@@ -1,0 +1,59 @@
+.field {
+  padding: 16px 12px;
+}
+.field__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.field__label {
+  margin-right: 12px;
+}
+.field__title {
+  overflow: hidden;
+  font-size: 16px;
+  color: #040a23;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.field__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  width: 0;
+}
+
+.field__value {
+  overflow: hidden;
+  margin-right: 8px;
+  width: 100%;
+  font-size: 16px;
+  text-align: right;
+  color: #040a23;
+  line-height: 24px;
+  text-overflow: ellipsis;
+}
+.field__extra {
+  display: flex;
+  align-items: center;
+}
+.field__line--vertical {
+  width: 1px;
+  height: 16px;
+  background-color: #9aa0b1;
+  transform: scaleX(0.5);
+}
+.field__text-btn {
+  margin-left: 8px;
+  font-size: 16px;
+  color: #1f4886;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.field__icon {
+  margin-left: 8px;
+  width: 16px;
+  height: 16px;
+}
