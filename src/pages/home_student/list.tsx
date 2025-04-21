@@ -8,13 +8,14 @@ import { base, Handler } from "@/domains/base";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchStudentList } from "@/biz/student/services";
+import { Plus } from "lucide-solid";
 
 function HomeStudentListPageViewModel(props: ViewComponentProps) {
   const ui = {
     $view: new ScrollViewCore(),
     $create_btn: new ButtonCore({
       onClick() {
-        props.history.push("root.home_layout.student_create");
+        props.history.push("root.student_create");
       },
     }),
   };
@@ -54,9 +55,11 @@ export function HomeStudentListPage(props: ViewComponentProps) {
 
   return (
     <ScrollView store={vm.ui.$view} class="p-4">
-      <h1 class="text-2xl font-bold mb-4">学员列表</h1>
-      <div>
-        <Button store={vm.ui.$create_btn}>添加学员</Button>
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-2xl font-bold">我的学员</div>
+        <Button variant="subtle" store={vm.ui.$create_btn}>
+          <Plus class="w-6 h-6" />
+        </Button>
       </div>
       <div class="py-4">
         <ListView store={vm.request.student.list} class="space-y-2">

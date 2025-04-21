@@ -4,6 +4,7 @@ import { CollectionCore } from "@/domains/ui/collection";
 import { DismissableLayerCore } from "@/domains/ui/dismissable-layer";
 import { PopoverCore } from "@/domains/ui/popover";
 import { Direction } from "@/domains/ui/direction";
+import { PresenceCore } from "@/domains/ui/presence";
 import { Rect } from "@/types";
 
 import { SelectContentCore } from "./content";
@@ -65,6 +66,7 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
 
   popper: PopperCore;
   popover: PopoverCore;
+  presence: PresenceCore;
   collection: CollectionCore;
   layer: DismissableLayerCore;
 
@@ -127,6 +129,7 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
     }
     this.popper = new PopperCore();
     this.popover = new PopoverCore();
+    this.presence = new PresenceCore();
     this.layer = new DismissableLayerCore();
     this.collection = new CollectionCore();
     this.popper.onReferenceMounted((reference) => {
@@ -189,14 +192,15 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
     // this.position();
     this.emit(Events.StateChange, { ...this.state });
   }
-  hide = () => {
+  hide() {
+    this.presence.hide();
     // console.log(...this.log("hide", this));
     if (this.open === false) {
       return;
     }
     this.open = false;
     this.emit(Events.StateChange, { ...this.state });
-  };
+  }
   addNativeOption() {}
   removeNativeOption() {}
   // appendItem(item: SelectItemCore<T>) {

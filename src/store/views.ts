@@ -9,16 +9,23 @@ import { HomeActionListPage } from "@/pages/home_workout_action/list";
 import { HomeActionCreatePage } from "@/pages/home_workout_action/create";
 import { HomeActionUpdatePage } from "@/pages/home_workout_action/update";
 import { HomeWorkoutPlanListPage } from "@/pages/home_workout_plan/list";
-import { HomeWorkoutPlanCreatePage } from "@/pages/home_workout_plan/create";
+import { WorkoutPlanCreatePage } from "@/pages/home_workout_plan/create";
 import { HomeWorkoutPlanProfilePage } from "@/pages/home_workout_plan/profile";
 import { HomeWorkoutPlanUpdatePage } from "@/pages/home_workout_plan/update";
+import { WorkoutPlanRecommendLayout } from "@/pages/home_workout_plan/recommend_layout";
+import { WorkoutPlanMineView } from "@/pages/home_workout_plan/plan_mine";
+import { WorkoutPlanSingleView } from "@/pages/home_workout_plan/plan_single";
+import { WorkoutPlanIntervalView } from "@/pages/home_workout_plan/plan_interval";
+import { WorkoutPlanRecommendView } from "@/pages/home_workout_plan/plan_recommend";
 import { HomeStudentListPage } from "@/pages/home_student/list";
 import { HomeStudentCreatePage } from "@/pages/home_student/create";
 import { HomeStudentUpdatePage } from "@/pages/home_student/update";
 import { HomeStudentProfilePage } from "@/pages/home_student/profile";
 import { HomeMusclePage } from "@/pages/home_muscle";
 import { HomeEquipmentPage } from "@/pages/home_equipment";
-import { HomeWorkoutDayUpdatePage } from "@/pages/home_workout_day/create";
+import { HomeWorkoutDayUpdatePage } from "@/pages/home_workout_day/update";
+import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
+import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
 import { ViewComponent } from "@/store/types";
 
 import { PageKeys } from "./routes";
@@ -29,18 +36,32 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.notfound": NotFoundPage,
   "root.home_layout": HomeLayout,
   "root.home_layout.index": HomeIndexPage,
+  // 肌肉
   "root.home_layout.muscle": HomeMusclePage,
+  // 器材、设备
   "root.home_layout.equipment": HomeEquipmentPage,
+  // 健身动作
   "root.home_layout.action_list": HomeActionListPage,
   "root.home_layout.action_create": HomeActionCreatePage,
   "root.home_layout.action_update": HomeActionUpdatePage,
+  // 训练计划
   "root.home_layout.workout_plan_list": HomeWorkoutPlanListPage,
-  "root.home_layout.workout_plan_create": HomeWorkoutPlanCreatePage,
+  "root.workout_plan_create": WorkoutPlanCreatePage,
   "root.home_layout.workout_plan_update": HomeWorkoutPlanUpdatePage,
+  "root.home_layout.workout_plan_layout": WorkoutPlanRecommendLayout,
+  "root.home_layout.workout_plan_layout.recommend": WorkoutPlanRecommendView,
+  "root.home_layout.workout_plan_layout.interval": WorkoutPlanIntervalView,
+  "root.home_layout.workout_plan_layout.single": WorkoutPlanSingleView,
+  "root.home_layout.workout_plan_layout.mine": WorkoutPlanMineView,
   "root.workout_plan_profile": HomeWorkoutPlanProfilePage,
+  // 训练记录
   "root.workout_day": HomeWorkoutDayUpdatePage,
+  // 学员管理
   "root.home_layout.student_list": HomeStudentListPage,
-  "root.home_layout.student_create": HomeStudentCreatePage,
-  "root.home_layout.student_update": HomeStudentUpdatePage,
-  "root.home_layout.student_profile": HomeStudentProfilePage,
+  "root.student_create": HomeStudentCreatePage,
+  "root.student_update": HomeStudentUpdatePage,
+  "root.student_profile": HomeStudentProfilePage,
+  // 假聊
+  "root.fake_chat": MemberListInFakeChatPage,
+  "root.fake_chat_profile": ChatProfileInFakeChatPage,
 };

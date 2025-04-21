@@ -2,7 +2,7 @@
  * @file 后台/首页布局
  */
 import { For, JSX, createSignal } from "solid-js";
-import { Users, Home, Tv } from "lucide-solid";
+import { Users, Home, Bike, BicepsFlexed } from "lucide-solid";
 
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { PageKeys } from "@/store/routes";
@@ -36,12 +36,12 @@ export const HomeLayout: ViewComponent = (props) => {
       url: "root.home_layout.index",
     },
     {
-      text: "训练计划列表",
-      icon: <Tv class="w-6 h-6" />,
-      url: "root.home_layout.workout_plan_list",
+      text: "训练计划",
+      icon: <BicepsFlexed class="w-6 h-6" />,
+      url: "root.home_layout.workout_plan_layout.recommend",
     },
     {
-      text: "学员列表",
+      text: "学员",
       icon: <Users class="w-6 h-6" />,
       url: "root.home_layout.student_list",
     },
@@ -91,12 +91,13 @@ export const HomeLayout: ViewComponent = (props) => {
           >
             <div class="px-4 py-2 border border-slate-300 rounded-xl cursor-pointer">开始训练</div>
           </div> */}
-        <div class="flex items-center justify-evenly">
+        <div class="flex items-center bg-white">
           <For each={menus()}>
             {(menu) => {
               const { icon, text, url, badge, onClick } = menu;
               return (
                 <Menu
+                  class="basis-1/3"
                   app={app}
                   icon={icon}
                   history={history}
@@ -128,10 +129,11 @@ function Menu(
 ) {
   const inner = (
     <div
-      class={cn(
-        "relative flex items-center px-4 py-2 space-x-2 opacity-80 cursor-pointer hover:bg-slate-300",
-        props.highlight ? "bg-slate-200" : ""
-      )}
+      classList={{
+        "relative flex items-center justify-center px-4 py-2 space-x-2 opacity-80 cursor-pointer hover:bg-slate-300":
+          true,
+        "bg-slate-200": props.highlight,
+      }}
       onClick={props.onClick}
     >
       <div class="flex flex-col items-center">
@@ -150,6 +152,9 @@ function Menu(
   return (
     <Show when={props.url} fallback={inner}>
       <div
+        classList={{
+          [props.class || ""]: true,
+        }}
         onClick={() => {
           if (!props.url) {
             return;

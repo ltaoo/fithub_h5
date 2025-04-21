@@ -61,16 +61,34 @@ const configure = {
               require: ["login"],
             },
           },
-          workout_plan_create: {
-            title: "训练计划创建",
-            pathname: "/home/workout_plan_create",
+          workout_plan_update: {
+            title: "训练计划编辑",
+            pathname: "/home/workout_plan_update",
             options: {
               require: ["login"],
             },
           },
-          workout_plan_update: {
-            title: "训练计划编辑",
-            pathname: "/home/workout_plan_update",
+          workout_plan_layout: {
+            title: "训练计划推荐",
+            pathname: "/home/workout_plan",
+            children: {
+              recommend: {
+                title: "推荐",
+                pathname: "/home/workout_plan/recommend",
+              },
+              interval: {
+                title: "周期",
+                pathname: "/home/workout_plan/interval",
+              },
+              single: {
+                title: "单次计划",
+                pathname: "/home/workout_plan/exercise",
+              },
+              mine: {
+                title: "我的",
+                pathname: "/home/workout_plan/mine",
+              },
+            },
             options: {
               require: ["login"],
             },
@@ -82,27 +100,13 @@ const configure = {
               require: ["login"],
             },
           },
-          student_create: {
-            title: "学员创建",
-            pathname: "/home/student_create",
-            options: {
-              require: ["login"],
-            },
-          },
-          student_update: {
-            title: "学员编辑",
-            pathname: "/home/student_update",
-            options: {
-              require: ["login"],
-            },
-          },
-          student_profile: {
-            title: "学员详情",
-            pathname: "/home/student_profile",
-            options: {
-              require: ["login"],
-            },
-          },
+        },
+      },
+      workout_plan_create: {
+        title: "训练计划创建",
+        pathname: "/home/workout_plan_create",
+        options: {
+          require: ["login"],
         },
       },
       workout_plan_profile: {
@@ -117,6 +121,41 @@ const configure = {
         pathname: "/workout_day",
         options: {
           require: ["login"],
+        },
+      },
+      student_create: {
+        title: "学员创建",
+        pathname: "/home/student_create",
+        options: {
+          require: ["login"],
+        },
+      },
+      student_update: {
+        title: "学员编辑",
+        pathname: "/home/student_update",
+        options: {
+          require: ["login"],
+        },
+      },
+      student_profile: {
+        title: "学员详情",
+        pathname: "/home/student_profile",
+        options: {
+          require: ["login"],
+        },
+      },
+      fake_chat: {
+        title: "沟通",
+        pathname: "/fake_chat",
+        options: {
+          require: [],
+        },
+      },
+      fake_chat_profile: {
+        title: "沟通详情",
+        pathname: "/fake_chat_profile",
+        options: {
+          require: [],
         },
       },
       login: {

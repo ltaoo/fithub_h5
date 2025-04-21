@@ -1,7 +1,7 @@
 import { ViewComponentProps } from "@/store/types";
 import { CountdownViewModel } from "@/biz/countdown";
 
-export function Countdown(props: { store: CountdownViewModel }) {
+export function TimerView(props: { store: CountdownViewModel }) {
   let $minutes1: undefined | HTMLDivElement;
   let $minutes2: undefined | HTMLDivElement;
   let $seconds1: undefined | HTMLDivElement;
@@ -65,7 +65,7 @@ export function Countdown(props: { store: CountdownViewModel }) {
         <div
           class="bg-gray-100 p-2 rounded-md"
           onClick={() => {
-            props.store.stop();
+            props.store.finish();
           }}
         >
           终止

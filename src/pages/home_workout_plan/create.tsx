@@ -1,24 +1,476 @@
 /**
  * @file 创建训练计划
  */
-import { For, Show } from "solid-js";
-import { Loader } from "lucide-solid";
+import { For, Show, Switch, Match } from "solid-js";
+import { ArrowDown, ArrowUp, Loader, MoreHorizontal, Trash } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
+import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
-import { Button, Dialog, Input, ListView, ScrollView } from "@/components/ui";
+import { Button, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { WorkoutPlanPreviewCard } from "@/components/workout-plan-share-card";
-import { WorkoutPlanPreviewPayload } from "@/biz/workout_plan/types";
+import { WorkoutActionSelect2View } from "@/components/workout-action-select2";
+import { Sheet } from "@/components/ui/sheet";
+import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
+import { WorkoutPlanPreviewPayload, WorkoutPlanStepBody } from "@/biz/workout_plan/types";
 import { createWorkoutPlan } from "@/biz/workout_plan/services";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionProfile } from "@/biz/workout_action/services";
+import { WorkoutActionType } from "@/biz/workout_action/constants";
+import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
+import { Result } from "@/domains/result";
+import { SetValueUnit } from "@/biz/set_value_input";
 import { base, Handler } from "@/domains/base";
-import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
+import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { RefCore } from "@/domains/ui/cur";
+import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
+import { seconds_to_hour, seconds_to_hour_with_template } from "@/utils";
 
-import { WorkoutPlanValuesView } from "./workout_plan_form";
+import { WorkoutPlanValuesView } from "./workout_plan_values";
+import { ActionInput, ActionInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
 
-function HomeWorkoutPlanCreatePageViewModel(props: ViewComponentProps) {
-  let _preview: WorkoutPlanPreviewPayload | null = null;
+function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
+  const request = {
+    workout_plan: {
+      create: new RequestCore(createWorkoutPlan, { client: props.client }),
+    },
+  };
+  const methods = {
+    calc_estimated_duration(v: { set_count: string; actions: { reps: number; reps_unit: SetValueUnit }[] }[]) {
+      const actions = v;
+      let duration = 0;
+      for (let i = 0; i < actions.length; i += 1) {
+        const set = actions[i];
+        let set_duration = 0;
+        for (let j = 0; j < set.actions.length; j += 1) {
+          const act = set.actions[j];
+          const reps = act.reps;
+          const reps_unit = act.reps_unit;
+          if (reps_unit === "秒") {
+            set_duration += Number(reps);
+          }
+          if (reps_unit === "分") {
+            set_duration += Number(reps) * 60;
+          }
+          if (reps_unit === "次") {
+            // 一次大概是 6s
+            set_duration += Number(reps) * 6;
+          }
+        }
+        duration += set_duration * Number(set.set_count);
+      }
+      // console.log("[PAGE]workout_plan/create - estimated duration", duration);
+      const text = seconds_to_hour_with_template(duration, {
+        hours(v: number) {
+          return `${v}小时`;
+        },
+        minutes(v: number, v2) {
+          return `${v2}分钟`;
+        },
+        seconds(v: number) {
+          return "";
+        },
+      });
+      ui.$input_duration.setValue(text);
+      return duration;
+    },
+    async submit() {
+      const r = await ui.$input_actions.validate();
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      const value_actions = r.data;
+      console.log("[PAGE]workout_plan/create submit", value_actions);
+      if (value_actions.length === 0) {
+        props.app.tip({
+          text: ["请至少选择一个动作"],
+        });
+        return;
+      }
+      const value_title = ui.$input_title.value;
+      const value_overview = ui.$input_overview.value;
+      const value_estimated_duration = methods.calc_estimated_duration(value_actions);
+      if (!value_title) {
+        props.app.tip({
+          text: ["请输入计划名称"],
+        });
+        return;
+      }
+      const muscle_ids: Record<number, boolean> = {};
+      const equipment_ids: Record<number, boolean> = {};
+      for (let i = 0; i < value_actions.length; i += 1) {
+        for (let j = 0; j < value_actions[i].actions.length; j += 1) {
+          const act = value_actions[i].actions[j];
+          const profile = _action_profiles[act.action.id];
+          if (profile) {
+            profile.muscles.forEach((m) => (muscle_ids[m.id] = true));
+            profile.equipments.forEach((m) => (equipment_ids[m.id] = true));
+          }
+        }
+      }
+      const body = {
+        title: value_title,
+        overview: value_overview,
+        tags: "",
+        level: 5,
+        details: JSON.stringify(value_actions),
+        steps: (() => {
+          const result: WorkoutPlanStepBody[] = [];
+          for (let i = 0; i < value_actions.length; i += 1) {
+            const set_value = value_actions[i];
+            const actions: WorkoutPlanStepBody["actions"] = [];
+            for (let j = 0; j < set_value.actions.length; j += 1) {
+              const act = value_actions[i].actions[j];
+              actions.push({
+                set_idx: i + 1,
+                idx: j + 1,
+                action_id: act.action.id,
+                reps: act.reps,
+                unit: act.reps_unit,
+                weight: act.weight,
+                rest_duration: act.rest_duration,
+                note: "",
+              });
+            }
+            result.push({
+              title: "",
+              idx: i + 1,
+              type: WorkoutPlanStepType.Strength,
+              set_type: set_value.set_type,
+              set_count: Number(set_value.set_count),
+              set_rest_duration: Number(set_value.set_rest_duration),
+              set_weight: set_value.set_weight,
+              actions,
+              note: "",
+            });
+          }
+          return result;
+        })(),
+        points: "",
+        suggestions: "",
+        muscle_ids: Object.values(muscle_ids).join(","),
+        equipment_ids: Object.values(equipment_ids).join(","),
+        estimated_duration: value_estimated_duration,
+      };
+      const r2 = await request.workout_plan.create.run(body);
+      if (r2.error) {
+        props.app.tip({
+          text: [r2.error.message],
+        });
+        return;
+      }
+      props.app.tip({
+        text: ["创建成功"],
+      });
+      // props.history.back();
+    },
+    cancel() {
+      props.history.back();
+    },
+  };
+  const $model = WorkoutPlanEditorViewModel(props);
+  const ui = {
+    $view: new ScrollViewCore(),
+    $input_title: new InputCore({
+      defaultValue: "",
+    }),
+    $input_overview: new InputCore({
+      defaultValue: "",
+    }),
+    $input_actions: new ArrayFieldCore({
+      label: "actions",
+      name: "",
+      field(count) {
+        return new SingleFieldCore({
+          label: "",
+          name: "",
+          input: ActionInputViewModel({}),
+        });
+      },
+    }),
+    $input_duration: new InputCore({ defaultValue: "0" }),
+    $workout_action_select: WorkoutActionSelectDialogViewModel({
+      defaultValue: [],
+      list: $workout_action_list,
+      client: props.client,
+      async onOk(actions) {
+        for (let i = 0; i < actions.length; i += 1) {
+          const act = actions[i];
+          if (!_action_profiles[act.id]) {
+            const profile = $workout_action_list.response.dataSource.find((v) => v.id === act.id);
+            if (profile) {
+              _action_profiles[act.id] = profile;
+            }
+          }
+        }
+        const field_value = ui.$ref_action_in_menu.value;
+        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value);
+        if (field_value) {
+          const $field = ui.$input_actions.getFieldWithId(field_value.id);
+          if (!$field) {
+            props.app.tip({
+              text: ["异常操作", "没有匹配的输入项"],
+            });
+            return;
+          }
+          const menu_type = ui.$ref_menu_type.value;
+          if (menu_type === "change_action") {
+            $field.field.input.setValue({
+              actions: actions.map((act) => {
+                return {
+                  action: {
+                    id: Number(act.id),
+                    zh_name: act.zh_name,
+                  },
+                  reps: 12,
+                  reps_unit: "次" as const,
+                  weight: "12RM",
+                  rest_duration: 90,
+                };
+              }),
+            });
+            const r = await ui.$input_actions.validate();
+            if (r.data) {
+              methods.calc_estimated_duration(r.data);
+            }
+            ui.$workout_action_select.clear();
+            ui.$workout_action_select.ui.$dialog.hide();
+            return;
+          }
+          return;
+        }
+        // 新增动作
+        for (let i = 0; i < actions.length; i += 1) {
+          const $input = ui.$input_actions.append();
+          $input.setValue({
+            set_type: WorkoutPlanSetType.Normal,
+            set_count: "3",
+            set_rest_duration: "90",
+            set_weight: "RPE 6",
+            actions: [
+              {
+                action: {
+                  id: Number(actions[i].id),
+                  zh_name: actions[i].zh_name,
+                },
+                reps: 12,
+                reps_unit: "次",
+                weight: "12RM",
+                rest_duration: 90,
+              },
+            ],
+          });
+        }
+        const r = await ui.$input_actions.validate();
+        if (r.data) {
+          methods.calc_estimated_duration(r.data);
+        }
+        ui.$workout_action_select.clear();
+        ui.$workout_action_select.ui.$dialog.hide();
+        bus.emit(Events.StateChange, { ..._state });
+      },
+    }),
+    $ref_action_in_menu: new RefCore<{ id: number; idx: number }>(),
+    $ref_menu_type: new RefCore<"change_action" | "add_action">(),
+    $menu: new DropdownMenuCore({
+      align: "start",
+      items: [
+        new MenuItemCore({
+          label: "修改动作",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$workout_action_select.setValue(
+              $field.field.input.actions.map((act) => {
+                return {
+                  id: act.action.id,
+                  zh_name: act.action.zh_name,
+                };
+              })
+            );
+            if (
+              [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
+                $field.field.input.type
+              )
+            ) {
+              ui.$workout_action_select.methods.setMode("single");
+            }
+            if ([WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes($field.field.input.type)) {
+              ui.$workout_action_select.methods.setMode("multiple");
+            }
+            ui.$ref_menu_type.select("change_action");
+            ui.$menu.hide();
+            ui.$workout_action_select.ui.$dialog.show();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为常规组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Normal);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为超级组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Super);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为递减组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Decreasing);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为递增组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Increasing);
+            ui.$menu.hide();
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "HIIT",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.HIIT);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "在前面插入",
+          onClick() {},
+        }),
+        new MenuItemCore({
+          label: "在后面插入",
+        }),
+        new MenuItemCore({
+          label: "上移",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.upIdx($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "下移",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.downIdx($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "删除",
+        }),
+      ],
+    }),
+    $action_select: $model.$action_select,
+    $back: new ButtonCore({
+      onClick() {
+        methods.cancel();
+      },
+    }),
+    $submit: new ButtonCore({
+      async onClick() {
+        methods.submit();
+      },
+    }),
+  };
+  let _action_profiles: Record<string, WorkoutActionProfile> = {};
   let _state = {
     get actions() {
       return ui.$action_select.state.actions;
@@ -26,78 +478,10 @@ function HomeWorkoutPlanCreatePageViewModel(props: ViewComponentProps) {
     get selectedActions() {
       return ui.$action_select.state.selected;
     },
-    get preview() {
-      return _preview;
+    get fields() {
+      return ui.$input_actions.state.fields;
     },
   };
-
-  const $model = WorkoutPlanEditorViewModel(props);
-
-  const request = {
-    workout_plan: {
-      create: new RequestCore(createWorkoutPlan, { client: props.client }),
-    },
-  };
-  const ui = {
-    $view: new ScrollViewCore(),
-    $action_dialog_btn: new ButtonCore({
-      onClick() {
-        ui.$action_select.ready();
-        ui.$action_select_dialog.show();
-      },
-    }),
-    $action_select: $model.$action_select,
-    $action_select_dialog: $model.$action_select_dialog,
-    $action_search_input: $model.$action_search_input,
-    $action_search_btn: $model.$action_search_btn,
-    $action_select_view: $model.$action_select_view,
-    $preview_dialog: new DialogCore({ footer: false }),
-    $values: $model.$values,
-    $back: new ButtonCore({
-      onClick() {
-        props.history.back();
-      },
-    }),
-    $preview: new ButtonCore({
-      async onClick() {
-        const r = await $model.toBody();
-        if (r.error) {
-          props.app.tip({
-            text: [r.error.message],
-          });
-          return;
-        }
-        _preview = JSON.parse(r.data.details);
-        bus.emit(Events.StateChange, { ..._state });
-        ui.$preview_dialog.show();
-      },
-    }),
-    $submit: new ButtonCore({
-      async onClick() {
-        const r = await $model.toBody();
-        if (r.error) {
-          props.app.tip({
-            text: [r.error.message],
-          });
-          return;
-        }
-        const body = r.data;
-        console.log("[PAGE]home_workout_plan/create - before create.run", body);
-        const r2 = await request.workout_plan.create.run(body);
-        if (r2.error) {
-          props.app.tip({
-            text: [r2.error.message],
-          });
-          return;
-        }
-        props.app.tip({
-          text: ["创建成功"],
-        });
-        props.history.back();
-      },
-    }),
-  };
-
   enum Events {
     StateChange,
   }
@@ -110,150 +494,11 @@ function HomeWorkoutPlanCreatePageViewModel(props: ViewComponentProps) {
   });
 
   return {
-    state: _state,
+    methods,
     ui,
+    state: _state,
     ready() {
-      // $action_select.ready();
       $model.ready();
-
-      // const v = {
-      //   level: 4,
-      //   steps: [
-      //     {
-      //       title: "弹力带肩胛骨划圈",
-      //       type: "warmup",
-      //       set_type: "normal",
-      //       set_count: 2,
-      //       set_rest_duration: 30,
-      //       step_note: "",
-      //       action: { id: 15 },
-      //       reps: 15,
-      //       unit: "次",
-      //       weight: "",
-      //       note: "",
-      //       actions: [],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "自重深蹲 + 侧向平移组合",
-      //       type: "warmup",
-      //       set_type: "combo",
-      //       set_count: 3,
-      //       set_rest_duration: 30,
-      //       step_note: "",
-      //       actions: [
-      //         { action: { id: 13 }, reps: 15, unit: "次", weight: "", rest_duration: 0, note: "" },
-      //         { action: { id: 14 }, reps: 15, unit: "秒", weight: "", rest_duration: 0, note: "" },
-      //       ],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "交替反向弓步 + 推举",
-      //       type: "strength",
-      //       set_type: "combo",
-      //       set_count: 3,
-      //       set_rest_duration: 90,
-      //       step_note: "",
-      //       actions: [
-      //         { action: { id: 11 }, reps: 12, unit: "次", weight: "18RM", rest_duration: 0, note: "" },
-      //         { action: { id: 12 }, reps: 12, unit: "次", weight: "18RM", rest_duration: 0, note: "" },
-      //       ],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "单臂划船 + 同侧腿后伸",
-      //       type: "strength",
-      //       set_type: "combo",
-      //       set_count: 4,
-      //       set_rest_duration: 90,
-      //       step_note: "",
-      //       actions: [
-      //         { action: { id: 9 }, reps: 10, unit: "次", weight: "15RM", rest_duration: 0, note: "" },
-      //         { action: { id: 10 }, reps: 10, unit: "次", weight: "15RM", rest_duration: 0, note: "" },
-      //       ],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "罗马尼亚硬拉",
-      //       type: "strength",
-      //       set_type: "normal",
-      //       set_count: 5,
-      //       set_rest_duration: 90,
-      //       step_note: "",
-      //       action: { id: 8 },
-      //       reps: 15,
-      //       unit: "次",
-      //       weight: "",
-      //       note: "弹力带辅助",
-      //       actions: [],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "死虫式负重加压",
-      //       type: "strength",
-      //       set_type: "normal",
-      //       set_count: 2,
-      //       set_rest_duration: 90,
-      //       step_note: "",
-      //       action: { id: 7 },
-      //       reps: 30,
-      //       unit: "秒",
-      //       weight: "",
-      //       note: "",
-      //       actions: [],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "改良版低冲击 HIIT",
-      //       type: "cardio",
-      //       set_type: "combo",
-      //       set_count: 4,
-      //       set_rest_duration: 180,
-      //       step_note: "",
-      //       actions: [
-      //         { action: { id: 3 }, reps: 40, unit: "秒", weight: "", rest_duration: 0, note: "无绳可做站姿划船模拟" },
-      //         { action: { id: 4 }, reps: 40, unit: "秒", weight: "", rest_duration: 0, note: "" },
-      //         { action: { id: 5 }, reps: 40, unit: "秒", weight: "", rest_duration: 0, note: "可用弹力带替代" },
-      //         { action: { id: 6 }, reps: 60, unit: "秒", weight: "", rest_duration: 0, note: "" },
-      //       ],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "胸椎旋转释放",
-      //       type: "stretching",
-      //       set_type: "normal",
-      //       set_count: 2,
-      //       set_rest_duration: 0,
-      //       step_note: "",
-      //       action: { id: 1 },
-      //       reps: 8,
-      //       unit: "次",
-      //       weight: "",
-      //       note: "",
-      //       actions: [],
-      //       sets3: [],
-      //     },
-      //     {
-      //       title: "髂腰肌动态拉伸",
-      //       type: "stretching",
-      //       set_type: "normal",
-      //       set_count: 2,
-      //       set_rest_duration: 0,
-      //       step_note: "",
-      //       action: { id: 2 },
-      //       reps: 6,
-      //       unit: "次",
-      //       weight: "",
-      //       note: "",
-      //       actions: [],
-      //       sets3: [],
-      //     },
-      //   ],
-      //   points: ["力量训练组间休息严格控制在 90 秒以内以维持热量消耗"],
-      //   suggestions: ["完成 24 小时内补充 20g 乳清蛋白 + 5g 谷氨酰胺"],
-      // };
-      // $values.setValue(v);
-      // $values.refresh();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -261,91 +506,129 @@ function HomeWorkoutPlanCreatePageViewModel(props: ViewComponentProps) {
   };
 }
 
-export function HomeWorkoutPlanCreatePage(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(HomeWorkoutPlanCreatePageViewModel, [props]);
+export function WorkoutPlanCreatePage(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(HomeWorkoutPlanCreateViewModel, [props]);
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="p-4">
-        <h1 class="text-2xl font-bold mb-4">创建训练计划</h1>
-        <div class="bg-white p-4 rounded-lg">
-          <WorkoutPlanValuesView store={vm.ui.$values} />
-        </div>
-        <div class="h-[68px]"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-          <div class="flex gap-2">
-            <Button variant="subtle" store={vm.ui.$back}>
-              返回
-            </Button>
-            <Button variant="subtle" store={vm.ui.$preview}>
-              预览
-            </Button>
-            <Button store={vm.ui.$submit}>提交</Button>
-          </div>
-        </div>
-      </ScrollView>
-      <div
-        class="absolute bottom-24 right-12 p-4 bg-white rounded-full border border-gray-200 cursor-pointer"
-        onClick={() => {
-          vm.ui.$action_dialog_btn.click();
-        }}
-      >
-        <div>添加动作</div>
-      </div>
-      <Dialog store={vm.ui.$action_select_dialog}>
-        <div class="w-[520px]">
-          <div class="flex gap-2">
-            <Input store={vm.ui.$action_search_input} />
-            <Button class="w-20" store={vm.ui.$action_search_btn}>
-              搜索
-            </Button>
-          </div>
-          <div class="mt-2">
-            <div class="flex gap-2">
-              <div class="px-2 py-1 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">力量</div>
-              <div class="px-2 py-1 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">有氧</div>
+      <ScrollView store={vm.ui.$view} class="">
+        <div class="bg-white p-4">
+          <div class="space-y-2">
+            <div class="field">
+              <div>标题</div>
+              <Input store={vm.ui.$input_title} />
             </div>
-          </div>
-          <div class="mt-2 h-[480px] overflow-y-auto">
-            <ScrollView store={vm.ui.$action_select_view}>
-              <ListView store={vm.ui.$action_select.request.action.list} class="space-y-2">
-                <For each={state().actions}>
-                  {(action) => {
-                    return (
-                      <div
-                        class="p-2 flex justify-between items-center border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
-                        onClick={() => {
-                          vm.ui.$action_select.methods.select(action);
-                        }}
-                      >
-                        <div>
-                          <div class="">{action.zh_name}</div>
-                          <div class="text-sm">{action.name}</div>
+            <div class="field">
+              <div>概要</div>
+              <Textarea store={vm.ui.$input_overview} />
+            </div>
+            <div class="field">
+              <div>动作</div>
+              <div class="w-full space-y-3 my-2">
+                <div class="space-y-12">
+                  <For
+                    each={state().fields}
+                    fallback={
+                      <div class="flex justify-center p-4 rounded-md bg-gray-100">
+                        <div
+                          onClick={() => {
+                            vm.ui.$ref_action_in_menu.clear();
+                            vm.ui.$workout_action_select.ui.$dialog.show();
+                          }}
+                        >
+                          <div>点击添加动作</div>
                         </div>
-                        <Show when={state().selectedActions.find((item) => item.id === action.id)}>
-                          <div class="text-sm text-green-500">已选</div>
-                        </Show>
                       </div>
-                    );
-                  }}
-                </For>
-              </ListView>
-            </ScrollView>
+                    }
+                  >
+                    {(field, index) => {
+                      const $inner = vm.ui.$input_actions.mapFieldWithIndex(index());
+                      if (!$inner) {
+                        return null;
+                      }
+                      return (
+                        <>
+                          <div class="relative border border-gray-200 rounded-lg bg-white shadow-sm">
+                            <Switch>
+                              <Match when={$inner.field.symbol === "SingleFieldCore"}>
+                                <ActionInput
+                                  store={$inner.field.input}
+                                  onShowActionSelect={() => {
+                                    vm.ui.$ref_menu_type.select("add_action");
+                                    vm.ui.$ref_action_in_menu.select({
+                                      id: field.id,
+                                      idx: index(),
+                                    });
+                                    const $field = vm.ui.$input_actions.getFieldWithId(field.id);
+                                    if (!$field) {
+                                      return;
+                                    }
+                                    vm.ui.$workout_action_select.methods.setDisabled(
+                                      $field.field.input.actions.map((act) => act.action.id)
+                                    );
+                                    vm.ui.$workout_action_select.ui.$dialog.show();
+                                  }}
+                                />
+                              </Match>
+                            </Switch>
+                            <div
+                              class="z-20 absolute right-4 top-2"
+                              onClick={(event) => {
+                                const client = event.currentTarget.getBoundingClientRect();
+                                vm.ui.$ref_action_in_menu.select({
+                                  id: field.id,
+                                  idx: index(),
+                                });
+                                vm.ui.$menu.toggle({ x: client.x + 18, y: client.y + 18 });
+                              }}
+                            >
+                              <MoreHorizontal class="w-6 h-6" />
+                            </div>
+                          </div>
+                          <Show when={state().fields.length - 1 === index()}>
+                            <div class=""></div>
+                          </Show>
+                        </>
+                      );
+                    }}
+                  </For>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div>预计时长</div>
+              <Input store={vm.ui.$input_duration} />
+            </div>
           </div>
         </div>
-      </Dialog>
-      <Dialog store={vm.ui.$preview_dialog}>
-        <Show
-          when={state().preview}
-          fallback={
-            <div class="flex justify-center items-center h-full">
-              <Loader class="animate-spin" />
-            </div>
-          }
-        >
-          <WorkoutPlanPreviewCard {...state().preview!} />
-        </Show>
-      </Dialog>
+        <div class="h-[112px]"></div>
+      </ScrollView>
+      <div class="absolute bottom-0 w-full bg-white">
+        <div class="flex justify-center w-full">
+          <div class="self-end px-4 py-2 border" onClick={vm.methods.cancel}>
+            <div>取消</div>
+          </div>
+          <div
+            class="p-4 border rounded-md bg-white"
+            onClick={() => {
+              vm.ui.$ref_action_in_menu.clear();
+              vm.ui.$workout_action_select.ui.$dialog.show();
+            }}
+          >
+            添加动作
+          </div>
+          <div class="self-end px-4 py-2 border" onClick={vm.methods.submit}>
+            <div>提交</div>
+          </div>
+        </div>
+        <div class="h-[48px]"></div>
+      </div>
+      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
+        <div class="w-screen">
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
+        </div>
+      </Sheet>
+      <DropdownMenu store={vm.ui.$menu}></DropdownMenu>
     </>
   );
 }

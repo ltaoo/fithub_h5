@@ -136,9 +136,9 @@ export class PopperCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 基准元素加载完成 */
-  setReference(reference: { $el?: unknown; getRect: () => Rect }) {
+  setReference(reference: { $el?: unknown; getRect: () => Rect }, opt: Partial<{ force: boolean }> = {}) {
     // this.log("setReference", this.reference, reference.$el);
-    if (this.reference !== null) {
+    if (this.reference !== null && !opt.force) {
       return;
     }
     this.reference = reference;
@@ -176,6 +176,14 @@ export class PopperCore extends BaseDomain<TheTypesOfEvents> {
     // this.emit(Events.ContainerChange, container);
   }
   setConfig(config: { placement?: Placement; strategy?: Strategy }) {}
+  setState(v: { x: number; y: number }) {
+    this.state.x = v.x;
+    this.state.y = v.y;
+    this.state.isPlaced = true;
+    this.emit(Events.StateChange, {
+      ...this.state,
+    });
+  }
   /** 计算浮动元素位置 */
   async place() {
     console.log(...this.log("place", this.reference, this.floating));

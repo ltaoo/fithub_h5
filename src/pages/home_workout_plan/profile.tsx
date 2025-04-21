@@ -8,6 +8,7 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
+import { createWorkoutDay } from "@/biz/workout_day/services";
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
 import { Button, ScrollView } from "@/components/ui";
@@ -23,11 +24,14 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         client: props.client,
       }),
     },
+    workout_day: {
+      create: new RequestCore(createWorkoutDay, { client: props.client }),
+    },
   };
   const ui = {
     $view: new ScrollViewCore({}),
     $btn_start_plan: new ButtonCore({
-      onClick() {
+      async onClick() {
         const id = props.view.query.id;
         if (!id) {
           props.app.tip({
@@ -35,8 +39,18 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
           });
           return;
         }
+        const r = await request.workout_day.create.run({
+          workout_plan_id: Number(id),
+          start_when_create: true,
+        });
+        if (r.error) {
+          props.app.tip({
+            text: [r.error.message],
+          });
+          return;
+        }
         props.history.push("root.workout_day", {
-          workout_plan_id: id,
+          id: String(r.data.id),
         });
       },
     }),

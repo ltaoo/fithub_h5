@@ -35,17 +35,28 @@ export const WorkoutPlanStepTypeOptions = [
 ];
 
 export enum WorkoutPlanSetType {
+  /** 常规 */
   Normal = "normal",
-  Combo = "combo",
-  Free = "free",
+  /** 超级组 */
+  Super = "super",
+  /** 递增组 */
+  Increasing = "increasing",
+  /** 递减组 */
+  Decreasing = "decreasing",
+  /** 高强度间歇 */
+  HIIT = "hiit",
 }
 export const WorkoutSetTypeTextMap: Record<WorkoutPlanSetType, string> = {
-  [WorkoutPlanSetType.Normal]: "单个动作",
-  [WorkoutPlanSetType.Combo]: "多个动作",
-  [WorkoutPlanSetType.Free]: "自由设置",
+  [WorkoutPlanSetType.Normal]: "常规组",
+  [WorkoutPlanSetType.Super]: "超级组",
+  [WorkoutPlanSetType.Increasing]: "递增组",
+  [WorkoutPlanSetType.Decreasing]: "递减组",
+  [WorkoutPlanSetType.HIIT]: "HIIT",
 };
-export const WorkoutSetTypeOptions = [
-  { label: "单个动作", value: WorkoutPlanSetType.Normal },
-  { label: "多个动作", value: WorkoutPlanSetType.Combo },
-  { label: "自由设置", value: WorkoutPlanSetType.Free },
-];
+export const WorkoutSetTypeOptions = Object.keys(WorkoutSetTypeTextMap).map((k) => {
+  const label = WorkoutSetTypeTextMap[k as any as WorkoutPlanSetType];
+  return {
+    label,
+    value: k,
+  };
+});

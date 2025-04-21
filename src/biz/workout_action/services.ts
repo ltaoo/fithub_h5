@@ -37,7 +37,7 @@ export function fetchWorkoutActionList(
   params: FetchParams & { type?: string; keyword?: string; tags1?: string[]; tags2?: string[] }
 ) {
   return request.post<ListResponseWithCursor<PartialWorkoutAction>>("/api/workout_action/list", {
-    page_size: params.page_size,
+    page_size: params.pageSize,
     page: params.page,
     next_marker: params.next_marker,
     type: params.type ?? WorkoutActionType.RESISTANCE,

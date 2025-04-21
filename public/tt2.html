@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>力量训练记录 | 健身日志</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide-static@latest"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 sm:p-6">
+
+<!-- 主容器 -->
+<div class="w-full max-w-md sm:max-w-4xl bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl sm:shadow-2xl p-4 sm:p-8 space-y-6 
+            border border-white/20 overflow-hidden">
+
+    <!-- 头部（移动端优化） -->
+    <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+        <div class="space-y-1">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">背部力量训练</h1>
+            <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-sm sm:text-base text-white/80">
+                <div class="flex items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/calendar.svg" 
+                         class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" alt="日期">
+                    2023-12-15
+                </div>
+                <div class="flex items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/clock.svg" 
+                         class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" alt="时长">
+                    90 分钟
+                </div>
+            </div>
+        </div>
+        <img src="https://source.unsplash.com/random/800x600/?gym,weightlifting" 
+             class="w-16 h-16 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl object-cover shadow border border-white/20 mt-2 sm:mt-0">
+    </header>
+
+    <!-- 训练内容（移动端垂直布局） -->
+    <div class="space-y-6 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0">
+        <!-- 训练项目 -->
+        <div class="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-white/20">
+            <h2 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center">
+                <img src="https://unpkg.com/lucide-static@latest/icons/dumbbell.svg" 
+                     class="w-5 h-5 sm:w-6 sm:h-6 mr-2" alt="训练">
+                训练项目
+            </h2>
+            
+            <div class="space-y-3">
+                <!-- 训练项（移动端紧凑布局） -->
+                <div class="bg-white/5 p-3 sm:p-4 rounded-lg hover:bg-white/10 transition-all">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-1 sm:space-y-0">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white text-base sm:text-inherit">硬拉</h3>
+                            <p class="text-xs sm:text-sm text-white/60 line-clamp-1">传统杠铃硬拉</p>
+                        </div>
+                        <span class="text-amber-400 text-sm sm:text-base">★ 核心</span>
+                    </div>
+                    <div class="mt-2 flex justify-between text-white/80 text-xs sm:text-sm">
+                        <div class="flex items-center">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/weight.svg" 
+                                 class="w-3 h-3 sm:w-4 sm:h-4 mr-1" alt="重量">
+                            120kg
+                        </div>
+                        <div class="flex items-center">
+                            <img src="https://unpkg.com/lucide-static@latest/icons/repeat.svg" 
+                                 class="w-3 h-3 sm:w-4 sm:h-4 mr-1" alt="次数">
+                            5x5
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 更多训练项... -->
+            </div>
+        </div>
+
+        <!-- 统计和总结（移动端垂直布局） -->
+        <div class="space-y-4 sm:space-y-6">
+            <!-- 统计卡片 -->
+            <div class="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-white/20">
+                <h2 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/activity.svg" 
+                         class="w-5 h-5 sm:w-6 sm:h-6 mr-2" alt="统计">
+                    训练统计
+                </h2>
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 text-white">
+                    <div class="space-y-1">
+                        <div class="text-xs sm:text-sm text-white/60">总重量</div>
+                        <div class="text-xl sm:text-2xl font-bold">18.6t</div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-xs sm:text-sm text-white/60">最大重量</div>
+                        <div class="text-xl sm:text-2xl font-bold">140kg</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 总结卡片 -->
+            <div class="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-white/20">
+                <h2 class="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center">
+                    <img src="https://unpkg.com/lucide-static@latest/icons/clipboard-list.svg" 
+                         class="w-5 h-5 sm:w-6 sm:h-6 mr-2" alt="总结">
+                    训练总结
+                </h2>
+                <p class="text-white/80 text-sm sm:text-base leading-relaxed line-clamp-4 sm:line-clamp-none">
+                    本次训练注重背部肌群发展，硬拉动作完成质量较高，
+                    但在最后两组出现核心稳定性下降的情况。
+                    下次需加强核心预热，尝试使用助力带提升握力表现。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部数据（移动端紧凑布局） -->
+    <footer class="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0 text-white/60 text-xs sm:text-sm">
+        <div class="flex items-center">
+            <img src="https://unpkg.com/lucide-static@latest/icons/heart-pulse.svg" 
+                 class="w-3 h-3 sm:w-4 sm:h-4 mr-1" alt="心率">
+            平均心率: 128bpm
+        </div>
+        <div class="flex items-center">
+            <img src="https://unpkg.com/lucide-static@latest/icons/flame.svg" 
+                 class="w-3 h-3 sm:w-4 sm:h-4 mr-1" alt="卡路里">
+            消耗: 680kcal
+        </div>
+    </footer>
+</div>
+
+</body>
+</html>

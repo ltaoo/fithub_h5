@@ -149,31 +149,20 @@ const ItemImpl = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTMLDivEle
       data-highlighted={state().focused ? "" : undefined}
       data-disabled={state().disabled ? "" : undefined}
       tabIndex={state().disabled ? undefined : -1}
-      onPointerEnter={(event) => {
-        console.log("[COMPONENT]ui/menu ItemImpl - onPointerEnter", event.pointerType, item.label);
-        if (event.pointerType !== "mouse") {
-          return;
-        }
-        event.currentTarget.focus();
-        item.handlePointerEnter();
-      }}
-      onPointerMove={(event) => {
-        // if (event.pointerType !== "mouse") {
-        //   return;
-        // }
-        // if (!item.state.disabled) {
-        //   event.currentTarget.focus();
-        // }
-        // item.handlePointerMove();
-      }}
-      onPointerLeave={(event) => {
-        console.log("[COMPONENT]ui/menu ItemImpl - onPointerLeave", event.pointerType, item.label);
-        if (event.pointerType !== "mouse") {
-          return;
-        }
-        item.handlePointerLeave();
-        // event.currentTarget.blur();
-      }}
+      // onPointerEnter={(event) => {
+      //   if (event.pointerType !== "mouse") {
+      //     return;
+      //   }
+      //   event.currentTarget.focus();
+      //   item.handlePointerEnter();
+      // }}
+      // onPointerLeave={(event) => {
+      //   console.log("[COMPONENT]ui/menu ItemImpl - onPointerLeave", event.pointerType, item.label);
+      //   if (event.pointerType !== "mouse") {
+      //     return;
+      //   }
+      //   item.handlePointerLeave();
+      // }}
       onClick={() => {
         // console.log("[COMPONENT]MenuItemImpl - on click");
         item.handleClick();

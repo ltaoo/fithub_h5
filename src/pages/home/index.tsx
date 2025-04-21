@@ -92,7 +92,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
 
   return (
     <>
-      <ScrollView store={$model.ui.$view} class="h-screen p-4 whitespace-nowrap">
+      <ScrollView store={$model.ui.$view} class="p-4 whitespace-nowrap">
         <div class="flex flex-col items-start gap-2 text-lg">
           <div class="flex items-center gap-4">
             <span>{state().month}</span>

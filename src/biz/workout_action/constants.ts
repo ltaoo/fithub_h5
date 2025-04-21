@@ -28,7 +28,7 @@ export const WorkoutActionTypeOptions = [
   { label: "静态拉伸", value: WorkoutActionType.STATIC_STRETCH },
   { label: "动态拉伸", value: WorkoutActionType.DYNAMIC_STRETCH },
   { label: "被动拉伸", value: WorkoutActionType.PASSIVE_STRETCH },
-  { label: "泡沫轴放松", value: WorkoutActionType.FOAM_ROLL },
+  { label: "SMR", value: WorkoutActionType.FOAM_ROLL },
   { label: "力量", value: WorkoutActionType.RESISTANCE },
   { label: "有氧", value: WorkoutActionType.CARDIO },
   { label: "心肺", value: WorkoutActionType.HIIT },

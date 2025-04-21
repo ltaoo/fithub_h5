@@ -34,6 +34,8 @@ export function FormFieldCore<T>(props: FormFieldCoreProps) {
   };
 }
 
+type FieldStatus = "normal" | "focus" | "warning" | "error" | "success";
+
 export type FormValidateResult = {
   valid: boolean;
   value: any;
@@ -44,27 +46,50 @@ enum SingleFieldEvents {
   StateChange,
 }
 type TheSingleFieldCoreEvents<T> = {
-  [SingleFieldEvents.StateChange]: T;
+  [SingleFieldEvents.StateChange]: SingleFieldCoreState<T>;
 };
 type SingleFieldCoreProps<T> = FormFieldCoreProps & {
   input: T;
   hidden?: boolean;
 };
+type SingleFieldCoreState<T> = {
+  symbol: string;
+  label: string;
+  name: string;
+  hidden: boolean;
+  focus: boolean;
+  error: BizError | null;
+  status: FieldStatus;
+  input: {
+    shape: string;
+    value: T;
+    type: any;
+    options?: any[];
+  };
+};
+
 export class SingleFieldCore<T extends FormInputInterface<any>> {
   symbol = "SingleFieldCore" as const;
   _label: string;
   _name: string;
   _hidden = false;
+  _error: BizError | null = null;
+  _status: FieldStatus = "normal";
+  _focus = false;
   _input: T;
   _rules: FieldRuleCore[];
   _dirty = false;
   _bus = base<TheSingleFieldCoreEvents<T>>();
-  get state() {
+
+  get state(): SingleFieldCoreState<T> {
     return {
       symbol: this.symbol,
       label: this._label,
       name: this._name,
       hidden: this._hidden,
+      focus: this._focus,
+      error: this._error,
+      status: this._status,
       input: {
         shape: this._input.shape,
         value: this._input.value,
@@ -109,22 +134,11 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   show() {
     this._hidden = false;
   }
-  setValue(value: T["value"], extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
-    const v = (() => {
-      if (value !== undefined) {
-        return value;
-      }
-      return this._input.defaultValue;
-    })();
-    //     console.log("[DOMAIN]formv2 - SingleField - setValue", v);
-    this._input.setValue(v);
+  showField(key: string) {
+    this._hidden = false;
   }
   clear() {
     this.setValue(this._input.defaultValue);
-  }
-  handleValueChange(value: T["value"]) {
-    this._dirty = true;
-    this._input.setValue(value);
   }
   async validate() {
     const value = this._input.value;
@@ -147,6 +161,28 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
       return Result.Err(new BizError(errors.join("\n")));
     }
     return Result.Ok(value);
+  }
+  setValue(value: T["value"], extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
+    const v = (() => {
+      if (value !== undefined) {
+        return value;
+      }
+      return this._input.defaultValue;
+    })();
+    //     console.log("[DOMAIN]formv2 - SingleField - setValue", v);
+    this._input.setValue(v);
+  }
+  setStatus(status: FieldStatus) {
+    this._status = status;
+    this._bus.emit(SingleFieldEvents.StateChange, { ...this.state });
+  }
+  setFocus(v: boolean) {
+    this._focus = v;
+    this._bus.emit(SingleFieldEvents.StateChange, { ...this.state });
+  }
+  handleValueChange(value: T["value"]) {
+    this._dirty = true;
+    this._input.setValue(value);
   }
   onStateChange(handler: Handler<TheSingleFieldCoreEvents<T>[SingleFieldEvents.StateChange]>) {
     return this._bus.on(SingleFieldEvents.StateChange, handler);
@@ -222,6 +258,40 @@ export class ArrayFieldCore<
     }
     return field;
   }
+  getFieldWithId(id: number) {
+    const matched = this.fields.find((f) => f.id === id);
+    return matched ?? null;
+  }
+  showField(key: string) {
+    console.log("[BIZ]formv2/field - showField", key, this.fields);
+    for (let i = 0; i < this.fields.length; i += 1) {
+      (() => {
+        let field = this.fields[i];
+        if (!field) {
+          return;
+        }
+        field.field.showField(key);
+        // if (field.field.name === key) {
+        //   console.log("before show field", field.field.name);
+        //   field.field.show();
+        // }
+      })();
+    }
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+  }
+  hideField(key: string) {
+    for (let i = 0; i < this.fields.length; i += 1) {
+      (() => {
+        let field = this.fields[i];
+        if (!field) {
+          return;
+        }
+        if (field.field.name === key) {
+          field.field.hide();
+        }
+      })();
+    }
+  }
 
   get label() {
     return this._label;
@@ -235,8 +305,8 @@ export class ArrayFieldCore<
   // get dirty() {
   //   return this._dirty;
   // }
-  get value(): ArrayFieldValue<T> {
-    const r: ArrayFieldValue<T> = this.fields.map((field) => {
+  get value(): ArrayFieldValue<T>[] {
+    const r: ArrayFieldValue<T>[] = this.fields.map((field) => {
       return field.field.value;
     });
     return r;
@@ -272,8 +342,8 @@ export class ArrayFieldCore<
   clear() {
     this.setValue([]);
   }
-  async validate(): Promise<Result<ArrayFieldValue<T>>> {
-    const results: ArrayFieldValue<T> = [];
+  async validate(): Promise<Result<ArrayFieldValue<T>[]>> {
+    const results: ArrayFieldValue<T>[] = [];
     const errors: BizError[] = [];
     for (let i = 0; i < this.fields.length; i += 1) {
       await (async () => {
@@ -339,6 +409,10 @@ export class ArrayFieldCore<
   }
   remove(id: number) {
     this.fields = this.fields.filter((field) => field.id !== id);
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+  }
+  removeByIndex(idx: number) {
+    this.fields = this.fields.filter((_, i) => i === idx);
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   /** 将指定的元素，向前移动一个位置 */
@@ -515,6 +589,14 @@ export class ObjectFieldCore<
     this._bus.emit(ObjectFieldEvents.StateChange, { ...this.state });
   }
   setValue(values: Record<string, any>, extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
+    console.log("[DOMAIN]formv2 - setValue", values, extra, this.fields);
+    if (extra.key) {
+      const field = this.fields[extra.key];
+      if (field) {
+        field.setValue(values[extra.key]);
+      }
+      return;
+    }
     const keys = Object.keys(this.fields);
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];

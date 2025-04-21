@@ -62,12 +62,17 @@ export function ImageUploadCore(props: ImageUploadPropsCore) {
     shape: "image-upload" as const,
     state: _state,
     value: _url,
+    defaultValue: "",
     ui: {
       zone: $zone,
       img: $img,
     },
     setValue(url: string) {
       _url = url;
+      bus.emit(Events.Change, _url);
+    },
+    clear() {
+      _url = "";
       bus.emit(Events.Change, _url);
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {

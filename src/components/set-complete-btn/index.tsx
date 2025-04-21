@@ -9,7 +9,7 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
 
   return (
     <div
-      class="relative flex items-center gap-2"
+      class="overflow-hidden relative flex items-center gap-2"
       onClick={(event) => {
         const { x, y } = event;
         props.store.handleClick({ x, y });
@@ -23,12 +23,12 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
           props.store.setValue(e.target.checked);
         }}
       /> */}
-      <div class="flex items-center justify-center px-4 h-10 rounded-lg border border-gray-300">
+      <div class="flex items-center justify-center px-4 h-10 rounded-lg border border-gray-300  bg-white">
         <Show
           when={state().value}
           fallback={
             <div class="text-gray-400">
-              <Circle size={16} />
+              <Check size={16} />
             </div>
           }
         >

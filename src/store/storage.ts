@@ -1,3 +1,4 @@
+import { SetValueUnit } from "@/biz/set_value_input";
 import { StorageCore } from "@/domains/storage";
 
 const DEFAULT_CACHE_VALUES = {
@@ -8,6 +9,7 @@ const DEFAULT_CACHE_VALUES = {
     avatar: "",
   },
   pending_workout_day: {
+    started_at: 0,
     step_idx: 0,
     set_idx: 0,
     data: [] as {
@@ -15,7 +17,9 @@ const DEFAULT_CACHE_VALUES = {
       set_idx: number;
       act_idx: number;
       reps: number;
+      reps_unit: SetValueUnit;
       weight: number;
+      weight_unit: SetValueUnit;
       completed: boolean;
     }[],
   },

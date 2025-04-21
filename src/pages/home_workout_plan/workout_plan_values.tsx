@@ -220,9 +220,9 @@ export function ObjectValuesView(props: { store: ObjectFieldCore<any> }) {
           }
           return (
             <div class="w-full">
-              <div class="flex mb-2">
-                <label class="block w-16 pt-2 mr-4 text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-                <div class="flex-1 w-0">
+              <div class="">
+                <label class="block pt-2 mr-4 text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                <div class="w-full">
                   {$inner.symbol === "ArrayFieldCore" ? (
                     <ArrayValuesView store={$inner} />
                   ) : $inner.symbol === "SingleFieldCore" ? (
@@ -245,11 +245,7 @@ export function ObjectValuesView(props: { store: ObjectFieldCore<any> }) {
 export function WorkoutPlanValuesView(props: { store: ObjectFieldCore<any> }) {
   const { store } = props;
 
-  return (
-    <div class="w-[780px] mx-auto">
-      <ObjectValuesView store={store} />
-    </div>
-  );
+  return <ObjectValuesView store={store} />;
 }
 
 export function WorkoutPlanSetView() {

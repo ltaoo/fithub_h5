@@ -19,7 +19,7 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 
-import { WorkoutPlanValuesView } from "./workout_plan_form";
+import { WorkoutPlanValuesView } from "./workout_plan_values";
 import { WorkoutPlanEditorViewModel } from "./model";
 
 function HomeWorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {

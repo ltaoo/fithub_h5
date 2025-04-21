@@ -8,6 +8,7 @@ export type WorkoutPlanStepBody = {
   set_type: WorkoutPlanSetType;
   set_count: number;
   set_rest_duration: number;
+  set_weight: string;
   actions: {
     id?: number | string;
     action_id: number | string;

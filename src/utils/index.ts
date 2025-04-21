@@ -162,6 +162,36 @@ export function bytes_to_size(bytes: number) {
  * @param value
  * @returns
  */
+export function seconds_to_hour_with_template(
+  value: number,
+  templates: {
+    hours: (v: number, v2: string) => string;
+    minutes: (v: number, v2: string) => string;
+    seconds: (v: number, v2: string) => string;
+  }
+) {
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value - hours * 3600) / 60);
+  const seconds = Math.floor(value - hours * 3600 - minutes * 60);
+
+  let str = "";
+  if (hours > 0 && templates.hours) {
+    str += templates.hours(hours, padding_zero(hours));
+  }
+  if (templates.minutes) {
+    str += templates.minutes(minutes, padding_zero(minutes));
+  }
+  if (templates.seconds) {
+    str += templates.seconds(seconds, padding_zero(seconds));
+  }
+  return str;
+}
+
+/**
+ * 秒数转时分秒
+ * @param value
+ * @returns
+ */
 export function seconds_to_hour(value: number) {
   const hours = Math.floor(value / 3600);
   const minutes = Math.floor((value - hours * 3600) / 60);

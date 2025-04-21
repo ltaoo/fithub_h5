@@ -58,6 +58,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
   allowClear: boolean = true;
   autoComplete: boolean = false;
   autoFocus: boolean = false;
+  isFocus = false;
   type: string;
   loading = false;
   /** 被消费过的值，用于做比较判断 input 值是否发生改变 */
@@ -69,6 +70,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
       value: this.value,
       placeholder: this.placeholder,
       disabled: this.disabled,
+      focus: this.isFocus,
       loading: this.loading,
       type: this.type,
       tmpType: this.tmpType,
@@ -133,6 +135,9 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
     this.valueUsed = this.value;
     this.emit(Events.Enter, this.value);
   }
+  handleFocus() {
+    this.isFocus = true;
+  }
   handleBlur() {
     if (this.value === this.valueUsed) {
       return;
@@ -171,6 +176,10 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
   }
   setLoading(loading: boolean) {
     this.loading = loading;
+    this.emit(Events.StateChange, { ...this.state });
+  }
+  setFocus() {
+    this.isFocus = true;
     this.emit(Events.StateChange, { ...this.state });
   }
   focus() {

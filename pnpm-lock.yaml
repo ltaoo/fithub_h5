@@ -27,8 +27,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       lucide-solid:
-        specifier: ^0.314.0
-        version: 0.314.0(solid-js@1.7.3)
+        specifier: ^0.487.0
+        version: 0.487.0(solid-js@1.7.3)
       mitt:
         specifier: ^3.0.0
         version: 3.0.0
@@ -1022,8 +1022,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucide-solid@0.314.0:
-    resolution: {integrity: sha512-j0+Y2LxmCJsKFVUOl90tbfu+mQzC3Sg0wHv9xQtbopoKNYzyXGO8n74dWqpDO8zKYb7MOqfhqsuSeSXABXMt+A==}
+  lucide-solid@0.487.0:
+    resolution: {integrity: sha512-NkmNhrXiHbeihY1kXMFQBlFP2gxdJMI9Jh7/pvrJmX5q1eMgmz+5bLsckwbbnr2RUiCtl2iIk8gRhQ79LRel/Q==}
     peerDependencies:
       solid-js: ^1.4.7
 
@@ -2451,7 +2451,7 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucide-solid@0.314.0(solid-js@1.7.3):
+  lucide-solid@0.487.0(solid-js@1.7.3):
     dependencies:
       solid-js: 1.7.3
 
