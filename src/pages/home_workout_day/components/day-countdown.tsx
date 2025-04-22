@@ -11,7 +11,6 @@ export function DayCountdown(props: { store: CountdownViewModel; onStart?: () =>
   let $seconds2: undefined | HTMLDivElement;
   let $ms1: undefined | HTMLDivElement;
   let $ms2: undefined | HTMLDivElement;
-  let $ms3: undefined | HTMLDivElement;
 
   const [state, setState] = createSignal(props.store.state);
   if (props.onCompleted) {
@@ -37,9 +36,6 @@ export function DayCountdown(props: { store: CountdownViewModel; onStart?: () =>
     }
     if ($ms2) {
       $ms2.innerText = v.ms2;
-    }
-    if ($ms3) {
-      $ms3.innerText = v.ms3;
     }
     // set(props.store.state);
   });
@@ -113,14 +109,6 @@ export function DayCountdown(props: { store: CountdownViewModel; onStart?: () =>
           ref={$ms2}
         >
           {state().ms2}
-        </div>
-        <div
-          classList={{
-            "text-center w-[12px]": true,
-          }}
-          ref={$ms3}
-        >
-          {state().ms3}
         </div>
       </div>
     </div>

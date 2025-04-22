@@ -19,17 +19,41 @@ export function createWorkoutDay(body: { workout_plan_id?: number; start_when_cr
   return request.post<{ id: number }>("/api/workout_day/create", body);
 }
 
+export type WorkoutDayUpdateBody = {
+  id: number | string;
+  step_idx: number;
+  set_idx: number;
+  data: {
+    step_idx: number;
+    set_idx: number;
+    act_idx: number;
+    action_id: number | string;
+    /** 计数数量 */
+    reps: number;
+    /** 计数单位 */
+    reps_unit: string;
+    /** 重量数值 */
+    weight: number;
+    /** 重量单位 */
+    weight_unit: string;
+    /** 是否完成 */
+    completed: boolean;
+    /** 完成时间 */
+    completed_at: number;
+    /** 休息时间没用完 */
+    remaining_time: number;
+    /** 休息时间超出多少 */
+    exceed_time: number;
+    /** 备注 */
+    remark?: string;
+  }[];
+};
 /**
  * 更新训练日内容
  * @param body
  * @returns
  */
-export function updateWorkoutDay(body: {
-  id: number | string;
-  step_idx?: number;
-  set_idx?: number;
-  data?: Record<string, any>;
-}) {
+export function updateWorkoutDay(body: WorkoutDayUpdateBody) {
   return request.post("/api/workout_day/update_steps", {
     id: Number(body.id),
     data: JSON.stringify({
@@ -45,8 +69,15 @@ export function updateWorkoutDay(body: {
  * @param body
  * @returns
  */
-export function finishWorkoutDay(body: { id: number }) {
-  return request.post("/api/workout_day/finish", body);
+export function completeWorkoutDay(body: { id: string }) {
+  return request.post("/api/workout_day/finish", {
+    id: Number(body.id),
+    // data: JSON.stringify({
+    //   step_idx: body.step_idx,
+    //   set_idx: body.set_idx,
+    //   data: body.data,
+    // }),
+  });
 }
 
 /**
@@ -100,11 +131,16 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
           step_idx: number;
           set_idx: number;
           act_idx: number;
+          action_id: number;
           reps: number;
           reps_unit: SetValueUnit;
           weight: number;
           weight_unit: SetValueUnit;
           completed: boolean;
+          completed_at: number;
+          remark: string;
+          remaining_time: number;
+          exceed_time: number;
         }[];
       }>(workout_day.pending_steps);
       if (r.error) {
@@ -167,7 +203,7 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
             step_note: step.note,
           });
         }
-        if (step.set_type === WorkoutPlanSetType.Combo) {
+        if (step.set_type === WorkoutPlanSetType.Super) {
           result.push({
             id: step.id,
             title: step.title,
@@ -189,85 +225,12 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
                 idx: action.idx,
                 weight: action.weight,
                 reps: action.reps,
-                unit: action.unit,
+                reps_unit: action.unit,
                 rest_interval: action.rest_duration,
                 note: action.note,
               };
             }),
             sets3: [],
-            step_note: step.note,
-          });
-        }
-        if (step.set_type === WorkoutPlanSetType.Free) {
-          result.push({
-            id: step.id,
-            title: step.title,
-            type: step.type,
-            idx: step.idx,
-            set_type: step.set_type,
-            set_count: step.set_count,
-            set_rest_duration: step.set_rest_duration,
-            action: { id: 0, zh_name: "" },
-            reps: 12,
-            unit: "次",
-            weight: "12RM",
-            note: "",
-            actions: [],
-            sets3: (() => {
-              const sets: Record<
-                number,
-                {
-                  actions: {
-                    id?: number | string;
-                    action_id: number | string;
-                    action: { id: number | string; zh_name: string };
-                    idx: number;
-                    set_idx: number;
-                    weight: string;
-                    reps: number;
-                    unit: string;
-                    rest_duration: number;
-                    note: string;
-                  }[];
-                }
-              > = {};
-              for (let i = 0; i < step.actions.length; i += 1) {
-                const action = step.actions[i];
-                sets[action.set_idx] = sets[action.set_idx] || {
-                  actions: [],
-                };
-                sets[action.set_idx].actions.push({
-                  id: action.id,
-                  action_id: action.action_id,
-                  action: { id: Number(action.action_id), zh_name: action.action.zh_name },
-                  idx: action.idx,
-                  set_idx: action.set_idx,
-                  weight: action.weight,
-                  reps: action.reps,
-                  unit: action.unit,
-                  rest_duration: action.rest_duration,
-                  note: action.note,
-                });
-              }
-              return Object.values(sets).map((set) => {
-                return {
-                  actions: set.actions.map((action) => {
-                    return {
-                      id: action.id,
-                      action: { id: Number(action.action_id), zh_name: action.action.zh_name },
-                      idx: action.idx,
-                      weight: action.weight,
-                      reps: action.reps,
-                      unit: action.unit,
-                      rest_interval: action.rest_duration,
-                      note: action.note,
-                    };
-                  }),
-                  set_rest_interval: 0,
-                  note: "",
-                };
-              });
-            })(),
             step_note: step.note,
           });
         }

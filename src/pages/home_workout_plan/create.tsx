@@ -38,12 +38,14 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     },
   };
   const methods = {
-    calc_estimated_duration(v: { set_count: string; actions: { reps: number; reps_unit: SetValueUnit }[] }[]) {
+    calc_estimated_duration(
+      v: { set_count: string; set_rest_duration: string; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
+    ) {
       const actions = v;
       let duration = 0;
       for (let i = 0; i < actions.length; i += 1) {
         const set = actions[i];
-        let set_duration = 0;
+        let set_duration = Number(set.set_rest_duration);
         for (let j = 0; j < set.actions.length; j += 1) {
           const act = set.actions[j];
           const reps = act.reps;
@@ -153,8 +155,8 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         })(),
         points: "",
         suggestions: "",
-        muscle_ids: Object.values(muscle_ids).join(","),
-        equipment_ids: Object.values(equipment_ids).join(","),
+        muscle_ids: Object.keys(muscle_ids).join(","),
+        equipment_ids: Object.keys(equipment_ids).join(","),
         estimated_duration: value_estimated_duration,
       };
       const r2 = await request.workout_plan.create.run(body);
@@ -624,7 +626,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
         <div class="h-[48px]"></div>
       </div>
       <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen">
+        <div class="w-screen bg-white" style={{ "z-index": 999 }}>
           <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
         </div>
       </Sheet>

@@ -31,6 +31,7 @@ export type WorkoutPlanStepResp = {
   set_type: WorkoutPlanSetType;
   set_count: number;
   set_rest_duration: number;
+  set_weight: string;
   actions: {
     id?: number | string;
     action_id: number | string;
@@ -56,7 +57,7 @@ export type WorkoutPlanActionPayload = {
   idx: number;
   weight: string;
   reps: number;
-  unit: string;
+  reps_unit: string;
   rest_interval: number;
   note: string;
 };

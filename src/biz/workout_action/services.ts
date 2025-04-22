@@ -8,6 +8,7 @@ import { parseJSONStr } from "@/utils";
 
 import { WorkoutActionSteps, WorkoutActionProblems } from "./types";
 import { WorkoutActionType } from "./constants";
+import dayjs from "dayjs";
 
 type PartialWorkoutAction = {
   id: number | string;
@@ -236,4 +237,73 @@ export function updateWorkoutAction(body: {
   regressed_action_ids: string;
 }) {
   return request.post<void>("/api/workout_action/update", body);
+}
+
+export function fetchWorkoutActionHistoryList(params: FetchParams) {
+  return request.post<
+    ListResponseWithCursor<{
+      id: number;
+      reps: number;
+      reps_unit: string;
+      weight: number;
+      weight_unit: string;
+      remark: string;
+      extra_medias: string;
+      created_at: string;
+      workout_day_id: number;
+      student_id: number;
+      action_id: number;
+      action: {
+        id: number;
+        status: number;
+        name: string;
+        zh_name: string;
+        alias: string;
+        overview: string;
+        type: string;
+        level: number;
+        tags1: string;
+        tags2: string;
+        details: string;
+        points: string;
+        problems: string;
+        created_at: string;
+        updated_at: string;
+        muscle_ids: string;
+        equipment_ids: string;
+        alternative_action_ids: string;
+        advanced_action_ids: string;
+        regressed_action_ids: string;
+        owner_id: number;
+      };
+    }>
+  >("/api/workout_action_history/list", {
+    page: params.page,
+    page_size: params.pageSize,
+  });
+}
+
+export function fetchWorkoutActionHistoryListProcess(r: TmpRequestResp<typeof fetchWorkoutActionHistoryList>) {
+  if (r.error) {
+    return Result.Err(r.error.message);
+  }
+  const { page_size, list, total } = r.data;
+  return Result.Ok({
+    page_size,
+    list: list.map((v) => {
+      return {
+        id: v.id,
+        reps: v.reps,
+        reps_unit: v.reps_unit,
+        weight: v.weight,
+        weight_unit: v.weight_unit,
+        created_at: dayjs(new Date(v.created_at)).format("YYYY-MM-DD HH:mm"),
+        action: {
+          id: v.action.id,
+          zh_name: v.action.zh_name,
+        },
+      };
+    }),
+    total,
+  });
 }

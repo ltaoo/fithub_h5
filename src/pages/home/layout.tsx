@@ -2,7 +2,7 @@
  * @file 后台/首页布局
  */
 import { For, JSX, createSignal } from "solid-js";
-import { Users, Home, Bike, BicepsFlexed } from "lucide-solid";
+import { Users, Home, Bike, BicepsFlexed, User } from "lucide-solid";
 
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { PageKeys } from "@/store/routes";
@@ -36,7 +36,7 @@ export const HomeLayout: ViewComponent = (props) => {
       url: "root.home_layout.index",
     },
     {
-      text: "训练计划",
+      text: "计划",
       icon: <BicepsFlexed class="w-6 h-6" />,
       url: "root.home_layout.workout_plan_layout.recommend",
     },
@@ -44,6 +44,11 @@ export const HomeLayout: ViewComponent = (props) => {
       text: "学员",
       icon: <Users class="w-6 h-6" />,
       url: "root.home_layout.student_list",
+    },
+    {
+      text: "我的",
+      icon: <User class="w-6 h-6" />,
+      url: "root.home_layout.mine",
     },
   ]);
   const [curRouteName, setCurRouteName] = createSignal(history.$router.name);
@@ -138,9 +143,9 @@ function Menu(
     >
       <div class="flex flex-col items-center">
         <div class="w-6 h-6">{props.icon}</div>
-        <div class="flex-1 text-slate-800">
+        <div class="flex-1 mt-1 text-slate-800">
           <div class="relative inline-block">
-            {props.children}
+            <div class="text-sm">{props.children}</div>
             <Show when={props.badge}>
               <div class="absolute right-[-8px] top-0 w-2 h-2 rounded-full bg-red-500" />
             </Show>

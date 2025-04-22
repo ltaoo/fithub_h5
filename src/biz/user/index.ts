@@ -117,7 +117,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     this.nickname = nickname;
     this.avatar_url = avatar_url;
     this.token = token;
-    this.emit(Events.Login, { ...this.state, token: `Bearer ${this.token}` });
+    this.emit(Events.Login, { ...this.state, token: this.token });
     return Result.Ok(r.data);
   }
   /** 退出登录 */
@@ -149,7 +149,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     this.avatar_url = avatar_url;
     this.token = token;
     this.needRegister = false;
-    this.emit(Events.Login, { ...this.state, token: `Bearer ${this.token}` });
+    this.emit(Events.Login, { ...this.state, token: this.token });
     return Result.Ok(r.data);
   }
   async fetchProfile() {

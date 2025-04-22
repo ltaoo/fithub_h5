@@ -5,16 +5,27 @@ import { useViewModelStore } from "@/hooks";
 import { CountdownViewModel } from "@/biz/countdown";
 import { base, Handler } from "@/domains/base";
 
-export function SetCountdownViewModel(props: { countdown: number; finished: boolean }) {
+export function SetCountdownViewModel(props: {
+  countdown: number;
+  remaining: number;
+  exceed: number;
+  finished: boolean;
+}) {
   const ui = {
-    $countdown1: CountdownViewModel({ countdown: props.countdown, finished: props.finished }),
-    $countdown2: CountdownViewModel({}),
+    $countdown1: CountdownViewModel({ countdown: props.countdown, time: props.remaining, finished: props.finished }),
+    $countdown2: CountdownViewModel({ time: props.exceed }),
   };
 
   let _running = false;
   let _state = {
     get running() {
       return _running;
+    },
+    get remaining() {
+      return ui.$countdown1.time;
+    },
+    get exceed() {
+      return ui.$countdown2.time;
     },
   };
   enum Events {
@@ -77,7 +88,6 @@ export function SetCountdownView(props: {
   let $seconds2: undefined | HTMLDivElement;
   let $ms1: undefined | HTMLDivElement;
   let $ms2: undefined | HTMLDivElement;
-  let $ms3: undefined | HTMLDivElement;
   let $sub_minutes1: undefined | HTMLDivElement;
   let $sub_minutes2: undefined | HTMLDivElement;
   let $sub_seconds1: undefined | HTMLDivElement;
@@ -91,7 +101,6 @@ export function SetCountdownView(props: {
   // }
 
   props.store.ui.$countdown1.onStateChange((v) => {
-    setCountdown1State(v);
     // console.log("[COMPONENT]set-countdown - update")
     if ($minutes1) {
       $minutes1.innerText = v.minutes1;
@@ -111,10 +120,7 @@ export function SetCountdownView(props: {
     if ($ms2) {
       $ms2.innerText = v.ms2;
     }
-    if ($ms3) {
-      $ms3.innerText = v.ms3;
-    }
-    // set(props.store.state);
+    setCountdown1State(v);
   });
   props.store.ui.$countdown2.onStateChange((v) => {
     if ($sub_minutes1) {
@@ -129,6 +135,7 @@ export function SetCountdownView(props: {
     if ($sub_seconds2) {
       $sub_seconds2.innerText = v.seconds2;
     }
+    setCountdown2State(v);
   });
 
   return (
@@ -211,15 +218,6 @@ export function SetCountdownView(props: {
           ref={$ms2}
         >
           {countdown1().ms2}
-        </div>
-        <div
-          classList={{
-            "text-center": true,
-            "w-[20px]": state().running,
-          }}
-          ref={$ms3}
-        >
-          {countdown1().ms3}
         </div>
       </div>
       <div class="flex items-center gap-2 px-4">

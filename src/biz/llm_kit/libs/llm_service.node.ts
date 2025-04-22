@@ -50,7 +50,7 @@ export function LLMServiceInNode(props: LLMServiceInNodeProps): LLMService {
         choices: { message: { content: string } }[];
       }>(_payload.apiProxyAddress, body, {
         headers: {
-          Authorization: `Bearer ${_payload.apiKey}`,
+          Authorization: _payload.apiKey,
         },
       });
       if (r.error) {

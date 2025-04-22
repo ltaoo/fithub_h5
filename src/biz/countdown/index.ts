@@ -5,6 +5,7 @@ import { base, Handler } from "@/domains/base";
 
 export function CountdownViewModel(props: {
   countdown?: number;
+  time?: number;
   finished?: boolean;
   onRefresh?: (text: string) => void;
 }) {
@@ -12,6 +13,9 @@ export function CountdownViewModel(props: {
     start(started_at: number) {
       if (_is_running) {
         return;
+      }
+      if (_is_interrupt && props.countdown !== undefined) {
+        _time = props.countdown;
       }
       _started_at = started_at;
       _is_pending = false;
@@ -48,6 +52,7 @@ export function CountdownViewModel(props: {
         return;
       }
       _is_running = false;
+      _is_interrupt = true;
       cancelAnimationFrame(_animation_frame_id);
       bus.emit(Events.Stop);
       bus.emit(Events.Completed);
@@ -97,9 +102,13 @@ export function CountdownViewModel(props: {
   let _is_pending = props.finished ? false : true;
   let _is_running = false;
   let _is_finished = props.finished ?? false;
+  let _is_interrupt = false;
 
   let _started_at = 0;
   let _time = (() => {
+    if (props.time) {
+      return props.time;
+    }
     if (_is_finished) {
       return 0;
     }
@@ -243,6 +252,9 @@ export function CountdownViewModel(props: {
     setStartedAt: methods.setStartedAt,
     addSeconds: methods.addSeconds,
     subSeconds: methods.subSeconds,
+    get time() {
+      return _time;
+    },
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);
     },

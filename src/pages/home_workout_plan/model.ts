@@ -68,187 +68,6 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "clie
       return Result.Err(r.error);
     }
     const values = r.data;
-
-    const body = {
-      title: values.title,
-      overview: values.overview,
-      tags: values.tags.join(","),
-      level: values.level,
-      steps: (() => {
-        const result: WorkoutPlanStepBody[] = [];
-        for (let i = 0; i < values.steps.length; i += 1) {
-          const step = values.steps[i];
-          result.push({
-            id: step.id,
-            title: step.title,
-            type: step.type ?? WorkoutPlanStepType.Strength,
-            idx: i,
-            set_type: step.set_type ?? WorkoutPlanSetType.Normal,
-            set_count: step.set_count,
-            set_rest_duration: step.set_rest_duration,
-            actions: (() => {
-              if (step.set_type === WorkoutPlanSetType.Normal) {
-                // 常规组
-                return [
-                  {
-                    id: step.action_id,
-                    action_id: step.action ? step.action.id : 0,
-                    idx: 0,
-                    set_idx: 0,
-                    reps: step.reps,
-                    unit: step.unit ?? "次",
-                    weight: step.weight,
-                    rest_duration: step.set_rest_duration,
-                    note: step.note,
-                  },
-                ];
-              }
-              if (step.set_type === WorkoutPlanSetType.Combo) {
-                // 超级组
-                return step.actions.map((action, index) => ({
-                  id: action.id,
-                  action_id: action.action ? action.action.id : 0,
-                  idx: index,
-                  set_idx: 0,
-                  reps: action.reps,
-                  unit: action.unit ?? "次",
-                  weight: action.weight,
-                  rest_duration: action.rest_duration,
-                  note: action.note,
-                }));
-              }
-              if (step.set_type === WorkoutPlanSetType.Free) {
-                // 自由设置
-                const r = step.sets3
-                  .map((set, index) => {
-                    return set.actions.map((action, idx) => ({
-                      id: action.id,
-                      action_id: action.action ? action.action.id : 0,
-                      idx: idx,
-                      set_idx: index,
-                      reps: action.reps,
-                      unit: action.unit ?? "次",
-                      weight: action.weight,
-                      rest_duration: action.rest_duration,
-                      note: action.note,
-                    }));
-                  })
-                  .reduce((acc, actions) => {
-                    return [...acc, ...actions];
-                  }, [] as WorkoutPlanStepBody["actions"]);
-                return r;
-              }
-              return [];
-            })(),
-            note: step.step_note,
-          });
-        }
-        return result;
-      })(),
-      details: (() => {
-        const groups: Partial<
-          Record<
-            WorkoutPlanStepType,
-            {
-              steps: WorkoutPlanPreviewPayload["timeline"][number]["steps"];
-            }
-          >
-        > = {};
-        const result: WorkoutPlanStepBody[] = [];
-        for (let i = 0; i < values.steps.length; i += 1) {
-          const step = values.steps[i];
-          const step_type = step.type ?? WorkoutPlanStepType.Strength;
-          groups[step_type] = groups[step_type] || {
-            steps: [],
-          };
-          groups[step_type]!.steps.push({
-            title: step.title,
-            tags: [],
-            sets_count: step.set_count,
-            set_type: step.set_type ?? WorkoutPlanSetType.Normal,
-            actions: (() => {
-              if (step.set_type === WorkoutPlanSetType.Normal) {
-                // 单个动作
-                return [
-                  {
-                    action_name: step.action?.zh_name ?? "",
-                    reps: step.reps,
-                    unit: step.unit ?? "次",
-                    rest_duration: step.set_rest_duration,
-                    note: step.note,
-                  },
-                ];
-              }
-              if (step.set_type === WorkoutPlanSetType.Combo) {
-                // 多动作
-                return step.actions.map((act, index) => ({
-                  action_name: act.action?.zh_name ?? "",
-                  reps: act.reps,
-                  unit: act.unit ?? "次",
-                  rest_duration: act.rest_duration,
-                  note: act.note,
-                }));
-              }
-              if (step.set_type === WorkoutPlanSetType.Free) {
-                // 自由设置
-                const r = step.sets3
-                  .map((set, index) => {
-                    return set.actions.map((act, idx) => ({
-                      action_name: act.action?.zh_name ?? "",
-                      reps: act.reps,
-                      unit: act.unit ?? "次",
-                      rest_duration: act.rest_duration,
-                      note: act.note,
-                    }));
-                  })
-                  .reduce((acc, actions) => {
-                    return [...acc, ...actions];
-                  }, []);
-                return r;
-              }
-              return [];
-            })(),
-            sets: [],
-            note: step.step_note,
-          });
-        }
-        const stats = Object.values(groups).reduce(
-          (acc, group) => {
-            const sets_count = group.steps.reduce((acc, step) => {
-              return acc + step.sets_count;
-            }, 0);
-            const actions_count = group.steps.reduce((acc, step) => {
-              return acc + step.actions.length;
-            }, 0);
-            return {
-              total_sets: acc.total_sets + sets_count,
-              total_actions: acc.total_actions + actions_count,
-            };
-          },
-          { total_sets: 0, total_actions: 0 }
-        );
-        const list = Object.keys(groups).map((key) => {
-          const { steps } = groups[key as WorkoutPlanStepType]!;
-          return {
-            text: WorkoutPlanStepTypeTextMap[key as WorkoutPlanStepType],
-            steps,
-          };
-        });
-        return JSON.stringify({
-          title: values.title,
-          overview: values.overview,
-          timeline: list,
-          sets_count: stats.total_sets,
-          actions_count: stats.total_actions,
-        });
-      })(),
-      muscle_ids: values.muscles.map((item) => item.id).join(","),
-      equipment_ids: values.equipments.map((item) => item.id).join(","),
-      estimated_duration: values.estimated_duration,
-      points: JSON.stringify(values.points),
-      suggestions: JSON.stringify(values.suggestions),
-    };
-    return Result.Ok(body);
   }
   const action_select_vm_list: WorkoutActionSelectViewModel[] = [];
   const $action_unit = () =>
@@ -559,7 +378,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "clie
                       field.hideField("actions");
                       field.hideField("sets3");
                     }
-                    if (value === WorkoutPlanSetType.Combo) {
+                    if (value === WorkoutPlanSetType.Super) {
                       field.showField("title");
                       field.showField("actions");
                       field.showField("set_count");
@@ -572,7 +391,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "clie
                       field.hideField("note");
                       field.hideField("sets3");
                     }
-                    if (value === WorkoutPlanSetType.Free) {
+                    if (value === WorkoutPlanSetType.Super) {
                       field.showField("title");
                       field.showField("sets3");
 
@@ -824,7 +643,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "clie
     }
     const field = $values.fields.steps.append();
     field.setValue({
-      set_type: WorkoutPlanSetType.Combo,
+      set_type: WorkoutPlanSetType.Super,
       type: WorkoutPlanStepType.Strength,
       title: selected_actions.map((act) => act.zh_name).join("+") + "超级组",
       actions: selected_actions.map((action) => ({

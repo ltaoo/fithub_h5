@@ -19,55 +19,6 @@ const configure = {
               require: ["login"],
             },
           },
-          muscle: {
-            title: "肌肉列表",
-            pathname: "/home/muscle",
-            options: {
-              require: ["login"],
-            },
-          },
-          equipment: {
-            title: "器械列表",
-            pathname: "/home/equipment",
-            options: {
-              require: ["login"],
-            },
-          },
-          action_list: {
-            title: "动作列表",
-            pathname: "/home/actions",
-            options: {
-              require: ["login"],
-            },
-          },
-          action_create: {
-            title: "动作创建",
-            pathname: "/home/action_create",
-            options: {
-              require: ["login"],
-            },
-          },
-          action_update: {
-            title: "动作编辑",
-            pathname: "/home/action_update",
-            options: {
-              require: ["login"],
-            },
-          },
-          workout_plan_list: {
-            title: "训练计划列表",
-            pathname: "/home/workout_plans",
-            options: {
-              require: ["login"],
-            },
-          },
-          workout_plan_update: {
-            title: "训练计划编辑",
-            pathname: "/home/workout_plan_update",
-            options: {
-              require: ["login"],
-            },
-          },
           workout_plan_layout: {
             title: "训练计划推荐",
             pathname: "/home/workout_plan",
@@ -96,6 +47,13 @@ const configure = {
           student_list: {
             title: "学员列表",
             pathname: "/home/students",
+            options: {
+              require: ["login"],
+            },
+          },
+          mine: {
+            title: "我的",
+            pathname: "/home/mine",
             options: {
               require: ["login"],
             },
@@ -156,6 +114,55 @@ const configure = {
         pathname: "/fake_chat_profile",
         options: {
           require: [],
+        },
+      },
+      muscle: {
+        title: "肌肉列表",
+        pathname: "/home/muscle",
+        options: {
+          require: ["login"],
+        },
+      },
+      equipment: {
+        title: "器械列表",
+        pathname: "/home/equipment",
+        options: {
+          require: ["login"],
+        },
+      },
+      action_list: {
+        title: "动作列表",
+        pathname: "/home/actions",
+        options: {
+          require: ["login"],
+        },
+      },
+      action_create: {
+        title: "动作创建",
+        pathname: "/home/action_create",
+        options: {
+          require: ["login"],
+        },
+      },
+      action_update: {
+        title: "动作编辑",
+        pathname: "/home/action_update",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_plan_list: {
+        title: "训练计划列表",
+        pathname: "/home/workout_plans",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_plan_update: {
+        title: "训练计划编辑",
+        pathname: "/home/workout_plan_update",
+        options: {
+          require: ["login"],
         },
       },
       login: {

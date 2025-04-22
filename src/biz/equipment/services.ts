@@ -11,7 +11,7 @@ import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
 import { parseJSONStr } from "@/utils";
 
-export function fetchEquipmentList() {
+export function fetchEquipmentList(params: { ids: number[] }) {
   return request.post<{
     list: {
       id: number | string;
@@ -21,7 +21,9 @@ export function fetchEquipmentList() {
       media: string;
     }[];
     total: number;
-  }>("/api/equipment/list", {});
+  }>("/api/equipment/list", {
+    ids: params.ids,
+  });
 }
 
 export function fetchEquipmentListProcess(r: TmpRequestResp<typeof fetchEquipmentList>) {

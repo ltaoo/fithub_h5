@@ -120,7 +120,7 @@ export function Sheet(props: SheetProps) {
 
   return (
     <DialogPrimitive.Portal store={props.store}>
-      <div class="fixed w-full bottom-0">
+      <div class="fixed w-full bottom-0" style={{ "z-index": 9999 }}>
         {/* <Overlay store={props.store} /> */}
         <DialogPrimitive.Overlay
           store={vm}

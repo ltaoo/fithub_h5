@@ -35,8 +35,8 @@ export function WorkoutPlanRecommendLayoutModel(props: ViewComponentProps) {
         },
       ] as { id: PageKeys; text: string }[],
       onMounted() {
-        ui.$tab.select(0);
-        props.history.push("root.home_layout.workout_plan_layout.recommend");
+        // ui.$tab.select(0);
+        // props.history.push("root.home_layout.workout_plan_layout.recommend");
       },
       onChange(value) {
         props.history.push(value.id);
@@ -82,7 +82,9 @@ export function WorkoutPlanRecommendLayoutModel(props: ViewComponentProps) {
     state: _state,
     setFilter,
     setSearch,
-    ready() {},
+    ready() {
+      const name = props.view.name;
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

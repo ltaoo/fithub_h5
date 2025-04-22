@@ -1,4 +1,5 @@
 import { request } from "@/biz/requests";
+import { FetchParams } from "@/domains/list/typing";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 
@@ -12,7 +13,7 @@ export function createMuscle(params: {
   return request.post<void>("/api/muscle/create", params);
 }
 
-export function fetchMuscleList() {
+export function fetchMuscleList(params: { ids: number[] }) {
   return request.post<{
     list: {
       id: number | string;
@@ -23,7 +24,9 @@ export function fetchMuscleList() {
       features: string;
     }[];
     total: number;
-  }>("/api/muscle/list", {});
+  }>("/api/muscle/list", {
+    ids: params.ids,
+  });
 }
 export function fetchMuscleListProcess(r: TmpRequestResp<typeof fetchMuscleList>) {
   if (r.error) {
