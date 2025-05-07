@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+.bottom-menu__indicator {
+  width: 100px;
+  box-sizing: border-box;
+  aspect-ratio: 1 / 1;
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  background-color: darkcyan;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  /* border: 6px solid #1d1e22; */
+  transform: translateX(-50%);
+  /* transition: all 0.4s linear; */
+  z-index: 1;
+}
+
 .__a {
   animation: __a 0.1s;
 }

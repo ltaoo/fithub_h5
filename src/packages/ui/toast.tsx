@@ -45,7 +45,7 @@ const Content = (
   const { store, enterClassName, exitClassName } = props;
 
   return (
-    <div class="fixed z-[99] left-[50%] translate-x-[-50%] top-60 w-120 h-120 ">
+    <div class="fixed z-[99999] left-[50%] translate-x-[-50%] top-60 w-120 h-120 ">
       <Presence
         store={store.present}
         class={cn(props.class)}

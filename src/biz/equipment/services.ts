@@ -11,10 +11,10 @@ import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
 import { parseJSONStr } from "@/utils";
 
-export function fetchEquipmentList(params: { ids: number[] }) {
+export function fetchEquipmentList(params: Partial<{ ids: number[] }> = {}) {
   return request.post<{
     list: {
-      id: number | string;
+      id: number;
       name: string;
       zh_name: string;
       overview: string;

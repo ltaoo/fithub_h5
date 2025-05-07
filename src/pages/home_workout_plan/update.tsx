@@ -79,46 +79,8 @@ function HomeWorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
       },
     }),
     $preview_dialog: new DialogCore({ footer: false }),
-    $preview: new ButtonCore({
-      async onClick() {
-        const r = await $model.toBody();
-        if (r.error) {
-          props.app.tip({
-            text: [r.error.message],
-          });
-          return;
-        }
-        _preview = JSON.parse(r.data.details);
-        bus.emit(Events.StateChange, { ..._state });
-        ui.$preview_dialog.show();
-      },
-    }),
     $submit: new ButtonCore({
-      async onClick() {
-        const r = await $model.toBody();
-        if (r.error) {
-          props.app.tip({
-            text: [r.error.message],
-          });
-          return;
-        }
-        const body = r.data;
-        console.log("[PAGE]home_workout_plan/update - before update.run", body);
-        const r2 = await request.workout_plan.update.run({
-          ...body,
-          id: workout_plan_id,
-        });
-        if (r2.error) {
-          props.app.tip({
-            text: [r2.error.message],
-          });
-          return;
-        }
-        props.app.tip({
-          text: ["更新成功"],
-        });
-        props.history.back();
-      },
+      async onClick() {},
     }),
   };
 
@@ -204,9 +166,6 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
             <Button variant="subtle" store={vm.ui.$back}>
               返回
             </Button>
-            <Button variant="subtle" store={vm.ui.$preview}>
-              预览
-            </Button>
             <Button store={vm.ui.$submit}>提交</Button>
           </div>
         </div>
@@ -251,20 +210,6 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
               </ListView>
             </ScrollView>
           </div>
-        </div>
-      </Dialog>
-      <Dialog store={vm.ui.$preview_dialog}>
-        <div class="w-[360px]">
-          <Show
-            when={state().preview}
-            fallback={
-              <div class="flex justify-center items-center h-full">
-                <Loader class="animate-spin" />
-              </div>
-            }
-          >
-            <WorkoutPlanPreviewCard {...state().preview!} />
-          </Show>
         </div>
       </Dialog>
     </>

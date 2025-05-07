@@ -28,6 +28,7 @@ export const Presence = (
           state().exit && exitClassName ? exitClassName : "",
           props.class
         )}
+        // classList={props.classList}
         role="presentation"
         data-state={state().visible ? "open" : "closed"}
         // onAnimationEnd={() => {

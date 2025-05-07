@@ -68,6 +68,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "clie
       return Result.Err(r.error);
     }
     const values = r.data;
+    return values;
   }
   const action_select_vm_list: WorkoutActionSelectViewModel[] = [];
   const $action_unit = () =>

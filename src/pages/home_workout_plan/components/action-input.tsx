@@ -3,7 +3,7 @@ import { MoreHorizontal } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
 import { Input } from "@/components/ui";
-import { SetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
 import { base, Handler } from "@/domains/base";
 import { InputCore, SelectCore } from "@/domains/ui";
 import { ArrayFieldCore, ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
@@ -55,11 +55,12 @@ function WorkoutActionInput() {
 }
 type WorkoutActionInput = ReturnType<typeof WorkoutActionInput>;
 
-export function ActionInputViewModel(props: { defaultValue?: {} }) {
+export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () => void }) {
   const ui = {
     $input_set_count: new InputCore({ defaultValue: "3" }),
     $input_set_rest: new InputCore({ defaultValue: "90" }),
     $input_set_weight: new InputCore({ defaultValue: "RPE 6" }),
+    $input_set_note: new InputCore({ defaultValue: "" }),
     //  new InputCore({
     //       defaultValue: "3",
     //     })
@@ -93,19 +94,27 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
               label: "计数单位",
               name: "reps_unit",
               input: new SelectCore({
-                defaultValue: "次",
+                defaultValue: getSetValueUnit("次"),
                 options: [
                   {
                     label: "次",
-                    value: "次",
+                    value: getSetValueUnit("次"),
                   },
                   {
                     label: "秒",
-                    value: "秒",
+                    value: getSetValueUnit("秒"),
                   },
                   {
                     label: "分",
-                    value: "分",
+                    value: getSetValueUnit("分"),
+                  },
+                  {
+                    label: "千米",
+                    value: getSetValueUnit("千米"),
+                  },
+                  {
+                    label: "米",
+                    value: getSetValueUnit("米"),
                   },
                 ],
               }),
@@ -150,11 +159,18 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
     },
     get value() {
       return {
+        /** 组内动作 */
         actions: _set_actions,
+        /** 组类型 */
         set_type: _type,
+        /** 组数 */
         set_count: ui.$input_set_count.value,
+        /** 组间歇 */
         set_rest_duration: ui.$input_set_rest.value,
+        /** 组负荷，一般用于 HIIT */
         set_weight: ui.$input_set_weight.value,
+        /** 动作说明 */
+        set_note: ui.$input_set_note.value,
       };
     },
     get action() {
@@ -177,6 +193,19 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  ui.$sets.onChange(async (changed) => {
+    const field = ui.$sets.mapFieldWithIndex(changed.idx);
+    if (field) {
+      const r = await field.field.validate();
+      if (r.data) {
+        const value = r.data;
+        _set_actions[changed.idx].reps = Number(value.reps);
+        _set_actions[changed.idx].reps_unit = value.reps_unit!;
+        _set_actions[changed.idx].weight = value.weight;
+      }
+    }
+  });
+
   return {
     shape: "input" as const,
     ui,
@@ -196,11 +225,35 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
     setType(type: WorkoutPlanSetType) {
       _type = type;
       if ([WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(type)) {
-        ui.$sets.append();
-        // ui.$sets.showField("rest_duration");
+        this.appendSet();
+        return;
       }
       if ([WorkoutPlanSetType.HIIT].includes(type)) {
         ui.$sets.showField("rest_duration");
+        ui.$sets.setFieldValue("reps_unit", getSetValueUnit("秒"));
+        ui.$sets.setFieldValue("reps", "30");
+        _set_actions = _set_actions.map((act) => {
+          return {
+            action: act.action,
+            reps: 30,
+            reps_unit: getSetValueUnit("秒"),
+            weight: act.weight,
+            rest_duration: act.rest_duration,
+          };
+        });
+      } else {
+        ui.$sets.hideField("rest_duration");
+        ui.$sets.setFieldValue("reps_unit", "次");
+        ui.$sets.setFieldValue("reps", "12");
+        _set_actions = _set_actions.map((act) => {
+          return {
+            action: act.action,
+            reps: 12,
+            reps_unit: getSetValueUnit("次"),
+            weight: act.weight,
+            rest_duration: act.rest_duration,
+          };
+        });
       }
       bus.emit(Events.StateChange, { ..._state });
     },
@@ -208,18 +261,15 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
       console.log("[COMPONENT]action-input - setValue", value);
       if (value.type !== undefined) {
         _type = value.type;
-        if ([WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(_type)) {
-          ui.$sets.showField("rest_duration");
-        }
         if ([WorkoutPlanSetType.HIIT].includes(_type)) {
           ui.$sets.showField("rest_duration");
         }
       }
       (() => {
-        if ([WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(_type)) {
-          return;
-        }
-        if ([WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super].includes(_type)) {
+        // if ([WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(_type)) {
+        //   return;
+        // }
+        if ([WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(_type)) {
           const { nodes_added, nodes_removed, nodes_updated } = diff2(_set_actions, value.actions);
           console.log("[COMPONENT]action-input - setValue diff", nodes_updated);
           for (let i = 0; i < nodes_updated.length; i += 1) {
@@ -248,9 +298,11 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
           for (let i = 0; i < nodes_added.length; i += 1) {
             const node = nodes_added[i];
             const $input = ui.$sets.append();
-            if (_type === WorkoutPlanSetType.Decreasing) {
+            if ([WorkoutPlanSetType.HIIT].includes(_type)) {
               $input.fields.reps_unit.setValue("秒");
+              $input.fields.reps.setValue("30");
               $input.fields.rest_duration.show();
+              // $input.fields.rest_duration.setValue("30");
             }
             $input.setValue(node);
           }
@@ -259,6 +311,55 @@ export function ActionInputViewModel(props: { defaultValue?: {} }) {
       _set_actions = value.actions;
       bus.emit(Events.Change, _state.value);
       bus.emit(Events.StateChange, { ..._state });
+    },
+    /** 递增递减组增加组 */
+    appendSet() {
+      const $first = ui.$sets.fields[0];
+      const $created = ui.$sets.append();
+      const idx = _set_actions.length;
+      const prev_weight = $first.field.value.weight;
+      const value_weight = ((): { type: "RM" | "%1RM" | "RIR" | "RPE" | "unknown"; v: string } => {
+        const r1 = prev_weight.match(/([0-9]{1,})([rR][mM])/);
+        if (r1) {
+          return { type: "RM", v: r1[1] };
+        }
+        const r2 = prev_weight.match(/([0-9]{1,})(%1[rR][mM])/);
+        if (r2) {
+          return { type: "%1RM", v: r2[1] };
+        }
+        const r3 = prev_weight.match(/([0-9]{1,})([rR][iI][rR])/);
+        if (r3) {
+          return { type: "RIR", v: r3[1] };
+        }
+        const r4 = prev_weight.match(/([0-9]{1,})([rR][pP][eE])/);
+        if (r4) {
+          return { type: "RPE", v: r4[1] };
+        }
+        return { type: "unknown", v: prev_weight };
+      })();
+      const next_reps = Number($first.field.value.reps) * (idx + 1);
+      const next_weight = (() => {
+        if (value_weight.type === "RM") {
+          return Number(value_weight.v) * (idx + 1) + "RM";
+        }
+        if (value_weight.type === "%1RM") {
+          return Number(value_weight.v) - (idx + 1) * 5 + "%1RM";
+        }
+        return value_weight.v;
+      })();
+      const created = {
+        action: _set_actions[0].action,
+        reps: next_reps,
+        reps_unit: $first.field.value.reps_unit as SetValueUnit,
+        weight: next_weight,
+        rest_duration: Number($first.field.value.rest_duration),
+        note: "",
+      };
+      _set_actions = [..._set_actions, created];
+      $created.fields.reps.setValue(String(next_reps));
+      $created.fields.weight.setValue(next_weight);
+      bus.emit(Events.Change, _state.value);
+      this.refresh();
     },
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -277,8 +378,8 @@ export type ActionInputViewModel = ReturnType<typeof ActionInputViewModel>;
 function WorkoutActionNameView(props: { name?: string }) {
   return (
     <div class="relative inline-block">
-      <div class="z-10 relative inline-block">{props.name}</div>
-      <div class="z-0 absolute left-2 -bottom-0 w-[110%] h-[8px] bg-blue-300"></div>
+      <div class="absolute left-2 -bottom-0 w-[110%] h-[8px] bg-blue-300"></div>
+      <div class="relative inline-block">{props.name}</div>
     </div>
   );
 }
@@ -297,7 +398,7 @@ function SetActionView(props: {
   store: ObjectFieldCore<{
     action: SingleFieldCore<WorkoutActionInput>;
     reps: SingleFieldCore<InputCore<string>>;
-    reps_unit: SingleFieldCore<SelectCore<string>>;
+    reps_unit: SingleFieldCore<SelectCore<SetValueUnit>>;
     weight: SingleFieldCore<InputCore<string>>;
     rest_duration: SingleFieldCore<InputCore<string>>;
   }>;
@@ -403,8 +504,7 @@ export function ActionInput(props: {
           <div
             class="inline-block px-2 py-1 border rounded"
             onClick={() => {
-              vm.ui.$sets.append();
-              vm.refresh();
+              vm.appendSet();
             }}
           >
             新增组

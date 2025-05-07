@@ -103,7 +103,7 @@ enum Events {
 type TheTypesOfEvents<T> = {
   [Events.LoadingChange]: boolean;
   [Events.BeforeSearch]: void;
-  [Events.AfterSearch]: { params: Search };
+  [Events.AfterSearch]: { params: any };
   [Events.ParamsChange]: FetchParams;
   [Events.DataSourceAdded]: unknown[];
   [Events.DataSourceChange]: T[];
@@ -128,7 +128,7 @@ export class ListCore<
   static commonProcessor = RESPONSE_PROCESSOR;
 
   /** 原始请求方法 */
-  private request: S;
+  request: S;
   // private originalFetch: (...args: unknown[]) => Promise<OriginalResponse>;
   /** 支持请求前对参数进行处理（formToBody） */
   private beforeRequest: ParamsProcessor = (currentParams, prevParams) => {
@@ -498,13 +498,13 @@ export class ListCore<
     this.emit(Events.DataSourceChange, [...this.response.dataSource]);
     return Result.Ok({ ...this.response });
   }
-  async search(params: Search) {
+  async search(...args: Parameters<S["service"]>) {
     this.emit(Events.BeforeSearch);
     const res = await this.fetch({
       ...this.initialParams,
-      ...params,
+      ...args[0],
     });
-    this.emit(Events.AfterSearch, { params });
+    this.emit(Events.AfterSearch, { params: args[0] });
     if (res.error) {
       this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
@@ -520,8 +520,8 @@ export class ListCore<
     this.emit(Events.DataSourceChange, [...this.response.dataSource]);
     return Result.Ok({ ...this.response });
   }
-  searchDebounce = debounce(800, (args: Search) => {
-    return this.search(args);
+  searchDebounce = debounce(800, (...args: Parameters<S["service"]>) => {
+    return this.search(...args);
   });
   /**
    * 使用初始参数请求一次，「重置」操作时调用该方法

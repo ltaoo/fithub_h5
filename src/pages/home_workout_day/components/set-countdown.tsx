@@ -29,10 +29,12 @@ export function SetCountdownViewModel(props: {
     },
   };
   enum Events {
+    Start,
     Stop,
     StateChange,
   }
   type TheTypesOfEvents = {
+    [Events.Start]: true;
     [Events.Stop]: true;
     [Events.StateChange]: typeof _state;
   };
@@ -53,6 +55,7 @@ export function SetCountdownViewModel(props: {
     state: _state,
     start() {
       _running = true;
+      bus.emit(Events.Start);
       ui.$countdown1.start(new Date().valueOf());
       bus.emit(Events.StateChange, { ..._state });
     },
@@ -66,6 +69,9 @@ export function SetCountdownViewModel(props: {
       ui.$countdown2.interrupt();
     },
     ready() {},
+    onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
+      return bus.on(Events.Start, handler);
+    },
     onStop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
       return bus.on(Events.Stop, handler);
     },

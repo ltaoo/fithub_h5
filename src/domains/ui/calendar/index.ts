@@ -12,6 +12,7 @@ type CalendarWeek = {
     time: number;
     is_prev_month: boolean;
     is_next_month: boolean;
+    is_today: boolean;
   }[];
 };
 type CalendarCoreProps = {
@@ -36,7 +37,8 @@ export function CalendarCore(props: CalendarCoreProps) {
     });
     for (let i = 0; i < r.length; i += 1) {
       const { dates } = r[i];
-      _weeks.push({
+      let include_today = false;
+      const week = {
         id: i,
         dates: dates.map((date, i) => {
           // console.log(date.getDate(), date.valueOf(), date.toLocaleString());
@@ -44,17 +46,25 @@ export function CalendarCore(props: CalendarCoreProps) {
           date.setMinutes(0);
           date.setSeconds(0);
           date.setMilliseconds(0);
+          const is_today = date.valueOf() === d.valueOf();
+          if (is_today) {
+            include_today = true;
+          }
           return {
             id: i,
             text: date.getDate().toString(),
             is_prev_month: date.getMonth() < d.getMonth(),
             is_next_month: date.getMonth() > d.getMonth(),
-            is_today: date.valueOf() === d.valueOf(),
+            is_today,
             value: date,
             time: date.valueOf(),
           };
         }),
-      });
+      };
+      _weeks.push(week);
+      if (include_today) {
+        _weekdays = week.dates;
+      }
     }
   }
 
@@ -84,6 +94,7 @@ export function CalendarCore(props: CalendarCoreProps) {
     time: today.valueOf(),
   };
   let _weeks: CalendarWeek[] = [];
+  let _weekdays: CalendarWeek["dates"] = [];
 
   refreshWeeksOfMonth(today);
 
@@ -96,6 +107,9 @@ export function CalendarCore(props: CalendarCoreProps) {
     },
     get year() {
       return _year;
+    },
+    get weekdays() {
+      return _weekdays;
     },
     get weeks() {
       return _weeks;

@@ -2,34 +2,72 @@
  * @file 后台/首页布局
  */
 import { For, JSX, createSignal } from "solid-js";
-import { Users, Home, Bike, BicepsFlexed, User } from "lucide-solid";
+import { Users, Home, Bike, BicepsFlexed, User, Star } from "lucide-solid";
 
+import { pages } from "@/store/views";
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { PageKeys } from "@/store/routes";
+
+import { useViewModel } from "@/hooks";
 import { Show } from "@/packages/ui/show";
 import { KeepAliveRouteView } from "@/components/ui";
+
+import { fetchStartedWorkoutDayList, fetchStartedWorkoutDayListProcess } from "@/biz/workout_day/services";
+import { base, Handler } from "@/domains/base";
+import { RequestCore } from "@/domains/request";
 import { cn } from "@/utils/index";
 
-function Page(props: ViewComponentProps) {
-  const { app, history, client, storage, pages, view } = props;
-}
+function HomeLayoutViewModel(props: ViewComponentProps) {
+  const request = {
+    workout_day: {
+      fetch_started: new RequestCore(fetchStartedWorkoutDayList, {
+        process: fetchStartedWorkoutDayListProcess,
+        client: props.client,
+      }),
+    },
+  };
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    gotoWorkoutDayView() {
+      const list = request.workout_day.fetch_started.response?.list;
+      if (!list) {
+        props.app.tip({
+          text: ["异常操作"],
+        });
+        return;
+      }
+      const first = list[0];
+      if (!first) {
+        props.app.tip({
+          text: ["异常操作"],
+        });
+        return;
+      }
+      props.history.push("root.workout_day", {
+        id: String(first.id),
+      });
+    },
+    gotoWorkoutPrepareView() {
+      props.history.push("root.workout_day_prepare");
+    },
+    setCurMenu() {
+      const name = props.history.$router.name as PageKeys;
+      _route_name = name;
+      const keys = [
+        "root.home_layout.workout_plan_layout.mine",
+        "root.home_layout.workout_plan_layout.interval",
+        "root.home_layout.workout_plan_layout.single",
+      ] as PageKeys[];
+      if (keys.includes(name)) {
+        _route_name = "root.home_layout.workout_plan_layout.recommend";
+      }
+      methods.refresh();
+    },
+  };
 
-export const HomeLayout: ViewComponent = (props) => {
-  const { app, history, client, storage, pages, view } = props;
-
-  const [curSubView, setCurSubView] = createSignal(view.curView);
-  const [subViews, setSubViews] = createSignal(view.subViews);
-
-  view.onSubViewsChange((nextSubViews) => {
-    setSubViews(nextSubViews);
-  });
-  view.onCurViewChange((nextCurView) => {
-    setCurSubView(nextCurView);
-  });
-
-  const [menus, setMenus] = createSignal<
-    { text: string; icon: JSX.Element; badge?: boolean; url?: PageKeys; onClick?: () => void }[]
-  >([
+  const _menus: { text: string; icon: JSX.Element; badge?: boolean; url?: PageKeys; onClick?: () => void }[] = [
     {
       text: "首页",
       icon: <Home class="w-6 h-6" />,
@@ -50,17 +88,65 @@ export const HomeLayout: ViewComponent = (props) => {
       icon: <User class="w-6 h-6" />,
       url: "root.home_layout.mine",
     },
-  ]);
-  const [curRouteName, setCurRouteName] = createSignal(history.$router.name);
+  ];
 
-  history.onRouteChange(({ name }) => {
-    setCurRouteName(name);
+  let _route_name: PageKeys = "root.home_layout.index";
+  let _state = {
+    get views() {
+      return props.view.subViews;
+    },
+    get cur_route_name() {
+      return _route_name;
+    },
+    get has_workout_day() {
+      return !!request.workout_day.fetch_started.response?.list.length;
+    },
+  };
+  enum Events {
+    StateChange,
+  }
+  type TheTypesOfEvents = {
+    [Events.StateChange]: typeof _state;
+  };
+  const bus = base<TheTypesOfEvents>();
+
+  props.view.onSubViewsChange((v) => {
+    bus.emit(Events.StateChange, { ..._state });
+    // setSubViews(nextSubViews);
   });
+  props.view.onCurViewChange((nextCurView) => {
+    bus.emit(Events.StateChange, { ..._state });
+    // setCurSubView(nextCurView);
+  });
+  props.history.onRouteChange(({ name }) => {
+    methods.setCurMenu();
+  });
+  request.workout_day.fetch_started.onStateChange(() => methods.refresh());
+
+  return {
+    methods,
+    state: _state,
+    get menus() {
+      return _menus;
+    },
+    ready() {
+      methods.setCurMenu();
+      request.workout_day.fetch_started.run();
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
+      return bus.on(Events.StateChange, handler);
+    },
+  };
+}
+
+export const HomeLayout: ViewComponent = (props) => {
+  const [state, vm] = useViewModel(HomeLayoutViewModel, [props]);
 
   return (
     <div class="flex flex-col w-full h-full">
-      <div class="flex-1 relative w-full h-full">
-        <For each={subViews()}>
+      <div class="flex-1 z-0 relative w-full h-full">
+        <For each={state().views}>
           {(subView, i) => {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
@@ -75,11 +161,11 @@ export const HomeLayout: ViewComponent = (props) => {
                 index={i()}
               >
                 <PageContent
-                  app={app}
-                  client={client}
-                  storage={storage}
+                  app={props.app}
+                  client={props.client}
+                  storage={props.storage}
                   pages={pages}
-                  history={history}
+                  history={props.history}
                   view={subView}
                 />
               </KeepAliveRouteView>
@@ -87,37 +173,55 @@ export const HomeLayout: ViewComponent = (props) => {
           }}
         </For>
       </div>
-      <div class="w-full h-[64px] border border-t-slate-300">
-        {/* <div
-            class="absolute z-50 right-12 bottom-12"
-            onClick={() => {
-              history.push("root.home_layout.workout_day");
-            }}
-          >
-            <div class="px-4 py-2 border border-slate-300 rounded-xl cursor-pointer">开始训练</div>
+      <div class="relative z-10 w-full h-[64px] border border-t-slate-300">
+        <div class="relative">
+          {/* <div class="bottom-menu__indicator">
+            <div
+              class="flex items-center justify-center h-full w-full"
+              onClick={() => {
+                vm.methods.gotoWorkoutPrepareView();
+              }}
+            >
+              <BicepsFlexed class="w-12 h-12 text-white" />
+            </div>
           </div> */}
-        <div class="flex items-center bg-white">
-          <For each={menus()}>
-            {(menu) => {
-              const { icon, text, url, badge, onClick } = menu;
-              return (
-                <Menu
-                  class="basis-1/3"
-                  app={app}
-                  icon={icon}
-                  history={history}
-                  highlight={(() => {
-                    return curRouteName() === url;
-                  })()}
-                  url={url}
-                  badge={badge}
-                  onClick={onClick}
-                >
-                  {text}
-                </Menu>
-              );
-            }}
-          </For>
+          <div class="flex items-center bg-white">
+            <For each={vm.menus}>
+              {(menu) => {
+                const { icon, text, url, badge, onClick } = menu;
+                return (
+                  <Menu
+                    class="basis-1/3"
+                    app={props.app}
+                    icon={icon}
+                    history={props.history}
+                    highlight={(() => {
+                      return state().cur_route_name === url;
+                    })()}
+                    url={url}
+                    badge={badge}
+                    onClick={onClick}
+                  >
+                    {text}
+                  </Menu>
+                );
+              }}
+            </For>
+          </div>
+        </div>
+      </div>
+      <div class="fixed right-4 bottom-20">
+        <div>
+          <Show when={state().has_workout_day}>
+            <div
+              class="p-4 rounded-full bg-green-500"
+              onClick={() => {
+                vm.methods.gotoWorkoutDayView();
+              }}
+            >
+              <div class="text-white text-sm">进行中的训练</div>
+            </div>
+          </Show>
         </div>
       </div>
     </div>
@@ -135,8 +239,7 @@ function Menu(
   const inner = (
     <div
       classList={{
-        "relative flex items-center justify-center px-4 py-2 space-x-2 opacity-80 cursor-pointer hover:bg-slate-300":
-          true,
+        "relative flex items-center justify-center px-4 py-2 space-x-2 opacity-80 cursor-pointer": true,
         "bg-slate-200": props.highlight,
       }}
       onClick={props.onClick}

@@ -1,4 +1,5 @@
 import { For } from "solid-js";
+import { Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -7,10 +8,19 @@ import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { base, Handler } from "@/domains/base";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
-import { fetchStudentList } from "@/biz/student/services";
-import { Plus } from "lucide-solid";
+import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/services";
 
 function HomeStudentListPageViewModel(props: ViewComponentProps) {
+  const request = {
+    student: {
+      list: new ListCore(new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client })),
+    },
+  };
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+  };
   const ui = {
     $view: new ScrollViewCore(),
     $create_btn: new ButtonCore({
@@ -19,12 +29,6 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
       },
     }),
   };
-  const request = {
-    student: {
-      list: new ListCore(new RequestCore(fetchStudentList, { client: props.client })),
-    },
-  };
-  const methods = {};
   let _state = {
     get response() {
       return request.student.list.response;
@@ -38,12 +42,16 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  request.student.list.onStateChange(() => methods.refresh());
+
   return {
     state: _state,
     ui,
     request,
     methods,
-    ready() {},
+    ready() {
+      request.student.list.init();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -63,7 +71,15 @@ export function HomeStudentListPage(props: ViewComponentProps) {
       </div>
       <div class="py-4">
         <ListView store={vm.request.student.list} class="space-y-2">
-          <For each={state().response.dataSource}>{(student) => <div>{student.name}</div>}</For>
+          <For each={state().response.dataSource}>
+            {(student) => {
+              return (
+                <div class="p-2 border border-rounded">
+                  <div>{student.nickname}</div>
+                </div>
+              );
+            }}
+          </For>
         </ListView>
       </div>
     </ScrollView>

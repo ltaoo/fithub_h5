@@ -25,9 +25,17 @@ import { HomeStudentProfilePage } from "@/pages/home_student/profile";
 import { HomeMusclePage } from "@/pages/home_muscle";
 import { HomeEquipmentPage } from "@/pages/home_equipment";
 import { HomeWorkoutDayUpdatePage } from "@/pages/home_workout_day/update";
+import { WorkoutDayPreparingPage } from "@/pages/home_workout_day/prepare";
 import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
 import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
 import { HomeMineView } from "@/pages/home_mine";
+import { WorkoutPlanCollectionCreateView } from "@/pages/workout_plan_collection/create";
+import { WorkoutPlanCollectionUpdateView } from "@/pages/workout_plan_collection/update";
+import { WorkoutPlanCollectionCreateSuccessView } from "@/pages/workout_plan_collection/success";
+import { WorkoutActionProfileView } from "@/pages/home_workout_action/profile";
+import { WorkoutActionHistoryListView } from "@/pages/workout_action_history/list";
+import { WorkoutDayListView } from "@/pages/home_workout_day/list";
+import { WorkoutDayProfileView } from "@/pages/home_workout_day/profile";
 
 import { PageKeys } from "./routes";
 
@@ -47,6 +55,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout.workout_plan_layout.single": WorkoutPlanSingleView,
   "root.home_layout.workout_plan_layout.mine": WorkoutPlanMineView,
   "root.workout_plan_profile": HomeWorkoutPlanProfilePage,
+  "root.workout_plan_collection_create": WorkoutPlanCollectionCreateView,
+  "root.workout_plan_collection_update": WorkoutPlanCollectionUpdateView,
+  "root.workout_plan_collection_create_success": WorkoutPlanCollectionCreateSuccessView,
   // 学员管理
   "root.home_layout.student_list": HomeStudentListPage,
   "root.student_create": HomeStudentCreatePage,
@@ -55,6 +66,10 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout.mine": HomeMineView,
   // 训练记录
   "root.workout_day": HomeWorkoutDayUpdatePage,
+  "root.workout_day_prepare": WorkoutDayPreparingPage,
+  "root.workout_day_list": WorkoutDayListView,
+  "root.workout_day_profile": WorkoutDayProfileView,
+  "root.action_history_list": WorkoutActionHistoryListView,
   // 假聊
   "root.fake_chat": MemberListInFakeChatPage,
   // 肌肉
@@ -65,5 +80,6 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.action_list": HomeActionListPage,
   "root.action_create": HomeActionCreatePage,
   "root.action_update": HomeActionUpdatePage,
+  "root.action_profile": WorkoutActionProfileView,
   "root.fake_chat_profile": ChatProfileInFakeChatPage,
 };

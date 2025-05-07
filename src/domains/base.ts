@@ -196,16 +196,25 @@ import { useViewModel } from "@/hooks";
 import { base, Handler } from "@/domains/base";
 
 function HomeActionCreatePageViewModel(props: ViewComponentProps) {
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+  };
+
   let _state = {};
   enum Events {
     StateChange,
+    Error,
   }
   type TheTypesOfEvents = {
     [Events.StateChange]: typeof _state;
+    [Events.Error]: BizError;
   };
   const bus = base<TheTypesOfEvents>();
 
   return {
+    methods,
     state: _state,
     ready() {},
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {

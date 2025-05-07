@@ -96,14 +96,18 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     this.show();
   }
   show() {
-    this.mounted = true;
+    if (this.mounted === false) {
+      this.mounted = true;
+    }
+    this.exit = false;
     this.enter = true;
     this.visible = true;
     this.emit(Events.StateChange, { ...this.state });
     setTimeout(() => {
-      // 120 是预计的动画时间
       this.emit(Events.Show);
-    }, 120);
+      // this.emit(Events.StateChange, { ...this.state });
+      // 180 是预计的动画时间
+    }, 180);
   }
   hide(options: Partial<{ reason: "show_sibling" | "back" | "forward"; destroy: boolean }> = {}) {
     // console.log("[DOMAIN]ui/presence - hide", options);
@@ -116,13 +120,14 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     this.exit = true;
+    this.enter = false;
     this.emit(Events.StateChange, { ...this.state });
     setTimeout(() => {
       this.visible = false;
       this.emit(Events.Hidden);
       this.emit(Events.StateChange, { ...this.state });
       this.unmount();
-    }, 120);
+    }, 180);
   }
   /** 将 DOM 从页面卸载 */
   unmount() {

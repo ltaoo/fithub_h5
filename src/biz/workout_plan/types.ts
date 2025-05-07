@@ -1,26 +1,26 @@
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "./constants";
 
 export type WorkoutPlanStepBody = {
-  id?: number | string;
-  title: string;
-  type: WorkoutPlanStepType;
   idx: number;
+  type: WorkoutPlanStepType;
   set_type: WorkoutPlanSetType;
   set_count: number;
   set_rest_duration: number;
   set_weight: string;
+  set_note: string;
   actions: {
-    id?: number | string;
-    action_id: number | string;
     idx: number;
+    action_id: number | string;
+    action: {
+      id: number;
+      zh_name: string;
+    };
     set_idx: number;
     weight: string;
     reps: number;
-    unit: string;
+    reps_unit: string;
     rest_duration: number;
-    note: string;
   }[];
-  note: string;
 };
 
 export type WorkoutPlanStepResp = {
@@ -44,7 +44,7 @@ export type WorkoutPlanStepResp = {
     set_idx: number;
     weight: string;
     reps: number;
-    unit: string;
+    reps_unit: string;
     rest_duration: number;
     note: string;
   }[];
@@ -58,7 +58,7 @@ export type WorkoutPlanActionPayload = {
   weight: string;
   reps: number;
   reps_unit: string;
-  rest_interval: number;
+  rest_duration: number;
   note: string;
 };
 

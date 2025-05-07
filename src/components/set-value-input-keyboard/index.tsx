@@ -200,7 +200,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             </div>
           </div>
         </div>
-        <div class="h-[68px]"></div>
+        <div class="h-[24px]"></div>
       </div>
     </>
   );

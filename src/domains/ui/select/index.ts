@@ -28,6 +28,13 @@ type TheTypesOfEvents<T> = {
   [Events.Focus]: void;
   [Events.Placed]: void;
 };
+type SelectProps<T> = {
+  defaultValue: T | null;
+  placeholder?: string;
+  // options: SelectItemCore<T>[];
+  options?: { value: T; label: string }[];
+  onChange?: (v: T | null) => void;
+};
 type SelectState<T> = {
   options: { value: T; label: string; selected: boolean }[];
   value: T | null;
@@ -42,13 +49,9 @@ type SelectState<T> = {
   required: boolean;
   dir: Direction;
   styles: Partial<CSSStyleDeclaration>;
-};
-type SelectProps<T> = {
-  defaultValue: T | null;
-  placeholder?: string;
-  // options: SelectItemCore<T>[];
-  options?: { value: T; label: string }[];
-  onChange?: (v: T | null) => void;
+  enter: boolean;
+  visible: boolean;
+  exit: boolean;
 };
 
 export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
@@ -66,7 +69,7 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
 
   popper: PopperCore;
   popover: PopoverCore;
-  presence: PresenceCore;
+  presence = new PresenceCore();
   collection: CollectionCore;
   layer: DismissableLayerCore;
 
@@ -97,13 +100,16 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
     return {
       options: this.options,
       value: this.value,
-      value2: this.options.find((opt) => opt.selected) ?? null,
+      value2: this.options.find((opt) => opt.value === this.value) ?? null,
       open: this.open,
       disabled: this.disabled,
       placeholder: this.placeholder,
       required: false,
       dir: "ltr",
       styles: {},
+      enter: this.presence.state.enter,
+      visible: this.presence.state.visible,
+      exit: this.presence.state.exit,
     };
   }
 
@@ -129,7 +135,6 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
     }
     this.popper = new PopperCore();
     this.popover = new PopoverCore();
-    this.presence = new PresenceCore();
     this.layer = new DismissableLayerCore();
     this.collection = new CollectionCore();
     this.popper.onReferenceMounted((reference) => {
@@ -149,6 +154,7 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
       console.log(...this.log("this.layer.onDismiss"));
       this.hide();
     });
+    this.presence.onStateChange(() => this.emit(Events.StateChange, { ...this.state }));
     if (onChange) {
       this.onChange(onChange);
     }
@@ -272,19 +278,16 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
   }
   setValue(v: T | null) {
     if (v === null) {
-      this.value = v;
+      this.value = null;
       this.emit(Events.StateChange, { ...this.state });
       this.emit(Events.Change, v);
       return;
     }
     const matched = this.options.find((opt) => opt.value === v);
     console.log("[DOMAIN]ui/select - setValue", v, matched, this.options);
-    if (!matched) {
-      return;
-    }
     this.value = v;
-    this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.Change, v);
+    this.emit(Events.StateChange, { ...this.state });
   }
   clear() {
     this.value = null;

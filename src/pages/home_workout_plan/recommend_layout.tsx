@@ -35,8 +35,8 @@ export function WorkoutPlanRecommendLayoutModel(props: ViewComponentProps) {
         },
       ] as { id: PageKeys; text: string }[],
       onMounted() {
-        // ui.$tab.select(0);
-        // props.history.push("root.home_layout.workout_plan_layout.recommend");
+        console.log(props.history.$router.name);
+        ui.$tab.selectById(props.history.$router.name);
       },
       onChange(value) {
         props.history.push(value.id);
@@ -76,6 +76,16 @@ export function WorkoutPlanRecommendLayoutModel(props: ViewComponentProps) {
     };
     bus.emit(Events.StateChange, _state);
   };
+  props.history.onRouteChange(async ({ pathname, href, query }) => {
+    if (!ui.$tab.mounted) {
+      return;
+    }
+    console.log("[PAGE]workout_plan/layout - history.onRouteChange", pathname, query);
+    // if (!query.id) {
+    //   return;
+    // }
+    // ui.$tab.selectById(query.id);
+  });
 
   return {
     ui,

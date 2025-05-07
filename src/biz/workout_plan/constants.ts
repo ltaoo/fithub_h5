@@ -27,13 +27,12 @@ export const WorkoutPlanStepTypeTextMap: Record<WorkoutPlanStepType, string> = {
 };
 
 export const WorkoutPlanStepTypeOptions = [
-  { label: "热身", value: WorkoutPlanStepType.Warmup },
+  { label: "热身激活", value: WorkoutPlanStepType.Warmup },
   { label: "力量", value: WorkoutPlanStepType.Strength },
   { label: "拉伸", value: WorkoutPlanStepType.Stretching },
-  { label: "有氧", value: WorkoutPlanStepType.Cardio },
+  // { label: "有氧", value: WorkoutPlanStepType.Cardio },
   { label: "心肺", value: WorkoutPlanStepType.Heart },
 ];
-
 export enum WorkoutPlanSetType {
   /** 常规 */
   Normal = "normal",
@@ -60,3 +59,9 @@ export const WorkoutSetTypeOptions = Object.keys(WorkoutSetTypeTextMap).map((k) 
     value: k,
   };
 });
+
+export enum WorkoutPlanCollectionType {
+  Weekly = 1,
+  Monthly = 2,
+  None = 3,
+}

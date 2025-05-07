@@ -129,7 +129,7 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
           zh_name: json.chinese_name,
           alias: json.alias,
           overview: json.benefits.join("\n"),
-          type: WorkoutActionType.RESISTANCE,
+          type: WorkoutActionType.Resistance,
           level: 5,
           tags1: json.tags,
           muscles: json.target_muscles

@@ -2,34 +2,33 @@
  * @file 创建训练计划
  */
 import { For, Show, Switch, Match } from "solid-js";
-import { ArrowDown, ArrowUp, Loader, MoreHorizontal, Trash } from "lucide-solid";
+import { ArrowDown, ArrowUp, Binary, Bird, ChevronLeft, Loader, MoreHorizontal, Plus, Trash } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
 import { Button, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
-import { WorkoutPlanPreviewCard } from "@/components/workout-plan-share-card";
-import { WorkoutActionSelect2View } from "@/components/workout-action-select2";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
-import { WorkoutPlanPreviewPayload, WorkoutPlanStepBody } from "@/biz/workout_plan/types";
-import { createWorkoutPlan } from "@/biz/workout_plan/services";
+import { createWorkoutPlan, WorkoutPlanDetailsJSON250424 } from "@/biz/workout_plan/services";
 import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 import { WorkoutActionProfile } from "@/biz/workout_action/services";
-import { WorkoutActionType } from "@/biz/workout_action/constants";
 import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
-import { Result } from "@/domains/result";
-import { SetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
 import { base, Handler } from "@/domains/base";
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RefCore } from "@/domains/ui/cur";
 import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
-import { seconds_to_hour, seconds_to_hour_with_template } from "@/utils";
+import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
 import { WorkoutPlanValuesView } from "./workout_plan_values";
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
+import { InputTextView } from "@/components/ui/input-text";
+import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
+import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
+import { Presence } from "@/components/ui/presence";
 
 function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const request = {
@@ -38,6 +37,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     },
   };
   const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
     calc_estimated_duration(
       v: { set_count: string; set_rest_duration: string; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
     ) {
@@ -64,17 +66,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         duration += set_duration * Number(set.set_count);
       }
       // console.log("[PAGE]workout_plan/create - estimated duration", duration);
-      const text = seconds_to_hour_with_template(duration, {
-        hours(v: number) {
-          return `${v}小时`;
-        },
-        minutes(v: number, v2) {
-          return `${v2}分钟`;
-        },
-        seconds(v: number) {
-          return "";
-        },
-      });
+      const text = seconds_to_hour_with_template(duration, seconds_to_hour_template1);
       ui.$input_duration.setValue(text);
       return duration;
     },
@@ -120,38 +112,38 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         overview: value_overview,
         tags: "",
         level: 5,
-        details: JSON.stringify(value_actions),
-        steps: (() => {
-          const result: WorkoutPlanStepBody[] = [];
+        details: ((): WorkoutPlanDetailsJSON250424 => {
+          const steps: WorkoutPlanDetailsJSON250424["steps"] = [];
           for (let i = 0; i < value_actions.length; i += 1) {
             const set_value = value_actions[i];
-            const actions: WorkoutPlanStepBody["actions"] = [];
+            const actions: WorkoutPlanDetailsJSON250424["steps"][number]["actions"] = [];
             for (let j = 0; j < set_value.actions.length; j += 1) {
               const act = value_actions[i].actions[j];
               actions.push({
-                set_idx: i + 1,
-                idx: j + 1,
                 action_id: act.action.id,
+                action: {
+                  id: act.action.id,
+                  zh_name: act.action.zh_name,
+                },
                 reps: act.reps,
-                unit: act.reps_unit,
+                reps_unit: act.reps_unit,
                 weight: act.weight,
                 rest_duration: act.rest_duration,
-                note: "",
               });
             }
-            result.push({
-              title: "",
-              idx: i + 1,
-              type: WorkoutPlanStepType.Strength,
+            steps.push({
               set_type: set_value.set_type,
               set_count: Number(set_value.set_count),
               set_rest_duration: Number(set_value.set_rest_duration),
               set_weight: set_value.set_weight,
               actions,
-              note: "",
+              set_note: set_value.set_note,
             });
           }
-          return result;
+          return {
+            v: "250424",
+            steps,
+          };
         })(),
         points: "",
         suggestions: "",
@@ -169,7 +161,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
       props.app.tip({
         text: ["创建成功"],
       });
-      // props.history.back();
+      props.history.push("root.workout_plan_profile", {
+        id: String(r2.data.id),
+      });
     },
     cancel() {
       props.history.back();
@@ -196,6 +190,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
       },
     }),
     $input_duration: new InputCore({ defaultValue: "0" }),
+    $input_tag: WorkoutPlanTagSelectViewModel(),
     $workout_action_select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: $workout_action_list,
@@ -211,7 +206,8 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
           }
         }
         const field_value = ui.$ref_action_in_menu.value;
-        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value);
+        const menu_type = ui.$ref_menu_type.value;
+        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value, menu_type);
         if (field_value) {
           const $field = ui.$input_actions.getFieldWithId(field_value.id);
           if (!$field) {
@@ -220,7 +216,6 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
             });
             return;
           }
-          const menu_type = ui.$ref_menu_type.value;
           if (menu_type === "change_action") {
             $field.field.input.setValue({
               actions: actions.map((act) => {
@@ -229,23 +224,63 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
                     id: Number(act.id),
                     zh_name: act.zh_name,
                   },
-                  reps: 12,
-                  reps_unit: "次" as const,
+                  reps: (() => {
+                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                      return 30;
+                    }
+                    return 12;
+                  })(),
+                  reps_unit: (() => {
+                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                      return getSetValueUnit("秒");
+                    }
+                    return getSetValueUnit("次");
+                  })(),
                   weight: "12RM",
-                  rest_duration: 90,
+                  rest_duration: 30,
                 };
               }),
             });
-            const r = await ui.$input_actions.validate();
+          }
+          if (menu_type === "add_action") {
+            $field.field.input.setValue({
+              actions: [
+                ...$field.field.input.value.actions,
+                ...actions.map((act) => {
+                  return {
+                    action: {
+                      id: Number(act.id),
+                      zh_name: act.zh_name,
+                    },
+                    reps: (() => {
+                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                        return 30;
+                      }
+                      return 12;
+                    })(),
+                    reps_unit: (() => {
+                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                        return "秒" as const;
+                      }
+                      return "次" as const;
+                    })(),
+                    weight: "12RM",
+                    rest_duration: 30,
+                  };
+                }),
+              ],
+            });
+          }
+          ui.$input_actions.validate().then((r) => {
             if (r.data) {
               methods.calc_estimated_duration(r.data);
             }
-            ui.$workout_action_select.clear();
-            ui.$workout_action_select.ui.$dialog.hide();
-            return;
-          }
+          });
+          ui.$workout_action_select.clear();
+          ui.$workout_action_select.ui.$dialog.hide();
           return;
         }
+
         // 新增动作
         for (let i = 0; i < actions.length; i += 1) {
           const $input = ui.$input_actions.append();
@@ -254,6 +289,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
             set_count: "3",
             set_rest_duration: "90",
             set_weight: "RPE 6",
+            set_note: "",
             actions: [
               {
                 action: {
@@ -263,18 +299,24 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
                 reps: 12,
                 reps_unit: "次",
                 weight: "12RM",
-                rest_duration: 90,
+                rest_duration: 30,
               },
             ],
           });
         }
-        const r = await ui.$input_actions.validate();
-        if (r.data) {
-          methods.calc_estimated_duration(r.data);
-        }
+        ui.$input_actions.validate().then((r) => {
+          if (r.data) {
+            methods.calc_estimated_duration(r.data);
+          }
+        });
         ui.$workout_action_select.clear();
         ui.$workout_action_select.ui.$dialog.hide();
         bus.emit(Events.StateChange, { ..._state });
+      },
+      onError(error) {
+        props.app.tip({
+          text: [error.message],
+        });
       },
     }),
     $ref_action_in_menu: new RefCore<{ id: number; idx: number }>(),
@@ -373,27 +415,27 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
             ui.$menu.hide();
           },
         }),
+        // new MenuItemCore({
+        //   label: "设为递增组",
+        //   onClick() {
+        //     const field_value = ui.$ref_action_in_menu.value;
+        //     if (!field_value) {
+        //       props.app.tip({
+        //         text: ["异常操作"],
+        //       });
+        //       return;
+        //     }
+        //     const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        //     if (!$field) {
+        //       return;
+        //     }
+        //     $field.field.input.setType(WorkoutPlanSetType.Increasing);
+        //     ui.$menu.hide();
+        //     ui.$menu.hide();
+        //   },
+        // }),
         new MenuItemCore({
-          label: "设为递增组",
-          onClick() {
-            const field_value = ui.$ref_action_in_menu.value;
-            if (!field_value) {
-              props.app.tip({
-                text: ["异常操作"],
-              });
-              return;
-            }
-            const $field = ui.$input_actions.getFieldWithId(field_value.id);
-            if (!$field) {
-              return;
-            }
-            $field.field.input.setType(WorkoutPlanSetType.Increasing);
-            ui.$menu.hide();
-            ui.$menu.hide();
-          },
-        }),
-        new MenuItemCore({
-          label: "HIIT",
+          label: "设为HIIT",
           onClick() {
             const field_value = ui.$ref_action_in_menu.value;
             if (!field_value) {
@@ -457,16 +499,32 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         }),
         new MenuItemCore({
           label: "删除",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.removeByIndex($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
         }),
       ],
     }),
     $action_select: $model.$action_select,
-    $back: new ButtonCore({
+    $btn_back: new ButtonCore({
       onClick() {
         methods.cancel();
       },
     }),
-    $submit: new ButtonCore({
+    $btn_submit: new ButtonCore({
       async onClick() {
         methods.submit();
       },
@@ -483,6 +541,33 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     get fields() {
       return ui.$input_actions.state.fields;
     },
+    get muscles() {
+      return Object.values(_action_profiles)
+        .map((act) => {
+          return act.muscles;
+        })
+        .reduce((a, b) => {
+          return [...a, ...b];
+        }, []);
+    },
+    get equipments() {
+      return Object.values(_action_profiles)
+        .map((act) => {
+          return act.equipments;
+        })
+        .reduce((a, b) => {
+          return [...a, ...b];
+        }, []);
+    },
+    get enter() {
+      return ui.$workout_action_select.ui.$dialog.state.enter;
+    },
+    get visible() {
+      return ui.$workout_action_select.ui.$dialog.state.visible;
+    },
+    get exit() {
+      return ui.$workout_action_select.ui.$dialog.state.exit;
+    },
   };
   enum Events {
     StateChange,
@@ -492,8 +577,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
   ui.$action_select.onStateChange(() => {
-    bus.emit(Events.StateChange, { ..._state });
+    methods.refresh();
   });
+  ui.$workout_action_select.ui.$dialog.onStateChange(() => methods.refresh());
 
   return {
     methods,
@@ -515,82 +601,133 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
     <>
       <ScrollView store={vm.ui.$view} class="">
         <div class="bg-white p-4">
-          <div class="space-y-2">
-            <div class="field">
-              <div>标题</div>
-              <Input store={vm.ui.$input_title} />
+          <div>
+            <div class="flex items-center gap-2">
+              <Button
+                store={vm.ui.$btn_back}
+                icon={<ChevronLeft class="w-6 h-6 text-gray-800" />}
+                class="flex items-center justify-center p-2 rounded-full bg-gray-200"
+              ></Button>
+              <div class="text-gray-600">创建训练计划</div>
+            </div>
+          </div>
+          <div class="mt-4 space-y-4">
+            <div class="field relative">
+              <div class="flex">
+                <div class="text-lg text-gray-800">标题</div>
+                <div class="text-red-500">*</div>
+              </div>
+              <Input store={vm.ui.$input_title} class="mt-1" />
             </div>
             <div class="field">
-              <div>概要</div>
-              <Textarea store={vm.ui.$input_overview} />
+              <div class="flex">
+                <div class="text-lg text-gray-800">概要</div>
+              </div>
+              <Textarea store={vm.ui.$input_overview} class="mt-1" />
             </div>
             <div class="field">
-              <div>动作</div>
+              <div class="flex">
+                <div class="text-lg text-gray-800">动作</div>
+                <div class="text-red-500">*</div>
+              </div>
               <div class="w-full space-y-3 my-2">
-                <div class="space-y-12">
-                  <For
-                    each={state().fields}
+                <div class="">
+                  <Show
+                    when={state().fields.length}
                     fallback={
-                      <div class="flex justify-center p-4 rounded-md bg-gray-100">
-                        <div
-                          onClick={() => {
-                            vm.ui.$ref_action_in_menu.clear();
-                            vm.ui.$workout_action_select.ui.$dialog.show();
-                          }}
-                        >
+                      <div
+                        class="flex justify-center p-4 rounded-md bg-gray-100"
+                        onClick={() => {
+                          vm.ui.$ref_action_in_menu.clear();
+                          vm.ui.$workout_action_select.ui.$dialog.show();
+                        }}
+                      >
+                        <div class="flex flex-col items-center text-gray-600">
+                          <div>
+                            <Plus class="w-8 h-8" />
+                          </div>
                           <div>点击添加动作</div>
                         </div>
                       </div>
                     }
                   >
-                    {(field, index) => {
-                      const $inner = vm.ui.$input_actions.mapFieldWithIndex(index());
-                      if (!$inner) {
-                        return null;
-                      }
-                      return (
-                        <>
-                          <div class="relative border border-gray-200 rounded-lg bg-white shadow-sm">
-                            <Switch>
-                              <Match when={$inner.field.symbol === "SingleFieldCore"}>
-                                <ActionInput
-                                  store={$inner.field.input}
-                                  onShowActionSelect={() => {
-                                    vm.ui.$ref_menu_type.select("add_action");
-                                    vm.ui.$ref_action_in_menu.select({
-                                      id: field.id,
-                                      idx: index(),
-                                    });
-                                    const $field = vm.ui.$input_actions.getFieldWithId(field.id);
-                                    if (!$field) {
-                                      return;
-                                    }
-                                    vm.ui.$workout_action_select.methods.setDisabled(
-                                      $field.field.input.actions.map((act) => act.action.id)
-                                    );
-                                    vm.ui.$workout_action_select.ui.$dialog.show();
+                    <div class="mt-4 space-y-12">
+                      <For each={state().fields}>
+                        {(field, index) => {
+                          const $inner = vm.ui.$input_actions.mapFieldWithIndex(index());
+                          if (!$inner) {
+                            return null;
+                          }
+                          return (
+                            <>
+                              <div class="relative border border-gray-200 rounded-lg bg-white shadow-sm">
+                                <Switch>
+                                  <Match when={$inner.field.symbol === "SingleFieldCore"}>
+                                    <ActionInput
+                                      store={$inner.field.input}
+                                      onShowActionSelect={() => {
+                                        vm.ui.$ref_menu_type.select("add_action");
+                                        vm.ui.$ref_action_in_menu.select({
+                                          id: field.id,
+                                          idx: index(),
+                                        });
+                                        const $field = vm.ui.$input_actions.getFieldWithId(field.id);
+                                        if (!$field) {
+                                          return;
+                                        }
+                                        vm.ui.$workout_action_select.methods.setDisabled(
+                                          $field.field.input.actions.map((act) => act.action.id)
+                                        );
+                                        vm.ui.$workout_action_select.ui.$dialog.show();
+                                      }}
+                                    />
+                                  </Match>
+                                </Switch>
+                                <div
+                                  class="z-0 absolute right-4 top-2"
+                                  onClick={(event) => {
+                                    // const client = event.currentTarget.getBoundingClientRect();
+                                    // vm.ui.$ref_action_in_menu.select({
+                                    //   id: field.id,
+                                    //   idx: index(),
+                                    // });
+                                    // vm.ui.$menu.toggle({ x: client.x + 18, y: client.y + 18 });
+                                    vm.ui.$menu.toggle({ x: 240 + 18, y: 0 + 18 });
                                   }}
-                                />
-                              </Match>
-                            </Switch>
-                            <div
-                              class="z-20 absolute right-4 top-2"
-                              onClick={(event) => {
-                                const client = event.currentTarget.getBoundingClientRect();
-                                vm.ui.$ref_action_in_menu.select({
-                                  id: field.id,
-                                  idx: index(),
-                                });
-                                vm.ui.$menu.toggle({ x: client.x + 18, y: client.y + 18 });
-                              }}
-                            >
-                              <MoreHorizontal class="w-6 h-6" />
-                            </div>
-                          </div>
-                          <Show when={state().fields.length - 1 === index()}>
-                            <div class=""></div>
-                          </Show>
-                        </>
+                                >
+                                  <MoreHorizontal class="w-6 h-6" />
+                                </div>
+                              </div>
+                              <Show when={state().fields.length - 1 === index()}>
+                                <div class=""></div>
+                              </Show>
+                            </>
+                          );
+                        }}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="flex">
+                <div class="text-lg text-gray-800">预计时长</div>
+              </div>
+              <InputTextView store={vm.ui.$input_duration} class="mt-1" />
+            </div>
+            <div class="field">
+              <div class="flex">
+                <div class="text-lg text-gray-800">锻炼部位</div>
+              </div>
+              <div class="mt-1">
+                <div class="flex flex-wrap gap-2">
+                  <For each={state().muscles}>
+                    {(v) => {
+                      return (
+                        <div>
+                          <div>{v.id}</div>
+                        </div>
                       );
                     }}
                   </For>
@@ -598,35 +735,62 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
             </div>
             <div class="field">
-              <div>预计时长</div>
-              <Input store={vm.ui.$input_duration} />
+              <div class="flex">
+                <div class="text-lg text-gray-800">所需器械</div>
+              </div>
+              <div class="mt-1">
+                <div class="flex flex-wrap gap-2">
+                  <For each={state().equipments}>
+                    {(v) => {
+                      return (
+                        <div>
+                          <div>{v.id}</div>
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="flex">
+                <div class="text-lg text-gray-800">标签</div>
+              </div>
+              <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
             </div>
           </div>
         </div>
         <div class="h-[112px]"></div>
       </ScrollView>
-      <div class="absolute bottom-0 w-full bg-white">
-        <div class="flex justify-center w-full">
-          <div class="self-end px-4 py-2 border" onClick={vm.methods.cancel}>
-            <div>取消</div>
+      <div class="z-10 fixed bottom-0 w-full py-2 bg-white">
+        <div class="flex justify-center gap-2 w-full">
+          <div class="flex items-center">
+            <div class="flex items-center justify-center p-2 rounded-full bg-gray-200" onClick={vm.methods.cancel}>
+              <ChevronLeft class="w-10 h-10 text-gray-800" />
+            </div>
           </div>
-          <div
-            class="p-4 border rounded-md bg-white"
-            onClick={() => {
-              vm.ui.$ref_action_in_menu.clear();
-              vm.ui.$workout_action_select.ui.$dialog.show();
-            }}
-          >
-            添加动作
+          <div class="flex items-center">
+            <div
+              class="flex items-center justify-center p-4 rounded-full bg-gray-200"
+              onClick={() => {
+                vm.ui.$ref_action_in_menu.clear();
+                vm.ui.$workout_action_select.ui.$dialog.show();
+              }}
+            >
+              <Bird class="w-16 h-16 text-gray-800" />
+            </div>
           </div>
-          <div class="self-end px-4 py-2 border" onClick={vm.methods.submit}>
-            <div>提交</div>
+          <div class="flex items-center">
+            <div class="flex items-center justify-center p-2 rounded-full bg-gray-200" onClick={vm.methods.submit}>
+              <Binary class="w-10 h-10 text-gray-800" />
+            </div>
           </div>
         </div>
-        <div class="h-[48px]"></div>
+        <div class="h-4"></div>
+        <div class="safe-area-bottom"></div>
       </div>
       <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-white" style={{ "z-index": 999 }}>
+        <div class="w-screen bg-white">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
         </div>
       </Sheet>

@@ -23,10 +23,10 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
         <div class="flex flex-col bg-white border-t" style={{ height: "100vh" }}>
           <div class="flex gap-2 py-3 px-4 h-[62px]">
             <div class="w-[240px]">
-              <Select store={vm.ui.$search_type_select} />
+              <Select store={vm.ui.$input_type_select} />
             </div>
-            <Input store={vm.ui.$search_input} />
-            <Button class="w-20" store={vm.ui.$search_submit_btn}>
+            <Input store={vm.ui.$input_keyword} />
+            <Button class="w-20" store={vm.ui.$btn_submit}>
               搜索
             </Button>
             {/* <Button variant="subtle" store={vm.ui.$search_reset_btn}>
@@ -34,56 +34,50 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
           </Button> */}
           </div>
           <div class="flex-1 flex h-0 border-t">
-            <div class="w-[90px] h-full overflow-y-auto border-r">
-              <For
-                each={[
-                  "胸",
-                  "背",
-                  "腿",
-                  "肩",
-                  "手臂",
-                  "卧推",
-                  "肩推",
-                  "划船",
-                  "引体",
-                  "蹲",
-                  "弓步",
-                  "前平举",
-                  "侧平举",
-                  "臂屈伸",
-                  "弯举",
-                  "腿屈伸",
-                  "腿弯举",
-                ]}
-              >
+            <div class="w-[90px] h-full pt-2 px-2 overflow-y-auto border-r">
+              <For each={state().tags}>
                 {(tag) => {
-                  return <div class="px-4 py-2 text-center">{tag}</div>;
+                  return (
+                    <div
+                      classList={{
+                        "py-2 rounded-md text-center": true,
+                        "bg-gray-300": tag.selected,
+                      }}
+                      onClick={() => {
+                        vm.methods.handleClickTag(tag);
+                      }}
+                    >
+                      <div class="text-center">{tag.text}</div>
+                    </div>
+                  );
                 }}
               </For>
             </div>
             <ScrollView store={vm.ui.$view} class="flex-1 h-full overflow-y-auto">
-              <ListView store={vm.request.action.list} class="grid grid-cols-3 gap-2 p-2">
-                <For each={state().actions}>
-                  {(action) => {
-                    return (
-                      <div
-                        classList={{
-                          "p-2 flex justify-between border border-gray-200 rounded-md": true,
-                          "border-green-500 bg-green-100": !!state().value.find((act) => act.id === action.id),
-                          "text-gray-100": !!state().disabled.includes(action.id),
-                        }}
-                        onClick={() => {
-                          vm.methods.select(action);
-                        }}
-                      >
-                        <div>
-                          <div class="">{action.zh_name}</div>
-                          {/* <div class="text-sm">{action.name}</div> */}
+              <ListView store={vm.request.action.list}>
+                <div class="grid grid-cols-3 gap-2 p-2">
+                  <For each={state().actions}>
+                    {(action) => {
+                      return (
+                        <div
+                          classList={{
+                            "p-2 flex justify-between border border-gray-200 rounded-md": true,
+                            "border-green-500 bg-green-100": !!state().value.find((act) => act.id === action.id),
+                            "text-gray-100": !!state().disabled.includes(action.id),
+                          }}
+                          onClick={() => {
+                            vm.methods.select(action);
+                          }}
+                        >
+                          <div>
+                            <div class="">{action.zh_name}</div>
+                            {/* <div class="text-sm">{action.name}</div> */}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }}
-                </For>
+                      );
+                    }}
+                  </For>
+                </div>
               </ListView>
             </ScrollView>
           </div>

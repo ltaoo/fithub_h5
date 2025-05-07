@@ -96,7 +96,7 @@ export function EquipmentSelectViewModel(props: {
       _selected = value;
     },
     ready() {
-      request.equipment.list.run();
+      request.equipment.list.run({});
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);

@@ -6,14 +6,13 @@ import { Portal } from "solid-js/web";
 import { JSX } from "solid-js/jsx-runtime";
 import { Check, ChevronDown } from "lucide-solid";
 
-import { SelectCore } from "@/domains/ui";
+import { useViewModelStore } from "@/hooks";
 import * as SelectPrimitive from "@/packages/ui/select";
 import * as PopperPrimitive from "@/packages/ui/popper";
+import { SelectCore } from "@/domains/ui";
 import { cn, sleep } from "@/utils/index";
-import { DropdownMenu } from "./dropdown-menu";
+
 import { Presence } from "./presence";
-import { Popover } from "./popover";
-import { useViewModelStore } from "@/hooks";
 
 export const Select = (props: { store: SelectCore<any>; position?: "popper" } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store, position = "popper" } = props;
@@ -21,7 +20,10 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
   const [state, setState] = createSignal(store.state);
   const [popper, $popper] = useViewModelStore(props.store.popper);
 
-  store.onStateChange((v) => setState(v));
+  store.onStateChange((v) => {
+    // console.log("[COMPONENT]ui/select - onStateChange", v);
+    setState(v);
+  });
 
   return (
     <div class="relative">
@@ -47,7 +49,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
         onClick={async (event) => {
           const client = event.currentTarget.getBoundingClientRect();
           const { clientHeight, clientWidth } = window.document.documentElement;
-          console.log("[]click", client.y, client.height);
+          // console.log("[]click", client.y, client.height);
           store.popper.setReference(
             {
               getRect() {
@@ -68,55 +70,70 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
       <Portal>
         <Presence store={props.store.presence}>
           <div
-            class="fixed inset-0 z-10 bg-black opacity-20"
+            class="z-[998] fixed inset-0 bg-black opacity-20"
             onClick={() => {
               props.store.presence.hide();
             }}
           ></div>
           <div
-            class="__a z-20 min-w-[120px] border rounded-md bg-white"
+            classList={{
+              "z-[999] min-w-[120px] border rounded-md bg-white duration-200": true,
+              block: state().visible,
+              hidden: !state().visible,
+              "animate-in fade-in": state().enter,
+              "animate-out fade-out": state().exit,
+            }}
             style={{
               position: "fixed",
               left: popper().x + "px",
               top: popper().y + "px",
               opacity: popper().isPlaced ? 100 : 0,
             }}
-            onAnimationStart={(event) => {
-              const reference = props.store.popper.reference;
-              if (!reference) {
-                return;
-              }
-              const floating = event.currentTarget.getBoundingClientRect();
-              const ref = reference.getRect();
-              const { clientHeight, clientWidth } = window.document.documentElement;
-              console.log("[]ref", ref.y, ref.height, ref.y + ref.height + 4);
-              console.log("[]floating", floating.height);
-              console.log("[]window", clientHeight);
-              const position = {
-                x: ref.x,
-                y: ref.y + ref.height + 4,
-              };
-              if (clientHeight - position.y < floating.height + 24) {
-                position.y = ref.y - floating.height - 4;
-              }
-              console.log("[]position", position);
-              store.popper.setState(position);
-            }}
           >
-            <For each={state().options}>
-              {(opt) => {
-                return (
-                  <div
-                    class="py-2 px-4"
-                    onClick={() => {
-                      props.store.select(opt.value);
-                    }}
-                  >
-                    {opt.label}
-                  </div>
-                );
+            <div
+              classList={{
+                "__a ": true,
               }}
-            </For>
+              onAnimationStart={(event) => {
+                const reference = props.store.popper.reference;
+                if (!reference) {
+                  return;
+                }
+                const floating = event.currentTarget.getBoundingClientRect();
+                const ref = reference.getRect();
+                const { clientHeight, clientWidth } = window.document.documentElement;
+                // console.log("[]ref", ref.y, ref.height, ref.y + ref.height + 4);
+                // console.log("[]floating", floating.height);
+                // console.log("[]window", clientHeight);
+                const position = {
+                  x: ref.x,
+                  y: ref.y + ref.height + 4,
+                };
+                if (clientHeight - position.y < floating.height + 24) {
+                  position.y = ref.y - floating.height - 4;
+                }
+                // console.log("[]position", position);
+                store.popper.setState(position);
+              }}
+            >
+              <For each={state().options}>
+                {(opt) => {
+                  return (
+                    <div
+                      classList={{
+                        "py-2 px-4": true,
+                        "bg-gray-100": opt.selected,
+                      }}
+                      onClick={() => {
+                        props.store.select(opt.value);
+                      }}
+                    >
+                      {opt.label}
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
           </div>
         </Presence>
       </Portal>

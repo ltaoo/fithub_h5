@@ -11,7 +11,7 @@ import { WorkoutActionType } from "./constants";
 import dayjs from "dayjs";
 
 type PartialWorkoutAction = {
-  id: number | string;
+  id: number;
   name: string;
   zh_name: string;
   alias: string;
@@ -35,15 +35,20 @@ type PartialWorkoutAction = {
  * @returns
  */
 export function fetchWorkoutActionList(
-  params: FetchParams & { type?: string; keyword?: string; tags1?: string[]; tags2?: string[] }
+  params: Partial<FetchParams> & {
+    type?: WorkoutActionType | null;
+    keyword?: string;
+    tags?: string[];
+    tags2?: string[];
+  }
 ) {
   return request.post<ListResponseWithCursor<PartialWorkoutAction>>("/api/workout_action/list", {
     page_size: params.pageSize,
     page: params.page,
     next_marker: params.next_marker,
-    type: params.type ?? WorkoutActionType.RESISTANCE,
+    type: params.type ?? WorkoutActionType.Resistance,
     keyword: params.keyword,
-    tags1: params.tags1,
+    tag: params.tags?.join(",") ?? "",
     tags2: params.tags2,
   });
 }
@@ -52,6 +57,7 @@ export function fetchWorkoutActionListProcess(r: TmpRequestResp<typeof fetchWork
     return Result.Err(r.error);
   }
   return Result.Ok({
+    no_more: !r.data.has_more,
     list: r.data.list.map((action) => {
       return {
         id: action.id,
@@ -132,7 +138,7 @@ export function createWorkoutAction(body: {
  */
 export function fetchWorkoutActionProfile(body: { id: number | string }) {
   return request.post<{
-    id: number | string;
+    id: number;
     name: string;
     zh_name: string;
     alias: string;
@@ -239,7 +245,7 @@ export function updateWorkoutAction(body: {
   return request.post<void>("/api/workout_action/update", body);
 }
 
-export function fetchWorkoutActionHistoryList(params: FetchParams) {
+export function fetchWorkoutActionHistoryList(params: Partial<FetchParams> & { workout_day_id?: number }) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -280,6 +286,7 @@ export function fetchWorkoutActionHistoryList(params: FetchParams) {
   >("/api/workout_action_history/list", {
     page: params.page,
     page_size: params.pageSize,
+    workout_day_id: params.workout_day_id,
   });
 }
 

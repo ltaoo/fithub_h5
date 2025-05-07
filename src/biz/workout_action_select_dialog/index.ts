@@ -7,7 +7,11 @@ import {
   fetchWorkoutActionListProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
-import { WorkoutActionType, WorkoutActionTypeOptions } from "@/biz/workout_action/constants";
+import {
+  WorkoutActionType,
+  WorkoutActionTypeOptions,
+  WorkoutActionTypeSubTagMap,
+} from "@/biz/workout_action/constants";
 import { base, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
 import { ListCore } from "@/domains/list";
@@ -23,31 +27,6 @@ export function WorkoutActionSelectDialogViewModel(props: {
   onOk?: (actions: { id: number | string; zh_name: string }[]) => void;
   onError?: (error: BizError) => void;
 }) {
-  let _loading = true;
-  let _selected: { id: number | string; zh_name: string }[] = (() => {
-    return props.defaultValue;
-  })();
-  let _disabled: (number | string)[] = [];
-  let _mode = "multiple" as "multiple" | "single";
-  let _actions: WorkoutActionProfile[] = props.list?.response.dataSource ?? [];
-  let _extra_actions: WorkoutActionProfile[] = [];
-  let _state = {
-    get loading() {
-      return _loading;
-    },
-    get value() {
-      return _selected;
-    },
-    get selected() {
-      return _selected;
-    },
-    get disabled() {
-      return _disabled;
-    },
-    get actions() {
-      return [..._actions, ..._extra_actions];
-    },
-  };
   const request = {
     action: {
       list:
@@ -58,6 +37,9 @@ export function WorkoutActionSelectDialogViewModel(props: {
     },
   };
   const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
     select(action: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
       console.log("[BIZ]workout_action_select2 - select", action);
       const disabled = _disabled.includes(action.id);
@@ -73,7 +55,7 @@ export function WorkoutActionSelectDialogViewModel(props: {
       }
       const v = _actions.find((item) => item.id === action.id);
       if (!v) {
-        props.onError?.(new BizError("健身动作不存在"));
+        bus.emit(Events.Error, new BizError("健身动作不存在"));
         return;
       }
       if (_mode === "multiple") {
@@ -112,9 +94,19 @@ export function WorkoutActionSelectDialogViewModel(props: {
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
+    async handleClickTag(tag: { text: string; selected: boolean }) {
+      if (tag.selected) {
+        return;
+      }
+      _selected_tag = tag.text;
+      const r = await request.action.list.search({
+        type: ui.$input_type_select.value,
+        tags: tag.text === "全部" ? [] : [tag.text],
+      });
+    },
     handleOk() {
       if (_selected.length === 0) {
-        props.onError?.(new BizError("请选择健身动作"));
+        bus.emit(Events.Error, new BizError("请选择健身动作"));
         return;
       }
       if (props.onOk) {
@@ -123,13 +115,8 @@ export function WorkoutActionSelectDialogViewModel(props: {
     },
   };
   const ui = {
-    $show_btn: new ButtonCore({
-      onClick() {
-        ui.$dialog.show();
-      },
-    }),
-    $search_type_select: new SelectCore({
-      defaultValue: WorkoutActionType.RESISTANCE,
+    $input_type_select: new SelectCore({
+      defaultValue: WorkoutActionType.Resistance,
       options: WorkoutActionTypeOptions,
       async onChange(v) {
         const r = await request.action.list.search({
@@ -139,37 +126,47 @@ export function WorkoutActionSelectDialogViewModel(props: {
           bus.emit(Events.Error, r.error);
           return;
         }
+        _selected_tag = "全部";
+        if (v) {
+          _tags = WorkoutActionTypeSubTagMap[v];
+        }
+        methods.refresh();
         // ui.$search_type_select.hide();
       },
     }),
-    $search_input: new InputCore({
+    $input_keyword: new InputCore({
       defaultValue: "",
       placeholder: "请输入关键字搜索",
       onEnter() {
-        ui.$search_submit_btn.click();
+        ui.$btn_submit.click();
       },
     }),
-    $search_submit_btn: new ButtonCore({
+    $btn_submit: new ButtonCore({
       async onClick() {
-        const v = ui.$search_input.value;
+        const v = ui.$input_keyword.value;
         if (!v) {
-          props.onError?.(new BizError("请输入关键字搜索"));
+          bus.emit(Events.Error, new BizError("请输入关键字搜索"));
           return;
         }
-        ui.$search_submit_btn.setLoading(true);
+        ui.$btn_submit.setLoading(true);
         const r = await request.action.list.search({ keyword: v });
-        ui.$search_submit_btn.setLoading(false);
+        ui.$btn_submit.setLoading(false);
         if (r.error) {
-          props.onError?.(r.error);
+          bus.emit(Events.Error, r.error);
           return;
         }
         _actions = r.data.dataSource;
         bus.emit(Events.StateChange, { ..._state });
       },
     }),
-    $search_reset_btn: new ButtonCore({
+    $btn_reset: new ButtonCore({
       onClick() {
         request.action.list.reset();
+      },
+    }),
+    $btn_dialog_show: new ButtonCore({
+      onClick() {
+        ui.$dialog.show();
       },
     }),
     $dialog: new DialogCore({
@@ -187,10 +184,49 @@ export function WorkoutActionSelectDialogViewModel(props: {
       },
     }),
   };
+
+  let _loading = true;
+  let _selected: { id: number | string; zh_name: string }[] = (() => {
+    return props.defaultValue;
+  })();
+  let _disabled: (number | string)[] = [];
+  let _mode = "multiple" as "multiple" | "single";
+  let _actions: WorkoutActionProfile[] = props.list?.response.dataSource ?? [];
+  let _tags = WorkoutActionTypeSubTagMap[WorkoutActionType.Resistance];
+  let _selected_tag = "全部";
+  let _extra_actions: WorkoutActionProfile[] = [];
+  let _state = {
+    get loading() {
+      return _loading;
+    },
+    get value() {
+      return _selected;
+    },
+    get selected() {
+      return _selected;
+    },
+    get disabled() {
+      return _disabled;
+    },
+    get actions() {
+      return [..._actions, ..._extra_actions];
+    },
+    get tags() {
+      return _tags.map((t) => {
+        return {
+          text: t,
+          selected: _selected_tag === t,
+        };
+      });
+    },
+  };
+
   enum Events {
     Change,
-    StateChange,
     Error,
+    Ok,
+    Cancel,
+    StateChange,
   }
   type TheTypesOfEvents = {
     [Events.Change]: typeof _selected;
@@ -198,6 +234,7 @@ export function WorkoutActionSelectDialogViewModel(props: {
     [Events.Error]: BizError;
   };
   const bus = base<TheTypesOfEvents>();
+
   request.action.list.onStateChange((state) => {
     // console.log("[BIZ]workout_action_select - request.action.list.onStateChange");
     const v = [...state.dataSource];
@@ -247,6 +284,10 @@ export function WorkoutActionSelectDialogViewModel(props: {
       return bus.on(Events.Error, handler);
     },
   };
+
+  if (props.onError) {
+    vm.onError(props.onError);
+  }
 
   return vm;
 }

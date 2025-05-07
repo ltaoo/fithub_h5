@@ -76,7 +76,28 @@ const configure = {
       },
       workout_day: {
         title: "训练日",
-        pathname: "/workout_day",
+        pathname: "/workout_day/running",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_day_prepare: {
+        title: "训练日",
+        pathname: "/workout_day/prepare",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_day_list: {
+        title: "历史训练记录",
+        pathname: "/workout_day/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_day_profile: {
+        title: "训练日详情",
+        pathname: "/workout_day/profile",
         options: {
           require: ["login"],
         },
@@ -98,6 +119,13 @@ const configure = {
       student_profile: {
         title: "学员详情",
         pathname: "/home/student_profile",
+        options: {
+          require: ["login"],
+        },
+      },
+      action_history_list: {
+        title: "动作记录",
+        pathname: "/action_history",
         options: {
           require: ["login"],
         },
@@ -151,16 +179,42 @@ const configure = {
           require: ["login"],
         },
       },
+      action_profile: {
+        title: "动作详情",
+        pathname: "/action_profile",
+        options: {},
+      },
       workout_plan_list: {
         title: "训练计划列表",
-        pathname: "/home/workout_plans",
+        pathname: "/workout_plan/list",
         options: {
           require: ["login"],
         },
       },
       workout_plan_update: {
         title: "训练计划编辑",
-        pathname: "/home/workout_plan_update",
+        pathname: "/workout_plan/update",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_plan_collection_create: {
+        title: "创建训练计划合集",
+        pathname: "/workout_plan_collect/create",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_plan_collection_create_success: {
+        title: "操作成功",
+        pathname: "/workout_plan_collect/success",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_plan_collection_update: {
+        title: "编辑训练计划合集",
+        pathname: "/workout_plan_collect/update",
         options: {
           require: ["login"],
         },

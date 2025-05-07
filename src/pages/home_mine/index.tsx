@@ -21,11 +21,31 @@ function HomeMineViewModel(props: ViewComponentProps) {
     },
   };
   const ui = {
-    $view: new ScrollViewCore({}),
+    $view: new ScrollViewCore({
+      async onReachBottom() {
+        await request.workout_action_history.list.loadMore();
+        ui.$view.finishLoadingMore();
+      },
+    }),
   };
+  const tools = [
+    {
+      icon: "📊",
+      name: "数据统计",
+      onClick() {
+        props.history.push("root.workout_day_list");
+      },
+    },
+    { icon: "📝", name: "训练计划", onClick() {} },
+    { icon: "🎯", name: "目标设置", onClick() {} },
+    { icon: "📅", name: "预约课程", onClick() {} },
+  ];
   let _state = {
     get response() {
       return request.workout_action_history.list.response;
+    },
+    get tools() {
+      return tools;
     },
   };
   enum Events {
@@ -40,9 +60,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
   return {
     ui,
     state: _state,
-    ready() {
-      request.workout_action_history.list.init();
-    },
+    ready() {},
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -55,30 +73,41 @@ export function HomeMineView(props: ViewComponentProps) {
   return (
     <ScrollView store={vm.ui.$view} class="h-full">
       <div class="p-4">
-        <div class="space-y-2">
-          <For each={state().response.dataSource}>
-            {(v) => {
-              return (
-                <div class=" p-4 border rounded-md">
-                  <div>
-                    <div>{v.action.zh_name}</div>
-                  </div>
-                  <div class="flex">
-                    <div class="flex">
-                      {v.weight}
-                      {v.weight_unit}
-                    </div>
-                    <div class="ml-4">x</div>
-                    <div class="flex">
-                      {v.reps}
-                      {v.reps_unit}
-                    </div>
-                  </div>
-                  <div>{v.created_at}</div>
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+          <div class="flex items-center">
+            <div class="w-16 h-16 rounded-full bg-gray-200 mr-4">{/* 头像占位 */}</div>
+            <div>
+              <h3 class="text-lg font-semibold">用户名</h3>
+              <p class="text-gray-600 text-sm">会员等级</p>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-between">
+            <div class="text-center">
+              <p class="text-gray-600 text-sm">训练天数</p>
+              <p class="font-semibold">0</p>
+            </div>
+            <div class="text-center">
+              <p class="text-gray-600 text-sm">累计时长</p>
+              <p class="font-semibold">0h</p>
+            </div>
+            <div class="text-center">
+              <p class="text-gray-600 text-sm">消耗热量</p>
+              <p class="font-semibold">0kcal</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+          <h3 class="text-lg font-semibold mb-4">快捷工具</h3>
+          <div class="grid grid-cols-4 gap-4">
+            {state().tools.map((tool) => (
+              <div class="text-center cursor-pointer" onClick={tool.onClick}>
+                <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center bg-gray-100 rounded-lg text-2xl">
+                  {tool.icon}
                 </div>
-              );
-            }}
-          </For>
+                <p class="text-sm text-gray-600">{tool.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </ScrollView>

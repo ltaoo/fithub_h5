@@ -1,6 +1,7 @@
 import { base, Handler } from "@/domains/base";
 import { Result } from "@/domains/result";
 import { BizError } from "@/domains/error";
+import { remove_arr_item } from "@/utils";
 
 import { FormInputInterface } from "./types";
 
@@ -43,9 +44,11 @@ export type FormValidateResult = {
 };
 
 enum SingleFieldEvents {
+  Change,
   StateChange,
 }
-type TheSingleFieldCoreEvents<T> = {
+type TheSingleFieldCoreEvents<T extends FormInputInterface<any>["value"]> = {
+  [SingleFieldEvents.Change]: T;
   [SingleFieldEvents.StateChange]: SingleFieldCoreState<T>;
 };
 type SingleFieldCoreProps<T> = FormFieldCoreProps & {
@@ -109,6 +112,11 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     this._input = input;
     this._rules = rules;
     this._hidden = hidden;
+
+    this._input.onChange(() => {
+      // console.log("the input change in SingleFieldCore", this._input.value);
+      this._bus.emit(SingleFieldEvents.Change, this._input.value);
+    });
   }
   get label() {
     return this._label;
@@ -136,6 +144,12 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   }
   showField(key: string) {
     this._hidden = false;
+  }
+  hideField(key: string) {
+    this._hidden = true;
+  }
+  setFieldValue(key: string, v: any) {
+    // ...
   }
   clear() {
     this.setValue(this._input.defaultValue);
@@ -169,7 +183,7 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
       }
       return this._input.defaultValue;
     })();
-    //     console.log("[DOMAIN]formv2 - SingleField - setValue", v);
+    // console.log("[DOMAIN]formv2 - SingleField - setValue", v);
     this._input.setValue(v);
   }
   setStatus(status: FieldStatus) {
@@ -183,6 +197,15 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   handleValueChange(value: T["value"]) {
     this._dirty = true;
     this._input.setValue(value);
+  }
+  destroy() {
+    if (this._input.destroy) {
+      this._input.destroy();
+    }
+    this._bus.destroy();
+  }
+  onChange(handler: Handler<TheSingleFieldCoreEvents<T>[SingleFieldEvents.Change]>) {
+    return this._bus.on(SingleFieldEvents.Change, handler);
   }
   onStateChange(handler: Handler<TheSingleFieldCoreEvents<T>[SingleFieldEvents.StateChange]>) {
     return this._bus.on(SingleFieldEvents.StateChange, handler);
@@ -210,11 +233,13 @@ type ArrayFieldCoreState = {
   fields: { id: number; label: string }[];
 };
 enum ArrayFieldEvents {
+  Change,
   StateChange,
 }
 type TheArrayFieldCoreEvents<
   T extends (count: number) => SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>
 > = {
+  [ArrayFieldEvents.Change]: { idx: number; id: number };
   [ArrayFieldEvents.StateChange]: ArrayFieldValue<T>;
 };
 export class ArrayFieldCore<
@@ -286,11 +311,22 @@ export class ArrayFieldCore<
         if (!field) {
           return;
         }
-        if (field.field.name === key) {
-          field.field.hide();
-        }
+        field.field.hideField(key);
       })();
     }
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+  }
+  setFieldValue(key: string, v: any) {
+    for (let i = 0; i < this.fields.length; i += 1) {
+      (() => {
+        let field = this.fields[i];
+        if (!field) {
+          return;
+        }
+        field.field.setFieldValue(key, v);
+      })();
+    }
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
 
   get label() {
@@ -310,6 +346,9 @@ export class ArrayFieldCore<
       return field.field.value;
     });
     return r;
+  }
+  refresh() {
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   hide() {
     this._hidden = true;
@@ -364,13 +403,20 @@ export class ArrayFieldCore<
   insertBefore(id: number): ReturnType<T> {
     const field_idx = this.fields.findIndex((field) => field.id === id) ?? 0;
     const field = this._field(this.fields.length);
-    let idx = field_idx;
-    if (idx < 0) {
-      idx = 0;
+    const v_id = this.fields.length;
+    let v_idx = field_idx;
+    if (v_idx < 0) {
+      v_idx = 0;
     }
-    this.fields.splice(idx, 0, {
+    field.onChange(() => {
+      this._bus.emit(ArrayFieldEvents.Change, {
+        id: v_id,
+        idx: v_idx,
+      });
+    });
+    this.fields.splice(v_idx, 0, {
       id: this.fields.length,
-      idx: idx,
+      idx: v_idx,
       // @ts-ignore
       field,
     });
@@ -381,13 +427,20 @@ export class ArrayFieldCore<
   insertAfter(id: number): ReturnType<T> {
     const field_idx = this.fields.findIndex((field) => field.id === id) ?? this.fields.length - 1;
     const field = this._field(this.fields.length);
-    let idx = field_idx + 1;
-    if (idx > this.fields.length) {
-      idx = this.fields.length;
+    const v_id = this.fields.length;
+    let v_idx = field_idx + 1;
+    if (v_idx > this.fields.length) {
+      v_idx = this.fields.length;
     }
-    this.fields.splice(idx, 0, {
-      id: this.fields.length,
-      idx: idx,
+    field.onChange(() => {
+      this._bus.emit(ArrayFieldEvents.Change, {
+        id: v_id,
+        idx: v_idx,
+      });
+    });
+    this.fields.splice(v_idx, 0, {
+      id: v_id,
+      idx: v_idx,
       // @ts-ignore
       field,
     });
@@ -397,9 +450,17 @@ export class ArrayFieldCore<
   }
   append(): ReturnType<T> {
     let field = this._field(this.fields.length);
+    const v_id = this.fields.length;
+    const v_idx = this.fields.length;
+    field.onChange(() => {
+      this._bus.emit(ArrayFieldEvents.Change, {
+        id: v_id,
+        idx: v_idx,
+      });
+    });
     this.fields.push({
-      id: this.fields.length,
-      idx: this.fields.length,
+      id: v_id,
+      idx: v_idx,
       // @ts-ignore
       field,
     });
@@ -408,11 +469,23 @@ export class ArrayFieldCore<
     return field;
   }
   remove(id: number) {
-    this.fields = this.fields.filter((field) => field.id !== id);
+    const matched_idx = this.fields.findIndex((field) => field.id === id);
+    if (matched_idx === -1) {
+      return;
+    }
+    const v = this.fields[matched_idx];
+    if (v && v.field.symbol === "SingleFieldCore") {
+      v.field.input.destroy();
+    }
+    this.fields = remove_arr_item(this.fields, matched_idx);
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   removeByIndex(idx: number) {
-    this.fields = this.fields.filter((_, i) => i === idx);
+    const v = this.fields[idx];
+    if (v && v.field.symbol === "SingleFieldCore") {
+      v.field.destroy();
+    }
+    this.fields = remove_arr_item(this.fields, idx);
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   /** 将指定的元素，向前移动一个位置 */
@@ -448,6 +521,16 @@ export class ArrayFieldCore<
     this.fields[field_idx + 1] = this.fields[field_idx];
     this.fields[field_idx] = next_idx;
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+  }
+  destroy() {
+    for (let i = 0; i < this.fields.length; i += 1) {
+      const f = this.fields[i];
+      f.field.destroy();
+    }
+    this._bus.destroy();
+  }
+  onChange(handler: Handler<TheArrayFieldCoreEvents<T>[ArrayFieldEvents.Change]>) {
+    return this._bus.on(ArrayFieldEvents.Change, handler);
   }
   onStateChange(handler: Handler<TheArrayFieldCoreEvents<T>[ArrayFieldEvents.StateChange]>) {
     return this._bus.on(ArrayFieldEvents.StateChange, handler);
@@ -532,6 +615,15 @@ export class ObjectFieldCore<
     this._name = name;
     this._hidden = hidden;
     this.fields = fields;
+
+    const _fields = Object.values(fields);
+    for (let i = 0; i < _fields.length; i += 1) {
+      const f = _fields[i];
+      f.onChange(() => {
+        // console.log("the object value change in ObjectFieldCore", f.label);
+        this._bus.emit(ObjectFieldEvents.Change);
+      });
+    }
   }
   get label() {
     return this._label;
@@ -565,6 +657,13 @@ export class ObjectFieldCore<
     this.fields[name] = field;
     this._bus.emit(ObjectFieldEvents.StateChange, { ...this.state });
   }
+  showField(name: string) {
+    const field = this.fields[name];
+    if (!field) {
+      return;
+    }
+    field.show();
+  }
   hideField(name: string) {
     const field = this.fields[name];
     if (!field) {
@@ -573,12 +672,13 @@ export class ObjectFieldCore<
     field.hide();
     this._bus.emit(ObjectFieldEvents.StateChange, { ...this.state });
   }
-  showField(name: string) {
-    const field = this.fields[name];
+  setFieldValue(key: string, v: any) {
+    const field = this.fields[key];
     if (!field) {
       return;
     }
-    field.show();
+    field.setValue(v);
+    this._bus.emit(ObjectFieldEvents.StateChange, { ...this.state });
   }
   hide() {
     this._hidden = true;
@@ -659,6 +759,11 @@ export class ObjectFieldCore<
       }, {});
   }
   destroy() {
+    const _fields = Object.values(this.fields);
+    for (let i = 0; i < _fields.length; i += 1) {
+      const f = _fields[i];
+      f.destroy();
+    }
     this._bus.destroy();
   }
   onChange(handler: Handler<TheObjectFieldCoreEvents<T>[ObjectFieldEvents.Change]>) {

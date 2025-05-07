@@ -1,12 +1,17 @@
 import { Show } from "solid-js";
 
+import { $workout_action_list } from "@/store";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { ScrollView } from "@/components/ui";
-import { createMember } from "@/biz/member/services";
+import { Sheet } from "@/components/ui/sheet";
+import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
+
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
 import { ScrollViewCore } from "@/domains/ui";
+import { createStudent } from "@/biz/student/services";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 
 import { MemberValuesViewModel } from "./model";
 import { MemberBasicValues } from "./components/basic-values";
@@ -37,8 +42,8 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
     // },
   ];
   const request = {
-    member: {
-      create: new RequestCore(createMember, { client: props.client }),
+    student: {
+      create: new RequestCore(createStudent, { client: props.client }),
     },
   };
   const methods = {
@@ -95,6 +100,20 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
         diet: diet_r.data,
       };
       console.log(values);
+      const r = await request.student.create.run({
+        name: values.name,
+        age: Number(values.age),
+        gender: Number(values.gender),
+      });
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      props.app.tip({
+        text: ["创建成功"],
+      });
     },
   };
 
@@ -107,6 +126,11 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
     $values_goal: vm.ui.$goal_values,
     $values_risk: vm.ui.$risk_values,
     $values_diet: vm.ui.$diet_values,
+    $workout_action_select: WorkoutActionSelectDialogViewModel({
+      defaultValue: [],
+      client: props.client,
+      list: $workout_action_list,
+    }),
   };
   let _cur_step = 0;
   let _state = {
@@ -234,6 +258,11 @@ export function HomeStudentCreatePage(props: ViewComponentProps) {
           </div>
         </div>
       </div>
+      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
+        <div class="w-screen bg-white">
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
+        </div>
+      </Sheet>
     </ScrollView>
   );
 }

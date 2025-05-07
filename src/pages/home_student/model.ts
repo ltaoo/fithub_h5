@@ -18,15 +18,19 @@ export function MemberValuesViewModel() {
         label: "性别",
         name: "gender",
         input: new SelectCore({
-          defaultValue: "male",
+          defaultValue: 1,
           options: [
             {
               label: "男",
-              value: "male",
+              value: 1,
             },
             {
               label: "女",
-              value: "female",
+              value: 2,
+            },
+            {
+              label: "其他",
+              value: 3,
             },
           ],
         }),
@@ -35,7 +39,7 @@ export function MemberValuesViewModel() {
         label: "年龄",
         name: "age",
         input: new InputCore({
-          defaultValue: "18",
+          defaultValue: 18,
         }),
       }),
     },

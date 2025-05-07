@@ -4,38 +4,34 @@
 import { For, createSignal, JSX } from "solid-js";
 import { ChevronRight } from "lucide-solid";
 
+import { useViewModelStore } from "@/hooks";
+import * as DropdownMenuPrimitive from "@/packages/ui/dropdown-menu";
+import { Show } from "@/packages/ui/show";
+
 import { DropdownMenuCore } from "@/domains/ui/dropdown-menu";
 import { MenuItemCore } from "@/domains/ui/menu/item";
-import { MenuCore } from "@/domains/ui/menu";
-import { Show } from "@/packages/ui/show";
 import { cn } from "@/utils";
 
-import * as DropdownMenuPrimitive from "@/packages/ui/dropdown-menu";
-
 export const DropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
-  const { store } = props;
-
-  const [state, setState] = createSignal(store.state);
-
-  store.onStateChange((nextState) => {
-    console.log("[COMPONENT]ui/dropdown-menu - store.onStateChange", nextState.items);
-    setState(nextState);
-  });
+  const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <DropdownMenuPrimitive.Root store={store}>
+    <DropdownMenuPrimitive.Root store={vm}>
       <Show when={props.children}>
-        <DropdownMenuPrimitive.Trigger class="inline-block" store={store}>
+        <DropdownMenuPrimitive.Trigger class="inline-block" store={vm}>
           {props.children}
         </DropdownMenuPrimitive.Trigger>
       </Show>
-      <DropdownMenuPrimitive.Portal store={store.menu}>
+      <DropdownMenuPrimitive.Portal store={vm.menu}>
         <DropdownMenuPrimitive.Content
           class={cn(
-            "z-50 min-w-[8rem] w-56 overflow-hidden rounded-md border-2 border-slate-100 bg-white p-1 text-slate-700 shadow-md dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400",
+            "__a z-50 min-w-[8rem] w-56 overflow-hidden rounded-md border-2 border-slate-100 bg-white p-1 text-slate-700 shadow-md dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400",
             props.class
           )}
-          store={store}
+          store={vm}
+          onAnimationStart={() => {
+            console.log("the dropdown menu is show");
+          }}
         >
           <For each={state().items}>
             {(item) => {

@@ -65,7 +65,7 @@ export function WorkoutPlanMineView(props: ViewComponentProps) {
       <ScrollView store={vm.ui.$view} class="">
         <div class="p-4">
           <div class="flex items-center justify-between"></div>
-          <ListView store={vm.request.workout_plan.mine_list}>
+          <ListView store={vm.request.workout_plan.mine_list} class="space-y-2">
             <For each={state().response.dataSource}>
               {(plan) => {
                 return (

@@ -9,19 +9,15 @@ import { connect } from "@/domains/ui/form/input/connect.web";
 import { ValueInputInterface } from "@/domains/ui/form/types";
 import { cn } from "@/utils";
 
-const Input = (
-  props: {
-    store: InputCore<string>;
-  } & JSX.HTMLAttributes<HTMLInputElement>
-) => {
+const Input = (props: { store: InputCore<any> } & JSX.HTMLAttributes<HTMLInputElement>) => {
   const { store } = props;
 
   let ref: HTMLInputElement | undefined = undefined;
   const [state, setState] = createSignal(store.state);
   // const [v, setV] = createSignal();
 
-  store.onStateChange((nextState) => {
-    setState(nextState);
+  store.onStateChange((v) => {
+    setState(v);
   });
   onMount(() => {
     const $input = ref;

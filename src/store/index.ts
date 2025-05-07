@@ -87,21 +87,21 @@ export const app = new Application({
       history.push("root.notfound");
       return Result.Ok(null);
     }
-    // if (!route.options?.require?.includes("login")) {
-    //   if (!history.isLayout(route.name)) {
-    //     history.push(route.name, query, { ignore: true });
-    //     return Result.Ok(null);
-    //   }
-    //   return Result.Err("can't goto layout");
-    // }
-    // console.log("[STORE]beforeReady - before if (!app.$user.isLogin", app.$user.isLogin);
-    // if (!app.$user.isLogin) {
-    //   app.tip({
-    //     text: ["请先登录"],
-    //   });
-    //   history.push("root.login", { redirect: route.pathname });
-    //   return Result.Err("need login");
-    // }
+    if (!route.options?.require?.includes("login")) {
+      if (!history.isLayout(route.name)) {
+        history.push(route.name, query, { ignore: true });
+        return Result.Ok(null);
+      }
+      return Result.Err("can't goto layout");
+    }
+    console.log("[STORE]beforeReady - before if (!app.$user.isLogin", app.$user.isLogin);
+    if (!app.$user.isLogin) {
+      app.tip({
+        text: ["请先登录"],
+      });
+      history.push("root.login", { redirect: route.pathname });
+      return Result.Err("need login");
+    }
     console.log("before client.appendHeaders", app.$user.token);
     if (!history.isLayout(route.name)) {
       history.push(route.name, query, { ignore: true });
@@ -116,7 +116,10 @@ export const $workout_action_list = new ListCore(
   new RequestCore(fetchWorkoutActionList, {
     process: fetchWorkoutActionListProcess,
     client,
-  })
+  }),
+  {
+    pageSize: 30,
+  }
 );
 export const $muscle_select = new ListCore(
   new RequestCore(fetchMuscleList, {

@@ -86,11 +86,42 @@ export function chinese_num_to_num(str: string) {
   return nzhcn.decodeS(str);
 }
 
-export function update<T>(arr: T[], index: number, nextItem: T) {
+export function update_arr_item<T>(arr: T[], index: number, v2: T) {
   if (index === -1) {
     return [...arr];
   }
-  return [...arr.slice(0, index), nextItem, ...arr.slice(index + 1)];
+  return [...arr.slice(0, index), v2, ...arr.slice(index + 1)];
+}
+export function remove_arr_item<T>(arr: T[], index: number) {
+  if (index === -1) {
+    return [...arr];
+  }
+  return [...arr.slice(0, index), ...arr.slice(index + 1)];
+}
+
+export function has_value(v: any) {
+  return v !== undefined && v !== null;
+}
+export function has_num_value(v: any) {
+  return v !== undefined && v !== null && v !== "";
+}
+
+export function calc_bottom_padding_need_add(arg: {
+  keyboard: { height: number; visible: boolean };
+  object: { x: number; y: number; width: number; height: number };
+  screen: { width: number; height: number };
+}) {
+  const { keyboard, object, screen } = arg;
+  const y = object.y + object.height;
+  const space_height_place_keyboard = screen.height - y;
+  console.log("space_height_place_keyboard", space_height_place_keyboard);
+  if (keyboard.visible) {
+    return 0;
+  }
+  if (space_height_place_keyboard < keyboard.height) {
+    return keyboard.height - space_height_place_keyboard;
+  }
+  return 0;
 }
 
 /**
@@ -157,6 +188,17 @@ export function bytes_to_size(bytes: number) {
   return `${remove_zero(size.toFixed(2))}${unit}`;
 }
 
+export const seconds_to_hour_template1 = {
+  hours(v: { value: number; text: string }) {
+    return `${v.text}小时`;
+  },
+  minutes(v: { value: number; text: string; hours: string }) {
+    return v.hours ? `${v.text}分钟` : `${v.value}分钟`;
+  },
+  seconds(v: { value: number; text: string }) {
+    return "";
+  },
+};
 /**
  * 秒数转时分秒
  * @param value
@@ -165,9 +207,9 @@ export function bytes_to_size(bytes: number) {
 export function seconds_to_hour_with_template(
   value: number,
   templates: {
-    hours: (v: number, v2: string) => string;
-    minutes: (v: number, v2: string) => string;
-    seconds: (v: number, v2: string) => string;
+    hours: (v: { value: number; text: string }) => string;
+    minutes: (v: { value: number; text: string; hours: string }) => string;
+    seconds: (v: { value: number; text: string }) => string;
   }
 ) {
   const hours = Math.floor(value / 3600);
@@ -175,14 +217,26 @@ export function seconds_to_hour_with_template(
   const seconds = Math.floor(value - hours * 3600 - minutes * 60);
 
   let str = "";
+  let hours_text = "";
   if (hours > 0 && templates.hours) {
-    str += templates.hours(hours, padding_zero(hours));
+    hours_text = templates.hours({
+      value: hours,
+      text: String(hours),
+    });
+    str += hours_text;
   }
   if (templates.minutes) {
-    str += templates.minutes(minutes, padding_zero(minutes));
+    str += templates.minutes({
+      value: minutes,
+      text: padding_zero(minutes),
+      hours: hours_text,
+    });
   }
   if (templates.seconds) {
-    str += templates.seconds(seconds, padding_zero(seconds));
+    str += templates.seconds({
+      value: seconds,
+      text: padding_zero(seconds),
+    });
   }
   return str;
 }

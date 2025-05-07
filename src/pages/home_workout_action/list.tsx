@@ -23,7 +23,7 @@ function HomeActionListPageViewModel(props: ViewComponentProps) {
   const ui = {
     $view: new ScrollViewCore({}),
     $type_select: new SelectCore({
-      defaultValue: WorkoutActionType.RESISTANCE,
+      defaultValue: WorkoutActionType.Resistance,
       options: WorkoutActionTypeOptions,
       onChange(v) {
         request.action.list.search({ type: v });
@@ -60,7 +60,7 @@ function HomeActionListPageViewModel(props: ViewComponentProps) {
     }),
     $goto_create_btn: new ButtonCore({
       onClick() {
-        props.history.push("root.home_layout.action_create");
+        props.history.push("root.action_create");
       },
     }),
   };
@@ -73,7 +73,7 @@ function HomeActionListPageViewModel(props: ViewComponentProps) {
   };
   const methods = {
     handleClickAction(action: { id: string | number }) {
-      props.history.push("root.home_layout.action_update", { id: action.id.toString() });
+      props.history.push("root.action_update", { id: action.id.toString() });
     },
   };
 

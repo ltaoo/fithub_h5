@@ -15,9 +15,10 @@ export type Search = {
 /**
  * 请求参数
  */
-export interface FetchParams extends Search {
+export interface FetchParams {
   page: number;
   pageSize: number;
+  next_marker: string;
 }
 
 /**

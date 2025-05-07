@@ -110,8 +110,8 @@ const portalVariants = cva("fixed inset-0 z-50 flex", {
 });
 
 type SheetProps = {
-  position: "bottom" | "top" | "left" | "right";
-  size: "content" | "default" | "sm" | "lg" | "xl" | "full";
+  position?: "bottom" | "top" | "left" | "right";
+  size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
   store: DialogCore;
 } & JSX.HTMLAttributes<HTMLDivElement>;
 
@@ -120,14 +120,16 @@ export function Sheet(props: SheetProps) {
 
   return (
     <DialogPrimitive.Portal store={props.store}>
-      <div class="fixed w-full bottom-0" style={{ "z-index": 9999 }}>
+      <div class="fixed w-full bottom-0" style={{ "z-index": 99 }}>
         {/* <Overlay store={props.store} /> */}
         <DialogPrimitive.Overlay
           store={vm}
           classList={{
             "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-all duration-200": true,
-            //       "animate-in fade-in": state().enter,
-            //       "animate-out fade-out": state().exit,
+            block: state().visible,
+            hidden: !state().visible,
+            "animate-in fade-in": state().enter,
+            "animate-out fade-out": state().exit,
           }}
           onClick={() => {
             vm.hide();
@@ -136,14 +138,21 @@ export function Sheet(props: SheetProps) {
         <DialogPrimitive.Content
           store={props.store}
           classList={{
-            "z-100 relative duration-200": true,
-            //       "animate-in slide-in-from-bottom": state().enter,
-            //       "animate-out slide-out-to-bottom": state().exit,
-            //       [props.class]: true,
-            [sheetVariants({ position: props.position, size: props.size })]: true,
+            "z-100 relative": true,
+            // [sheetVariants({ position: props.position, size: props.size })]: true,
           }}
         >
-          {props.children}
+          <div
+            classList={{
+              "duration-200": true,
+              block: state().visible,
+              hidden: !state().visible,
+              "animate-in slide-in-from-bottom": state().enter,
+              "animate-out slide-out-to-bottom": state().exit,
+            }}
+          >
+            {props.children}
+          </div>
         </DialogPrimitive.Content>
       </div>
     </DialogPrimitive.Portal>

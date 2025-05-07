@@ -1,4 +1,4 @@
-export function idsMapValue(ids: string) {
+export function idsMapValue(ids: string): { id: number }[] {
   return ids
     .split(",")
     .filter(Boolean)
@@ -12,5 +12,5 @@ export function idsMapValue(ids: string) {
     })
     .filter((v) => {
       return v !== null;
-    });
+    }) as { id: number }[];
 }

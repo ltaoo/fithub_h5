@@ -91,7 +91,7 @@ export function LoginPage(props: ViewComponentProps) {
         </div>
         {props.app.$user.isLogin ? (
           <div class="mt-2">
-            <Button size="lg" variant="subtle" store={vm.ui.$btn_goto_home}>
+            <Button class="w-full" variant="subtle" store={vm.ui.$btn_goto_home}>
               前往首页
             </Button>
             <div class="mt-1 text-sm text-w-fg-2 text-center">检测到当前已登录</div>

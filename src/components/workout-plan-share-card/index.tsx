@@ -78,7 +78,7 @@ export function WorkoutPlanPreviewCard(props: WorkoutPlanPreviewCardProps) {
                             <div class="flex-shrink-0 text-sm text-gray-400">x{step.sets_count}</div>
                           </div>
                         </Match>
-                        <Match when={[WorkoutPlanSetType.Combo].includes(step.set_type)}>
+                        <Match when={[WorkoutPlanSetType.Super].includes(step.set_type)}>
                           <div class="flex items-center gap-3">
                             <div class="flex-shrink-0 w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-medium text-sm">
                               {index() + 1}
@@ -99,33 +99,6 @@ export function WorkoutPlanPreviewCard(props: WorkoutPlanPreviewCardProps) {
                             <div class="flex-shrink-0 text-sm text-gray-400">x{step.sets_count}</div>
                           </div>
                         </Match>
-                        <Match when={[WorkoutPlanSetType.Free].includes(step.set_type)}>
-                          <div class="flex items-center gap-3">
-                            <div class="flex-shrink-0 w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-medium text-sm">
-                              {index() + 1}
-                            </div>
-                            <div class="flex-1">
-                              <div class="flex items-center gap-2">
-                                <span class="text-gray-200">{step.title}</span>
-                              </div>
-                              <For each={step.sets}>
-                                {(set, idx) => (
-                                  <div class="flex items-center gap-2 text-sm">
-                                    <span class="text-gray-200">{idx() + 1}组</span>
-                                    <For each={set.actions}>
-                                      {(action) => (
-                                        <div class="flex items-center gap-2">
-                                          <span class="text-gray-200">{action.action_name}</span>
-                                          <span class="text-blue-400 font-medium">{action.reps}</span>
-                                        </div>
-                                      )}
-                                    </For>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                          </div>
-                        </Match>
                       </Switch>
                     </div>
                   </div>
@@ -139,9 +112,7 @@ export function WorkoutPlanPreviewCard(props: WorkoutPlanPreviewCardProps) {
       {/* 底部推广区域 */}
       <div class="p-4 bg-gradient-to-t from-gray-900 to-transparent">
         <div class="flex items-center justify-between text-sm text-gray-400">
-          <div class="flex items-center gap-2">
-            {/* <span>扫码查看完整计划</span> */}
-          </div>
+          <div class="flex items-center gap-2">{/* <span>扫码查看完整计划</span> */}</div>
           <img src="https://unpkg.com/lucide-static@latest/icons/arrow-right.svg" class="w-4 h-4" />
         </div>
       </div>

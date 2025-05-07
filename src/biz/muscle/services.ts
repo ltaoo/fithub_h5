@@ -13,10 +13,10 @@ export function createMuscle(params: {
   return request.post<void>("/api/muscle/create", params);
 }
 
-export function fetchMuscleList(params: { ids: number[] }) {
+export function fetchMuscleList(params: Partial<{ ids: number[] }> = {}) {
   return request.post<{
     list: {
-      id: number | string;
+      id: number;
       name: string;
       zh_name: string;
       tags: string;

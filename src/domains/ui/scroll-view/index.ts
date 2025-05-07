@@ -312,7 +312,7 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
     }
     const curPoint = getPoint(e);
     const instanceY = curPoint.y - this.startPoint.y;
-    console.log("[DOMAIN]ScrollView - handlePointMove", scrollTop, instanceY);
+    // console.log("[DOMAIN]ScrollView - handlePointMove", scrollTop, instanceY);
     if (instanceY > 0) {
       if (scrollTop <= 0) {
         preventDefault(e);

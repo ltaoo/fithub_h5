@@ -41,7 +41,7 @@ export function WorkoutActionViewModel(props: Pick<ViewComponentProps, "client" 
         name: "type",
         label: "动作类型",
         input: new SelectCore({
-          defaultValue: WorkoutActionType.RESISTANCE,
+          defaultValue: WorkoutActionType.Resistance,
           options: WorkoutActionTypeOptions,
         }),
       }),
@@ -170,7 +170,7 @@ export function WorkoutActionViewModel(props: Pick<ViewComponentProps, "client" 
       zh_name: values.zh_name,
       alias: values.alias.join(","),
       overview: values.overview,
-      type: values.type || WorkoutActionType.RESISTANCE,
+      type: values.type || WorkoutActionType.Resistance,
       level: values.level,
       tags1: values.tags1.join(","),
       tags2: values.tags2.join(","),

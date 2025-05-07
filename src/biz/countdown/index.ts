@@ -10,6 +10,9 @@ export function CountdownViewModel(props: {
   onRefresh?: (text: string) => void;
 }) {
   const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
     start(started_at: number) {
       if (_is_running) {
         return;
@@ -81,7 +84,9 @@ export function CountdownViewModel(props: {
         methods.start(_started_at !== 0 ? _started_at : new Date().valueOf());
         return;
       }
+      console.log("_time and started at", _started_at, _time);
       _time = new Date().valueOf() - _started_at;
+      console.log("_time and started at 2", _started_at, _time);
       if (_time > 99 * 60 * 1000) {
         refresh(99 * 60 * 1000);
         bus.emit(Events.StateChange, { ..._state });
@@ -99,9 +104,13 @@ export function CountdownViewModel(props: {
     },
   };
 
+  /** 等待中 */
   let _is_pending = props.finished ? false : true;
+  /** 进行中 */
   let _is_running = false;
+  /** 已结束 */
   let _is_finished = props.finished ?? false;
+  /** 已暂停 */
   let _is_interrupt = false;
 
   let _started_at = 0;

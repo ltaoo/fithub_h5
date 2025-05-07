@@ -38,10 +38,8 @@ const Portal = (
     store: MenuCore;
   } & JSX.HTMLAttributes<HTMLElement>
 ) => {
-  const { store } = props;
-
   return (
-    <Presence store={store.presence}>
+    <Presence store={props.store.presence}>
       <PortalPrimitive>{props.children}</PortalPrimitive>
     </Presence>
   );

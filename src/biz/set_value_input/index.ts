@@ -7,7 +7,10 @@ interface WeightInputViewModelProps {
   unit?: SetValueUnit;
 }
 
-export type SetValueUnit = "公斤" | "磅" | "秒" | "分" | "次";
+export type SetValueUnit = "公斤" | "磅" | "秒" | "分" | "次" | "千米" | "米" | "千卡";
+export function getSetValueUnit(v: SetValueUnit): SetValueUnit {
+  return v;
+}
 
 export function SetValueInputViewModel(props: WeightInputViewModelProps) {
   const methods = {
@@ -96,10 +99,10 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     $popover: new PopoverCore(),
   };
   let _text = props.defaultValue !== undefined ? props.defaultValue.toString() : "0";
-  let _unit: SetValueUnit = props.unit ?? "公斤";
+  let _unit: SetValueUnit = props.unit ?? getSetValueUnit("公斤");
   let _unit_options: { value: SetValueUnit; label: SetValueUnit }[] = [
-    { value: "公斤", label: "公斤" },
-    { value: "磅", label: "磅" },
+    { value: getSetValueUnit("公斤"), label: "公斤" },
+    { value: getSetValueUnit("磅"), label: "磅" },
   ];
   let _state = {
     get value() {

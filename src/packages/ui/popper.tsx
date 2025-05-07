@@ -13,16 +13,11 @@ const Root = (props: { store?: PopperCore } & JSX.HTMLAttributes<HTMLElement>) =
   return props.children;
 };
 
-const Anchor = (
-  props: {
-    store: PopperCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
+const Anchor = (props: { store: PopperCore } & JSX.HTMLAttributes<HTMLElement>) => {
   let $anchor: HTMLDivElement;
 
   // console.log("[COMPONENT]PopperAnchor - before setReference", store.reference);
-  if (!store.reference) {
+  if (!props.store.reference) {
     return (
       <div
         ref={(el) => {
@@ -32,7 +27,7 @@ const Anchor = (
             return;
           }
           props.ref = el;
-          store.setReference({
+          props.store.setReference({
             getRect() {
               const rect = $anchor.getBoundingClientRect();
               return rect;

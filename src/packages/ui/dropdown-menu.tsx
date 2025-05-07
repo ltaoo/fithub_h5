@@ -22,32 +22,26 @@ const Root = (
   );
 };
 
-const Trigger = (
-  props: {
-    store: DropdownMenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
-
-  const [state, setState] = createSignal(store.state);
-  store.onStateChange((nextState) => {
-    setState(nextState);
+const Trigger = (props: { store: DropdownMenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
+  const [state, setState] = createSignal(props.store.state);
+  props.store.onStateChange((v) => {
+    setState(v);
   });
 
   const disabled = () => state().disabled;
 
   return (
-    <MenuPrimitive.Anchor class={props.class} store={store.menu}>
+    <MenuPrimitive.Anchor class={props.class} store={props.store.menu}>
       <button
         onPointerDown={() => {
-          store.toggle();
+          props.store.toggle();
         }}
         onKeyDown={(event) => {
           if (disabled()) {
             return;
           }
           if (["Enter", " "].includes(event.key)) {
-            store.toggle();
+            props.store.toggle();
             return;
           }
           if (event.key === "ArrowDown") {
@@ -69,15 +63,9 @@ const Trigger = (
 /* -------------------------------------------------------------------------------------------------
  * DropdownMenuPortal
  * -----------------------------------------------------------------------------------------------*/
-const Portal = (
-  props: {
-    store: MenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
-
+const Portal = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   return (
-    <MenuPrimitive.Portal class={props.class} store={store}>
+    <MenuPrimitive.Portal class={props.class} store={props.store}>
       {props.children}
     </MenuPrimitive.Portal>
   );

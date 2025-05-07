@@ -42,6 +42,7 @@ type InputState<T> = {
   placeholder: string;
   disabled: boolean;
   loading: boolean;
+  focus: boolean;
   type: string;
   tmpType: string;
   allowClear: boolean;
@@ -65,7 +66,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
   valueUsed: unknown;
   tmpType = "";
 
-  get state() {
+  get state(): InputState<T> {
     return {
       value: this.value,
       placeholder: this.placeholder,

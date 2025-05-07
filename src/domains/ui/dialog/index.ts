@@ -31,13 +31,6 @@ type TheTypesOfEvents = {
   [Events.AnimationEnd]: void;
   [Events.StateChange]: DialogState;
 };
-type DialogState = {
-  open: boolean;
-  title: string;
-  footer?: boolean;
-  /** 能否手动关闭 */
-  closeable?: boolean;
-};
 export type DialogProps = {
   title?: string;
   footer?: boolean;
@@ -45,6 +38,17 @@ export type DialogProps = {
   onCancel?: () => void;
   onOk?: () => void;
   onUnmounted?: () => void;
+};
+
+type DialogState = {
+  open: boolean;
+  title: string;
+  footer: boolean;
+  /** 能否手动关闭 */
+  closeable: boolean;
+  enter: boolean;
+  visible: boolean;
+  exit: boolean;
 };
 
 export class DialogCore extends BaseDomain<TheTypesOfEvents> {
@@ -63,6 +67,9 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
       title: this.title,
       footer: this.footer,
       closeable: this.closeable,
+      enter: this.present.state.enter,
+      visible: this.present.state.visible,
+      exit: this.present.state.exit,
     };
   }
 
@@ -98,6 +105,9 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
     this.present.onUnmounted(() => {
       this.emit(Events.Unmounted);
     });
+    this.present.onStateChange(() => {
+      this.emit(Events.StateChange, { ...this.state });
+    });
     this.okBtn.onClick(() => {
       this.ok();
     });
@@ -107,17 +117,17 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 显示弹窗 */
   show() {
-    if (this.open) {
-      return;
-    }
+    // if (this.open) {
+    //   return;
+    // }
     // this.emit(Events.BeforeShow);
     this.present.show();
   }
   /** 隐藏弹窗 */
   hide() {
-    if (this.open === false) {
-      return;
-    }
+    // if (this.open === false) {
+    //   return;
+    // }
     // this.emit(Events.Cancel);
     this.present.hide();
   }
