@@ -16,7 +16,8 @@ export type FormInputInterface<T> = {
     | "upload"
     | "date-picker"
     | "list"
-    | "form";
+    | "form"
+    | "drag-select";
   // state: any;
   value: T;
   defaultValue: T;

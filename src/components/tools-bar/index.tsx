@@ -8,15 +8,15 @@ export function ToolsBar(props: { store: PresenceCore } & JSX.HTMLAttributes<HTM
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="flex items-center justify-between rounded-full bg-gray-100 shadow-md transition-all duration-300">
+    <div class="flex items-center justify-between rounded-full transition-all duration-300 bg-gray-200">
       <div
-        class="p-2 "
+        class="flex items-center justify-center p-4 rounded-full bg-gray-200"
         onClick={() => {
           vm.toggle();
         }}
       >
-        <Show when={state().visible} fallback={<ChevronLeft class="w-6 h-6" />}>
-          <ChevronRight class="w-6 h-6" />
+        <Show when={state().visible} fallback={<ChevronLeft class="w-8 h-8 text-gray-800" />}>
+          <ChevronRight class="w-8 h-8 text-gray-800" />
         </Show>
       </div>
       <div>

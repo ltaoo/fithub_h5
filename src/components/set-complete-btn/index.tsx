@@ -16,17 +16,24 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
         props.onClick?.(event);
       }}
     >
-      <div class="flex items-center justify-center px-4 h-10 rounded-lg border border-gray-300  bg-white">
+      <div
+        class=""
+        classList={{
+          "flex items-center justify-center px-4 h-10 w-10 rounded-full": true,
+          "bg-gray-100": !state().value,
+          "bg-white": state().value,
+        }}
+      >
         <Show
           when={state().value}
           fallback={
             <div class="text-gray-400">
-              <Check size={16} />
+              <Check class="w-4 h-4" />
             </div>
           }
         >
           <div class="text-green-500">
-            <Check size={16} />
+            <Check class="w-4 h-4" />
           </div>
         </Show>
       </div>

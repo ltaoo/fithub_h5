@@ -29,8 +29,9 @@ function Application() {
     setSubViews(v);
   });
   app.onTip((msg) => {
-    const { text } = msg;
+    const { icon, text } = msg;
     toast.show({
+      icon,
       texts: text,
     });
   });

@@ -7,14 +7,22 @@ export function WorkoutPlanCard(props: {
   cover_path: string;
   tags: string[];
   estimated_duration_text: string;
+  onClick?: () => void;
 }) {
   return (
     <div
       class="overflow-hidden relative w-full h-[160px] rounded-lg"
-      style={{
-        "background-size": "100% auto",
-        "background-position": "center",
-        "background-image": `url(${props.cover_path})`,
+      style={
+        props.cover_path
+          ? {
+              "background-size": "100% auto",
+              "background-position": "center",
+              "background-image": `url(${props.cover_path})`,
+            }
+          : {}
+      }
+      onClick={() => {
+        props.onClick?.();
       }}
     >
       <div class="z-10 absolute inset-0 bg-gradient-to-r from-gray-600 to-transparent"></div>

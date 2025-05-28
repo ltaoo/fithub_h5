@@ -1,43 +1,46 @@
 import { JSXElement } from "solid-js";
 
+import { PageKeys } from "./routes";
+
 import { ViewComponent } from "@/store/types";
 import { LoginPage } from "@/pages/login";
 import { RegisterPage } from "@/pages/register";
 import { NotFoundPage } from "@/pages/notfound";
 import { HomeLayout } from "@/pages/home/layout";
 import { HomeIndexPage } from "@/pages/home";
-import { HomeActionListPage } from "@/pages/home_workout_action/list";
-import { HomeActionCreatePage } from "@/pages/home_workout_action/create";
-import { HomeActionUpdatePage } from "@/pages/home_workout_action/update";
-import { HomeWorkoutPlanListPage } from "@/pages/home_workout_plan/list";
-import { WorkoutPlanCreatePage } from "@/pages/home_workout_plan/create";
-import { HomeWorkoutPlanProfilePage } from "@/pages/home_workout_plan/profile";
-import { HomeWorkoutPlanUpdatePage } from "@/pages/home_workout_plan/update";
-import { WorkoutPlanRecommendLayout } from "@/pages/home_workout_plan/recommend_layout";
-import { WorkoutPlanMineView } from "@/pages/home_workout_plan/plan_mine";
-import { WorkoutPlanSingleView } from "@/pages/home_workout_plan/plan_single";
-import { WorkoutPlanIntervalView } from "@/pages/home_workout_plan/plan_interval";
-import { WorkoutPlanRecommendView } from "@/pages/home_workout_plan/plan_recommend";
-import { HomeStudentListPage } from "@/pages/home_student/list";
-import { HomeStudentCreatePage } from "@/pages/home_student/create";
-import { HomeStudentUpdatePage } from "@/pages/home_student/update";
-import { HomeStudentProfilePage } from "@/pages/home_student/profile";
-import { HomeMusclePage } from "@/pages/home_muscle";
-import { HomeEquipmentPage } from "@/pages/home_equipment";
-import { HomeWorkoutDayUpdatePage } from "@/pages/home_workout_day/update";
-import { WorkoutDayPreparingPage } from "@/pages/home_workout_day/prepare";
+import { HomeActionListPage } from "@/pages/workout_action/list";
+import { HomeActionCreatePage } from "@/pages/workout_action/create";
+import { HomeActionUpdatePage } from "@/pages/workout_action/update";
+import { HomeWorkoutPlanListPage } from "@/pages/workout_plan/list";
+import { WorkoutPlanCreatePage } from "@/pages/workout_plan/create";
+import { HomeWorkoutPlanProfilePage } from "@/pages/workout_plan/profile";
+import { HomeWorkoutPlanUpdatePage } from "@/pages/workout_plan/update";
+import { WorkoutPlanRecommendLayout } from "@/pages/workout_plan/recommend_layout";
+import { WorkoutPlanMineView } from "@/pages/workout_plan/plan_mine";
+import { WorkoutPlanSingleView } from "@/pages/workout_plan/plan_single";
+import { WorkoutPlanIntervalView } from "@/pages/workout_plan/plan_interval";
+import { WorkoutPlanRecommendView } from "@/pages/workout_plan/plan_recommend";
+import { HomeStudentListPage } from "@/pages/student/list";
+import { HomeStudentCreatePage } from "@/pages/student/create";
+import { HomeStudentUpdatePage } from "@/pages/student/update";
+import { HomeStudentProfilePage } from "@/pages/student/profile";
+import { MuscleListView } from "@/pages/muscle/list";
+import { HomeEquipmentPage } from "@/pages/equipment";
+import { HomeWorkoutDayUpdatePage } from "@/pages/workout_day/update";
+import { WorkoutDayPreparingPage } from "@/pages/workout_day/prepare";
 import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
 import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
-import { HomeMineView } from "@/pages/home_mine";
+import { HomeMineView } from "@/pages/mine";
 import { WorkoutPlanCollectionCreateView } from "@/pages/workout_plan_collection/create";
 import { WorkoutPlanCollectionUpdateView } from "@/pages/workout_plan_collection/update";
 import { WorkoutPlanCollectionCreateSuccessView } from "@/pages/workout_plan_collection/success";
-import { WorkoutActionProfileView } from "@/pages/home_workout_action/profile";
+import { WorkoutActionProfileView } from "@/pages/workout_action/profile";
 import { WorkoutActionHistoryListView } from "@/pages/workout_action_history/list";
-import { WorkoutDayListView } from "@/pages/home_workout_day/list";
-import { WorkoutDayProfileView } from "@/pages/home_workout_day/profile";
-
-import { PageKeys } from "./routes";
+import { WorkoutDayListView } from "@/pages/workout_day/list";
+import { WorkoutDayProfileView } from "@/pages/workout_day/profile";
+import { ToolsView } from "@/pages/tools";
+import { RMCalcView } from "@/pages/tools/rm_calc";
+import { BMRCalcView } from "@/pages/tools/bmr_calc";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -45,6 +48,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.notfound": NotFoundPage,
   "root.home_layout": HomeLayout,
   "root.home_layout.index": HomeIndexPage,
+  "root.home_layout.tools": ToolsView,
+  "root.tools_rm_calc": RMCalcView,
+  "root.tools_bmr_calc": BMRCalcView,
   // 训练计划
   "root.workout_plan_list": HomeWorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,
@@ -70,10 +76,8 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.workout_day_list": WorkoutDayListView,
   "root.workout_day_profile": WorkoutDayProfileView,
   "root.action_history_list": WorkoutActionHistoryListView,
-  // 假聊
-  "root.fake_chat": MemberListInFakeChatPage,
   // 肌肉
-  "root.muscle": HomeMusclePage,
+  "root.muscle": MuscleListView,
   // 器材、设备
   "root.equipment": HomeEquipmentPage,
   // 健身动作
@@ -81,5 +85,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.action_create": HomeActionCreatePage,
   "root.action_update": HomeActionUpdatePage,
   "root.action_profile": WorkoutActionProfileView,
+  // 假聊
+  "root.fake_chat": MemberListInFakeChatPage,
   "root.fake_chat_profile": ChatProfileInFakeChatPage,
 };

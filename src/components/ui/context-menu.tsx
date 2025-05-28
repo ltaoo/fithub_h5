@@ -69,7 +69,7 @@ const ItemWithSub = (
   item.onStateChange((nextState) => {
     setItemState(nextState);
   });
-  item.menu!.onChange((nextState) => {
+  item.menu!.onStateChange((nextState) => {
     setState(nextState);
   });
 

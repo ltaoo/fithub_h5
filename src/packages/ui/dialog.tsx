@@ -20,7 +20,7 @@ const Portal = (
   const { store, enterClassName, exitClassName } = props;
 
   return (
-    <Presence store={store.present} enterClassName={enterClassName} exitClassName={exitClassName}>
+    <Presence store={store.present} classList={props.classList}>
       <PortalPrimitive>
         <div class={props.class}>{props.children}</div>
       </PortalPrimitive>
@@ -31,40 +31,26 @@ const Portal = (
 const Overlay = (
   props: { store: DialogCore; enterClassName?: string; exitClassName?: string } & JSX.HTMLAttributes<HTMLDivElement>
 ) => {
-  const { store, enterClassName, exitClassName } = props;
-
   return (
     <Presence
-      store={store.present}
+      store={props.store.present}
       class={cn(props.class)}
-      enterClassName={enterClassName}
-      exitClassName={exitClassName}
+      classList={props.classList}
       onClick={() => {
-        if (!store.closeable) {
+        if (!props.store.closeable) {
           return;
         }
-        store.hide();
+        props.store.hide();
       }}
     ></Presence>
   );
 };
 
 const Content = (
-  props: {
-    store: DialogCore;
-    enterClassName?: string;
-    exitClassName?: string;
-  } & JSX.HTMLAttributes<HTMLElement>
+  props: { store: DialogCore; enterClassName?: string; exitClassName?: string } & JSX.HTMLAttributes<HTMLElement>
 ) => {
-  const { store, enterClassName, exitClassName } = props;
-
   return (
-    <Presence
-      store={store.present}
-      class={cn(props.class)}
-      enterClassName={enterClassName}
-      exitClassName={exitClassName}
-    >
+    <Presence store={props.store.present} class={cn(props.class)} classList={props.classList}>
       {props.children}
     </Presence>
   );
@@ -81,6 +67,7 @@ const Close = (props: { store: DialogCore } & JSX.HTMLAttributes<HTMLElement>) =
   return (
     <div
       class={props.class}
+      classList={props.classList}
       data-state={getState(state().open)}
       onClick={() => {
         props.store.hide();

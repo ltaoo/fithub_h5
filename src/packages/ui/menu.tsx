@@ -33,11 +33,7 @@ const Anchor = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) =>
   );
 };
 
-const Portal = (
-  props: {
-    store: MenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
+const Portal = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   return (
     <Presence store={props.store.presence}>
       <PortalPrimitive>{props.children}</PortalPrimitive>
@@ -45,11 +41,7 @@ const Portal = (
   );
 };
 
-const Content = (
-  props: {
-    store: MenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
+const Content = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store } = props;
 
   return (
@@ -61,33 +53,21 @@ const Content = (
   );
 };
 // 这里多一个，是因为还存在 MenuContentModal 场景，这两个和 MenuSubContent 都复用 MenuContentImpl
-const ContentNonModal = (
-  props: {
-    store: MenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
+const ContentNonModal = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
+  // const { store } = props;
 
   return (
-    <ContentImpl store={store} class={props.class}>
+    <ContentImpl store={props.store} class={props.class} classList={props.classList}>
       {props.children}
     </ContentImpl>
   );
 };
 
-const ContentImpl = (
-  props: {
-    store: MenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
-
+const ContentImpl = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   return (
-    <DismissableLayer store={store.layer}>
-      <PopperPrimitive.Content store={store.popper} class={props.class}>
-        {props.children}
-      </PopperPrimitive.Content>
-    </DismissableLayer>
+    <PopperPrimitive.Content store={props.store.popper} class={props.class} classList={props.classList}>
+      {props.children}
+    </PopperPrimitive.Content>
   );
 };
 

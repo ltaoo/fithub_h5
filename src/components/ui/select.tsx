@@ -18,38 +18,22 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
   const { store, position = "popper" } = props;
 
   const [state, setState] = createSignal(store.state);
-  const [popper, $popper] = useViewModelStore(props.store.popper);
+  const [popper] = useViewModelStore(props.store.popper);
 
   store.onStateChange((v) => {
-    // console.log("[COMPONENT]ui/select - onStateChange", v);
     setState(v);
   });
 
   return (
     <div class="relative">
-      {/* <select
-        class="absolute inset-0 opacity-0 cursor-pointer"
-        value={state().value}
-        onChange={(event) => {
-          const selected = event.currentTarget.value;
-          store.select(selected);
-        }}
-      >
-        <For each={state().options}>
-          {(opt) => {
-            return <option value={opt.value}>{opt.label}</option>;
-          }}
-        </For>
-      </select> */}
       <div
         class={cn(
           "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           props.class
         )}
-        onClick={async (event) => {
+        onClick={(event) => {
           const client = event.currentTarget.getBoundingClientRect();
           const { clientHeight, clientWidth } = window.document.documentElement;
-          // console.log("[]click", client.y, client.height);
           store.popper.setReference(
             {
               getRect() {
@@ -58,7 +42,6 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
             },
             { force: true }
           );
-          await sleep(200);
           props.store.presence.show();
         }}
       >
@@ -70,69 +53,64 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
       <Portal>
         <Presence store={props.store.presence}>
           <div
-            class="z-[998] fixed inset-0 bg-black opacity-20"
+            classList={{
+              "z-[998] fixed inset-0 bg-black opacity-20 duration-200": true,
+              "animate-in fade-in": state().enter,
+              "animate-out fade-out": state().exit,
+            }}
             onClick={() => {
               props.store.presence.hide();
             }}
           ></div>
           <div
-            classList={{
-              "z-[999] min-w-[120px] border rounded-md bg-white duration-200": true,
-              block: state().visible,
-              hidden: !state().visible,
-              "animate-in fade-in": state().enter,
-              "animate-out fade-out": state().exit,
-            }}
+            class="z-[999]"
             style={{
               position: "fixed",
-              left: popper().x + "px",
-              top: popper().y + "px",
+              left: 0,
+              top: 0,
               opacity: popper().isPlaced ? 100 : 0,
+              transform: popper().isPlaced
+                ? `translate3d(${Math.round(popper().x)}px, ${Math.round(popper().y)}px, 0)`
+                : "translate3d(0, -200%, 0)",
             }}
           >
             <div
               classList={{
-                "__a ": true,
-              }}
-              onAnimationStart={(event) => {
-                const reference = props.store.popper.reference;
-                if (!reference) {
-                  return;
-                }
-                const floating = event.currentTarget.getBoundingClientRect();
-                const ref = reference.getRect();
-                const { clientHeight, clientWidth } = window.document.documentElement;
-                // console.log("[]ref", ref.y, ref.height, ref.y + ref.height + 4);
-                // console.log("[]floating", floating.height);
-                // console.log("[]window", clientHeight);
-                const position = {
-                  x: ref.x,
-                  y: ref.y + ref.height + 4,
-                };
-                if (clientHeight - position.y < floating.height + 24) {
-                  position.y = ref.y - floating.height - 4;
-                }
-                // console.log("[]position", position);
-                store.popper.setState(position);
+                "min-w-[120px] border rounded-md bg-white duration-200": true,
+                "animate-in fade-in": state().enter,
+                "animate-out fade-out": state().exit,
               }}
             >
-              <For each={state().options}>
-                {(opt) => {
-                  return (
-                    <div
-                      classList={{
-                        "py-2 px-4": true,
-                        "bg-gray-100": opt.selected,
-                      }}
-                      onClick={() => {
-                        props.store.select(opt.value);
-                      }}
-                    >
-                      {opt.label}
-                    </div>
-                  );
+              <div
+                classList={{
+                  "z-50 min-w-[4rem] w-36 overflow-hidden rounded-md border-2 border-slate-100 bg-white p-1 text-slate-700 shadow-md dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400":
+                    true,
+                  "__a ": true,
                 }}
-              </For>
+                onAnimationStart={(event) => {
+                  const floating = event.currentTarget.getBoundingClientRect();
+                  props.store.popper.place2(floating);
+                }}
+              >
+                <For each={state().options}>
+                  {(opt) => {
+                    return (
+                      <div
+                        classList={{
+                          "relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700":
+                            true,
+                          "bg-gray-100": opt.selected,
+                        }}
+                        onClick={() => {
+                          props.store.select(opt.value);
+                        }}
+                      >
+                        {opt.label}
+                      </div>
+                    );
+                  }}
+                </For>
+              </div>
             </div>
           </div>
         </Presence>

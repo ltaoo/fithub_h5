@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+.safe-height {
+  height: env(safe-area-inset-bottom);
+  height: constant(safe-area-inset-bottom);
+}
+.scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll--fix {
+  overscroll-behavior: auto;
+}
+.scroll--hidden::-webkit-scrollbar {
+  display: none;
+}
+.dialog-touch-container {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bubble::before {
+  border: 16px solid transparent; /* 调整三角形大小 */
+  top: 8px; /* 调整垂直位置 */
+}
+
 .bottom-menu__indicator {
   width: 100px;
   box-sizing: border-box;

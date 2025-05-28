@@ -20,6 +20,9 @@ type DropdownMenuState = {
   items: MenuItemCore[];
   open: boolean;
   disabled: boolean;
+  enter: boolean;
+  visible: boolean;
+  exit: boolean;
 };
 export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
   open = false;
@@ -30,6 +33,9 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
       items: this.items,
       open: this.open,
       disabled: this.disabled,
+      enter: this.menu.presence?.state.enter,
+      visible: this.menu.presence?.state.visible,
+      exit: this.menu.presence?.state.exit,
     };
   }
 
@@ -53,6 +59,12 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
         onHidden();
       }
     });
+    this.menu.presence.onStateChange(() => {
+      this.emit(Events.StateChange, { ...this.state });
+    });
+    // this.menu.popper.onStateChange(() => {
+    //   this.emit(Events.StateChange, { ...this.state });
+    // });
   }
 
   listenItems(items: MenuItemCore[]) {
@@ -118,15 +130,15 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
       ...this.state,
     });
   }
-  toggle(position?: Partial<{ x: number; y: number }>) {
+  toggle(position?: Partial<{ x: number; y: number; width: number; height: number }>) {
     if (position) {
-      const { x, y } = position;
+      const { x, y, width = 8, height = 8 } = position;
       this.menu.popper.updateReference({
         // @ts-ignore
         getRect() {
           return {
-            width: 8,
-            height: 8,
+            width,
+            height,
             x,
             y,
           };
@@ -136,7 +148,7 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
     this.menu.toggle();
   }
   hide() {
-    console.log('[DOMAIN/ui]dropdown-menu/index - hide');
+    // console.log("[DOMAIN/ui]dropdown-menu/index - hide");
     this.menu.hide();
   }
   unmount() {

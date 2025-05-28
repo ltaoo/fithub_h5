@@ -148,7 +148,7 @@ export class PopperCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 更新基准元素（右键菜单时会用到这个方法） */
   updateReference(reference: { getRect: () => Rect }) {
-    this.log("updateReference", this.reference);
+    // this.log("updateReference", this.reference);
     this.reference = reference;
   }
   removeReference() {
@@ -184,9 +184,33 @@ export class PopperCore extends BaseDomain<TheTypesOfEvents> {
       ...this.state,
     });
   }
+  place2(floating: { x: number; y: number; width: number; height: number }) {
+    const reference = this.reference;
+    if (!reference) {
+      return;
+    }
+    const ref = reference.getRect();
+    const { clientHeight, clientWidth } = window.document.documentElement;
+    const position = {
+      x: ref.x,
+      y: ref.y + ref.height + 4,
+    };
+    // console.log("[COMPONENT]dropdown-menu - ref", ref.x, ref.y, ref.width, ref.height);
+    // console.log("[COMPONENT]dropdown-menu - floating", floating.width, floating.height);
+    if (clientHeight - position.y < floating.height + 24) {
+      position.y = ref.y - floating.height - 4;
+    }
+    if (clientWidth - position.x < floating.width + 24) {
+      position.x = ref.x + ref.width - floating.width - 4;
+    }
+    if (position.y <= 0) {
+      position.y = 12;
+    }
+    this.setState(position);
+  }
   /** 计算浮动元素位置 */
   async place() {
-    console.log(...this.log("place", this.reference, this.floating));
+    // console.log(...this.log("place", this.reference, this.floating));
     this.middleware = [
       // arrow({
       //   element: this.floating,

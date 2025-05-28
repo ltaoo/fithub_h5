@@ -121,20 +121,21 @@ export function Sheet(props: SheetProps) {
   return (
     <DialogPrimitive.Portal store={props.store}>
       <div class="fixed w-full bottom-0" style={{ "z-index": 99 }}>
-        {/* <Overlay store={props.store} /> */}
-        <DialogPrimitive.Overlay
-          store={vm}
-          classList={{
-            "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-all duration-200": true,
-            block: state().visible,
-            hidden: !state().visible,
-            "animate-in fade-in": state().enter,
-            "animate-out fade-out": state().exit,
-          }}
-          onClick={() => {
-            vm.hide();
-          }}
-        />
+        <Show when={state().mask}>
+          <DialogPrimitive.Overlay
+            store={vm}
+            classList={{
+              "fixed inset-0 z-0 bg-black/50 backdrop-blur-sm transition-all duration-200": true,
+              block: state().visible,
+              hidden: !state().visible,
+              "animate-in fade-in": state().enter,
+              "animate-out fade-out": state().exit,
+            }}
+            onClick={() => {
+              vm.hide();
+            }}
+          />
+        </Show>
         <DialogPrimitive.Content
           store={props.store}
           classList={{

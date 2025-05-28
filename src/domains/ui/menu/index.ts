@@ -16,7 +16,7 @@ enum Events {
   LeaveItem,
   EnterMenu,
   LeaveMenu,
-  Change,
+  StateChange,
 }
 type TheTypesOfEvents = {
   [Events.Show]: void;
@@ -25,7 +25,7 @@ type TheTypesOfEvents = {
   [Events.LeaveItem]: MenuItemCore;
   [Events.EnterMenu]: void;
   [Events.LeaveMenu]: void;
-  [Events.Change]: MenuCoreState;
+  [Events.StateChange]: MenuCoreState;
 };
 type MenuCoreState = {
   /** 是否是展开状态 */
@@ -116,6 +116,7 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
 
   toggle() {
     const { open } = this.state;
+    console.log("[DOMAIN]ui/dropdown-menu - toggle", open);
     // this.log("toggle", open);
     if (open) {
       this.hide();
@@ -132,7 +133,7 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
     this.presence.show();
     this.popper.place();
     this.emit(Events.Show);
-    // this.emit(Events.StateChange, { ...this.state });
+    this.emit(Events.StateChange, { ...this.state });
   }
   hide() {
     if (this.state.open === false) {
@@ -141,9 +142,9 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
     // console.log("[DOMAIN]ui/menu/index - hide");
     this.state.open = false;
     // this.log("hide");
-    this.presence.hide({ destroy: true });
+    this.presence.hide();
     this.emit(Events.Hidden);
-    this.emit(Events.Change, { ...this.state });
+    this.emit(Events.StateChange, { ...this.state });
   }
   /** 处理选项 */
   listen_item(item: MenuItemCore) {
@@ -245,7 +246,7 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
     this.state.items = items;
     this.items = items;
     this.listen_items(items);
-    this.emit(Events.Change, {
+    this.emit(Events.StateChange, {
       ...this.state,
     });
   }
@@ -312,8 +313,8 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
   onLeave(handler: Handler<TheTypesOfEvents[Events.LeaveMenu]>) {
     return this.on(Events.LeaveMenu, handler);
   }
-  onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
-    return this.on(Events.Change, handler);
+  onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
+    return this.on(Events.StateChange, handler);
   }
 
   get [Symbol.toStringTag]() {

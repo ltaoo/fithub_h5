@@ -68,6 +68,7 @@ export type ScrollViewProps = {
   // down: Partial<PullToDownOptions>;
   /** 下拉多少距离后刷新 */
   offset?: number;
+  disabled?: boolean;
   onScroll?: (pos: { scrollTop: number }) => void;
   onReachBottom?: () => void;
   onPullToRefresh?: () => void;
@@ -114,6 +115,7 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
     scrollTop: 0,
     contentHeight: 0,
   };
+  disabled = false;
   canPullToRefresh: boolean;
   canReachBottom = true;
   /** 隐藏下拉刷新指示器 */
@@ -193,10 +195,11 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
   constructor(props: ScrollViewProps = {}) {
     super(props);
 
-    const { os, offset = 80, onScroll, onReachBottom, onPullToRefresh, onPullToBack } = props;
+    const { os, offset = 80, disabled = false, onScroll, onReachBottom, onPullToRefresh, onPullToBack } = props;
     // console.log(props);
 
     this.options = props;
+    this.disabled = disabled;
     if (os) {
       this.os = os;
     }

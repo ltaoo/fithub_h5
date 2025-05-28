@@ -6,14 +6,14 @@ export function connect(history: HistoryCore<string, any>) {
   history.reload = () => {
     window.location.reload();
   };
-  history.back = () => {
-    window.history.back();
-  };
+  // history.back = () => {
+  //   window.history.back();
+  // };
   history.$router.onPopState((r) => {
     const { type, pathname, href } = r;
     console.log("[ROOT]index - app.onPopState", type, pathname, href);
     if (type === "back") {
-      history.realBack();
+      history.back();
       return;
     }
     if (type === "forward") {
@@ -22,7 +22,7 @@ export function connect(history: HistoryCore<string, any>) {
     }
   });
   history.$router.onPushState(({ from, to, path, pathname }) => {
-    console.log("[ROOT]index - before history.pushState", from, to, path, pathname);
+    // console.log("[ROOT]index - before history.pushState", from, to, path, pathname);
     window.history.pushState(
       {
         from,
@@ -33,7 +33,7 @@ export function connect(history: HistoryCore<string, any>) {
     );
   });
   history.$router.onReplaceState(({ from, path, pathname }) => {
-    console.log("[ROOT]index - before history.replaceState", from, path, pathname);
+    // console.log("[ROOT]index - before history.replaceState", from, path, pathname);
     window.history.replaceState(
       {
         from,

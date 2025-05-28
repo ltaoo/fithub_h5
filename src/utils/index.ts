@@ -15,6 +15,10 @@ export function cn(...inputs: any[]) {
   return twMerge(inputs);
 }
 
+export function toFixed(v: any, n: number = 2) {
+  return Number(Number(v).toFixed(n));
+}
+
 /** 解析一段 json 字符串 */
 export function parseJSONStr<T extends any>(json: string) {
   try {
@@ -45,34 +49,6 @@ export function padding_zero(str: number | string) {
 }
 export function remove_str(filename: string, index: number = 0, length: number) {
   return filename.slice(0, index) + filename.slice(index + length);
-}
-
-export function episode_to_chinese_num(str: string) {
-  const regex = /(\d+)/g;
-  let s = str.replace(/[eE]/g, "");
-  const matches = s.match(regex);
-  if (!matches) {
-    return str;
-  }
-  for (let i = 0; i < matches.length; i++) {
-    const num = parseInt(matches[i], 10);
-    const chinese_num = num_to_chinese(num);
-    s = s.replace(matches[i], `第${chinese_num}集`);
-  }
-  return s;
-}
-export function season_to_chinese_num(str: string) {
-  const num = str.match(/[0-9]{1,}/);
-  if (!num) {
-    return str;
-  }
-  const value = parseInt(num[0]);
-  const chinese_num = num_to_chinese(value);
-  const correct = chinese_num.match(/^一(十.{0,1})/);
-  if (correct) {
-    return `第${correct[1]}季`;
-  }
-  return `第${chinese_num}季`;
 }
 /**
  * 阿拉伯数字转中文数字
@@ -106,6 +82,10 @@ export function has_num_value(v: any) {
   return v !== undefined && v !== null && v !== "";
 }
 
+/**
+ * 弹出键盘时，希望指定元素不被键盘遮挡，将整个页面向上移动一定距离
+ * 该方法用于计算所需要移动的「一定距离」
+ */
 export function calc_bottom_padding_need_add(arg: {
   keyboard: { height: number; visible: boolean };
   object: { x: number; y: number; width: number; height: number };
@@ -114,7 +94,7 @@ export function calc_bottom_padding_need_add(arg: {
   const { keyboard, object, screen } = arg;
   const y = object.y + object.height;
   const space_height_place_keyboard = screen.height - y;
-  console.log("space_height_place_keyboard", space_height_place_keyboard);
+  // console.log("space_height_place_keyboard", space_height_place_keyboard);
   if (keyboard.visible) {
     return 0;
   }
@@ -301,10 +281,4 @@ export function buildRegexp(value: string) {
     const e = err as Error;
     return Result.Err(e.message);
   }
-}
-
-export const video_file_type_regexp =
-  /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$|\.[mM][oO][vV]$/;
-export function is_video_file(filename: string) {
-  return video_file_type_regexp.test(filename);
 }

@@ -12,6 +12,56 @@ import { WorkoutPlanCollectionType, WorkoutPlanSetType } from "./constants";
 import { WorkoutPlanStepBody, WorkoutPlanActionPayload, WorkoutPlanPreviewPayload, WorkoutPlanStepResp } from "./types";
 import { map_weekday_text } from "./workout_plan_collection";
 
+export type WorkoutPlanDetailsJSON250424 = {
+  v: "250424";
+  steps: WorkoutPlanStepJSON250424[];
+};
+/** 可以理解成训练计划中的「动作组」 */
+export type WorkoutPlanStepJSON250424 = {
+  /** 组类型 */
+  set_type: WorkoutPlanSetType;
+  /** 组动作 */
+  actions: {
+    action_id: number;
+    /** 动作 */
+    action: {
+      id: number;
+      zh_name: string;
+    };
+    /** 计数 */
+    reps: number;
+    /** 技术单位 */
+    reps_unit: SetValueUnit;
+    /** 负重 */
+    weight: string;
+    /** 动作间歇 */
+    rest_duration: number;
+  }[];
+  /** 组数 */
+  set_count: number;
+  /** 组间歇 */
+  set_rest_duration: number;
+  /** 组负重，一般都用不上 */
+  set_weight: string;
+  /** 组说明 */
+  set_note: string;
+};
+type WorkoutPlanStepContent = {
+  idx: number;
+  set_type: WorkoutPlanSetType;
+  set_count: number;
+  set_rest_duration: number;
+  set_weight: string;
+  set_note: string;
+  actions: {
+    action: { id: number; zh_name: string };
+    reps: number;
+    reps_unit: SetValueUnit;
+    weight: string;
+    rest_duration: number;
+  }[];
+};
+
 export function createWorkoutPlan(body: {
   title: string;
   overview: string;
@@ -73,56 +123,6 @@ export function fetchWorkoutPlanProfile(body: { id: number | string }) {
     equipment_ids: string;
   }>("/api/workout_plan/profile", { id: Number(body.id) });
 }
-
-export type WorkoutPlanDetailsJSON250424 = {
-  v: "250424";
-  steps: WorkoutPlanStepJSON[];
-};
-/** 可以理解成训练计划中的「动作组」 */
-export type WorkoutPlanStepJSON = {
-  /** 组类型 */
-  set_type: WorkoutPlanSetType;
-  /** 组动作 */
-  actions: {
-    action_id: number;
-    /** 动作 */
-    action: {
-      id: number;
-      zh_name: string;
-    };
-    /** 计数 */
-    reps: number;
-    /** 技术单位 */
-    reps_unit: SetValueUnit;
-    /** 负重 */
-    weight: string;
-    /** 动作间歇 */
-    rest_duration: number;
-  }[];
-  /** 组数 */
-  set_count: number;
-  /** 组间歇 */
-  set_rest_duration: number;
-  /** 组负重，一般都用不上 */
-  set_weight: string;
-  /** 组说明 */
-  set_note: string;
-};
-type WorkoutPlanStepContent = {
-  idx: number;
-  set_type: WorkoutPlanSetType;
-  set_count: number;
-  set_rest_duration: number;
-  set_weight: string;
-  set_note: string;
-  actions: {
-    action: { id: number; zh_name: string };
-    reps: number;
-    reps_unit: SetValueUnit;
-    weight: string;
-    rest_duration: number;
-  }[];
-};
 
 export function parseWorkoutPlanStepsString(details: string) {
   const r = parseJSONStr<WorkoutPlanDetailsJSON250424>(details);
@@ -357,6 +357,60 @@ export function fetchWorkoutPlanCollectionProfileProcess(r: TmpRequestResp<typeo
           plan.workout_plan.estimated_duration,
           seconds_to_hour_template1
         ),
+      };
+    }),
+  });
+}
+
+export function fetchWorkoutPlanSetList() {
+  return request.post<{
+    list: {
+      id: number;
+      title: string;
+      overview: string;
+      idx: number;
+      details: string;
+    }[];
+  }>("/api/workout_plan_set/list", {});
+}
+
+export function fetchWorkoutPlanSetListProcess(r: TmpRequestResp<typeof fetchWorkoutPlanSetList>) {
+  if (r.error) {
+    return Result.Err(r.error.message);
+  }
+  const { list } = r.data;
+  return Result.Ok({
+    list: list.map((v) => {
+      return {
+        id: v.id,
+        title: v.title,
+        overview: v.overview,
+        idx: v.idx,
+        ...(() => {
+          const d = parseJSONStr<{ plans: { id: number; title: string; overview: string; tags: string[] }[] }>(
+            v.details
+          );
+          if (d.error) {
+            return {
+              list: [],
+            };
+          }
+          if (!d.data.plans) {
+            return {
+              list: [],
+            };
+          }
+          return {
+            list: d.data.plans.map((vv) => {
+              return {
+                id: vv.id,
+                title: vv.title,
+                overview: vv.overview,
+                tags: vv.tags,
+              };
+            }),
+          };
+        })(),
       };
     }),
   });

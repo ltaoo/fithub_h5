@@ -2,7 +2,7 @@
  * @file 后台/首页布局
  */
 import { For, JSX, createSignal } from "solid-js";
-import { Users, Home, Bike, BicepsFlexed, User, Star } from "lucide-solid";
+import { Users, Home, Bike, BicepsFlexed, User, Star, Boxes } from "lucide-solid";
 
 import { pages } from "@/store/views";
 import { ViewComponent, ViewComponentProps } from "@/store/types";
@@ -23,6 +23,9 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
       fetch_started: new RequestCore(fetchStartedWorkoutDayList, {
         process: fetchStartedWorkoutDayListProcess,
         client: props.client,
+        onFailed(error) {
+          // ...
+        },
       }),
     },
   };
@@ -74,9 +77,9 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
       url: "root.home_layout.index",
     },
     {
-      text: "计划",
-      icon: <BicepsFlexed class="w-6 h-6" />,
-      url: "root.home_layout.workout_plan_layout.recommend",
+      text: "工具",
+      icon: <Boxes class="w-6 h-6" />,
+      url: "root.home_layout.tools",
     },
     {
       text: "学员",
@@ -120,6 +123,9 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
   });
   props.history.onRouteChange(({ name }) => {
     methods.setCurMenu();
+  });
+  props.view.onShow(() => {
+    request.workout_day.fetch_started.run();
   });
   request.workout_day.fetch_started.onStateChange(() => methods.refresh());
 
@@ -173,18 +179,8 @@ export const HomeLayout: ViewComponent = (props) => {
           }}
         </For>
       </div>
-      <div class="relative z-10 w-full h-[64px] border border-t-slate-300">
-        <div class="relative">
-          {/* <div class="bottom-menu__indicator">
-            <div
-              class="flex items-center justify-center h-full w-full"
-              onClick={() => {
-                vm.methods.gotoWorkoutPrepareView();
-              }}
-            >
-              <BicepsFlexed class="w-12 h-12 text-white" />
-            </div>
-          </div> */}
+      <div class="relative z-10 w-full border border-t-slate-300">
+        <div class="relative h-[64px]">
           <div class="flex items-center bg-white">
             <For each={vm.menus}>
               {(menu) => {
@@ -209,6 +205,7 @@ export const HomeLayout: ViewComponent = (props) => {
             </For>
           </div>
         </div>
+        <div class="safe-height"></div>
       </div>
       <div class="fixed right-4 bottom-20">
         <div>

@@ -24,26 +24,40 @@ type TheTypesOfEvents = {
   [Events.AnimationEnd]: void;
   [Events.StateChange]: ToastState;
 };
-type ToastState = {
-  icon?: unknown;
-  texts: string[];
-};
 type ToastProps = {
   delay: number;
+};
+
+type ToastState = {
+  mask: boolean;
+  icon?: unknown;
+  texts: string[];
+  enter: boolean;
+  visible: boolean;
+  exit: boolean;
 };
 
 export class ToastCore extends BaseDomain<TheTypesOfEvents> {
   name = "ToastCore";
 
-  present: PresenceCore;
+  present = new PresenceCore();
   delay = 1200;
   timer: NodeJS.Timeout | null = null;
   open = false;
+  _mask = false;
+  _icon: unknown = null;
+  _texts: string[] = [];
 
-  state: ToastState = {
-    icon: null,
-    texts: [],
-  };
+  get state(): ToastState {
+    return {
+      mask: this._mask,
+      icon: this._icon,
+      texts: this._texts,
+      enter: this.present.state.enter,
+      visible: this.present.state.visible,
+      exit: this.present.state.exit,
+    };
+  }
 
   constructor(options: Partial<{ _name: string } & ToastProps> = {}) {
     super(options);
@@ -52,7 +66,6 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
     if (delay) {
       this.delay = delay;
     }
-    this.present = new PresenceCore();
     this.present.onShow(() => {
       // console.log("[]ToastCore - this.present.onShow");
       this.open = true;
@@ -63,20 +76,22 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
       this.open = false;
       this.emit(Events.OpenChange, false);
     });
+    this.present.onStateChange(() => this.emit(Events.StateChange, { ...this.state }));
   }
 
   /** 显示弹窗 */
-  async show(params: { icon?: unknown; texts: string[] }) {
-    const { icon, texts } = params;
-    this.emit(Events.StateChange, {
-      icon,
-      texts,
-    });
+  async show(params: { mask?: boolean; icon?: unknown; texts: string[] }) {
+    const { mask = false, icon, texts } = params;
+    this._mask = mask;
+    this._icon = icon;
+    this._texts = texts;
+    this.emit(Events.StateChange, { ...this.state });
     if (this.timer !== null) {
       this.clearTimer();
       this.timer = setTimeout(() => {
         this.hide();
         this.clearTimer();
+        this._mask = false;
       }, this.delay);
       return;
     }

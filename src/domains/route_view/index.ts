@@ -101,7 +101,10 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     out: string;
     show: string;
     hide: string;
-  }> = {};
+  }> = {
+    in: "fade-in",
+    out: "fade-out",
+  };
   /** 当前视图的 query */
   query: Record<string, string> = {};
   /** 当前视图的 params */

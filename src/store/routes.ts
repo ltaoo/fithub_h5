@@ -19,6 +19,10 @@ const configure = {
               require: ["login"],
             },
           },
+          tools: {
+            title: "工具",
+            pathname: "/tools",
+          },
           workout_plan_layout: {
             title: "训练计划推荐",
             pathname: "/home/workout_plan",
@@ -129,6 +133,15 @@ const configure = {
         options: {
           require: ["login"],
         },
+      },
+      tools_rm_calc: {
+        title: "RM换算",
+        pathname: "/tools1",
+        options: {},
+      },
+      tools_bmr_calc: {
+        title: "基础代谢计算",
+        pathname: "/tools2",
       },
       fake_chat: {
         title: "沟通",

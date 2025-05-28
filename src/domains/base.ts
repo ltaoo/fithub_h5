@@ -144,10 +144,10 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     // @ts-ignore
     this._emitter.emit(event, value);
   }
-  tip(content: { icon?: unknown; text: string[] }) {
+  tip(arg: { icon?: unknown; text: string[] }) {
     // @ts-ignore
-    this._emitter.emit(BaseEvents.Tip, content);
-    return content.text.join("\n");
+    this._emitter.emit(BaseEvents.Tip, arg);
+    return arg.text.join("\n");
   }
   /** 主动销毁所有的监听事件 */
   destroy() {

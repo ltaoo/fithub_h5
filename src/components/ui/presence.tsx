@@ -6,29 +6,17 @@ import { JSX, Show, createSignal } from "solid-js";
 import { PresenceCore } from "@/domains/ui/presence";
 import { cn } from "@/utils/index";
 
-export const Presence = (
-  props: {
-    store: PresenceCore;
-    enterClassName?: string;
-    exitClassName?: string;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store, enterClassName, exitClassName, onClick } = props;
+export const Presence = (props: { store: PresenceCore } & JSX.HTMLAttributes<HTMLElement>) => {
+  const { store, onClick } = props;
 
   const [state, setState] = createSignal(store.state);
-
   store.onStateChange((v) => setState(v));
 
   return (
     <Show when={state().mounted}>
       <div
-        class={cn(
-          "presence",
-          state().enter && enterClassName ? enterClassName : "",
-          state().exit && exitClassName ? exitClassName : "",
-          props.class
-        )}
-        // classList={props.classList}
+        class={props.class}
+        classList={props.classList}
         role="presentation"
         data-state={state().visible ? "open" : "closed"}
         // onAnimationEnd={() => {

@@ -43,11 +43,7 @@ const Anchor = (props: { store: PopperCore } & JSX.HTMLAttributes<HTMLElement>) 
   return props.children;
 };
 
-const Content = (
-  props: {
-    store: PopperCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
+const Content = (props: { store: PopperCore } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store } = props;
   // const store = useContext(PopperContext);
   const [state, setState] = createSignal(store.state);

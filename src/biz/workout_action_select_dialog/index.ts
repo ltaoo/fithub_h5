@@ -144,10 +144,10 @@ export function WorkoutActionSelectDialogViewModel(props: {
     $btn_submit: new ButtonCore({
       async onClick() {
         const v = ui.$input_keyword.value;
-        if (!v) {
-          bus.emit(Events.Error, new BizError("请输入关键字搜索"));
-          return;
-        }
+        // if (!v) {
+        //   bus.emit(Events.Error, new BizError("请输入关键字搜索"));
+        //   return;
+        // }
         ui.$btn_submit.setLoading(true);
         const r = await request.action.list.search({ keyword: v });
         ui.$btn_submit.setLoading(false);

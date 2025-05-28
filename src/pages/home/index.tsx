@@ -1,20 +1,31 @@
 /**
  * @file 首页
  */
-import { Switch, Match } from "solid-js";
+import { Switch, Match, For } from "solid-js";
 import { Bell, Menu, BicepsFlexed } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
+import { WorkoutPlanCard } from "@/components/workout-plan-card";
 import { ScrollView } from "@/components/ui";
+import { DragSelectView } from "@/components/drag-select";
+import { Sheet } from "@/components/ui/sheet";
+
+import { RequestCore } from "@/domains/request";
 import { base, Handler } from "@/domains/base";
-import { ScrollViewCore } from "@/domains/ui";
+import { DialogCore, ScrollViewCore } from "@/domains/ui";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
+import { DragSelectViewModel } from "@/biz/drag_select";
+import { fetchWorkoutPlanSetList, fetchWorkoutPlanSetListProcess } from "@/biz/workout_plan/services";
 
 import { HomeViewTabHeader } from "./components/tabs";
-import { WorkoutPlanCard } from "@/components/workout-plan-card";
 
 function HomeIndexPageViewModel(props: ViewComponentProps) {
+  const request = {
+    workout_plan_set: {
+      list: new RequestCore(fetchWorkoutPlanSetList, { process: fetchWorkoutPlanSetListProcess, client: props.client }),
+    },
+  };
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -39,40 +50,49 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       _time = time;
       methods.refresh();
     },
+    gotoWorkoutPlanProfileView(v: { id: number }) {
+      props.history.push("root.workout_plan_profile", {
+        id: String(v.id),
+      });
+    },
     gotoWorkoutPlanListView() {
       props.history.push("root.workout_plan_list");
     },
   };
-  const request = {};
-  enum TabValues {
-    Recommend = 1,
-    HIIT = 2,
-    FivePart = 3,
-  }
   const ui = {
     $view: new ScrollViewCore(),
     $tab: new TabHeaderCore({
       options: [
         {
-          id: TabValues.Recommend,
+          id: 1,
           text: "推荐",
         },
         {
-          id: TabValues.HIIT,
+          id: 2,
           text: "HIIT",
         },
         {
-          id: TabValues.FivePart,
+          id: 3,
           text: "五分化",
         },
-      ] as { id: TabValues; text: string }[],
-      onMounted() {
-        ui.$tab.selectById(props.history.$router.name);
-      },
+      ] as { id: number; text: string }[],
+      // onMounted() {
+      //   ui.$tab.selectById(1);
+      // },
       onChange(value) {
         // props.history.push(value.id);
         methods.refresh();
       },
+    }),
+    $dialog_height_input: new DialogCore(),
+    $input_height: DragSelectViewModel({
+      options: ["172", "174", "176", "178", "180", "182", "184", "186", "188", "190"].map((v) => {
+        return {
+          label: v,
+          value: v,
+        };
+      }),
+      defaultValue: "182",
     }),
   };
 
@@ -98,7 +118,22 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       return methods.format_date(this.cur_time).time;
     },
     get cur_tab() {
-      return ui.$tab.state.curId ?? (TabValues.Recommend as TabValues | null);
+      return ui.$tab.state.curId;
+    },
+    get dataSource() {
+      const resp = request.workout_plan_set.list.response;
+      if (!resp) {
+        return [];
+      }
+      const curId = ui.$tab.state.curId ?? resp.list[0].id;
+      if (!curId) {
+        return [];
+      }
+      const matched = resp.list.find((vv) => vv.id === Number(curId));
+      if (!matched) {
+        return [];
+      }
+      return matched.list;
     },
   };
   enum Events {
@@ -110,14 +145,30 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   return {
-    state: _state,
-    ui,
     methods,
-    TabValues,
-    ready() {
+    ui,
+    state: _state,
+    async ready() {
       _timer = setInterval(() => {
         methods.update_time();
       }, 1000);
+      const r = await request.workout_plan_set.list.run();
+      if (r.error) {
+        return;
+      }
+      const { list } = r.data;
+      ui.$tab.setTabs(
+        list.map((v) => {
+          return {
+            id: v.id,
+            text: v.title,
+          };
+        })
+      );
+      // if (list.length) {
+      //   ui.$tab.selectById(list[0].id);
+      // }
+      methods.refresh();
     },
     destroy() {
       if (_timer) {
@@ -132,11 +183,11 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
 }
 
 export const HomeIndexPage = (props: ViewComponentProps) => {
-  const [state, $model] = useViewModel(HomeIndexPageViewModel, [props]);
+  const [state, vm] = useViewModel(HomeIndexPageViewModel, [props]);
 
   return (
     <>
-      <ScrollView store={$model.ui.$view} class="relative whitespace-nowrap">
+      <ScrollView store={vm.ui.$view} class="relative whitespace-nowrap">
         <div class="absolute right-4 top-6">
           <div class="flex gap-2">
             <div>
@@ -144,11 +195,11 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                 <Bell class="w-6 h-6" />
               </div>
             </div>
-            <div>
+            {/* <div>
               <div class="flex items-center justify-center p-4 rounded-full bg-gray-200">
                 <BicepsFlexed class="w-6 h-6" />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         <div class="flex flex-col items-start gap-2 p-4 text-lg">
@@ -161,85 +212,31 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
         <div class="space-y-4">
           <div class="border-b">
             <HomeViewTabHeader
-              store={$model.ui.$tab}
+              store={vm.ui.$tab}
               onMoreClick={() => {
-                $model.methods.gotoWorkoutPlanListView();
+                vm.methods.gotoWorkoutPlanListView();
               }}
             />
           </div>
           <div class="px-4 pb-8">
-            <Switch>
-              <Match when={state().cur_tab === $model.TabValues.Recommend}>
-                <div class="space-y-2">
-                  <WorkoutPlanCard
-                    title="五分化背部训练计划"
-                    overview="专注整体厚度"
-                    estimated_duration_text="58分钟"
-                    cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
-                    tags={["五分化", "背部", "高强度"]}
-                  />
-                  <WorkoutPlanCard
-                    title="五分化手臂训练计划"
-                    overview="专注整体厚度"
-                    estimated_duration_text="48分钟"
-                    cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
-                    tags={["五分化", "手臂", "中强度"]}
-                  />
-                  <WorkoutPlanCard
-                    title="五分化下肢训练计划"
-                    overview="冲击大重量"
-                    estimated_duration_text="68分钟"
-                    cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
-                    tags={["五分化", "下肢", "高强度"]}
-                  />
-                </div>
-              </Match>
-              <Match when={state().cur_tab === $model.TabValues.HIIT}>
-                <div>
-                  {/* <div class="text-xl">HIIT</div> */}
-                  <div class="p-2 mt-2 bg-gray-100 rounded-md">
-                    <div class="">
-                      <div class="flex">
-                        <div>
-                          <div>
-                            <img
-                              class="h-[120px] object-cover"
-                              src="https://static.funzm.com/assets/images/682e277957709aef.png"
-                            />
-                          </div>
-                          <div class="tags flex gap-2 mt-2">
-                            <div class="py-1 px-2 bg-green-500 rounded-full text-white text-sm">20分钟</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Match>
-              <Match when={state().cur_tab === $model.TabValues.FivePart}>
-                <div>
-                  {/* <div class="text-xl">居家力量</div> */}
-                  <div class="p-2 mt-2 bg-gray-100 rounded-md">
-                    <div class="">
-                      <div class="flex">
-                        <div>
-                          <div>
-                            <img
-                              class="h-[120px] object-cover"
-                              src="https://static.funzm.com/assets/images/682e277957709aef.png"
-                            />
-                          </div>
-                          <div class="tags flex gap-2 mt-2">
-                            <div class="py-1 px-2 bg-green-500 rounded-full text-white text-sm">两分化</div>
-                            <div class="py-1 px-2 bg-green-500 rounded-full text-white text-sm">胸+肩</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Match>
-            </Switch>
+            <div class="space-y-2">
+              <For each={state().dataSource}>
+                {(vv) => {
+                  return (
+                    <WorkoutPlanCard
+                      title={vv.title}
+                      overview={vv.overview}
+                      estimated_duration_text="58分钟"
+                      cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
+                      tags={vv.tags}
+                      onClick={() => {
+                        vm.methods.gotoWorkoutPlanProfileView({ id: vv.id });
+                      }}
+                    />
+                  );
+                }}
+              </For>
+            </div>
           </div>
         </div>
       </ScrollView>

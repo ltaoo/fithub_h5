@@ -165,6 +165,9 @@ history.onRouteChange(({ ignore, reason, view, href }) => {
   if (ignore) {
     return;
   }
+  if (app.env.ios) {
+    return;
+  }
   if (reason === "push") {
     history.$router.pushState(href);
   }

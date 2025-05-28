@@ -7,12 +7,12 @@ import { ListResponseWithCursor } from "@/biz/requests/types";
 import {
   parseWorkoutPlanStepsString,
   WorkoutPlanDetailsJSON250424,
-  WorkoutPlanStepJSON,
+  WorkoutPlanStepJSON250424,
 } from "@/biz/workout_plan/services";
 import { SetValueUnit } from "@/biz/set_value_input";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
-import { parseJSONStr } from "@/utils";
+import { parseJSONStr, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
 import { WorkoutDayStatus } from "./constants";
 
@@ -233,6 +233,13 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     status: workout_day.status,
     started_at: dayjs(workout_day.started_at),
     started_at_text: dayjs(workout_day.started_at).format("MM-DD HH:mm"),
+    duration_text: (() => {
+      if (workout_day.status !== WorkoutDayStatus.Finished) {
+        return null;
+      }
+      const seconds = dayjs(workout_day.started_at).valueOf() / 1000 - dayjs(workout_day.finished_at).valueOf() / 1000;
+      return seconds_to_hour_with_template(seconds, seconds_to_hour_template1);
+    })(),
     pending_steps: ((): Omit<WorkoutDayStepProgressJSON250424, "v"> => {
       const r = parseJSONStr<WorkoutDayStepProgressJSON250424>(workout_day.pending_steps);
       if (r.error) {
@@ -340,6 +347,7 @@ export function fetchWorkoutDayListProcess(r: TmpRequestResp<typeof fetchWorkout
         status: v.status,
         started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : null,
         finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : null,
+        day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
       };
     }),
   });

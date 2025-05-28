@@ -71,11 +71,7 @@ const Portal = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) =>
   );
 };
 
-const Content = (
-  props: {
-    store: DropdownMenuCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
+const Content = (props: { store: DropdownMenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store } = props;
 
   return (

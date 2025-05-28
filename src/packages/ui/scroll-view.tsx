@@ -12,6 +12,9 @@ export const Root = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLD
     if (!$elm) {
       return;
     }
+    if (props.store.disabled) {
+      return;
+    }
     store.setRect({
       width: $elm.clientWidth,
       height: $elm.clientHeight,
@@ -37,6 +40,9 @@ export const Indicator = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<
 
   onMount(() => {
     if (!$elm) {
+      return;
+    }
+    if (props.store.disabled) {
       return;
     }
     // 在这里里面会监听滚动逻辑，并改变 height

@@ -22,36 +22,16 @@ const Portal = (props: { store: ToastCore } & JSX.HTMLAttributes<HTMLDivElement>
   );
 };
 
-const Overlay = (
-  props: { store: ToastCore; enterClassName?: string; exitClassName?: string } & JSX.HTMLAttributes<HTMLDivElement>
-) => {
-  const { store, enterClassName, exitClassName } = props;
+const Overlay = (props: { store: ToastCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
+  const { store } = props;
 
-  return (
-    <Presence
-      store={store.present}
-      class={cn(props.class)}
-      enterClassName={enterClassName}
-      exitClassName={exitClassName}
-    >
-      <div />
-    </Presence>
-  );
+  return <Presence store={store.present} class={cn(props.class)} classList={props.classList}></Presence>;
 };
 
-const Content = (
-  props: { store: ToastCore; enterClassName?: string; exitClassName?: string } & JSX.HTMLAttributes<HTMLDivElement>
-) => {
-  const { store, enterClassName, exitClassName } = props;
-
+const Content = (props: { store: ToastCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
   return (
-    <div class="fixed z-[99999] left-[50%] translate-x-[-50%] top-60 w-120 h-120 ">
-      <Presence
-        store={store.present}
-        class={cn(props.class)}
-        enterClassName={enterClassName}
-        exitClassName={exitClassName}
-      >
+    <div class="" classList={props.classList}>
+      <Presence store={props.store.present} class={cn(props.class)}>
         {props.children}
       </Presence>
     </div>

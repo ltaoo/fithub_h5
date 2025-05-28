@@ -67,7 +67,8 @@ export function connect<T extends { storage: StorageCore<any> }>(app: Applicatio
    */
   const userAgent = navigator.userAgent;
   const ua = userAgent.toLowerCase();
-  const ios = /iPad|iPhone|iPod/.test(userAgent);
+  // const ios = /iPad|iPhone|iPod/.test(userAgent);
+  const ios = true;
   const android = /Android/.test(userAgent);
   app.setEnv({
     wechat: ua.indexOf("micromessenger") !== -1,

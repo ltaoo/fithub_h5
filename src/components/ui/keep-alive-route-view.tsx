@@ -7,45 +7,41 @@ import { RouteViewCore } from "@/domains/route_view";
 import { cn } from "@/utils/index";
 
 export function KeepAliveRouteView(
-  props: {
-    store: RouteViewCore;
-    index: number;
-  } & JSX.HTMLAttributes<HTMLDivElement>
+  props: { store: RouteViewCore; index: number } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
-  const { store, index } = props;
-
-  const [state, setState] = createSignal(store.$presence.state);
+  const [state, setState] = createSignal(props.store.$presence.state);
 
   // store.onStateChange((v) => setState(v));
-  store.$presence.onStateChange((v) => setState(v));
-  store.ready();
+  props.store.$presence.onStateChange((v) => setState(v));
+  props.store.ready();
   onMount(() => {
-    if (store.mounted) {
+    if (props.store.mounted) {
       return;
     }
-    store.setShow();
+    props.store.setShow();
   });
   onCleanup(() => {
-    store.setUnmounted();
-    store.destroy();
+    props.store.setUnmounted();
+    props.store.destroy();
   });
 
   // const className = cn(mounted() ? "block" : "hidden", props.class);
 
   return (
     <div
-      class={cn(
-        props.class,
-        state().enter ? `animate-in ${store.animation.in}` : "",
-        state().exit ? `animate-out ${store.animation.out}` : ""
-      )}
+      classList={{
+        "duration-200": true,
+        [`animate-in ${props.store.animation.in ?? "fade-in"}`]: state().enter,
+        [`animate-out ${props.store.animation.out ?? "fade-out"}`]: state().exit,
+        [props.class || ""]: true,
+      }}
       style={{
-        "z-index": index,
+        "z-index": props.index,
         display: state().visible ? "block" : "none",
       }}
       data-state={state().visible ? "open" : "closed"}
-      data-title={store.title}
-      data-href={store.href}
+      data-title={props.store.title}
+      data-href={props.store.href}
     >
       {props.children}
     </div>

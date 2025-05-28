@@ -25,19 +25,22 @@ export function Dialog(
     <DialogPrimitive.Root store={store}>
       <DialogPrimitive.Portal class="fixed inset-0 z-50 flex items-start justify-center sm:items-center" store={store}>
         <DialogPrimitive.Overlay
-          class={cn("fixed inset-0 z-50 bg-black/50 backdrop-blur-sm", "transition-all duration-200")}
-          enterClassName="animate-in fade-in"
-          exitClassName="animate-out fade-out"
+          classList={{
+            "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm": true,
+            "transition-all duration-200": true,
+            "animate-in fade-in": state().enter,
+            "animate-out fade-out": state().exit,
+          }}
           store={store}
         />
         <DialogPrimitive.Content
-          class={cn(
-            "fixed z-50 grid gap-4 rounded-b-lg bg-white p-6 duration-200",
-            "sm:zoom-in-90 sm:rounded-lg",
-            "dark:bg-slate-900"
-          )}
-          enterClassName="animate-in fade-in-90"
-          exitClassName="animate-out fade-out"
+          classList={{
+            "fixed z-50 grid gap-4 rounded-b-lg bg-white p-6 duration-200": true,
+            "sm:zoom-in-90 sm:rounded-lg": true,
+            "dark:bg-slate-900": true,
+            "animate-in fade-in-90": state().enter,
+            "animate-out fade-out": state().exit,
+          }}
           store={store}
         >
           <DialogPrimitive.Header class="flex flex-col space-y-2 text-center sm:text-left">

@@ -94,7 +94,7 @@ export class TabHeaderCore<
       this.onMounted(onMounted);
     }
   }
-  setTabs(options: T["options"]) {
+  setTabs(options: T["options"], extra: Partial<{ force: boolean }> = {}) {
     if (options.length === 0) {
       return;
     }
@@ -113,6 +113,7 @@ export class TabHeaderCore<
         };
       }
     }
+    this.emit(Events.StateChange, { ...this.state });
   }
   select(index: number) {
     const matchedTab = this.tabs[index] as unknown as T["options"][number];

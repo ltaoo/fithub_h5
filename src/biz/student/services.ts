@@ -41,3 +41,7 @@ export function createStudent(data: { name: string; age: number; gender: number 
 export function updateStudent(data: { id: string; name: string; phone: string; email: string }) {
   return request.post<{}>("/api/student/update", data);
 }
+
+export function fetchStudentProfile(body: { id: number }) {
+  return request.post<{}>("/api/student/profile", { id: body.id });
+}

@@ -26,9 +26,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               <Select store={vm.ui.$input_type_select} />
             </div>
             <Input store={vm.ui.$input_keyword} />
-            <Button class="w-20" store={vm.ui.$btn_submit}>
-              搜索
-            </Button>
+            <Button store={vm.ui.$btn_submit}>搜索</Button>
             {/* <Button variant="subtle" store={vm.ui.$search_reset_btn}>
             重置
           </Button> */}
@@ -85,7 +83,8 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
             <div class="flex items-center gap-2 p-4">
               <div
                 classList={{
-                  "flex items-center justify-center flex-1 py-4 rounded-md bg-gray-300 text-gray-500": true,
+                  "flex items-center justify-center flex-1 py-4 rounded-md ": true,
+                  "bg-gray-300 text-gray-500": !state().selected.length,
                   "bg-blue-500 text-white": !!state().selected.length,
                 }}
                 onClick={() => {

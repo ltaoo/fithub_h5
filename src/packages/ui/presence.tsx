@@ -8,30 +8,22 @@ import { cn } from "@/utils";
 
 import { Show } from "./show";
 
-export const Presence = (
-  props: {
-    store: PresenceCore;
-  } & JSX.HTMLAttributes<HTMLElement>
-) => {
-  const { store } = props;
+export const Presence = (props: { store: PresenceCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
+  const [state, setState] = createSignal(props.store.state);
 
-  const [state, setState] = createSignal(store.state);
-
-  store.onStateChange((nextState) => {
-    setState(nextState);
+  props.store.onStateChange((v) => {
+    setState(v);
   });
 
-  const open = () => state().visible;
-  const mounted = () => state().mounted;
-
   return (
-    <Show when={mounted()}>
+    <Show when={state().mounted}>
       <div
         class={cn("presence", props.class)}
+        classList={props.classList}
         role="presentation"
-        data-state={open() ? "open" : "closed"}
+        data-state={state().visible ? "open" : "closed"}
         onAnimationEnd={() => {
-          store.unmount();
+          props.store.unmount();
         }}
       >
         {props.children}

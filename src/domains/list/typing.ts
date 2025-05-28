@@ -134,4 +134,4 @@ export interface ListProps<T> {
   afterSearch?: () => void;
 }
 
-export type ItemTypeFromListCore<T extends { response: { dataSource: {}[] } }> = T["response"]["dataSource"][number];
+export type TheItemTypeFromListCore<T extends { response: { dataSource: {}[] } }> = T["response"]["dataSource"][number];
