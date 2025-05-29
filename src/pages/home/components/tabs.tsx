@@ -41,7 +41,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
                 <Show when={!tab.hidden}>
                   <div
                     classList={{
-                      "__a px-4 py-2 text-xl break-keep cursor-pointer": true,
+                      "__a px-4 py-2 text-w-fg-1 break-keep cursor-pointer": true,
                     }}
                     // style="{{current === index ? activeItemStyle : itemStyle}}"
                     onClick={() => {
@@ -70,7 +70,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
             }}
           </For>
           <div
-            classList={{ "absolute right-0 px-4 py-2 text-xl break-keep cursor-pointer": true }}
+            classList={{ "absolute right-0 px-4 py-2 text-w-fg-1 break-keep cursor-pointer": true }}
             onClick={() => {
               props.onMoreClick?.();
             }}
@@ -79,7 +79,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
           </div>
           {left() !== null ? (
             <div
-              class="absolute bottom-0 w-4 bg-slate-900 transition-all"
+              class="absolute bottom-0 w-4 bg-w-bg-1 transition-all"
               style={{
                 left: `${left()}px`,
                 height: "4px",

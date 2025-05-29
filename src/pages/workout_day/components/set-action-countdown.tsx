@@ -267,7 +267,7 @@ export function SetActionCountdownView(props: {
     <div class="flex items-center gap-4">
       <div
         classList={{
-          "flex items-center transition-all duration-200": true,
+          "flex items-center text-w-fg-1 transition-all duration-200": true,
         }}
       >
         <div

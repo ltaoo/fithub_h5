@@ -28,7 +28,7 @@ export function WorkoutPlanTagSelectView(
             each={state().value}
             fallback={
               <div class="">
-                <div class="text-center text-gray-800">点击选择标签</div>
+                <div class="text-center text-w-fg-1">点击选择标签</div>
               </div>
             }
           >

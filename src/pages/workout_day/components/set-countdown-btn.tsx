@@ -18,7 +18,7 @@ export function SetActionCountdownBtn(props: {
   return (
     <div class="overflow-hidden relative flex items-center gap-2">
       <div
-        class="flex items-center justify-center p-2 rounded-full bg-white"
+        class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
         onClick={(event) => {
           const { x, y } = event;
           if (props.onClick) {

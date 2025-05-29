@@ -18,9 +18,9 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
 
   return (
     <div class="">
-      <div class="z-10 fixed inset-0 bg-black opacity-40"></div>
+      <div class="z-10 fixed inset-0 bg-w-bg-0 opacity-40"></div>
       <div class="z-50 relative w-screen">
-        <div class="flex flex-col bg-white border-t" style={{ height: "100vh" }}>
+        <div class="flex flex-col bg-w-bg-0 border-t-2 border-w-bg-5" style={{ height: "100vh" }}>
           <div class="flex gap-2 py-3 px-4 h-[62px]">
             <div class="w-[240px]">
               <Select store={vm.ui.$input_type_select} />
@@ -32,14 +32,14 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
           </Button> */}
           </div>
           <div class="flex-1 flex h-0 border-t">
-            <div class="w-[90px] h-full pt-2 px-2 overflow-y-auto border-r">
+            <div class="w-[90px] h-full pt-2 px-2 overflow-y-auto border-r-2 border-w-bg-5">
               <For each={state().tags}>
                 {(tag) => {
                   return (
                     <div
                       classList={{
-                        "py-2 rounded-md text-center": true,
-                        "bg-gray-300": tag.selected,
+                        "py-2 rounded-md text-center text-w-fg-2": true,
+                        "bg-w-bg-3": tag.selected,
                       }}
                       onClick={() => {
                         vm.methods.handleClickTag(tag);
@@ -59,7 +59,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
                       return (
                         <div
                           classList={{
-                            "p-2 flex justify-between border border-gray-200 rounded-md": true,
+                            "p-2 flex justify-between border-2 border-w-bg-5 rounded-md text-w-fg-1": true,
                             "border-green-500 bg-green-100": !!state().value.find((act) => act.id === action.id),
                             "text-gray-100": !!state().disabled.includes(action.id),
                           }}
@@ -68,7 +68,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
                           }}
                         >
                           <div>
-                            <div class="">{action.zh_name}</div>
+                            <div class="text-sm">{action.zh_name}</div>
                             {/* <div class="text-sm">{action.name}</div> */}
                           </div>
                         </div>
@@ -79,12 +79,12 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </ListView>
             </ScrollView>
           </div>
-          <div class="h-[88px] bg-white border-t">
+          <div class="h-[88px] bg-w-bg-0 border-t-2 border-w-bg-5">
             <div class="flex items-center gap-2 p-4">
               <div
                 classList={{
                   "flex items-center justify-center flex-1 py-4 rounded-md ": true,
-                  "bg-gray-300 text-gray-500": !state().selected.length,
+                  "bg-w-bg-5 text-w-fg-1": !state().selected.length,
                   "bg-blue-500 text-white": !!state().selected.length,
                 }}
                 onClick={() => {
@@ -95,7 +95,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </div>
               <div
                 classList={{
-                  "flex items-center justify-center w-[88px] py-4 rounded-md bg-gray-300 text-gray-500": true,
+                  "flex items-center justify-center w-[88px] py-4 rounded-md bg-w-bg-5 text-w-fg-1": true,
                 }}
                 onClick={() => {
                   vm.ui.$dialog.hide();
@@ -107,7 +107,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
           </div>
         </div>
       </div>
-      <div class="z-50 absolute bottom-0 w-full bg-white"></div>
+      {/* <div class="z-50 absolute bottom-0 w-full bg-white"></div> */}
     </div>
   );
 }

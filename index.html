@@ -2,17 +2,93 @@
 <html lang="zh-CN">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="description" content="健身,训练计划,力量训练,fitness,workout" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="referrer" content="no-referrer" />
-  <meta name="theme-color" content="#000000" />
-  <title>FAMILY-FLIX 管理后台</title>
+  <title>健身工具站</title>
+  <style>
+    :root {
+      --background: #ededed;
+      --foreground: #171717;
+      --weui-BG-0: #ededed;
+      --weui-BG-1: #f7f7f7;
+      --weui-BG-2: #fff;
+      --weui-BG-3: #f7f7f7;
+      --weui-BG-4: #4c4c4c;
+      --weui-BG-5: #fff;
+      --weui-FG-0: rgba(0, 0, 0, 1);
+      --weui-FG-HALF: rgba(0, 0, 0, 1);
+      --weui-FG-1: rgba(0, 0, 0, 0.6);
+      --weui-FG-2: rgba(0, 0, 0, 0.42);
+      --weui-FG-3: rgba(0, 0, 0, 0.1);
+      --weui-FG-4: rgba(0, 0, 0, 0.15);
+      --weui-FG-5: rgba(0, 0, 0, 0.05);
+      --weui-BG-COLOR-ACTIVE: #ececec;
+      --weui-RED: #fa5151;
+      --weui-BRAND: #07c160;
+    }
+
+    [data-theme="dark"] {
+      --background: #111;
+      --foreground: #f3f4f6;
+      --weui-BG-0: #111;
+      --weui-BG-1: #1e1e1e;
+      --weui-BG-2: #191919;
+      --weui-BG-3: #202020;
+      --weui-BG-4: #404040;
+      --weui-BG-5: #2c2c2c;
+      --weui-FG-0: rgba(255, 255, 255, 0.85);
+      --weui-FG-HALF: rgba(255, 255, 255, 0.65);
+      --weui-FG-1: rgba(255, 255, 255, 0.55);
+      --weui-FG-2: rgba(255, 255, 255, 0.35);
+      --weui-FG-3: rgba(255, 255, 255, 0.1);
+      --weui-FG-4: rgba(255, 255, 255, 0.15);
+      --weui-FG-5: rgba(255, 255, 255, 0.1);
+      --weui-BG-COLOR-ACTIVE: #373737;
+      --weui-RED: #fa5151;
+      --weui-BRAND: #07c160;
+    }
+
+    html,
+    body {
+      overscroll-behavior: none;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      margin: 0;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      font-family: system-ui, -apple-system, "Helvetica Neue";
+    }
+
+    [data-theme="light"] body {
+      background-color: #ededed;
+    }
+
+    [data-theme="dark"] body {
+      background-color: #111111;
+    }
+
+    img {
+      -webkit-user-drag: none;
+    }
+
+    video {
+      max-height: 100%;
+      height: unset;
+    }
+  </style>
 </head>
 
 <body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <script>!function () { try { var d = document.documentElement, n = 'data-theme', s = 'setAttribute'; var e = localStorage.getItem('theme'); if ('system' === e || (!e && true)) { var t = '(prefers-color-scheme: dark)', m = window.matchMedia(t); if (m.media !== t || m.matches) { d.style.colorScheme = 'dark'; d[s](n, 'dark') } else { d.style.colorScheme = 'light'; d[s](n, 'light') } } else if (e) { d[s](n, e || '') } if (e === 'light' || e === 'dark') d.style.colorScheme = e } catch (e) { } }()</script>
   <div id="root"></div>
-  <script src="/src/index.tsx" type="module"></script>
+  <script defer type="module" src="/src/index.tsx"></script>
 </body>
 
 </html>

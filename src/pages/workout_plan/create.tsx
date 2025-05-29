@@ -645,24 +645,24 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
       {/* <NavigationBar1 title="创建训练计划" history={props.history} /> */}
       <div class="flex-1 overflow-auto">
         <ScrollView store={vm.ui.$view} class="h-full overflow-auto">
-          <div class="bg-white p-4">
+          <div class="p-4">
             <div class="space-y-4">
               <div class="field relative">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">标题</div>
+                  <div class="text-lg text-w-fg-1">标题</div>
                   <div class="text-red-500">*</div>
                 </div>
                 <Input store={vm.ui.$input_title} class="mt-1" />
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">概要</div>
+                  <div class="text-lg text-w-fg-1">概要</div>
                 </div>
                 <Textarea store={vm.ui.$input_overview} class="mt-1" />
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">动作</div>
+                  <div class="text-w-fg-1">动作</div>
                   <div class="text-red-500">*</div>
                 </div>
                 <div class="w-full space-y-3 my-2">
@@ -671,13 +671,13 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                       when={state().fields.length}
                       fallback={
                         <div
-                          class="flex justify-center p-4 rounded-md bg-gray-100"
+                          class="flex justify-center p-4 rounded-md bg-w-bg-5"
                           onClick={() => {
                             vm.ui.$ref_action_in_menu.clear();
                             vm.ui.$workout_action_select.ui.$dialog.show();
                           }}
                         >
-                          <div class="flex flex-col items-center text-gray-600">
+                          <div class="flex flex-col items-center text-w-fg-1">
                             <div>
                               <Plus class="w-8 h-8" />
                             </div>
@@ -695,7 +695,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                             }
                             return (
                               <>
-                                <div class="relative border border-gray-200 rounded-lg bg-white shadow-sm">
+                                <div class="relative border border-gray-200 rounded-lg bg-w-bg-5 shadow-sm">
                                   <Switch>
                                     <Match when={$inner.field.symbol === "SingleFieldCore"}>
                                       <ActionInput
@@ -772,13 +772,13 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">预计时长</div>
+                  <div class="text-w-fg-1">预计时长</div>
                 </div>
                 <InputTextView store={vm.ui.$input_duration} class="mt-1" />
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">锻炼部位</div>
+                  <div class="text-w-fg-1">锻炼部位</div>
                 </div>
                 <div class="mt-1">
                   <div class="flex flex-wrap gap-2">
@@ -796,7 +796,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">所需器械</div>
+                  <div class="text-w-fg-1">所需器械</div>
                 </div>
                 <div class="mt-1">
                   <div class="flex flex-wrap gap-2">
@@ -814,7 +814,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-gray-800">标签</div>
+                  <div class="text-w-fg-1">标签</div>
                 </div>
                 <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
               </div>
@@ -822,10 +822,10 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
           </div>
         </ScrollView>
       </div>
-      <div class="z-10 p-4 bg-white border-t">
+      <div class="z-10 p-4 bg-w-bg-0 border-t-2 border-w-bg-5">
         <div class="flex items-center gap-4">
-          <div class="p-2 rounded-full bg-gray-100" onClick={vm.methods.back}>
-            <ChevronLeft class="w-6 h-6 text-gray-800" />
+          <div class="p-2 rounded-full bg-w-bg-5" onClick={vm.methods.back}>
+            <ChevronLeft class="w-6 h-6 text-w-fg-1" />
           </div>
           <div class="flex items-center gap-2 w-full">
             <Button class="w-full" store={vm.ui.$btn_add_act}>

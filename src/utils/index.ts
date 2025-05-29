@@ -85,20 +85,26 @@ export function has_num_value(v: any) {
 /**
  * 弹出键盘时，希望指定元素不被键盘遮挡，将整个页面向上移动一定距离
  * 该方法用于计算所需要移动的「一定距离」
- * @todo 还是存在问题，弹出键盘后，滚动一些距离，然后点击靠近键盘的输入框，页面反而往下移动，导致输入框更加看不见了
  */
 export function calc_bottom_padding_need_add(arg: {
-  keyboard: { height: number; visible: boolean };
+  keyboard: {
+    height: number;
+    visible: boolean;
+    /** 键盘处于展示状态，已经将页面移动了多少距离 */
+    prev_padding: number;
+  };
+  /** 要避免被键盘遮挡的元素 */
   object: { x: number; y: number; width: number; height: number };
   screen: { width: number; height: number };
 }) {
   const { keyboard, object, screen } = arg;
-  const y = object.y + object.height;
-  const space_height_place_keyboard = screen.height - y;
-  // console.log("space_height_place_keyboard", space_height_place_keyboard);
   if (keyboard.visible) {
-    return 0;
+    object.y = object.y + keyboard.prev_padding;
   }
+  const y = object.y + object.height;
+  /** 页面底部可以用于放置键盘的剩余高度 */
+  const space_height_place_keyboard = screen.height - y;
+  // console.log("[UTILS]space_height_place_keyboard", space_height_place_keyboard, keyboard.height, object);
   if (space_height_place_keyboard < keyboard.height) {
     return keyboard.height - space_height_place_keyboard;
   }

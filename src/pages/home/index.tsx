@@ -196,13 +196,13 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
         <div class="absolute right-4 top-6">
           <div class="flex gap-2">
             <div>
-              <div class="flex items-center justify-center p-4 rounded-full bg-gray-200">
+              <div class="flex items-center justify-center p-4 rounded-full bg-w-bg-5 text-w-fg-1">
                 <Bell class="w-6 h-6" />
               </div>
             </div>
             <div>
               <div
-                class="flex items-center justify-center p-4 rounded-full bg-gray-200"
+                class="flex items-center justify-center p-4 rounded-full bg-w-bg-5 text-w-fg-1"
                 onClick={() => {
                   vm.methods.gotoWorkoutDayPrepareView();
                 }}
@@ -213,14 +213,14 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
           </div>
         </div>
         <div class="flex flex-col items-start gap-2 p-4 text-lg">
+          <div class="text-3xl font-bold">{state().time}</div>
           <div class="flex items-center gap-4">
             <span>{state().month}</span>
             <span>{state().week}</span>
           </div>
-          <div class="text-3xl font-bold">{state().time}</div>
         </div>
         <div class="space-y-4">
-          <div class="border-b">
+          <div class="border-b-2 border-w-bg-5">
             <HomeViewTabHeader
               store={vm.ui.$tab}
               onMoreClick={() => {

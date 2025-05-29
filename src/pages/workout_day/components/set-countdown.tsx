@@ -174,7 +174,7 @@ export function SetCountdownView(props: {
     <div class="flex items-center justify-between">
       <div
         classList={{
-          "flex items-center transition-all duration-200": true,
+          "flex items-center text-w-fg-1 transition-all duration-200": true,
           // "text-xl": state().pending,
           "text-4xl": state().running,
           // "text-gray-100": state().finished,

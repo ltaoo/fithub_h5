@@ -1,11 +1,16 @@
+/**
+ * @file 工具列表
+ */
+import { For } from "solid-js";
+
+import { PageKeys } from "@/store/routes";
 import { ViewComponentProps } from "@/store/types";
+import { useViewModel } from "@/hooks";
+import { ScrollView } from "@/components/ui";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
-import { ScrollView } from "@/components/ui";
 import { ScrollViewCore } from "@/domains/ui";
-import { useViewModel } from "@/hooks";
-import { PageKeys } from "@/store/routes";
 
 function ToolsViewModel(props: ViewComponentProps) {
   const methods = {
@@ -26,7 +31,96 @@ function ToolsViewModel(props: ViewComponentProps) {
   const ui = {
     $view: new ScrollViewCore({}),
   };
-  let _state = {};
+  let _tool_groups: {
+    title: string;
+    menus: { title: string; onClick?: () => void }[];
+  }[] = [
+    {
+      title: "查询",
+      menus: [
+        {
+          title: "动作库",
+        },
+        {
+          title: "肌肉",
+          onClick() {
+            methods.handleClickTool("muscle");
+          },
+        },
+        {
+          title: "器械",
+        },
+        {
+          title: "评估参考",
+        },
+        {
+          title: "常见问题",
+        },
+      ],
+    },
+    {
+      title: "计算",
+      menus: [
+        {
+          title: "BMI计算",
+        },
+        {
+          title: "基础代谢",
+          onClick() {
+            props.history.push("root.tools_bmr_calc");
+          },
+        },
+        {
+          title: "RM换算",
+          onClick() {
+            props.history.push("root.tools_rm_calc");
+          },
+        },
+        {
+          title: "心率换算",
+        },
+      ],
+    },
+    {
+      title: "学习",
+      menus: [
+        {
+          title: "学习资料",
+        },
+        {
+          title: "答题挑战",
+        },
+      ],
+    },
+    {
+      title: "小工具",
+      menus: [
+        {
+          title: "节拍器",
+        },
+        {
+          title: "秒表",
+          onClick() {
+            props.history.push("root.stopwatch");
+          },
+        },
+        {
+          title: "分组",
+          onClick() {
+            props.history.push("root.countdown");
+          },
+        },
+        {
+          title: "抽签",
+        },
+      ],
+    },
+  ];
+  let _state = {
+    get groups() {
+      return _tool_groups;
+    },
+  };
   enum Events {
     StateChange,
     Error,
@@ -54,174 +148,34 @@ export function ToolsView(props: ViewComponentProps) {
   return (
     <ScrollView store={vm.ui.$view}>
       <div class="p-4">
-        <div class="text-3xl">常用工具</div>
+        <div class="text-3xl text-w-fg-0">常用工具</div>
         <div class="mt-8">
           <div class="space-y-4">
-            <div class="w-full ">
-              <div class="text-xl">查询</div>
-              <div class="grid grid-cols-5 gap-4 mt-4">
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      动作库
+            <For each={state().groups}>
+              {(group) => {
+                return (
+                  <div class="w-full ">
+                    <div class="text-xl text-w-fg-0">查询</div>
+                    <div class="grid grid-cols-5 gap-4 mt-4">
+                      <For each={group.menus}>
+                        {(menu) => {
+                          return (
+                            <div class="relative pb-8">
+                              <div class="w-full h-full min-h-[48px] bg-w-bg-5" onClick={menu.onClick}></div>
+                              <div class="relative mt-2">
+                                <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-w-fg-1 text-sm text-center">
+                                  {menu.title}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }}
+                      </For>
                     </div>
                   </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      器械
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="relative pb-8"
-                  onClick={() => {
-                    vm.methods.handleClickTool("muscle");
-                  }}
-                >
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap  text-gray-800 text-md text-center">
-                      肌肉
-                    </div>
-                  </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      评估参考
-                    </div>
-                  </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      常见问题
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="w-full ">
-              <div class="text-xl">计算</div>
-              <div class="grid grid-cols-5 gap-4 mt-4">
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      BMI计算
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="relative pb-8"
-                  onClick={() => {
-                    props.history.push("root.tools_bmr_calc");
-                  }}
-                >
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      基础代谢
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="relative pb-8"
-                  onClick={() => {
-                    props.history.push("root.tools_rm_calc");
-                  }}
-                >
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      RM换算
-                    </div>
-                  </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 w-[74px] text-gray-800 text-md text-center">
-                      心率换算
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="w-full ">
-              <div class="text-xl">学习</div>
-              <div class="grid grid-cols-5 gap-4 mt-4">
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      学习资料
-                    </div>
-                  </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      答题挑战
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="w-full">
-              <div class="text-xl">小工具</div>
-              <div class="grid grid-cols-5 gap-4 mt-4">
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      节拍器
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="relative pb-8"
-                  onClick={() => {
-                    props.history.push("root.stopwatch");
-                  }}
-                >
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      秒表
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="relative pb-8"
-                  onClick={() => {
-                    props.history.push("root.countdown");
-                  }}
-                >
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      分组
-                    </div>
-                  </div>
-                </div>
-                <div class="relative pb-8">
-                  <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
-                  <div class="relative mt-2">
-                    <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">
-                      抽签
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                );
+              }}
+            </For>
           </div>
         </div>
       </div>

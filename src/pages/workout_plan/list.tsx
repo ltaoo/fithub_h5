@@ -102,13 +102,13 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
               <Input store={vm.ui.$input_keyword} />
               <Button
                 store={vm.ui.$btn_submit}
-                icon={<Search class="w-6 h-6 text-gray-800" />}
-                class="flex items-center justify-center p-2 rounded-full bg-gray-200"
+                icon={<Search class="w-6 h-6 text-w-fg-1" />}
+                class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
               ></Button>
               <Button
                 store={vm.ui.$btn_create}
-                icon={<Plus class="w-6 h-6 text-gray-800" />}
-                class="flex items-center justify-center p-2 rounded-full bg-gray-200"
+                icon={<Plus class="w-6 h-6 text-w-fg-1" />}
+                class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
               ></Button>
             </div>
           }

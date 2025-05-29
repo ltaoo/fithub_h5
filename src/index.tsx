@@ -48,7 +48,7 @@ function Application() {
     <div class={"screen w-screen h-screen overflow-hidden"}>
       <Show when={!state().ready}>
         <div class="flex items-center justify-center w-full h-full">
-          <div class="flex flex-col items-center text-slate-500">
+          <div class="flex flex-col items-center text-w-fg-1">
             <Loader2 class="w-8 h-8 animate-spin" />
             <div class="mt-4 text-center">正在加载</div>
           </div>
@@ -60,7 +60,7 @@ function Application() {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
-              <KeepAliveRouteView class="absolute inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
+              <KeepAliveRouteView class="absolute inset-0 opacity-100 w-bg-0" store={subView} index={i()}>
                 <PageContent
                   app={app}
                   history={history}

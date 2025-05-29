@@ -179,9 +179,9 @@ export const HomeLayout: ViewComponent = (props) => {
           }}
         </For>
       </div>
-      <div class="relative z-10 w-full border border-t-slate-300">
-        <div class="relative h-[64px]">
-          <div class="flex items-center bg-white">
+      <div class="relative z-10 w-full border-t-w-bg-2">
+        <div class="relative h-[68px]">
+          <div class="flex items-center bg-w-bg-1">
             <For each={vm.menus}>
               {(menu) => {
                 const { icon, text, url, badge, onClick } = menu;
@@ -207,11 +207,11 @@ export const HomeLayout: ViewComponent = (props) => {
         </div>
         <div class="safe-height"></div>
       </div>
-      <div class="fixed right-4 bottom-20">
+      {/* <div class="fixed right-4 bottom-20">
         <div>
           <Show when={state().has_workout_day}>
             <div
-              class="p-4 rounded-full bg-green-500"
+              class="p-4 rounded-full bg-w-bg-5"
               onClick={() => {
                 vm.methods.gotoWorkoutDayView();
               }}
@@ -220,7 +220,7 @@ export const HomeLayout: ViewComponent = (props) => {
             </div>
           </Show>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -237,13 +237,13 @@ function Menu(
     <div
       classList={{
         "relative flex items-center justify-center px-4 py-2 space-x-2 opacity-80 cursor-pointer": true,
-        "bg-slate-200": props.highlight,
+        "bg-w-bg-5": props.highlight,
       }}
       onClick={props.onClick}
     >
-      <div class="flex flex-col items-center">
+      <div class="flex flex-col items-center text-w-fg-1">
         <div class="w-6 h-6">{props.icon}</div>
-        <div class="flex-1 mt-1 text-slate-800">
+        <div class="flex-1 mt-1">
           <div class="relative inline-block">
             <div class="text-sm">{props.children}</div>
             <Show when={props.badge}>

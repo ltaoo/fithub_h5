@@ -64,7 +64,9 @@ import { SetActionView, SetActionViewModel } from "./components/set-action";
 import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
+import { WorkoutDayOverviewView } from "./components/day-overview";
 
+export type HomeWorkoutDayUpdateViewModel = ReturnType<typeof HomeWorkoutDayUpdateViewModel>;
 export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const request = {
     workout_plan: {
@@ -115,6 +117,13 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       act_idx: number;
       rect: { x: number; y: number; width: number; height: number };
     }) {
+      const k = ui.$ref_input_key.value;
+      if (k) {
+        const $field = methods.getField(k);
+        if ($field) {
+          $field.setStatus("normal");
+        }
+      }
       methods.beforeShowNumInput({
         step_idx: opt.step_idx,
         set_idx: opt.set_idx,
@@ -123,7 +132,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       });
       methods.showNumInput({
         key: `${opt.step_idx}-${opt.set_idx}-${opt.act_idx}`,
-        for: "weight",
+        for: opt.for,
       });
     },
     beforeShowNumInput(opt: {
@@ -132,15 +141,12 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       act_idx: number;
       rect: { x: number; y: number; width: number; height: number };
     }) {
-      const k = ui.$ref_input_key.value;
-      if (k) {
-        const $field = methods.getField(k);
-        if ($field) {
-          $field.setStatus("normal");
-        }
-      }
       const v = calc_bottom_padding_need_add({
-        keyboard: { height: 420, visible: false },
+        keyboard: {
+          height: 480,
+          visible: ui.$dialog_num_keyboard.state.open,
+          prev_padding: _height,
+        },
         object: opt.rect,
         screen: props.app.screen,
       });
@@ -164,8 +170,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if (opt.for === "weight") {
         ui.$set_value_input.setWeightOptions();
       }
-      if (!ui.$input_keyboard_dialog.state.open) {
-        ui.$input_keyboard_dialog.show();
+      if (!ui.$dialog_num_keyboard.state.open) {
+        ui.$dialog_num_keyboard.show();
       }
     },
     removeSet(opt: { step_idx: number; set_idx: number }) {
@@ -327,13 +333,12 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       console.log("[PAGE]workout_day/update - nextSet before refresh", _cur_step_idx, _cur_step_idx);
       bus.emit(Events.StateChange, { ..._state });
     },
-    /**
-     * 完成一个组动作
-     */
-    handleCompleteSetAction(opt: {
+    /** 手动完成一个组动作 */
+    completeSetAct(opt: {
       step_idx: number;
       set_idx: number;
       act_idx: number;
+      /** 如果当前组动作是已完成状态，再次完成，是否需要忽略掉该操作，也就是说不要（取消完成） */
       ignore_when_completed?: boolean;
     }) {
       console.log("[PAGE]workout_day/create - handleCompleteSet", opt);
@@ -341,71 +346,75 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if (!_touched_set_idx.includes(kk)) {
         _touched_set_idx.push(kk);
       }
-      if (ui.$input_keyboard_dialog.state.open) {
-        ui.$input_keyboard_dialog.hide();
+      if (ui.$dialog_num_keyboard.state.open) {
+        ui.$dialog_num_keyboard.hide();
       }
+      const common_error_tip = "异常数据";
       const step = _steps[opt.step_idx];
       if (!step) {
-        props.app.tip({
-          text: ["异常数据"],
-        });
-        return;
+        return Result.Err(common_error_tip);
       }
       const set = step.sets[opt.set_idx];
       if (!set) {
-        props.app.tip({
-          text: ["异常数据"],
-        });
-        return;
+        return Result.Err(common_error_tip);
       }
+      const is_last_step = opt.step_idx === _steps.length - 1;
+      const is_last_set = opt.set_idx === step.sets.length - 1;
+      const is_last_act = opt.act_idx === set.actions.length - 1;
       const k = `${opt.step_idx}-${opt.set_idx}-${opt.act_idx}`;
       const $field_reps = ui.$fields_reps.get(k);
       const $field_weight = ui.$fields_weight.get(k);
       const $input_completed = ui.$inputs_completed.get(k);
       if (!$field_reps || !$field_weight || !$input_completed) {
         console.log("[PAGE]workout_day/create - no inputs", $field_reps, $field_weight, $input_completed);
-        props.app.tip({
-          text: ["数据异常"],
-        });
-        return;
+        return Result.Err(common_error_tip);
       }
-      if ($input_completed.value) {
+      const cur_act_completed = $input_completed.value;
+      const result = {
+        completed: cur_act_completed,
+        is_last_step,
+        is_last_set,
+        is_last_act,
+      };
+      if (cur_act_completed) {
         if (opt.ignore_when_completed) {
-          return;
+          return Result.Ok(result);
         }
-        // 取消选中
+        // 取消完成状态
         $input_completed.setValue(0);
         methods.updateSteps({
           step_idx: _cur_step_idx,
           set_idx: _next_set_idx,
         });
-        return;
+        result.completed = false;
+        return Result.Ok(result);
       }
-      let vv_weight = Number(
-        $field_weight.input.value || $field_weight.input.placeholder || $field_weight.input.state.placeholder
-      );
-      const vv_reps = Number(
-        $field_reps.input.value || $field_reps.input.placeholder || $field_reps.input.state.placeholder
-      );
-
+      let vv_weight = Number($field_weight.input.value ?? $field_weight.input.placeholder);
+      const vv_reps = Number($field_reps.input.value ?? $field_reps.input.placeholder);
       const errors: { msg: string }[] = [];
       if (isNaN(vv_weight)) {
+        const tip = "不合法的重量";
         errors.push({
-          msg: `不合法的重量`,
+          msg: tip,
         });
         $field_weight.setStatus("error");
-        return;
+        console.warn(
+          tip,
+          vv_weight,
+          $field_weight.input.value,
+          $field_weight.input.placeholder,
+          $field_weight.input.state.placeholder
+        );
+        return Result.Err(tip);
       }
       if (isNaN(vv_reps)) {
+        const tip = "不合法的数量";
         errors.push({
-          msg: `不合法的数量`,
+          msg: tip,
         });
         $field_reps.setStatus("error");
-        return;
-      }
-      if (errors.length > 0) {
-        console.log("[PAGE]workout_day/create - errors", errors);
-        return;
+        console.warn(tip, vv_reps);
+        return Result.Err(tip);
       }
       // if (Number.isNaN(vv_weight) && [WorkoutPlanSetType.HIIT].includes(set.type)) {
       //   vv_weight = 0;
@@ -415,30 +424,38 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       $field_weight.setValue(vv_weight);
       $field_reps.setValue(vv_reps);
       $input_completed.setValue(dayjs().unix());
-
       _cur_step_idx = opt.step_idx;
       _next_set_idx = opt.set_idx;
       methods.updateSteps({
         step_idx: _cur_step_idx,
         set_idx: _next_set_idx,
       });
-
-      let the_set_is_completed = false;
-      if (opt.act_idx === set.actions.length - 1) {
-        the_set_is_completed = true;
-      }
-      if (!the_set_is_completed) {
-        return;
-      }
-      if (opt.step_idx === _steps.length - 1) {
-        const step = _steps[opt.step_idx];
-        if (opt.set_idx === step.sets.length - 1) {
-          const set = step.sets[opt.set_idx];
-          if (opt.act_idx === set.actions.length - 1) {
-            methods.showWorkoutDayCompleteConfirmDialog();
-            return;
+      if (is_last_act) {
+        if ([WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(set.type)) {
+          for (let i = 0; i < set.actions.length - 1; i += 1) {
+            methods.completeSetAct({
+              step_idx: opt.step_idx,
+              set_idx: opt.set_idx,
+              act_idx: i,
+              ignore_when_completed: true,
+            });
           }
         }
+      }
+      let the_set_is_completed = true;
+      for (let i = 0; i < set.actions.length; i += 1) {
+        const _k = `${opt.step_idx}-${opt.set_idx}-${i}`;
+        const $input_act_completed = ui.$inputs_completed.get(_k);
+        if ($input_act_completed && !$input_act_completed.value) {
+          the_set_is_completed = false;
+        }
+      }
+      if (!the_set_is_completed) {
+        return Result.Ok(result);
+      }
+      if (is_last_step && is_last_set && the_set_is_completed) {
+        methods.showWorkoutDayCompleteConfirmDialog();
+        return Result.Ok(result);
       }
       const $countdown = ui.$set_countdowns.get(`${opt.step_idx}-${opt.set_idx}`);
       // console.log("[]handleCompleteSet - ", _cur_step_idx, _next_set_idx, $countdown);
@@ -470,6 +487,28 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             $field_next_reps.input.setUnit($field_cur_reps.input.unit);
           }
         }
+      }
+      return Result.Ok(result);
+    },
+    /**
+     * 完成一个组动作
+     */
+    handleCompleteSetAction(opt: {
+      step_idx: number;
+      set_idx: number;
+      act_idx: number;
+      ignore_when_completed?: boolean;
+    }) {
+      const r = methods.completeSetAct(opt);
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      const set = _steps[opt.step_idx].sets[opt.set_idx];
+      if (set && r.data.is_last_act && r.data.completed) {
+        const has_multiple_set_act = [WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(set.type);
       }
       bus.emit(Events.StateChange, { ..._state });
     },
@@ -968,12 +1007,12 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       },
     }),
-    $input_keyboard_dialog: new DialogCore({
+    $dialog_num_keyboard: new DialogCore({
       mask: false,
       onOk() {
         const v = ui.$set_value_input.value;
         console.log("[PAGE]workout_day/create", v);
-        ui.$input_keyboard_dialog.hide();
+        ui.$dialog_num_keyboard.hide();
       },
     }),
     $set_value_input: SetValueInputViewModel({}),
@@ -1103,13 +1142,14 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
 
   ui.$set_value_input.onSubmit((v) => {
     console.log("[PAGE]workout_day/create", v);
-    ui.$input_keyboard_dialog.hide();
+    ui.$dialog_num_keyboard.hide();
   });
-  ui.$input_keyboard_dialog.onCancel(() => {
+  ui.$dialog_num_keyboard.onCancel(() => {
     methods.setHeight(0);
     const v = ui.$ref_input_key.value;
     if (v) {
       const $field = methods.getField(v);
+      console.log("[PAGE]workout_day - input_keyboard_dialog.onCancel", v, $field);
       if ($field) {
         $field.setStatus("normal");
       }
@@ -1150,10 +1190,10 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     }
     $field.input.setUnit(ui.$set_value_input.state.unit);
   });
-
   request.workout_action.profile.onStateChange((v) => {
     bus.emit(Events.StateChange, { ..._state });
   });
+
   return {
     state: _state,
     ui,
@@ -1269,29 +1309,29 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full h-[72px] border-b">
+      <div class="z-0 fixed top-0 left-0 w-full h-[72px] border-b-2 border-w-bg-5">
         <div class="p-4">
           <Show when={state().profile?.status === WorkoutDayStatus.Started}>
             <div class="flex items-center justify-between">
               <DayDurationTextView store={vm.ui.$day_duration} />
               <div class="flex items-center gap-2">
                 <div
-                  class="py-2 px-4 rounded-md bg-gray-100 text-center text-gray-800 text-sm"
+                  class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-1 text-sm"
                   onClick={() => {
-                    // vm.methods.showWorkoutDayCompleteConfirmDialog();
-                    vm.methods.resetPendingSteps();
+                    vm.methods.showWorkoutDayCompleteConfirmDialog();
+                    // vm.methods.resetPendingSteps();
                   }}
                 >
                   完成
                 </div>
                 <div
-                  class="p-2 rounded-full bg-gray-100"
+                  class="p-2 rounded-full bg-w-bg-5"
                   onClick={(event) => {
                     const client = event.currentTarget.getBoundingClientRect();
                     vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
                   }}
                 >
-                  <MoreHorizontal class="w-6 h-6 text-gray-800" />
+                  <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
                 </div>
               </div>
             </div>
@@ -1330,7 +1370,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                       "border-green-600 bg-green-100":
                                         state().cur_step_idx === a() && state().next_set_idx === b(),
                                     }}
-                                    class="flex items-center gap-2 p-4 border rounded-md"
+                                    class="flex items-center gap-2 p-4 border border-w-bg-5 rounded-md"
                                   >
                                     <div
                                       class="absolute right-4 top-4"
@@ -1340,7 +1380,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                         vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
                                       }}
                                     >
-                                      <MoreHorizontal class="w-6 h-6" />
+                                      <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
                                     </div>
                                     <div class="space-y-2 w-full">
                                       <Show
@@ -1400,7 +1440,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                   <Show when={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)}>
                                                     <SetValueInput
                                                       store={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)!}
-                                                      class="w-[68px] border border-gray-300 rounded-md p-2"
+                                                      class="w-[68px] border border-w-bg-5 rounded-md p-2"
                                                       onClick={(event) => {
                                                         const client = event.currentTarget.getBoundingClientRect();
                                                         console.log("[]beforeShowNumInput2", a(), b(), c());
@@ -1456,7 +1496,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                     ) && vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)
                                                   }
                                                 >
-                                                  <div class="rounded-md p-2 mt-1 bg-white">
+                                                  <div class="rounded-md p-2 mt-1 bg-w-bg-5">
                                                     <SetActionCountdownView
                                                       store={vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)!}
                                                     />
@@ -1477,7 +1517,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                         "border-green-600 bg-green-100":
                                           state().cur_step_idx === a() && state().next_set_idx === b(),
                                       }}
-                                      class="flex items-center gap-2 p-4 border rounded-md"
+                                      class="flex items-center gap-2 p-4 border border-w-bg-5 rounded-md"
                                     >
                                       <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
                                         <SetCountdownView
@@ -1498,6 +1538,10 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
               </For>
             </div>
           </div>
+          <div class="py-4">
+            <div class="text-sm text-w-fg-5 text-center">胜利就在眼前 加油!</div>
+          </div>
+          <div class="h-[32px]"></div>
         </ScrollView>
       </div>
       <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} position="bottom" size="sm">
@@ -1505,12 +1549,11 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
           <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$input_keyboard_dialog} position="bottom" size="sm">
+      <Sheet store={vm.ui.$dialog_num_keyboard} position="bottom" size="sm">
         <div class="w-screen border-t-gray-200">
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
-
       <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
         <div class="relative w-screen min-h-[320px] border border-t-gray-200 bg-white">
           <Show when={state().loading}>
@@ -1537,116 +1580,8 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_confirm_complete} position="bottom" size="sm">
-        <div class="w-screen border border-t-gray-200 bg-white">
-          <div class="flex flex-col h-[100vh] ">
-            <div class="flex-1 overflow-y-auto">
-              <div class="p-4">
-                <div class="text-3xl">{state().stats.finished_at}</div>
-                <div class="">
-                  <div class="flex">
-                    <div>开始时间</div>
-                    <div>{state().stats.started_at}</div>
-                  </div>
-                  <div class="flex">
-                    <div>总耗时</div>
-                    <div>{state().stats.duration}</div>
-                  </div>
-                </div>
-                <Show
-                  when={!!state().stats.uncompleted_actions.length}
-                  fallback={
-                    <div class="flex items-center mt-4 border border-green-600 bg-green-100 p-4 rounded-md">
-                      <div>
-                        <CircleCheck class="w-6 h-6 text-green-600" />
-                      </div>
-                      <div class="ml-2 text-green-600">所有动作已完成</div>
-                    </div>
-                  }
-                >
-                  <div class="flex items-center mt-4 border border-red-600 bg-red-100 p-4 rounded-md">
-                    <div>
-                      <Info class="w-6 h-6 text-red-600" />
-                    </div>
-                    <div class="ml-2 text-red-600">有 {state().stats.uncompleted_actions.length} 个未完成动作</div>
-                  </div>
-                </Show>
-                <div class="mt-4">
-                  <div class="mt-2 rounded-md">
-                    <div class="space-y-1">
-                      <For each={state().stats.sets}>
-                        {(set, b) => {
-                          return (
-                            <div class="flex">
-                              <div class="w-[36px]">{b() + 1}</div>
-                              <div class="space-y-1">
-                                <For each={set.actions}>
-                                  {(act, c) => {
-                                    return (
-                                      <div class="flex items-center">
-                                        <div class="w-[120px]">{act.zh_name}</div>
-                                        <div class="w-[68px]">
-                                          {act.weight}
-                                          <span class="ml-1 text-gray-800 text-sm">{act.weight_unit}</span>
-                                        </div>
-                                        <span class="text-gray-600">x</span>
-                                        <div>
-                                          {act.reps}
-                                          <span class="ml-1 text-gray-800 text-sm">{act.reps_unit}</span>
-                                        </div>
-                                      </div>
-                                    );
-                                  }}
-                                </For>
-                              </div>
-                            </div>
-                          );
-                        }}
-                      </For>
-                    </div>
-                  </div>
-                </div>
-                <div class="mt-4">
-                  <div>总容量</div>
-                  <div class="relative inline-block">
-                    <div class="text-3xl">{state().stats.total_volume}</div>
-                    <div class="absolute -right-6 bottom-1 text-sm">KG</div>
-                  </div>
-                </div>
-                <div class="mt-4">
-                  <div></div>
-                </div>
-              </div>
-            </div>
-            <div class="h-[88px] p-4">
-              <div class="flex gap-2">
-                <div
-                  class="flex flex-1 items-center justify-center py-2 bg-green-500 rounded-md"
-                  onClick={() => {
-                    vm.methods.submit();
-                  }}
-                >
-                  <div class="text-white">提交</div>
-                </div>
-                <div
-                  class="flex flex-1 items-center justify-center py-2 bg-gray-500 rounded-md"
-                  onClick={() => {
-                    vm.methods.giveUp();
-                  }}
-                >
-                  <div class="text-white">放弃</div>
-                </div>
-                <div
-                  class="flex flex-1 items-center justify-center py-2 bg-gray-300 rounded-md"
-                  onClick={() => {
-                    vm.ui.$dialog_confirm_complete.hide();
-                  }}
-                >
-                  <div class="text-white">取消</div>
-                </div>
-              </div>
-              <div class="h-[34px]"></div>
-            </div>
-          </div>
+        <div class="w-screen bg-w-bg-0">
+          <WorkoutDayOverviewView store={vm} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_remark}>

@@ -41,7 +41,7 @@ export function DayDurationTextView(props: {
     <div class="flex items-center justify-between">
       <div
         classList={{
-          "flex items-center text-xl transition-all duration-200": true,
+          "flex items-center text-xl text-w-fg-1 transition-all duration-200": true,
           // "text-gray-100": state().finished,
         }}
       >
