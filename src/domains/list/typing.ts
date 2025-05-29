@@ -126,6 +126,7 @@ export interface ListProps<T> {
    * 额外的默认 response
    */
   extraDefaultResponse?: Record<string, unknown>;
+  extraDataSource?: T[];
   /** 初始状态，默认该值为 true，可以通过该值判断是否展示骨架屏 */
   initial?: boolean;
   onLoadingChange?: (loading: boolean) => void;

@@ -10,6 +10,7 @@ import { Result } from "@/domains/result/index";
 import { DEFAULT_RESPONSE, DEFAULT_PARAMS, DEFAULT_CURRENT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_TOTAL } from "./constants";
 import { OriginalResponse, FetchParams, Response, Search, ParamsProcessor, ListProps } from "./typing";
 import { omit } from "./utils";
+import { s } from "vitest/dist/types-e3c9754d";
 
 /**
  * 只处理
@@ -139,6 +140,9 @@ export class ListCore<
   /** 初始查询参数 */
   private initialParams: FetchParams;
   private extraResponse: Record<string, unknown>;
+  /** 额外的数据 */
+  private extraDatSource: T[] = [];
+  private insertExtraDataSource = false;
   params: FetchParams = { ...DEFAULT_PARAMS };
 
   // 响应数据
@@ -158,6 +162,7 @@ export class ListCore<
       beforeRequest,
       processor,
       extraDefaultResponse,
+      extraDataSource,
       onLoadingChange,
       onStateChange,
       beforeSearch,
@@ -186,6 +191,7 @@ export class ListCore<
     this.extraResponse = {
       ...extraDefaultResponse,
     };
+    this.extraDatSource = options.extraDataSource ?? [];
     if (onLoadingChange) {
       this.onLoadingChange(onLoadingChange);
     }
@@ -301,6 +307,15 @@ export class ListCore<
     }
     const originalResponse = res.data;
     let response = this.processor(originalResponse);
+    const responseIsEmpty = response.dataSource === undefined;
+    if (responseIsEmpty) {
+      response.dataSource = [];
+    }
+    console.log("[DOMAIN]list/fetch - before this.extraDataSource.length", this.extraDatSource);
+    if (this.extraDatSource.length !== 0 && this.insertExtraDataSource === false) {
+      this.insertExtraDataSource = true;
+      response.dataSource = [...this.extraDatSource, ...response.dataSource];
+    }
     if (params.page === 1 && response.dataSource.length === 0) {
       response.empty = true;
     }
@@ -311,10 +326,6 @@ export class ListCore<
       this.params.next_marker = response.next_marker;
     }
     // console.log(...this.log('3、afterProcessor', response));
-    const responseIsEmpty = response.dataSource === undefined;
-    if (responseIsEmpty) {
-      response.dataSource = [];
-    }
     return Result.Ok(response);
   }
   /**
@@ -336,6 +347,7 @@ export class ListCore<
       ...this.response,
       ...res.data,
     };
+    console.log("[DOMAIN]list/init - before Event.StateChange", this.response.dataSource);
     this.emit(Events.StateChange, { ...this.response });
     this.emit(Events.DataSourceAdded, [...res.data.dataSource]);
     this.emit(Events.DataSourceChange, [...this.response.dataSource]);

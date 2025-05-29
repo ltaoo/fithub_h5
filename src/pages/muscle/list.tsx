@@ -2,11 +2,13 @@
  * 肌肉信息管理
  */
 import { For } from "solid-js";
-import { ChevronLeft, Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Dialog, ScrollView } from "@/components/ui";
+import { BodyMusclePreview } from "@/components/body-muscle-preview";
+import { NavigationBar1 } from "@/components/navigation-bar1";
+import { Sheet } from "@/components/ui/sheet";
 
 import { base, Handler } from "@/domains/base";
 import { RefCore } from "@/domains/ui/cur";
@@ -15,6 +17,8 @@ import { InputCore } from "@/domains/ui/form/input";
 import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
 import { ScrollViewCore, SelectCore, DialogCore, ButtonCore, ButtonInListCore } from "@/domains/ui";
 import { TagInputCore } from "@/domains/ui/form/tag-input";
+import { ListCore } from "@/domains/list";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import {
   createMuscle,
   deleteMuscle,
@@ -26,10 +30,6 @@ import {
 import { Unpacked } from "@/types";
 
 import { MuscleValueView } from "./muscle_form";
-import { Sheet } from "@/components/ui/sheet";
-import { ListCore } from "@/domains/list";
-import { TheItemTypeFromListCore } from "@/domains/list/typing";
-import { BodyMusclePreview } from "@/components/body-muscle-preview";
 
 function MuscleListViewModel(props: ViewComponentProps) {
   const request = {
@@ -292,25 +292,8 @@ export function MuscleListView(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="flex items-center justify-between gap-2 p-4 border-b">
-        <div class="flex items-center gap-2">
-          <div
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.methods.back();
-            }}
-          >
-            <ChevronLeft class="w-6 h-6 text-gray-800" />
-          </div>
-          <div class="text-gray-600">肌肉</div>
-        </div>
-        <Button
-          class="p-2 rounded-full bg-gray-200"
-          icon={<Plus class="w-6 h-6 text-gray-800" />}
-          store={vm.ui.$btn_show_values_dialog}
-        >
-          <div class="pr-2 text-gray-800">创建</div>
-        </Button>
+      <div class="z-0 fixed top-0 left-0 w-full">
+        <NavigationBar1 title="肌肉" history={props.history} />
       </div>
       <div class="absolute top-[74px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>

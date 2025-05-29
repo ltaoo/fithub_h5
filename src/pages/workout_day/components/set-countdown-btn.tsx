@@ -1,3 +1,6 @@
+/**
+ * @file 如果是 HIIT 计时
+ */
 import { Show } from "solid-js";
 import { Play, Pause, Check, Circle } from "lucide-solid";
 
@@ -15,7 +18,7 @@ export function SetActionCountdownBtn(props: {
   return (
     <div class="overflow-hidden relative flex items-center gap-2">
       <div
-        class="flex items-center justify-center px-4 h-10 rounded-full border border-gray-300 bg-white"
+        class="flex items-center justify-center p-2 rounded-full bg-white"
         onClick={(event) => {
           const { x, y } = event;
           if (props.onClick) {
@@ -32,12 +35,12 @@ export function SetActionCountdownBtn(props: {
           when={state().running}
           fallback={
             <div class="text-gray-400">
-              <Play size={16} />
+              <Play class="w-4 h-4" />
             </div>
           }
         >
           <div class="text-gray-400">
-            <Pause size={16} />
+            <Pause class="w-4 h-4" />
           </div>
         </Show>
       </div>

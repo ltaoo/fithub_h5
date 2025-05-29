@@ -19,7 +19,7 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
       <div
         class=""
         classList={{
-          "flex items-center justify-center px-4 h-10 w-10 rounded-full": true,
+          "flex items-center justify-center p-2 rounded-full bg-white": true,
           "bg-gray-100": !state().value,
           "bg-white": state().value,
         }}

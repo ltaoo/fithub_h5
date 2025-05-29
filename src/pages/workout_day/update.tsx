@@ -2,13 +2,13 @@
  * @file 训练日记录
  */
 import { For, Show } from "solid-js";
-import { ChevronLeft, CircleCheck, Info, Loader, MoreHorizontal, StopCircle, X } from "lucide-solid";
+import { CircleCheck, Info, Loader, MoreHorizontal, StopCircle, X } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
-import { Button, ScrollView, Textarea } from "@/components/ui";
+import { Button, DropdownMenu, ScrollView, Textarea } from "@/components/ui";
 import { WorkoutActionCard } from "@/components/workout-action-card";
 import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
@@ -184,9 +184,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       pending_set?: WorkoutDayStepProgressJSON250424["sets"][number];
     }) {
       const { step_idx: a, set_idx: b, idx: c, action, pending_set } = opt;
+      const set_k = `${a}-${b}`;
       const k = `${a}-${b}-${c}`;
       const prev_set_k = `${a}-${b - 1}`;
       const prev_k = `${a}-${b}-${c - 1}`;
+      const next_k = `${a}-${b}-${c + 1}`;
       // const pending_action = pending_set?.actions.find((act) => act.idx === c);
       const pending_action = pending_set?.actions[c];
       const act = _steps[a].sets[b].actions[c];
@@ -240,9 +242,22 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }
           const $prev_set_countdown = ui.$set_countdowns.get(prev_set_k);
           if ($prev_set_countdown && $prev_set_countdown.state.running) {
-            $prev_set_countdown.interrupt();
+            $prev_set_countdown.pause();
           }
           methods.setCurSet({ step_idx: a, set_idx: b });
+        });
+        $action_countdown.onCompleted(() => {
+          const $next_act_countdown = ui.$action_countdowns.get(next_k);
+          if ($next_act_countdown) {
+            $next_act_countdown.start();
+          }
+          const is_last_act = !$next_act_countdown;
+          if (is_last_act) {
+            const $countdown = ui.$set_countdowns.get(set_k);
+            if ($countdown) {
+              $countdown.start();
+            }
+          }
         });
         ui.$action_countdowns.set(k, $action_countdown);
       }
@@ -401,7 +416,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       }
       const $countdown = ui.$set_countdowns.get(`${opt.step_idx}-${opt.set_idx}`);
       // console.log("[]handleCompleteSet - ", _cur_step_idx, _next_set_idx, $countdown);
-      if ($countdown && !$countdown.state.interrupt) {
+      if ($countdown && !$countdown.state.paused) {
         $countdown.start();
       }
       let next_set_idx = opt.set_idx + 1;
@@ -709,7 +724,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $action_countdowns,
     $set_countdowns,
     btns_more,
-    $set_menu: new DropdownMenuCore({
+    $menu_set: new DropdownMenuCore({
       // side: "left",
       align: "start",
       items: [
@@ -717,13 +732,13 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           label: "备注",
           onClick() {
             ui.$dialog_remark.show();
-            ui.$set_menu.hide();
+            ui.$menu_set.hide();
           },
         }),
         new MenuItemCore({
           label: "修改动作",
           onClick() {
-            ui.$set_menu.hide();
+            ui.$menu_set.hide();
             ui.$ref_action_dialog_for.select("change_action");
             const cur_set_key = ui.$ref_cur_set_key.value;
             if (!cur_set_key) {
@@ -763,7 +778,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             }
             const { step_idx, idx } = cur_set_key;
             methods.removeSet({ step_idx, set_idx: idx });
-            ui.$set_menu.hide();
+            ui.$menu_set.hide();
           },
         }),
       ],
@@ -936,7 +951,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       },
     }),
     $set_value_input: SetValueInputViewModel({}),
-    /** 当次循环所用时 */
+    /** 当次训练已经过了多久 */
     $day_countdown: CountdownViewModel({}),
     $countdown_presence: new PresenceCore(),
     $workout_action_profile_dialog: new DialogCore({ footer: false }),
@@ -958,6 +973,41 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         ui.$dialog_remark.hide();
       },
     }),
+    $btn_give_up_confirm_cancel: new ButtonCore({
+      onClick() {
+        ui.$dialog_give_up_confirm.hide();
+      },
+    }),
+    $btn_give_up_confirm_ok: new ButtonCore({
+      async onClick() {
+        ui.$btn_give_up_confirm_ok.setLoading(true);
+        const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
+        ui.$btn_give_up_confirm_ok.setLoading(false);
+        if (r.error) {
+          props.app.tip({
+            text: [r.error.message],
+          });
+          return;
+        }
+        ui.$dialog_give_up_confirm.hide();
+        props.history.push("root.home_layout.index");
+      },
+    }),
+    $menu_workout_day: new DropdownMenuCore({
+      items: [
+        new MenuItemCore({
+          label: "增加动作",
+        }),
+        new MenuItemCore({
+          label: "放弃",
+          onClick() {
+            ui.$menu_workout_day.hide();
+            ui.$dialog_give_up_confirm.show();
+          },
+        }),
+      ],
+    }),
+    $dialog_give_up_confirm: new DialogCore({}),
   };
   let _height = 0;
   let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
@@ -1074,16 +1124,6 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     }
     $field.input.setUnit(ui.$set_value_input.state.unit);
   });
-  ui.$tools.onShow(() => {
-    if (request.workout_day.profile.response?.status === WorkoutDayStatus.Started) {
-      ui.$day_countdown.play();
-    }
-  });
-  // ui.$tools.onHidden(() => {
-  //   if (request.workout_day.profile.response?.status === WorkoutDayStatus.Started) {
-  //     ui.$day_countdown.pause();
-  //   }
-  // });
 
   request.workout_action.profile.onStateChange((v) => {
     bus.emit(Events.StateChange, { ..._state });
@@ -1112,6 +1152,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if (status === WorkoutDayStatus.Started) {
         // console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
         ui.$day_countdown.setStartedAt(started_at.valueOf());
+        ui.$day_countdown.play();
       }
       _stats.started_at = started_at.format("YYYY-MM-DD HH:mm");
       _cur_step_idx = pending_steps.step_idx;
@@ -1146,7 +1187,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }
           if (set.rest_duration) {
             const $countdown = SetCountdownViewModel({
-              countdown: set.rest_duration,
+              countdown: 10,
+              // countdown: set.rest_duration,
               remaining: pending_set?.remaining_time ?? 0,
               exceed: pending_set?.exceed_time ?? 0,
               finished: is_completed,
@@ -1201,176 +1243,62 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="">
-        <div
-          class="bg-white p-4 rounded-lg transition-all duration-300"
-          style={{ transform: `translateY(${-state().height}px)` }}
-        >
-          <div class="mt-4 space-y-8">
-            <For each={state().steps}>
-              {(step, a) => {
-                return (
-                  <div>
-                    <Show when={step.note}>
-                      <div class="relative">
-                        <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] bg-gray-100">
-                          {step.note}
+      <div class="z-0 fixed top-0 left-0 w-full h-[72px] border-b">
+        <div class="p-4">
+          <Show when={state().profile?.status === WorkoutDayStatus.Started}>
+            <div class="flex items-center justify-between">
+              <DayCountdown store={vm.ui.$day_countdown} />
+              <div class="flex items-center gap-2">
+                <div
+                  class="py-2 px-4 rounded-md bg-gray-100 text-center text-gray-800 text-sm"
+                  onClick={() => {
+                    vm.methods.showWorkoutDayCompleteConfirmDialog();
+                    // vm.methods.resetPendingSteps();
+                  }}
+                >
+                  完成
+                </div>
+                <div
+                  class="p-2 rounded-full bg-gray-100"
+                  onClick={(event) => {
+                    const client = event.currentTarget.getBoundingClientRect();
+                    vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
+                  }}
+                >
+                  <MoreHorizontal class="w-6 h-6 text-gray-800" />
+                </div>
+              </div>
+            </div>
+          </Show>
+        </div>
+      </div>
+      <div class="absolute top-[72px] bottom-0 left-0 w-full">
+        <ScrollView store={vm.ui.$view} class="">
+          <div
+            class="p-4 rounded-lg transition-all duration-300"
+            style={{ transform: `translateY(${-state().height}px)` }}
+          >
+            <div class="space-y-8">
+              <For each={state().steps}>
+                {(step, a) => {
+                  return (
+                    <div class="">
+                      <Show when={step.note}>
+                        <div class="flex gap-2">
+                          <div class="w-[40px] h-[40px] rounded-full bg-gray-100"></div>
+                          <div class="relative">
+                            <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] bg-gray-100">
+                              {step.note}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </Show>
-                    <div class="mt-2 space-y-2">
-                      <For each={step.sets}>
-                        {(set, b) => {
-                          return (
-                            <>
-                              <div class="relative w-full overflow-hidden">
-                                <div
-                                  classList={{
-                                    "border-green-600 bg-green-100":
-                                      state().cur_step_idx === a() && state().next_set_idx === b(),
-                                  }}
-                                  class="flex items-center gap-2 p-4 border rounded-md"
-                                >
-                                  <div
-                                    class="absolute right-4 top-4"
-                                    onClick={(event) => {
-                                      const client = event.currentTarget.getBoundingClientRect();
-                                      vm.ui.$ref_cur_set_key.select({ step_idx: a(), idx: b() });
-                                      vm.ui.$set_menu.toggle({ x: client.x + 18, y: client.y + 18 });
-                                    }}
-                                  >
-                                    <MoreHorizontal class="w-6 h-6" />
-                                  </div>
-                                  <div class="space-y-2">
-                                    <Show
-                                      when={
-                                        [WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                        vm.ui.$set_actions.get(`${a()}-${b()}-0`)
-                                      }
-                                    >
-                                      <SetActionView
-                                        store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
-                                        onClick={() => {
-                                          vm.methods.showWorkoutActionProfile(set.actions[0]);
-                                        }}
-                                      />
-                                    </Show>
-                                    <For each={set.actions}>
-                                      {(action, c) => {
-                                        return (
-                                          <div class="gap-2">
-                                            <Show
-                                              when={
-                                                ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                                vm.ui.$set_actions.get(`${a()}-${b()}-${c()}`)
-                                              }
-                                            >
-                                              <SetActionView
-                                                store={vm.ui.$set_actions.get(`${a()}-${b()}-${c()}`)!}
-                                                onClick={() => {
-                                                  vm.methods.showWorkoutActionProfile(action);
-                                                }}
-                                              />
-                                            </Show>
-                                            <div class="flex items-center gap-2">
-                                              <Show when={vm.ui.$fields_weight.get(`${a()}-${b()}-${c()}`)}>
-                                                <SetValueInput
-                                                  store={vm.ui.$fields_weight.get(`${a()}-${b()}-${c()}`)!}
-                                                  class="w-[68px] border border-gray-300 rounded-md p-2"
-                                                  onClick={(event) => {
-                                                    const client = event.currentTarget.getBoundingClientRect();
-                                                    vm.methods.beforeShowNumInput({
-                                                      step_idx: a(),
-                                                      set_idx: b(),
-                                                      act_idx: c(),
-                                                      obj: {
-                                                        x: client.x,
-                                                        y: client.y,
-                                                        width: client.width,
-                                                        height: client.height,
-                                                      },
-                                                    });
-                                                    vm.methods.showNumInput({
-                                                      key: `${a()}-${b()}-${c()}`,
-                                                      for: "weight",
-                                                    });
-                                                  }}
-                                                />
-                                              </Show>
-                                              <Show when={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)}>
-                                                <SetValueInput
-                                                  store={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)!}
-                                                  class="w-[68px] border border-gray-300 rounded-md p-2"
-                                                  onClick={(event) => {
-                                                    const client = event.currentTarget.getBoundingClientRect();
-                                                    vm.methods.beforeShowNumInput({
-                                                      step_idx: a(),
-                                                      set_idx: b(),
-                                                      act_idx: c(),
-                                                      obj: {
-                                                        x: client.x,
-                                                        y: client.y,
-                                                        width: client.width,
-                                                        height: client.height,
-                                                      },
-                                                    });
-                                                    vm.methods.showNumInput({
-                                                      key: `${a()}-${b()}-${c()}`,
-                                                      for: "reps",
-                                                    });
-                                                  }}
-                                                />
-                                              </Show>
-                                              <Show
-                                                when={
-                                                  [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
-                                                    action.reps_unit
-                                                  ) && vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)
-                                                }
-                                              >
-                                                <SetActionCountdownBtn
-                                                  store={vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)!}
-                                                  onClick={({ finished }) => {
-                                                    vm.methods.setCurSet({
-                                                      step_idx: a(),
-                                                      set_idx: b(),
-                                                    });
-                                                  }}
-                                                />
-                                              </Show>
-                                              <Show when={vm.ui.$inputs_completed.get(`${a()}-${b()}-${c()}`)}>
-                                                <SetCompleteBtn
-                                                  store={vm.ui.$inputs_completed.get(`${a()}-${b()}-${c()}`)!}
-                                                  onClick={(event) => {
-                                                    vm.methods.handleCompleteSetAction({
-                                                      step_idx: a(),
-                                                      set_idx: b(),
-                                                      act_idx: c(),
-                                                    });
-                                                  }}
-                                                />
-                                              </Show>
-                                            </div>
-                                            <Show
-                                              when={
-                                                [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
-                                                  action.reps_unit
-                                                ) && vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)
-                                              }
-                                            >
-                                              <SetActionCountdownView
-                                                store={vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)!}
-                                              />
-                                            </Show>
-                                          </div>
-                                        );
-                                      }}
-                                    </For>
-                                  </div>
-                                </div>
-                              </div>
-                              <Show when={!(a() === state().steps.length - 1 && b() === step.sets.length - 1)}>
-                                <div class="relative w-full overflow-hidden">
+                      </Show>
+                      <div class="mt-2 space-y-2 w-full">
+                        <For each={step.sets}>
+                          {(set, b) => {
+                            return (
+                              <>
+                                <div class="relative w-full overflow-hidden ">
                                   <div
                                     classList={{
                                       "border-green-600 bg-green-100":
@@ -1378,27 +1306,178 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                     }}
                                     class="flex items-center gap-2 p-4 border rounded-md"
                                   >
-                                    <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
-                                      <SetCountdownView
-                                        store={vm.ui.$set_countdowns.get(`${a()}-${b()}`)!}
-                                      ></SetCountdownView>
-                                    </Show>
+                                    <div
+                                      class="absolute right-4 top-4"
+                                      onClick={(event) => {
+                                        const client = event.currentTarget.getBoundingClientRect();
+                                        vm.ui.$ref_cur_set_key.select({ step_idx: a(), idx: b() });
+                                        vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
+                                      }}
+                                    >
+                                      <MoreHorizontal class="w-6 h-6" />
+                                    </div>
+                                    <div class="space-y-2 w-full">
+                                      <Show
+                                        when={
+                                          [WorkoutPlanSetType.Decreasing].includes(set.type) &&
+                                          vm.ui.$set_actions.get(`${a()}-${b()}-0`)
+                                        }
+                                      >
+                                        <SetActionView
+                                          store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
+                                          onClick={() => {
+                                            vm.methods.showWorkoutActionProfile(set.actions[0]);
+                                          }}
+                                        />
+                                      </Show>
+                                      <div class="space-y-2 w-full">
+                                        <For each={set.actions}>
+                                          {(action, c) => {
+                                            return (
+                                              <div class="gap-2">
+                                                <Show
+                                                  when={
+                                                    ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
+                                                    vm.ui.$set_actions.get(`${a()}-${b()}-${c()}`)
+                                                  }
+                                                >
+                                                  <SetActionView
+                                                    store={vm.ui.$set_actions.get(`${a()}-${b()}-${c()}`)!}
+                                                    onClick={() => {
+                                                      vm.methods.showWorkoutActionProfile(action);
+                                                    }}
+                                                  />
+                                                </Show>
+                                                <div class="flex items-center gap-2 mt-2">
+                                                  <Show when={vm.ui.$fields_weight.get(`${a()}-${b()}-${c()}`)}>
+                                                    <SetValueInput
+                                                      store={vm.ui.$fields_weight.get(`${a()}-${b()}-${c()}`)!}
+                                                      class="w-[68px] border border-gray-300 rounded-md p-2"
+                                                      onClick={(event) => {
+                                                        const client = event.currentTarget.getBoundingClientRect();
+                                                        vm.methods.beforeShowNumInput({
+                                                          step_idx: a(),
+                                                          set_idx: b(),
+                                                          act_idx: c(),
+                                                          obj: {
+                                                            x: client.x,
+                                                            y: client.y,
+                                                            width: client.width,
+                                                            height: client.height,
+                                                          },
+                                                        });
+                                                        vm.methods.showNumInput({
+                                                          key: `${a()}-${b()}-${c()}`,
+                                                          for: "weight",
+                                                        });
+                                                      }}
+                                                    />
+                                                  </Show>
+                                                  <Show when={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)}>
+                                                    <SetValueInput
+                                                      store={vm.ui.$fields_reps.get(`${a()}-${b()}-${c()}`)!}
+                                                      class="w-[68px] border border-gray-300 rounded-md p-2"
+                                                      onClick={(event) => {
+                                                        const client = event.currentTarget.getBoundingClientRect();
+                                                        vm.methods.beforeShowNumInput({
+                                                          step_idx: a(),
+                                                          set_idx: b(),
+                                                          act_idx: c(),
+                                                          obj: {
+                                                            x: client.x,
+                                                            y: client.y,
+                                                            width: client.width,
+                                                            height: client.height,
+                                                          },
+                                                        });
+                                                        vm.methods.showNumInput({
+                                                          key: `${a()}-${b()}-${c()}`,
+                                                          for: "reps",
+                                                        });
+                                                      }}
+                                                    />
+                                                  </Show>
+                                                  <Show when={vm.ui.$inputs_completed.get(`${a()}-${b()}-${c()}`)}>
+                                                    <SetCompleteBtn
+                                                      store={vm.ui.$inputs_completed.get(`${a()}-${b()}-${c()}`)!}
+                                                      onClick={(event) => {
+                                                        vm.methods.handleCompleteSetAction({
+                                                          step_idx: a(),
+                                                          set_idx: b(),
+                                                          act_idx: c(),
+                                                        });
+                                                      }}
+                                                    />
+                                                  </Show>
+                                                  <Show
+                                                    when={
+                                                      [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
+                                                        action.reps_unit
+                                                      ) && vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)
+                                                    }
+                                                  >
+                                                    <SetActionCountdownBtn
+                                                      store={vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)!}
+                                                      onClick={({ finished }) => {
+                                                        vm.methods.setCurSet({
+                                                          step_idx: a(),
+                                                          set_idx: b(),
+                                                        });
+                                                      }}
+                                                    />
+                                                  </Show>
+                                                </div>
+                                                <Show
+                                                  when={
+                                                    [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
+                                                      action.reps_unit
+                                                    ) && vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)
+                                                  }
+                                                >
+                                                  <div class="rounded-md p-2 mt-1 bg-white">
+                                                    <SetActionCountdownView
+                                                      store={vm.ui.$action_countdowns.get(`${a()}-${b()}-${c()}`)!}
+                                                    />
+                                                  </div>
+                                                </Show>
+                                              </div>
+                                            );
+                                          }}
+                                        </For>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              </Show>
-                            </>
-                          );
-                        }}
-                      </For>
+                                <Show when={!(a() === state().steps.length - 1 && b() === step.sets.length - 1)}>
+                                  <div class="relative w-full overflow-hidden">
+                                    <div
+                                      classList={{
+                                        "border-green-600 bg-green-100":
+                                          state().cur_step_idx === a() && state().next_set_idx === b(),
+                                      }}
+                                      class="flex items-center gap-2 p-4 border rounded-md"
+                                    >
+                                      <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
+                                        <SetCountdownView
+                                          store={vm.ui.$set_countdowns.get(`${a()}-${b()}`)!}
+                                        ></SetCountdownView>
+                                      </Show>
+                                    </div>
+                                  </div>
+                                </Show>
+                              </>
+                            );
+                          }}
+                        </For>
+                      </div>
                     </div>
-                  </div>
-                );
-              }}
-            </For>
+                  );
+                }}
+              </For>
+            </div>
           </div>
-        </div>
-        <div class="h-[98px]"></div>
-      </ScrollView>
+        </ScrollView>
+      </div>
       <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} position="bottom" size="sm">
         <div class="w-screen">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} />
@@ -1409,24 +1488,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
-      <Show when={state().profile?.status === WorkoutDayStatus.Started}>
-        <div class="absolute right-4 bottom-8">
-          <ToolsBar store={vm.ui.$tools}>
-            <div class="flex items-center gap-2">
-              <DayCountdown store={vm.ui.$day_countdown} />
-              <div
-                class="pl-4 pr-8"
-                onClick={() => {
-                  vm.methods.showWorkoutDayCompleteConfirmDialog();
-                  // vm.methods.resetPendingSteps();
-                }}
-              >
-                结束
-              </div>
-            </div>
-          </ToolsBar>
-        </div>
-      </Show>
+
       <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
         <div class="relative w-screen min-h-[320px] border border-t-gray-200 bg-white">
           <Show when={state().loading}>
@@ -1586,7 +1648,23 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <SetDropdownMenu store={vm.ui.$set_menu}></SetDropdownMenu>
+      <Sheet store={vm.ui.$dialog_give_up_confirm}>
+        <div class="w-screen bg-white p-4">
+          <div>
+            <div class="text-xl">确认放弃本次训练？</div>
+            <div class="mt-2 flex items-center gap-2">
+              <Button class="w-full" store={vm.ui.$btn_give_up_confirm_cancel}>
+                取消
+              </Button>
+              <Button class="w-full" store={vm.ui.$btn_give_up_confirm_ok}>
+                确定
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Sheet>
+      <SetDropdownMenu store={vm.ui.$menu_set}></SetDropdownMenu>
+      <DropdownMenu store={vm.ui.$menu_workout_day}></DropdownMenu>
     </>
   );
 }

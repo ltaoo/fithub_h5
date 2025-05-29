@@ -1,11 +1,12 @@
 /**
  * @file 学员详情
  */
-import { ChevronLeft, Edit } from "lucide-solid";
+import { Edit } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { ScrollView } from "@/components/ui";
+import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { base, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
@@ -52,41 +53,33 @@ function MemberProfileViewModel(props: ViewComponentProps) {
 export function HomeStudentProfilePage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(MemberProfileViewModel, [props]);
   return (
-    <ScrollView store={vm.ui.$view}>
-      <div class="flex items-center gap-2 p-4 border-b">
-        <div
-          class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-          onClick={() => {
-            vm.methods.back();
-          }}
-        >
-          <ChevronLeft class="w-6 h-6 text-gray-800" />
-        </div>
-        <div class="text-gray-600"></div>
-      </div>
-      <div class="relative p-4">
-        <div>
-          <div></div>
-          <div></div>
-        </div>
-        <div class="relative">
-          <div class="absolute right-2 top-2">
-            <div class="p-2 rounded-full bg-gray-200">
-              <Edit class="w-4 h-4 text-gray-800" />
-            </div>
+    <>
+      <ScrollView store={vm.ui.$view}>
+        <NavigationBar1 title="" history={props.history} />
+        <div class="relative p-4">
+          <div>
+            <div></div>
+            <div></div>
           </div>
-          <div class="text-xl">身体信息</div>
+          <div class="relative">
+            <div class="absolute right-2 top-2">
+              <div class="p-2 rounded-full bg-gray-200">
+                <Edit class="w-4 h-4 text-gray-800" />
+              </div>
+            </div>
+            <div class="text-xl">身体信息</div>
+          </div>
+          <div>
+            <div class="text-xl">问卷调查</div>
+          </div>
+          <div>
+            <div class="text-xl">训练统计</div>
+          </div>
+          <div>
+            <div class="text-xl">训练记录</div>
+          </div>
         </div>
-        <div>
-          <div class="text-xl">问卷调查</div>
-        </div>
-        <div>
-          <div class="text-xl">训练统计</div>
-        </div>
-        <div>
-          <div class="text-xl">训练记录</div>
-        </div>
-      </div>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }

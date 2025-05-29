@@ -39,8 +39,9 @@ import { WorkoutActionHistoryListView } from "@/pages/workout_action_history/lis
 import { WorkoutDayListView } from "@/pages/workout_day/list";
 import { WorkoutDayProfileView } from "@/pages/workout_day/profile";
 import { ToolsView } from "@/pages/tools";
-import { RMCalcView } from "@/pages/tools/rm_calc";
-import { BMRCalcView } from "@/pages/tools/bmr_calc";
+import { RMCalcToolView } from "@/pages/tools/rm_calc";
+import { BMRCalcToolView } from "@/pages/tools/bmr_calc";
+import { StopwatchToolView } from "@/pages/tools/stopwatch";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -49,8 +50,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout": HomeLayout,
   "root.home_layout.index": HomeIndexPage,
   "root.home_layout.tools": ToolsView,
-  "root.tools_rm_calc": RMCalcView,
-  "root.tools_bmr_calc": BMRCalcView,
+  "root.tools_rm_calc": RMCalcToolView,
+  "root.tools_bmr_calc": BMRCalcToolView,
+  "root.stopwatch": StopwatchToolView,
   // 训练计划
   "root.workout_plan_list": HomeWorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,

@@ -43,21 +43,21 @@ export function MemberValuesViewModel() {
           defaultValue: 18,
         }),
       }),
-      height: new SingleFieldCore({
-        label: "身高",
-        name: "height",
-        input: DragSelectViewModel({
-          defaultValue: 140,
-          visible_count: 7,
-          direction: "horizontal",
-          options: Array.from({ length: 41 }, (_, i) => 140 + i * 2).map((v) => {
-            return {
-              label: String(v),
-              value: v,
-            };
-          }),
-        }),
-      }),
+      // height: new SingleFieldCore({
+      //   label: "身高",
+      //   name: "height",
+      //   input: DragSelectViewModel({
+      //     defaultValue: 140,
+      //     visible_count: 7,
+      //     direction: "horizontal",
+      //     options: Array.from({ length: 41 }, (_, i) => 140 + i * 2).map((v) => {
+      //       return {
+      //         label: String(v),
+      //         value: v,
+      //       };
+      //     }),
+      //   }),
+      // }),
     },
   });
   const $values_goal = new ObjectFieldCore({

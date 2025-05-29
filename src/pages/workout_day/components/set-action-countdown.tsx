@@ -1,3 +1,6 @@
+/**
+ * @file 动作倒计时，用于计数单位是 s 的动作
+ */
 import { createSignal, Show } from "solid-js";
 import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
 
@@ -44,20 +47,23 @@ export function SetActionCountdownViewModel(props: {
   enum Events {
     Start,
     Stop,
+    Completed,
     StateChange,
   }
   type TheTypesOfEvents = {
     [Events.Start]: void;
     [Events.Stop]: true;
+    [Events.Completed]: void;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$countdown1.onFinish(() => {
+  ui.$countdown1.onCompleted(() => {
     ui.$countdown2.start(new Date().valueOf());
   });
-  ui.$countdown2.onFinish(() => {
-    ui.$countdown3.start(new Date().valueOf());
+  ui.$countdown2.onCompleted(() => {
+    bus.emit(Events.Completed);
+    // ui.$countdown3.start(new Date().valueOf());
   });
   ui.$countdown1.onStop(() => {
     bus.emit(Events.Stop);
@@ -81,15 +87,15 @@ export function SetActionCountdownViewModel(props: {
     stop() {
       _running = false;
       bus.emit(Events.StateChange, { ..._state });
-      if (ui.$countdown1.state.is_running) {
-        ui.$countdown1.interrupt();
+      if (ui.$countdown1.state.running) {
+        ui.$countdown1.pause();
         return;
       }
-      if (ui.$countdown2.state.is_running) {
-        ui.$countdown2.interrupt();
+      if (ui.$countdown2.state.running) {
+        ui.$countdown2.pause();
         return;
       }
-      ui.$countdown3.interrupt();
+      ui.$countdown3.pause();
     },
     get time1() {
       return ui.$countdown1.time;
@@ -106,6 +112,9 @@ export function SetActionCountdownViewModel(props: {
     },
     onStop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
       return bus.on(Events.Stop, handler);
+    },
+    onCompleted(handler: Handler<TheTypesOfEvents[Events.Completed]>) {
+      return bus.on(Events.Completed, handler);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -181,21 +190,21 @@ export function SetActionCountdownView(props: {
     }
     setCountdown2State(v);
   });
-  props.store.ui.$countdown3.onStateChange((v) => {
-    if ($c_minutes1) {
-      $c_minutes1.innerText = v.minutes1;
-    }
-    if ($c_minutes2) {
-      $c_minutes2.innerText = v.minutes2;
-    }
-    if ($c_seconds1) {
-      $c_seconds1.innerText = v.seconds1;
-    }
-    if ($c_seconds2) {
-      $c_seconds2.innerText = v.seconds2;
-    }
-    setCountdown3State(v);
-  });
+  // props.store.ui.$countdown3.onStateChange((v) => {
+  //   if ($c_minutes1) {
+  //     $c_minutes1.innerText = v.minutes1;
+  //   }
+  //   if ($c_minutes2) {
+  //     $c_minutes2.innerText = v.minutes2;
+  //   }
+  //   if ($c_seconds1) {
+  //     $c_seconds1.innerText = v.seconds1;
+  //   }
+  //   if ($c_seconds2) {
+  //     $c_seconds2.innerText = v.seconds2;
+  //   }
+  //   setCountdown3State(v);
+  // });
 
   return (
     <div class="flex items-center gap-4">
@@ -269,7 +278,7 @@ export function SetActionCountdownView(props: {
         </div>
       </div>
       <div class="flex items-center">
-        <Show when={countdown1().finished}>
+        <Show when={countdown1().completed}>
           <div
             classList={{
               "flex items-center text-green-500": true,
@@ -340,7 +349,7 @@ export function SetActionCountdownView(props: {
           </div>
         </Show>
       </div>
-      <div class="flex items-center">
+      {/* <div class="flex items-center">
         <Show when={countdown2().finished}>
           <div
             classList={{
@@ -418,7 +427,7 @@ export function SetActionCountdownView(props: {
             </div>
           </div>
         </Show>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { RequestCore } from "@/domains/request";
 import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
+import { ChevronRight } from "lucide-solid";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
@@ -35,16 +36,14 @@ function HomeMineViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
+    gotoWorkoutDayListView() {
+      props.history.push("root.workout_day_list");
+    },
   };
   const ui = {
-    $view: new ScrollViewCore({
-      async onReachBottom() {
-        await request.workout_action_history.list.loadMore();
-        ui.$view.finishLoadingMore();
-      },
-    }),
+    $view: new ScrollViewCore({}),
     $calendar: ActivityCalendar<{ day: string; num: number }>({
-      x: 16,
+      x: 17,
       min: 2,
     }),
   };
@@ -101,9 +100,9 @@ export function HomeMineView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(HomeMineViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view} class="h-full">
-      <div class="p-4">
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+    <ScrollView store={vm.ui.$view} class="bg-gray-100">
+      <div class="">
+        <div class="p-4 mb-4">
           <div class="flex items-center">
             <div class="w-16 h-16 rounded-full bg-gray-200 mr-4">{/* 头像占位 */}</div>
             <div>
@@ -111,7 +110,7 @@ export function HomeMineView(props: ViewComponentProps) {
               <p class="text-gray-600 text-sm">会员等级</p>
             </div>
           </div>
-          <div class="mt-4 flex justify-between">
+          {/* <div class="mt-4 flex justify-between">
             <div class="text-center">
               <p class="text-gray-600 text-sm">训练天数</p>
               <p class="font-semibold">0</p>
@@ -124,42 +123,58 @@ export function HomeMineView(props: ViewComponentProps) {
               <p class="text-gray-600 text-sm">消耗热量</p>
               <p class="font-semibold">0kcal</p>
             </div>
-          </div>
+          </div> */}
         </div>
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-          <h3 class="text-lg font-semibold mb-4">记录</h3>
-          <div class="mt-2">
-            <div class="flex space-x-1" style="padding: 0 4rpx;">
-              <For each={state().calendar.weeks}>
-                {(week) => {
-                  return (
-                    <div class="space-y-1">
-                      <For each={week.days}>
-                        {(day) => {
-                          const ColorMap: Record<number, string> = {
-                            1: "#65da65",
-                          };
-                          const v = day.payload?.num ?? 0;
-                          console.log(day);
-                          return (
-                            <div
-                              style={{
-                                width: "16px",
-                                height: "16px",
-                                "border-radius": "4px",
-                                border: "1px solid #e6e6e6",
-                                opacity: day.hidden ? "0.2" : "1",
-                                "background-color": ColorMap[v] ?? "white",
-                              }}
-                              data-day={day.day}
-                            ></div>
-                          );
-                        }}
-                      </For>
-                    </div>
-                  );
+        <div
+          class="mine-page-content overflow-hidden p-4 bg-white"
+          style={{
+            "border-radius": "12px 12px 0 0",
+          }}
+        >
+          <div class="bg-white rounded-lg mb-4">
+            <div class="flex items-center justify-between  mb-4">
+              <h3 class="text-lg font-semibold">训练记录</h3>
+              <div
+                class="p-2"
+                onClick={() => {
+                  vm.methods.gotoWorkoutDayListView();
                 }}
-              </For>
+              >
+                <ChevronRight class="w-4 h-4 text-gray-600" />
+              </div>
+            </div>
+            <div class="mt-2">
+              <div class="flex space-x-1" style="padding: 0 4rpx;">
+                <For each={state().calendar.weeks}>
+                  {(week) => {
+                    return (
+                      <div class="space-y-1">
+                        <For each={week.days}>
+                          {(day) => {
+                            const ColorMap: Record<number, string> = {
+                              1: "#65da65",
+                            };
+                            const v = day.payload?.num ?? 0;
+                            return (
+                              <div
+                                style={{
+                                  width: "16px",
+                                  height: "16px",
+                                  "border-radius": "4px",
+                                  border: "1px solid #e6e6e6",
+                                  opacity: day.hidden ? "0.2" : "1",
+                                  "background-color": ColorMap[v] ?? "white",
+                                }}
+                                data-day={day.day}
+                              ></div>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    );
+                  }}
+                </For>
+              </div>
             </div>
           </div>
         </div>

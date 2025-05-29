@@ -1,8 +1,12 @@
 import { Show } from "solid-js";
+import { Send } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { ScrollView } from "@/components/ui";
+import { Sheet } from "@/components/ui/sheet";
+import { DragSelectView } from "@/components/drag-select";
+import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
@@ -11,9 +15,6 @@ import { createStudent } from "@/biz/student/services";
 
 import { MemberValuesViewModel } from "./model";
 import { MemberBasicValues } from "./components/basic-values";
-import { ChevronLeft, Search, Send } from "lucide-solid";
-import { Sheet } from "@/components/ui/sheet";
-import { DragSelectView } from "@/components/drag-select";
 
 export function MemberCreateViewModel(props: ViewComponentProps) {
   const request = {
@@ -144,25 +145,7 @@ export function HomeStudentCreatePage(props: ViewComponentProps) {
   return (
     <>
       <div class="z-0 fixed top-0 left-0 w-full">
-        <div class="flex items-center gap-2 p-4 border-b">
-          <div
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.methods.back();
-            }}
-          >
-            <ChevronLeft class="w-6 h-6 text-gray-800" />
-          </div>
-          <div>新增学员</div>
-          <div
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.ui.$dialog_test.show();
-            }}
-          >
-            <Search class="w-6 h-6 text-gray-800" />
-          </div>
-        </div>
+        <NavigationBar1 history={props.history} title="新增学员" />
       </div>
       <div class="absolute top-[74px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view} class="scroll-view w-full h-full overflow-y-auto bg-white">

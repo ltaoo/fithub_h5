@@ -57,7 +57,6 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       methods.scrollToIdx(_idx);
     },
     handleScroll: debounce(300, (event: { top: number; left: number }) => {
-      console.log("scrolling 1");
       if (!_mounted) {
         return;
       }
@@ -67,7 +66,6 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       }
       // 设置新的动画帧
       _scroll_animation_frame = setTimeout(() => {
-        console.log("the scrolling is stop");
         // 这里可以处理滚动停止后的逻辑
         methods.handleTouchEnd(event);
       }, 100);
@@ -82,7 +80,7 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
         return idx;
       })();
       _idx = idx;
-      console.log("[BIZ]drag_select/handleTouchEnd - _idx", _idx);
+      // console.log("[BIZ]drag_select/handleTouchEnd - _idx", _idx);
       const v = _options[idx];
       bus.emit(Events.Change, v);
       if (distance % _cell_height !== 0) {

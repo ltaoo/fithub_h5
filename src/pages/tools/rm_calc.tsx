@@ -2,12 +2,13 @@
  * @file RM 换算
  */
 import { For } from "solid-js";
-import { ChevronLeft, Info, MoreHorizontal } from "lucide-solid";
+import { MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Input, ScrollView } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
+import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
@@ -126,25 +127,16 @@ export function RMCalcViewModel(props: ViewComponentProps) {
   };
 }
 
-export function RMCalcView(props: ViewComponentProps) {
+export function RMCalcToolView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(RMCalcViewModel, [props]);
 
   return (
     <>
       <div class="z-0 fixed top-0 left-0 w-full">
-        <div class="flex items-center justify-between p-4 border-b">
-          <div class="flex items-center gap-2">
-            <div
-              class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-              onClick={() => {
-                vm.methods.back();
-              }}
-            >
-              <ChevronLeft class="w-6 h-6 text-gray-800" />
-            </div>
-            <div class="text-gray-600">RM换算</div>
-          </div>
-          <div class="extra">
+        <NavigationBar1
+          title="RM换算"
+          history={props.history}
+          extra={
             <div
               onClick={() => {
                 vm.methods.showDialogOfRMStep();
@@ -152,8 +144,8 @@ export function RMCalcView(props: ViewComponentProps) {
             >
               <MoreHorizontal class="w-6 h-6" />
             </div>
-          </div>
-        </div>
+          }
+        />
       </div>
       <div class="absolute top-[74px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>

@@ -2,21 +2,7 @@
  * @file 创建训练计划
  */
 import { For, Show, Switch, Match } from "solid-js";
-import {
-  ArrowDown,
-  ArrowUp,
-  Binary,
-  Bird,
-  ChevronLeft,
-  Dumbbell,
-  Edit,
-  Loader,
-  MoreHorizontal,
-  Pen,
-  Plus,
-  Send,
-  Trash,
-} from "lucide-solid";
+import { ChevronLeft, Dumbbell, MoreHorizontal, Pen, Plus, Send, Trash } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
@@ -24,25 +10,27 @@ import { useViewModel } from "@/hooks";
 import { Button, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
-import { createWorkoutPlan, WorkoutPlanDetailsJSON250424 } from "@/biz/workout_plan/services";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
-import { WorkoutActionProfile } from "@/biz/workout_action/services";
-import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
-import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
+import { InputTextView } from "@/components/ui/input-text";
+import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
+import { Presence } from "@/components/ui/presence";
+import { NavigationBar1 } from "@/components/navigation-bar1";
+
 import { base, Handler } from "@/domains/base";
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RefCore } from "@/domains/ui/cur";
 import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
+import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
+import { createWorkoutPlan, WorkoutPlanDetailsJSON250424 } from "@/biz/workout_plan/services";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionProfile } from "@/biz/workout_action/services";
+import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
+import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
 import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
 import { WorkoutPlanValuesView } from "./workout_plan_values";
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
-import { InputTextView } from "@/components/ui/input-text";
-import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
-import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
-import { Presence } from "@/components/ui/presence";
 
 function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const request = {
@@ -53,6 +41,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
     },
     calc_estimated_duration(
       v: { set_count: string; set_rest_duration: string; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
@@ -93,7 +84,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         return;
       }
       const value_actions = r.data;
-      console.log("[PAGE]workout_plan/create submit", value_actions);
+      // console.log("[PAGE]workout_plan/create submit", value_actions);
       if (value_actions.length === 0) {
         props.app.tip({
           text: ["请至少选择一个动作"],
@@ -165,7 +156,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         equipment_ids: Object.keys(equipment_ids).join(","),
         estimated_duration: value_estimated_duration,
       };
+      ui.$btn_submit.setLoading(true);
       const r2 = await request.workout_plan.create.run(body);
+      ui.$btn_submit.setLoading(false);
       if (r2.error) {
         props.app.tip({
           text: [r2.error.message],
@@ -178,9 +171,6 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
       props.history.push("root.workout_plan_profile", {
         id: String(r2.data.id),
       });
-    },
-    cancel() {
-      props.history.back();
     },
   };
   const $model = WorkoutPlanEditorViewModel(props);
@@ -568,7 +558,13 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     }),
     $btn_back: new ButtonCore({
       onClick() {
-        methods.cancel();
+        methods.back();
+      },
+    }),
+    $btn_add_act: new ButtonCore({
+      onClick() {
+        ui.$ref_action_in_menu.clear();
+        ui.$workout_action_select.ui.$dialog.show();
       },
     }),
     $btn_submit: new ButtonCore({
@@ -646,20 +642,11 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
 
   return (
     <div class="flex flex-col h-screen">
+      {/* <NavigationBar1 title="创建训练计划" history={props.history} /> */}
       <div class="flex-1 overflow-auto">
         <ScrollView store={vm.ui.$view} class="h-full overflow-auto">
           <div class="bg-white p-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <Button
-                  store={vm.ui.$btn_back}
-                  icon={<ChevronLeft class="w-6 h-6 text-gray-800" />}
-                  class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-                ></Button>
-                <div class="text-gray-600">创建训练计划</div>
-              </div>
-            </div>
-            <div class="mt-4 space-y-4">
+            <div class="space-y-4">
               <div class="field relative">
                 <div class="flex">
                   <div class="text-lg text-gray-800">标题</div>
@@ -835,31 +822,21 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
           </div>
         </ScrollView>
       </div>
-      <div class="z-10 py-2 h-[128px] bg-white border-t">
-        <div class="flex justify-center gap-2 w-full">
-          <div class="flex items-center">
-            <div class="flex items-center justify-center p-4 rounded-full bg-gray-200" onClick={vm.methods.cancel}>
-              <ChevronLeft class="w-10 h-10 text-gray-800" />
-            </div>
+      <div class="z-10 p-4 bg-white border-t">
+        <div class="flex items-center gap-4">
+          <div class="p-2 rounded-full bg-gray-100" onClick={vm.methods.back}>
+            <ChevronLeft class="w-6 h-6 text-gray-800" />
           </div>
-          <div class="flex items-center">
-            <div
-              class="flex items-center justify-center p-8 rounded-full bg-gray-200"
-              onClick={() => {
-                vm.ui.$ref_action_in_menu.clear();
-                vm.ui.$workout_action_select.ui.$dialog.show();
-              }}
-            >
-              <Dumbbell class="w-12 h-12 text-gray-800" />
-            </div>
-          </div>
-          <div class="flex items-center">
-            <div class="flex items-center justify-center p-4 rounded-full bg-gray-200" onClick={vm.methods.submit}>
-              <Send class="w-10 h-10 text-gray-800" />
-            </div>
+          <div class="flex items-center gap-2 w-full">
+            <Button class="w-full" store={vm.ui.$btn_add_act}>
+              添加动作
+            </Button>
+            <Button class="w-full" store={vm.ui.$btn_submit}>
+              创建
+            </Button>
           </div>
         </div>
-        <div class="safe-area-bottom"></div>
+        <div class="safe-height"></div>
       </div>
       <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
         <div class="w-screen bg-white">

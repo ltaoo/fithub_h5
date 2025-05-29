@@ -8,13 +8,14 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, ScrollView } from "@/components/ui";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
+import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
+import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType, WorkoutPlanStepTypeTextMap, WorkoutSetTypeTextMap } from "@/biz/workout_plan/constants";
 import { createWorkoutDay } from "@/biz/workout_day/services";
-import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { WorkoutPlanViewModel } from "@/biz/workout_plan/workout_plan";
@@ -53,10 +54,12 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         });
         return;
       }
+      ui.$btn_start_workout.setLoading(true);
       const r = await request.workout_day.create.run({
         workout_plan_id: Number(id),
         start_when_create: true,
       });
+      ui.$btn_start_workout.setLoading(false);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -73,6 +76,11 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     $profile: WorkoutPlanViewModel({ client: props.client }),
     $btn_start_plan: new ButtonCore({
       async onClick() {
+        methods.startWorkoutDay();
+      },
+    }),
+    $btn_start_workout: new ButtonCore({
+      onClick() {
         methods.startWorkoutDay();
       },
     }),
@@ -136,17 +144,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         {/* <div class="z-0 absolute inset-0 bg-gradient-to-b from-gray-600 to-transparent"></div> */}
       </div>
       <ScrollView store={vm.ui.$view} class="relative">
-        <div class="relative flex items-center gap-2 p-4">
-          <div
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.methods.back();
-            }}
-          >
-            <ChevronLeft class="w-6 h-6 text-gray-800" />
-          </div>
-          <div class="text-gray-600">计划详情</div>
-        </div>
+        <NavigationBar1 title="计划详情" history={props.history} />
         <Show when={state().error}>
           <div class="error">
             <div>加载失败</div>
@@ -309,17 +307,17 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         <div class="h-[112px]"></div>
       </ScrollView>
       <div class="fixed bottom-0 left-0 w-full">
-        <div class="flex justify-center py-4">
-          <div
-            class="p-8 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.methods.startWorkoutDay();
-            }}
-          >
-            <BicepsFlexed class="w-10 h-10 text-gray-800" />
+        <div>
+          <div class="flex justify-center p-4">
+            <Button
+              class="w-full py-4 rounded-md bg-gray-900 text-gray-100 text-center"
+              store={vm.ui.$btn_start_workout}
+            >
+              开始训练
+            </Button>
           </div>
+          <div class="safe-height"></div>
         </div>
-        <div class="safe-height"></div>
       </div>
     </>
   );

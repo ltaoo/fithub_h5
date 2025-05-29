@@ -1,8 +1,8 @@
 import { For, Show } from "solid-js";
-import { ChevronLeft } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { ListView, ScrollView } from "@/components/ui";
+import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -85,17 +85,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
   return (
     <>
       <div class="z-0 fixed top-0 left-0 w-full">
-        <div class="flex items-center gap-2 p-4 border-b">
-          <div
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            onClick={() => {
-              vm.methods.back();
-            }}
-          >
-            <ChevronLeft class="w-6 h-6 text-gray-800" />
-          </div>
-          <div class="text-gray-600">训练记录列表</div>
-        </div>
+        <NavigationBar1 title="训练记录列表" history={props.history} />
       </div>
       <div class="absolute top-[74px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>

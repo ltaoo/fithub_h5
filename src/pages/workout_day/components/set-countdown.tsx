@@ -1,9 +1,13 @@
+/**
+ * @file 组间歇 倒计时
+ */
 import { createSignal, Show } from "solid-js";
 import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
-import { CountdownViewModel } from "@/biz/countdown";
+
 import { base, Handler } from "@/domains/base";
+import { CountdownViewModel } from "@/biz/countdown";
 
 export function SetCountdownViewModel(props: {
   countdown: number;
@@ -11,19 +15,24 @@ export function SetCountdownViewModel(props: {
   exceed: number;
   finished: boolean;
 }) {
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+  };
   const ui = {
     $countdown1: CountdownViewModel({ countdown: props.countdown, time: props.remaining, finished: props.finished }),
     $countdown2: CountdownViewModel({ time: props.exceed }),
   };
 
   let _running = false;
-  let _interrupt = false;
+  let _paused = false;
   let _state = {
     get running() {
       return _running;
     },
-    get interrupt() {
-      return _interrupt;
+    get paused() {
+      return _paused;
     },
     get remaining() {
       return ui.$countdown1.time;
@@ -44,14 +53,26 @@ export function SetCountdownViewModel(props: {
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$countdown1.onFinish(() => {
+  ui.$countdown1.onStart(() => {
+    _running = true;
+    _paused = false;
+    methods.refresh();
+  });
+  ui.$countdown1.onFinished(() => {
+    console.log("[BIZ]workout_day/SetCountdown - countdown1.onFinished");
     ui.$countdown2.start(new Date().valueOf());
   });
   ui.$countdown1.onStop(() => {
+    _running = false;
+    _paused = true;
     bus.emit(Events.Stop);
+    methods.refresh();
   });
   ui.$countdown2.onStop(() => {
+    _running = false;
+    _paused = true;
     bus.emit(Events.Stop);
+    methods.refresh();
   });
 
   return {
@@ -63,15 +84,13 @@ export function SetCountdownViewModel(props: {
       ui.$countdown1.start(new Date().valueOf());
       bus.emit(Events.StateChange, { ..._state });
     },
-    interrupt() {
-      _running = false;
-      _interrupt = true;
-      bus.emit(Events.StateChange, { ..._state });
-      if (ui.$countdown1.state.is_running) {
-        ui.$countdown1.interrupt();
+    pause() {
+      console.log("[BIZ]workout_day/SetCountdown - pause", _paused);
+      if (ui.$countdown1.state.running) {
+        ui.$countdown1.pause();
         return;
       }
-      ui.$countdown2.interrupt();
+      ui.$countdown2.pause();
     },
     ready() {},
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
@@ -232,30 +251,36 @@ export function SetCountdownView(props: {
         </div>
       </div>
       <div class="flex items-center gap-2 px-4">
-        <Show when={countdown1().pending}>
-          <div
-            class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-400"
-            onClick={() => {
-              if (props.onStart) {
-                props.onStart();
-              }
-              props.store.start();
-            }}
-          >
-            <Play class="w-4 h-4" />
-          </div>
-        </Show>
-        <Show when={state().running}>
-          <div
-            class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-400"
-            onClick={() => {
-              props.store.interrupt();
-            }}
-          >
-            <Pause class="w-4 h-4" />
-          </div>
-        </Show>
-        <Show when={countdown1().finished && countdown2().time !== 0}>
+        <div
+          classList={{
+            "flex items-center justify-center p-2 rounded-full bg-white": true,
+          }}
+        >
+          <Show when={countdown1().pending}>
+            <div
+              class="text-gray-400"
+              onClick={() => {
+                if (props.onStart) {
+                  props.onStart();
+                }
+                props.store.start();
+              }}
+            >
+              <Play class="w-4 h-4" />
+            </div>
+          </Show>
+          <Show when={state().running}>
+            <div
+              class="text-gray-400"
+              onClick={() => {
+                props.store.pause();
+              }}
+            >
+              <Pause class="w-4 h-4" />
+            </div>
+          </Show>
+        </div>
+        <Show when={countdown1().completed && countdown2().time !== 0}>
           <div
             classList={{
               "flex items-center text-red-500": true,

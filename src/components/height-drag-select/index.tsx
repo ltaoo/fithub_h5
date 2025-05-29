@@ -35,7 +35,6 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
             "vertical-align": "middle",
           }}
           onScroll={(event) => {
-        console.log("scrolling 0");
             vm.methods.handleScroll({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop });
           }}
         >

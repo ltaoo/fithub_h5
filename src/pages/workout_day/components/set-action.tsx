@@ -48,8 +48,8 @@ export function SetActionView(props: { store: SetActionViewModel; onClick?: () =
         }
       }}
     >
-      <div class="absolute -left-2 -bottom-0 w-[4px] h-full bg-blue-500"></div>
-      <div>{state().zh_name}</div>
+      <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div>
+      <div class="relative left-[4px] text-sm text-gray-600">{state().zh_name}</div>
     </div>
   );
 }

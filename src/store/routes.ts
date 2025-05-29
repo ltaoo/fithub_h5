@@ -143,6 +143,10 @@ const configure = {
         title: "基础代谢计算",
         pathname: "/tools2",
       },
+      stopwatch: {
+        title: "秒表",
+        pathname: "/tools3",
+      },
       fake_chat: {
         title: "沟通",
         pathname: "/fake_chat",

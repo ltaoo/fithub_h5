@@ -1,51 +1,46 @@
 /**
- * @file 通用多选选择
+ * @file 学员选择
  */
+
+import { $workout_action_list } from "@/store";
+import {
+  fetchWorkoutActionList,
+  fetchWorkoutActionListProcess,
+  WorkoutActionProfile,
+} from "@/biz/workout_action/services";
 import { base, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
 import { ListCore } from "@/domains/list";
-import { RequestCore, TheResponseOfFetchFunction } from "@/domains/request";
-import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
-import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
+import { RequestCore } from "@/domains/request";
+import { PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 
-type WorkoutPlanId = number | string;
-type WorkoutPlan = {
-  id: WorkoutPlanId;
-  title: string;
+type StudentId = number | string;
+type Student = {
+  id: StudentId;
+  nickname: string;
 };
 
-export function WorkoutPlanSelectViewModel(props: {
-  defaultValue: WorkoutPlan[];
+export function StudentSelectViewModel(props: {
+  defaultValue: Student[];
   client: HttpClientCore;
-  multiple?: boolean;
-  // list: ListCore<RequestCore<typeof fetchWorkoutPlanList, TheResponseOfFetchFunction<typeof fetchWorkoutPlanList>>>;
   list: ListCore<any>;
-  onChange?: (list: WorkoutPlan[]) => void;
+  onChange?: (students: Student[]) => void;
 }) {
   const request = {
-    workout_plan: {
+    student: {
       list: props.list,
     },
   };
   const methods = {
-    select(vv: WorkoutPlan) {
-      const existing = _selected.find((v) => v.id === vv.id);
-      if (_multiple === false) {
-        if (existing) {
-          return;
-        }
-        _selected = [vv];
-        bus.emit(Events.Change, _selected);
-        bus.emit(Events.StateChange, { ..._state });
-        return;
-      }
+    select(student: Student) {
+      const existing = _selected.find((v) => v.id === student.id);
       if (existing) {
-        _selected = _selected.filter((v) => v.id !== vv.id);
+        _selected = _selected.filter((v) => v.id !== student.id);
         bus.emit(Events.Change, _selected);
         bus.emit(Events.StateChange, { ..._state });
         return;
       }
-      const v = _list.find((v) => v.id === vv.id);
+      const v = _student_list.find((v) => v.id === student.id);
       if (!v) {
         return;
       }
@@ -53,31 +48,30 @@ export function WorkoutPlanSelectViewModel(props: {
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
-    remove(vv: WorkoutPlan) {
-      _selected = _selected.filter((v) => v.id !== vv.id);
+    remove(student: Student) {
+      _selected = _selected.filter((v) => v.id !== student.id);
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
-    map_list(list: { id: WorkoutPlanId }[]) {
-      return _list.flatMap((a) => {
-        return list.find((v) => v.id === a.id) ?? [];
+    map_student_list(students: { id: StudentId }[]) {
+      return _student_list.flatMap((a) => {
+        return students.find((v) => v.id === a.id) ?? [];
       });
     },
-    find(value: { id: WorkoutPlanId }) {
-      return _list.find((a) => a.id === value.id) ?? null;
+    find(value: { id: StudentId }) {
+      return _student_list.find((a) => a.id === value.id) ?? null;
     },
     search(value: string) {
-      request.workout_plan.list.search({
+      request.student.list.search({
         keyword: value,
       });
     },
-    set_list(list: WorkoutPlan[]) {
-      // @ts-ignore
-      request.workout_plan.list.modifyResponse((v) => {
+    set_student_list(student_list: Student[]) {
+      request.student.list.modifyResponse((v) => {
         return {
           ...v,
           initial: false,
-          dataSource: list,
+          dataSource: student_list,
         };
       });
       bus.emit(Events.StateChange, { ..._state });
@@ -96,36 +90,29 @@ export function WorkoutPlanSelectViewModel(props: {
     $popover: new PopoverCore(),
     $scroll: new ScrollViewCore({
       async onReachBottom() {
-        await request.workout_plan.list.loadMore();
+        await request.student.list.loadMore();
         ui.$scroll.finishLoadingMore();
       },
     }),
-    $dialog: new DialogCore(),
-    $input_keyword: new InputCore({ defaultValue: "" }),
-    $btn_search: new ButtonCore({}),
   };
 
-  let _multiple = props.multiple ?? true;
-  let _selected: WorkoutPlan[] = [];
-  let _list: WorkoutPlan[] = props.list?.response.dataSource ?? [];
+  let _selected: Student[] = [];
+  let _student_list: Student[] = props.list?.response.dataSource ?? [];
   let _state = {
     get value() {
       return _selected;
     },
     get selected() {
       return _selected.flatMap((item) => {
-        const existing = _list.find((a) => a.id === item.id);
+        const existing = _student_list.find((a) => a.id === item.id);
         if (!existing) {
           return [];
         }
         return [existing];
       });
     },
-    get response() {
-      return request.workout_plan.list.response;
-    },
     get list() {
-      return _list.map((v) => {
+      return _student_list.map((v) => {
         return {
           ...v,
           selected: _state.selected
@@ -143,15 +130,15 @@ export function WorkoutPlanSelectViewModel(props: {
     StateChange,
   }
   type TheTypesOfEvents = {
-    [Events.ActionsLoaded]: typeof _list;
+    [Events.ActionsLoaded]: typeof _student_list;
     [Events.Change]: typeof _selected;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
 
-  request.workout_plan.list.onStateChange((state) => {
-    _list = state.dataSource;
-    bus.emit(Events.ActionsLoaded, _list);
+  request.student.list.onStateChange((state) => {
+    _student_list = state.dataSource;
+    bus.emit(Events.ActionsLoaded, _student_list);
     bus.emit(Events.StateChange, { ..._state });
   });
   bus.on(Events.Change, (actions) => {
@@ -162,7 +149,7 @@ export function WorkoutPlanSelectViewModel(props: {
 
   return {
     shape: "custom" as const,
-    type: "multiple-select",
+    type: "workout_action_select",
     state: _state,
     methods,
     request,
@@ -173,15 +160,18 @@ export function WorkoutPlanSelectViewModel(props: {
     get defaultValue() {
       return props.defaultValue;
     },
-    setValue(value: WorkoutPlan[]) {
-      const v = _list.filter((a) => {
+    setValue(value: Student[]) {
+      // console.log("[BIZ]workout_action_select - setValue", value, _student_list);
+      const v = _student_list.filter((a) => {
         return value.find((v) => v.id === a.id);
       });
       _selected = v;
       bus.emit(Events.StateChange, { ..._state });
     },
-    ready() {},
-    onListLoaded(handler: Handler<TheTypesOfEvents[Events.ActionsLoaded]>) {
+    ready() {
+      // request.action.list.init();
+    },
+    onStudentListLoaded(handler: Handler<TheTypesOfEvents[Events.ActionsLoaded]>) {
       return bus.on(Events.ActionsLoaded, handler);
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
@@ -193,4 +183,4 @@ export function WorkoutPlanSelectViewModel(props: {
   };
 }
 
-export type WorkoutPlanSelectViewModel = ReturnType<typeof WorkoutPlanSelectViewModel>;
+export type StudentSelectViewModel = ReturnType<typeof StudentSelectViewModel>;

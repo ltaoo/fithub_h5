@@ -12,13 +12,26 @@ import { TagInputCore } from "@/domains/ui/form/tag-input";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RequestCore } from "@/domains/request";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
-import { createWorkoutPlanCollection } from "@/biz/workout_plan/services";
+import {
+  createWorkoutPlanCollection,
+  fetchWorkoutPlanList,
+  fetchWorkoutPlanListProcess,
+} from "@/biz/workout_plan/services";
 import { update_arr_item } from "@/utils";
+import { ListCore } from "@/domains/list";
 
 export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
   const request = {
     workout_plan_collection: {
       create: new RequestCore(createWorkoutPlanCollection, { client: props.client }),
+    },
+    workout_plan: {
+      list: new ListCore(
+        new RequestCore(fetchWorkoutPlanList, {
+          process: fetchWorkoutPlanListProcess,
+          client: props.client,
+        })
+      ),
     },
   };
   const methods = {
@@ -36,13 +49,14 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
       ui.$workout_plan_select.ui.$dialog.hide();
     },
     ensureSelectedWorkoutPlan() {
-      const selected = ui.$workout_plan_select.state.selected;
-      if (!selected) {
+      const selected_plans = ui.$workout_plan_select.state.selected;
+      if (selected_plans.length === 0) {
         props.app.tip({
           text: ["请先选择计划"],
         });
         return;
       }
+      const selected = selected_plans[0];
       const the_day = ui.$ref_weekday.value;
       if (!the_day) {
         props.app.tip({
@@ -186,7 +200,11 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
         }),
       },
     }),
-    $workout_plan_select: WorkoutPlanSelectViewModel({ client: props.client }),
+    $workout_plan_select: WorkoutPlanSelectViewModel({
+      defaultValue: [],
+      list: request.workout_plan.list,
+      client: props.client,
+    }),
     $ref_weekday: new RefCore<CalendarCore["state"]["weekdays"][number]>(),
   };
 

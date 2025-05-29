@@ -1,5 +1,8 @@
+/**
+ * @file 学员列表 页面
+ */
 import { For } from "solid-js";
-import { ChevronLeft, Plus } from "lucide-solid";
+import { Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -14,7 +17,17 @@ import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/service
 function HomeStudentListPageViewModel(props: ViewComponentProps) {
   const request = {
     student: {
-      list: new ListCore(new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client })),
+      list: new ListCore(
+        new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client }),
+        {
+          extraDataSource: [
+            {
+              id: 0,
+              nickname: "我",
+            },
+          ],
+        }
+      ),
     },
   };
   const methods = {
