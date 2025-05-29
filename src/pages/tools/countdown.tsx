@@ -1,36 +1,35 @@
+import { For, Show } from "solid-js";
+
+import { useViewModel } from "@/hooks";
 import { ViewComponentProps } from "@/store/types";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { ScrollView } from "@/components/ui";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { useViewModel } from "@/hooks";
 import { ScrollViewCore } from "@/domains/ui";
 import { StopwatchViewModel } from "@/biz/stopwatch";
-import { For, Show } from "solid-js";
+import { CountdownViewModel } from "@/biz/countdown";
 
-function StopwatchToolViewModel(props: ViewComponentProps) {
+function CountdownToolViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    segment() {
-      ui.$stopwatch.segment();
-    },
     reset() {
-      ui.$stopwatch.reset();
+      ui.$countdown.reset();
     },
     toggle() {
-      ui.$stopwatch.toggle();
+      ui.$countdown.toggle();
     },
   };
   const ui = {
     $view: new ScrollViewCore(),
-    $stopwatch: StopwatchViewModel({}),
+    $countdown: CountdownViewModel({ countdown: 5 }),
   };
   let _state = {
     get stopwatch() {
-      return ui.$stopwatch.state;
+      return ui.$countdown.state;
     },
   };
   enum Events {
@@ -43,18 +42,30 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$stopwatch.onStateChange(() => methods.refresh());
+  ui.$countdown.onStateChange(() => methods.refresh());
+  ui.$countdown.onStart(() => {
+    console.log("start");
+  });
+  ui.$countdown.onStop(() => {
+    console.log("stop");
+  });
+  ui.$countdown.onResume(() => {
+    console.log("resume");
+  });
+  ui.$countdown.onFinished(() => {
+    console.log("completed");
+  });
 
   return {
     methods,
     ui,
     state: _state,
     ready() {
-//       ui.$stopwatch.setStartedAt(new Date("2025/05/29 18:00").valueOf());
-      ui.$stopwatch.setStartedAt(new Date("2025-05-29 18:05").valueOf());
+      // ui.$countdown.setStartedAt(new Date("2025/05/29 18:00").valueOf());
     },
     destroy() {
-      ui.$stopwatch.destroy();
+      ui.$view.destroy();
+      ui.$countdown.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -62,8 +73,8 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
   };
 }
 
-export function StopwatchToolView(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(StopwatchToolViewModel, [props]);
+export function CountdownToolView(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(CountdownToolViewModel, [props]);
 
   let $minutes1: undefined | HTMLDivElement;
   let $minutes2: undefined | HTMLDivElement;
@@ -72,7 +83,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
   let $ms1: undefined | HTMLDivElement;
   let $ms2: undefined | HTMLDivElement;
 
-  vm.ui.$stopwatch.onStateChange((v) => {
+  vm.ui.$countdown.onStateChange((v) => {
     if ($minutes1) {
       $minutes1.innerText = v.minutes1;
     }
@@ -96,7 +107,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
   return (
     <>
       <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="秒表" history={props.history} />
+        <NavigationBar1 title="倒计时" history={props.history} />
       </div>
       <div class="absolute top-[74px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>
@@ -180,7 +191,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
             </div>
           </div>
           <div class="flex items-center justify-between p-4">
-            <div
+            {/* <div
               class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
               onClick={() => {
                 if (state().stopwatch.running) {
@@ -203,19 +214,39 @@ export function StopwatchToolView(props: ViewComponentProps) {
               <Show when={state().stopwatch.running} fallback={<div>开始</div>}>
                 <div>暂停</div>
               </Show>
-            </div>
-          </div>
-          <div class="p-4 space-y-4">
-            <For each={state().stopwatch.segments}>
-              {(seg) => {
-                return (
-                  <div class="flex items-center justify-between">
-                    <div>分段{seg.idx}</div>
-                    <div>{seg.text}</div>
-                  </div>
-                );
+            </div> */}
+            <div
+              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+              onClick={() => {
+                vm.ui.$countdown.play();
               }}
-            </For>
+            >
+              <div>开始</div>
+            </div>
+            <div
+              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+              onClick={() => {
+                vm.ui.$countdown.pause();
+              }}
+            >
+              <div>暂停</div>
+            </div>
+            <div
+              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+              onClick={() => {
+                vm.ui.$countdown.reset();
+              }}
+            >
+              <div>重新开始</div>
+            </div>
+            <div
+              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+              onClick={() => {
+                vm.ui.$countdown.finish();
+              }}
+            >
+              <div>提前完成</div>
+            </div>
           </div>
         </ScrollView>
       </div>

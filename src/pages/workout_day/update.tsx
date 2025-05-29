@@ -12,7 +12,27 @@ import { Button, DropdownMenu, ScrollView, Textarea } from "@/components/ui";
 import { WorkoutActionCard } from "@/components/workout-action-card";
 import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
+import { Sheet } from "@/components/ui/sheet";
+import { SetCompleteBtn } from "@/components/set-complete-btn";
+import { ToolsBar } from "@/components/tools-bar";
 
+import { base, Handler } from "@/domains/base";
+import { RequestCore } from "@/domains/request";
+import {
+  ButtonCore,
+  DialogCore,
+  DropdownMenuCore,
+  InputCore,
+  MenuItemCore,
+  PresenceCore,
+  ScrollViewCore,
+} from "@/domains/ui";
+import { RefCore } from "@/domains/ui/cur";
+import { buildSetAct } from "@/biz/workout_plan/workout_plan";
+import { SingleFieldCore } from "@/domains/ui/formv2";
+import { Result } from "@/domains/result";
+import { WorkoutDayStatus } from "@/biz/workout_day/constants";
+import { StopwatchViewModel } from "@/biz/stopwatch";
 import {
   fetchWorkoutDayProfile,
   fetchWorkoutDayProfileProcess,
@@ -35,32 +55,13 @@ import {
   fetchWorkoutActionProfile,
   fetchWorkoutActionProfileProcess,
 } from "@/biz/workout_action/services";
-import { base, Handler } from "@/domains/base";
-import { RequestCore } from "@/domains/request";
-import {
-  ButtonCore,
-  DialogCore,
-  DropdownMenuCore,
-  InputCore,
-  MenuItemCore,
-  PresenceCore,
-  ScrollViewCore,
-} from "@/domains/ui";
-import { RefCore } from "@/domains/ui/cur";
-import { buildSetAct } from "@/biz/workout_plan/workout_plan";
-import { SingleFieldCore } from "@/domains/ui/formv2";
-import { Sheet } from "@/components/ui/sheet";
-import { SetCompleteBtn } from "@/components/set-complete-btn";
-import { ToolsBar } from "@/components/tools-bar";
-import { WorkoutDayStatus } from "@/biz/workout_day/constants";
-import { Result } from "@/domains/result";
 import { calc_bottom_padding_need_add, has_num_value, has_value, remove_arr_item, update_arr_item } from "@/utils";
 
 import { SetCountdownView, SetCountdownViewModel } from "./components/set-countdown";
 import { SetValueInput } from "./components/set-value-input";
 import { SetDropdownMenu } from "./components/set-dropdown-menu";
 import { SetActionView, SetActionViewModel } from "./components/set-action";
-import { DayCountdown } from "./components/day-countdown";
+import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 
@@ -97,11 +98,39 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
+
+    getField(opt: { key: string; for: "reps" | "weight" }) {
+      if (opt.for === "reps") {
+        return ui.$fields_reps.get(opt.key) ?? null;
+      }
+      if (opt.for === "weight") {
+        return ui.$fields_weight.get(opt.key) ?? null;
+      }
+      return null;
+    },
+    handleShowNumKeyboard(opt: {
+      for: "reps" | "weight";
+      step_idx: number;
+      set_idx: number;
+      act_idx: number;
+      rect: { x: number; y: number; width: number; height: number };
+    }) {
+      methods.beforeShowNumInput({
+        step_idx: opt.step_idx,
+        set_idx: opt.set_idx,
+        act_idx: opt.act_idx,
+        rect: opt.rect,
+      });
+      methods.showNumInput({
+        key: `${opt.step_idx}-${opt.set_idx}-${opt.act_idx}`,
+        for: "weight",
+      });
+    },
     beforeShowNumInput(opt: {
       step_idx: number;
       set_idx: number;
       act_idx: number;
-      obj: { x: number; y: number; width: number; height: number };
+      rect: { x: number; y: number; width: number; height: number };
     }) {
       const k = ui.$ref_input_key.value;
       if (k) {
@@ -111,22 +140,14 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         }
       }
       const v = calc_bottom_padding_need_add({
-        keyboard: { height: 420, visible: ui.$input_keyboard_dialog.state.open },
-        object: opt.obj,
+        keyboard: { height: 420, visible: false },
+        object: opt.rect,
         screen: props.app.screen,
       });
+      // console.log("[PAGE]workout_day/update - beforeShowNumInput", v);
       if (v > 0) {
         methods.setHeight(v);
       }
-    },
-    getField(opt: { key: string; for: "reps" | "weight" }) {
-      if (opt.for === "reps") {
-        return ui.$fields_reps.get(opt.key) ?? null;
-      }
-      if (opt.for === "weight") {
-        return ui.$fields_weight.get(opt.key) ?? null;
-      }
-      return null;
     },
     showNumInput(opt: { key: string; for: "reps" | "weight" }) {
       ui.$ref_input_key.select(opt);
@@ -191,7 +212,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       const next_k = `${a}-${b}-${c + 1}`;
       // const pending_action = pending_set?.actions.find((act) => act.idx === c);
       const pending_action = pending_set?.actions[c];
-      const act = _steps[a].sets[b].actions[c];
+      // const act = _steps[a].sets[b].actions[c];
       ui.$set_actions.set(k, SetActionViewModel({ id: action.id, zh_name: action.zh_name }));
       ui.$fields_weight.set(
         k,
@@ -217,28 +238,23 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }),
         })
       );
+      const is_last_act = c === _steps[a].sets[b].actions.length - 1;
       if ([getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps_unit)) {
         const $action_countdown = SetActionCountdownViewModel({
-          workout_duration: action.reps,
-          rest_duration: action.rest_duration,
+          workout_duration: 10,
+          rest_duration: 5,
+          // workout_duration: action.reps,
+          // rest_duration: action.rest_duration,
           time1: pending_action?.time1,
           time2: pending_action?.time2,
           time3: pending_action?.time3,
           finished: false,
+          no_rest_countdown: is_last_act,
         });
         $action_countdown.onStart(() => {
           const $prev_act_countdown = ui.$action_countdowns.get(prev_k);
-          if ($prev_act_countdown && $prev_act_countdown.state.running) {
-            $prev_act_countdown.stop();
-          }
-          const $prev_act_check = ui.$inputs_completed.get(prev_k);
-          if ($prev_act_check) {
-            methods.handleCompleteSetAction({
-              step_idx: a,
-              set_idx: b,
-              act_idx: c - 1,
-              ignore_when_completed: true,
-            });
+          if ($prev_act_countdown) {
+            $prev_act_countdown.pause();
           }
           const $prev_set_countdown = ui.$set_countdowns.get(prev_set_k);
           if ($prev_set_countdown && $prev_set_countdown.state.running) {
@@ -246,7 +262,17 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }
           methods.setCurSet({ step_idx: a, set_idx: b });
         });
-        $action_countdown.onCompleted(() => {
+        $action_countdown.onFinished(() => {
+          /** 在动作倒计时结束后，尝试去将动作「完成」 */
+          const $cur_act_check = ui.$inputs_completed.get(k);
+          if ($cur_act_check) {
+            methods.handleCompleteSetAction({
+              step_idx: a,
+              set_idx: b,
+              act_idx: c,
+              ignore_when_completed: true,
+            });
+          }
           const $next_act_countdown = ui.$action_countdowns.get(next_k);
           if ($next_act_countdown) {
             $next_act_countdown.start();
@@ -952,7 +978,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     }),
     $set_value_input: SetValueInputViewModel({}),
     /** 当次训练已经过了多久 */
-    $day_countdown: CountdownViewModel({}),
+    $day_duration: StopwatchViewModel({}),
     $countdown_presence: new PresenceCore(),
     $workout_action_profile_dialog: new DialogCore({ footer: false }),
     $tools: new PresenceCore({}),
@@ -1150,9 +1176,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       const { status, steps, pending_steps, started_at } = r.data;
       console.log("[PAGE]workout_day/update - ready", steps);
       if (status === WorkoutDayStatus.Started) {
-        // console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
-        ui.$day_countdown.setStartedAt(started_at.valueOf());
-        ui.$day_countdown.play();
+        console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
+        ui.$day_duration.setStartedAt(started_at.valueOf());
+        ui.$day_duration.play();
       }
       _stats.started_at = started_at.format("YYYY-MM-DD HH:mm");
       _cur_step_idx = pending_steps.step_idx;
@@ -1187,8 +1213,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }
           if (set.rest_duration) {
             const $countdown = SetCountdownViewModel({
-              countdown: 10,
-              // countdown: set.rest_duration,
+              // countdown: 10,
+              countdown: set.rest_duration,
               remaining: pending_set?.remaining_time ?? 0,
               exceed: pending_set?.exceed_time ?? 0,
               finished: is_completed,
@@ -1199,7 +1225,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
                 console.log("[]the k is", k);
                 const $last_action_countdown = ui.$action_countdowns.get(k);
                 if ($last_action_countdown && $last_action_countdown.state.running) {
-                  $last_action_countdown.stop();
+                  $last_action_countdown.pause();
                 }
               }
               methods.setCurSet({ step_idx: a, set_idx: b });
@@ -1247,13 +1273,13 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         <div class="p-4">
           <Show when={state().profile?.status === WorkoutDayStatus.Started}>
             <div class="flex items-center justify-between">
-              <DayCountdown store={vm.ui.$day_countdown} />
+              <DayDurationTextView store={vm.ui.$day_duration} />
               <div class="flex items-center gap-2">
                 <div
                   class="py-2 px-4 rounded-md bg-gray-100 text-center text-gray-800 text-sm"
                   onClick={() => {
-                    vm.methods.showWorkoutDayCompleteConfirmDialog();
-                    // vm.methods.resetPendingSteps();
+                    // vm.methods.showWorkoutDayCompleteConfirmDialog();
+                    vm.methods.resetPendingSteps();
                   }}
                 >
                   完成
@@ -1355,20 +1381,18 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                       class="w-[68px] border border-gray-300 rounded-md p-2"
                                                       onClick={(event) => {
                                                         const client = event.currentTarget.getBoundingClientRect();
-                                                        vm.methods.beforeShowNumInput({
+                                                        console.log("[]beforeShowNumInput1", a(), b(), c(), client.y);
+                                                        vm.methods.handleShowNumKeyboard({
+                                                          for: "weight",
                                                           step_idx: a(),
                                                           set_idx: b(),
                                                           act_idx: c(),
-                                                          obj: {
+                                                          rect: {
                                                             x: client.x,
                                                             y: client.y,
                                                             width: client.width,
                                                             height: client.height,
                                                           },
-                                                        });
-                                                        vm.methods.showNumInput({
-                                                          key: `${a()}-${b()}-${c()}`,
-                                                          for: "weight",
                                                         });
                                                       }}
                                                     />
@@ -1379,20 +1403,18 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                       class="w-[68px] border border-gray-300 rounded-md p-2"
                                                       onClick={(event) => {
                                                         const client = event.currentTarget.getBoundingClientRect();
-                                                        vm.methods.beforeShowNumInput({
+                                                        console.log("[]beforeShowNumInput2", a(), b(), c());
+                                                        vm.methods.handleShowNumKeyboard({
+                                                          for: "reps",
                                                           step_idx: a(),
                                                           set_idx: b(),
                                                           act_idx: c(),
-                                                          obj: {
+                                                          rect: {
                                                             x: client.x,
                                                             y: client.y,
                                                             width: client.width,
                                                             height: client.height,
                                                           },
-                                                        });
-                                                        vm.methods.showNumInput({
-                                                          key: `${a()}-${b()}-${c()}`,
-                                                          for: "reps",
                                                         });
                                                       }}
                                                     />

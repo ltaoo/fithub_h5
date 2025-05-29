@@ -7,6 +7,7 @@ import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
 import { useViewModelStore } from "@/hooks";
 import { CountdownViewModel } from "@/biz/countdown";
 import { base, Handler } from "@/domains/base";
+import { StopwatchViewModel } from "@/biz/stopwatch";
 
 export function SetActionCountdownViewModel(props: {
   workout_duration: number;
@@ -15,21 +16,30 @@ export function SetActionCountdownViewModel(props: {
   time2?: number;
   time3?: number;
   finished: boolean;
+  no_rest_countdown?: boolean;
 }) {
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+  };
   const ui = {
+    /** 动作执行倒计时 */
     $countdown1: CountdownViewModel({
       countdown: props.workout_duration,
       time: props.time1,
       // finished: props.time1 !== undefined && props.time1 < props.workout_duration,
       finished: props.time1 === 0,
     }),
+    /** 动作休息倒计时 */
     $countdown2: CountdownViewModel({
       countdown: props.rest_duration,
       time: props.time2,
       // finished: props.time2 !== undefined && props.time2 < props.rest_duration,
       finished: props.time2 === 0,
     }),
-    $countdown3: CountdownViewModel({ time: props.time3, finished: props.time3 === 0 }),
+    /** 计算休息的超出时间，废弃了 */
+    $stopwatch: StopwatchViewModel({ time: props.time3 }),
   };
 
   let _running = false;
@@ -43,59 +53,101 @@ export function SetActionCountdownViewModel(props: {
     get exceed() {
       return ui.$countdown2.time;
     },
+    get show_countdown2() {
+      return !props.no_rest_countdown;
+    },
   };
   enum Events {
     Start,
     Stop,
-    Completed,
+    Finished,
     StateChange,
   }
   type TheTypesOfEvents = {
     [Events.Start]: void;
     [Events.Stop]: true;
-    [Events.Completed]: void;
+    [Events.Finished]: void;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$countdown1.onCompleted(() => {
+  ui.$countdown1.onStart(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown1.onStart");
+    _running = true;
+    bus.emit(Events.Start);
+    methods.refresh();
+  });
+  ui.$countdown2.onStart(() => {
+    _running = true;
+    methods.refresh();
+  });
+  ui.$countdown1.onResume(() => {
+    _running = true;
+    methods.refresh();
+  });
+  ui.$countdown2.onResume(() => {
+    _running = true;
+    methods.refresh();
+  });
+  ui.$countdown1.onFinished(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown1.onFinished");
+    if (props.no_rest_countdown) {
+      _running = false;
+      bus.emit(Events.Finished);
+      methods.refresh();
+      return;
+    }
     ui.$countdown2.start(new Date().valueOf());
   });
-  ui.$countdown2.onCompleted(() => {
-    bus.emit(Events.Completed);
-    // ui.$countdown3.start(new Date().valueOf());
+  ui.$countdown2.onFinished(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown2.onFinished");
+    bus.emit(Events.Finished);
   });
+
   ui.$countdown1.onStop(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown1.onStop");
+    _running = false;
     bus.emit(Events.Stop);
+    methods.refresh();
   });
   ui.$countdown2.onStop(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown2.onStop");
+    _running = false;
     bus.emit(Events.Stop);
+    methods.refresh();
   });
-  ui.$countdown3.onStop(() => {
-    bus.emit(Events.Stop);
+  ui.$countdown2.onCompleted(() => {
+    console.log("[BIZ]workout_day/set-action-countdown - countdown2.onCompleted");
+    _running = false;
+    // bus.emit(Events.Stop);
+    methods.refresh();
   });
 
   return {
     ui,
     state: _state,
     start() {
-      _running = true;
-      ui.$countdown1.start(new Date().valueOf());
-      bus.emit(Events.Start);
-      bus.emit(Events.StateChange, { ..._state });
-    },
-    stop() {
-      _running = false;
-      bus.emit(Events.StateChange, { ..._state });
-      if (ui.$countdown1.state.running) {
-        ui.$countdown1.pause();
+      console.log(
+        "[BIZ]workout_day/set-action-countdown - start",
+        ui.$countdown1.state.completed,
+        ui.$countdown2.state.completed
+      );
+      if (ui.$countdown2.state.paused) {
+        ui.$countdown2.play();
         return;
       }
+      ui.$countdown1.play();
+    },
+    pause() {
+      console.log("[BIZ]workout_day/set-action-countdown - pause");
       if (ui.$countdown2.state.running) {
         ui.$countdown2.pause();
         return;
       }
-      ui.$countdown3.pause();
+      if (ui.$countdown1.state.running) {
+        ui.$countdown1.pause();
+        return;
+      }
     },
     get time1() {
       return ui.$countdown1.time;
@@ -104,17 +156,22 @@ export function SetActionCountdownViewModel(props: {
       return ui.$countdown2.time;
     },
     get time3() {
-      return ui.$countdown3.time;
+      return ui.$stopwatch.time;
     },
     ready() {},
+    destroy() {
+      ui.$countdown1.destroy();
+      ui.$countdown2.destroy();
+      ui.$stopwatch.destroy();
+    },
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);
     },
     onStop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
       return bus.on(Events.Stop, handler);
     },
-    onCompleted(handler: Handler<TheTypesOfEvents[Events.Completed]>) {
-      return bus.on(Events.Completed, handler);
+    onFinished(handler: Handler<TheTypesOfEvents[Events.Finished]>) {
+      return bus.on(Events.Finished, handler);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -151,7 +208,7 @@ export function SetActionCountdownView(props: {
   const [state, vm] = useViewModelStore(props.store);
   const [countdown1, setCountdown1State] = createSignal(props.store.ui.$countdown1.state);
   const [countdown2, setCountdown2State] = createSignal(props.store.ui.$countdown2.state);
-  const [countdown3, setCountdown3State] = createSignal(props.store.ui.$countdown3.state);
+  const [countdown3, setCountdown3State] = createSignal(props.store.ui.$stopwatch.state);
 
   props.store.ui.$countdown1.onStateChange((v) => {
     // console.log("[COMPONENT]set-countdown - update")
@@ -278,7 +335,7 @@ export function SetActionCountdownView(props: {
         </div>
       </div>
       <div class="flex items-center">
-        <Show when={countdown1().completed}>
+        <Show when={countdown1().completed && state().show_countdown2}>
           <div
             classList={{
               "flex items-center text-green-500": true,

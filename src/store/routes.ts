@@ -147,6 +147,10 @@ const configure = {
         title: "秒表",
         pathname: "/tools3",
       },
+      countdown: {
+        title: "倒计时",
+        pathname: "/tools4",
+      },
       fake_chat: {
         title: "沟通",
         pathname: "/fake_chat",

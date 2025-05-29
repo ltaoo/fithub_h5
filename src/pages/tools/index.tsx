@@ -199,7 +199,12 @@ export function ToolsView(props: ViewComponentProps) {
                     </div>
                   </div>
                 </div>
-                <div class="relative pb-8">
+                <div
+                  class="relative pb-8"
+                  onClick={() => {
+                    props.history.push("root.countdown");
+                  }}
+                >
                   <div class="w-full h-full min-h-[48px] bg-gray-200"></div>
                   <div class="relative mt-2">
                     <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-gray-800 text-md text-center">

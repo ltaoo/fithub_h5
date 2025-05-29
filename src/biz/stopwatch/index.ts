@@ -4,7 +4,7 @@
 import { base, Handler } from "@/domains/base";
 
 export function StopwatchViewModel(props: {
-  /** 已过去的时间，用于从后端恢复计时 */
+  /** 已过去的时间，用于从后端恢复计时。毫秒数 */
   time?: number;
   onRefresh?: (text: string) => void;
 }) {
@@ -104,8 +104,11 @@ export function StopwatchViewModel(props: {
       methods.refresh();
     },
     setStartedAt(v: number) {
-      _is_running = true;
-      _started_at = v;
+      _time = new Date().valueOf() - v;
+      refresh_time_text(_time);
+      console.log("[BIZ]stopwatch - setStartedAt", v, _time, _time_text);
+      methods.refresh();
+      // tick(new Date().valueOf(), { force: true });
     },
     addSeconds(seconds: number) {
       _time += seconds * 1000;
@@ -279,17 +282,16 @@ export function StopwatchViewModel(props: {
     _ms1 = time_text.milliseconds.a;
     _ms2 = time_text.milliseconds.b;
   }
-  function tick(timestamp: number) {
-    if (!_is_running) {
+  function tick(timestamp: number, extra: Partial<{ force: boolean }> = {}) {
+    if (!_is_running && !extra.force) {
       return;
     }
     if (!_previous_time) {
       _previous_time = timestamp;
     }
     const delta_time = timestamp - _previous_time;
-    // console.log("tick", delta_time, _time);
+    // console.log("[BIZ]stopwatch - tick", delta_time, _time);
     _previous_time = timestamp;
-    /** 倒计时和秒表的差别通过这里实现的 */
     _time = _time + delta_time;
     refresh_time_text(_time);
     _animation_frame_id = requestAnimationFrame(tick);
@@ -314,6 +316,9 @@ export function StopwatchViewModel(props: {
     setStartedAt: methods.setStartedAt,
     addSeconds: methods.addSeconds,
     subSeconds: methods.subSeconds,
+    destroy() {
+      cancelAnimationFrame(_animation_frame_id);
+    },
     /** 倒计时开始 */
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);

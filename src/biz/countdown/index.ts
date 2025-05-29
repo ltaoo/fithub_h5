@@ -24,6 +24,7 @@ export function CountdownViewModel(props: {
       bus.emit(Events.StateChange, { ..._state });
     },
     play() {
+      // console.log("[BIZ]countdown - play", _started_at);
       methods.start(_started_at !== 0 ? _started_at : new Date().valueOf(), {
         is_resume: _started_at !== 0,
       });
@@ -41,6 +42,7 @@ export function CountdownViewModel(props: {
       // _animation_frame_id = requestAnimationFrame(tick);
     },
     start(started_at: number, extra: Partial<{ is_resume: boolean }> = {}) {
+      console.log("[BIZ]countdown - start", _time, _is_running);
       /** 如果倒计时正常结束，就无法再次开始，需要使用 reset 来重置倒计时 */
       if (_time === 0) {
         return;
@@ -57,26 +59,21 @@ export function CountdownViewModel(props: {
       _is_completed = false;
       _previous_time = undefined;
       _animation_frame_id = requestAnimationFrame(tick);
-      methods.refresh();
       if (!extra.is_resume) {
         bus.emit(Events.Start);
       }
       if (extra.is_resume) {
         bus.emit(Events.Resume);
       }
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     finish() {
-      console.log("[BIZ]countdown - finish", _is_running);
+      console.log("[BIZ]countdown - finish", _is_running, _time);
       // if (!_is_running) {
       //   return;
       // }
-      if (_time === 0) {
-        return;
-      }
       cancelAnimationFrame(_animation_frame_id);
       _is_running = false;
-      _time = 0;
       _time_text = "00:00.00";
       _minutes1 = "0";
       _minutes2 = "0";
@@ -87,10 +84,10 @@ export function CountdownViewModel(props: {
       _ms3 = "0";
       _previous_time = undefined;
       _is_completed = true;
-      methods.refresh();
-      bus.emit(Events.Completed, { time: new Date().valueOf() / 1000 });
+      _started_at = 0;
       bus.emit(Events.Finished);
-      bus.emit(Events.StateChange, { ..._state });
+      bus.emit(Events.Completed, { time: new Date().valueOf() / 1000 });
+      methods.refresh();
     },
     pause() {
       console.log("[BIZ]countdown - pause", _is_running);
@@ -100,10 +97,9 @@ export function CountdownViewModel(props: {
       _is_running = false;
       _is_paused = true;
       cancelAnimationFrame(_animation_frame_id);
-      methods.refresh();
       bus.emit(Events.Stop);
-      bus.emit(Events.Finished);
-      bus.emit(Events.StateChange, { ..._state });
+      bus.emit(Events.Completed);
+      methods.refresh();
     },
     toggle() {
       console.log("[BIZ]countdown - toggle", _is_running);
@@ -128,16 +124,16 @@ export function CountdownViewModel(props: {
       this.start(new Date().valueOf(), { is_resume: false });
     },
     setStartedAt(v: number) {
-      _is_running = true;
+      console.log("[BIZ]countdown - setStartedAt", v);
       _started_at = v;
     },
     addSeconds(seconds: number) {
       _time += seconds * 1000;
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     subSeconds(seconds: number) {
       _time -= seconds * 1000;
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     format_time(time: number) {
       const hours = Math.floor(time / 3600000);
@@ -173,6 +169,10 @@ export function CountdownViewModel(props: {
         text: `${h}:${m}:${s}.${ms}`,
       };
       return r;
+    },
+    handleFinished() {
+      methods.finish();
+      _time = 0;
     },
   };
 
@@ -311,18 +311,17 @@ export function CountdownViewModel(props: {
       _previous_time = timestamp;
     }
     const delta_time = timestamp - _previous_time;
-    // console.log("tick", delta_time, _time);
+    // console.log("[BIZ]countdown - tick", delta_time, _time);
     _previous_time = timestamp;
-    /** 倒计时和秒表的差别通过这里实现的 */
-    _time = props.countdown !== undefined ? _time - delta_time : _time + delta_time;
+    _time = _time - delta_time;
     refresh_time_text(_time);
     if (props.countdown !== undefined) {
       if (_time <= 0) {
-        methods.finish();
+        methods.handleFinished();
       }
     }
     _animation_frame_id = requestAnimationFrame(tick);
-    bus.emit(Events.StateChange, { ..._state });
+    methods.refresh();
   }
 
   refresh_time_text(_time);
@@ -342,6 +341,9 @@ export function CountdownViewModel(props: {
     setStartedAt: methods.setStartedAt,
     addSeconds: methods.addSeconds,
     subSeconds: methods.subSeconds,
+    destroy() {
+      cancelAnimationFrame(_animation_frame_id);
+    },
     /** 倒计时开始 */
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);

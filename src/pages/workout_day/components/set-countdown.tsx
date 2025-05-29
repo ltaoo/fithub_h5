@@ -8,6 +8,7 @@ import { useViewModelStore } from "@/hooks";
 
 import { base, Handler } from "@/domains/base";
 import { CountdownViewModel } from "@/biz/countdown";
+import { StopwatchViewModel } from "@/biz/stopwatch";
 
 export function SetCountdownViewModel(props: {
   countdown: number;
@@ -21,8 +22,8 @@ export function SetCountdownViewModel(props: {
     },
   };
   const ui = {
-    $countdown1: CountdownViewModel({ countdown: props.countdown, time: props.remaining, finished: props.finished }),
-    $countdown2: CountdownViewModel({ time: props.exceed }),
+    $countdown: CountdownViewModel({ countdown: props.countdown, time: props.remaining, finished: props.finished }),
+    $stopwatch: StopwatchViewModel({ time: props.exceed }),
   };
 
   let _running = false;
@@ -35,10 +36,10 @@ export function SetCountdownViewModel(props: {
       return _paused;
     },
     get remaining() {
-      return ui.$countdown1.time;
+      return ui.$countdown.time;
     },
     get exceed() {
-      return ui.$countdown2.time;
+      return ui.$stopwatch.time;
     },
   };
   enum Events {
@@ -53,22 +54,24 @@ export function SetCountdownViewModel(props: {
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$countdown1.onStart(() => {
+  ui.$countdown.onStart(() => {
+      console.log("[BIZ]workout_day/SetCountdown - countdown.onStart", _running, _paused);
     _running = true;
     _paused = false;
+    bus.emit(Events.Start);
     methods.refresh();
   });
-  ui.$countdown1.onFinished(() => {
+  ui.$countdown.onFinished(() => {
     console.log("[BIZ]workout_day/SetCountdown - countdown1.onFinished");
-    ui.$countdown2.start(new Date().valueOf());
+    ui.$stopwatch.start(new Date().valueOf());
   });
-  ui.$countdown1.onStop(() => {
+  ui.$countdown.onStop(() => {
     _running = false;
     _paused = true;
     bus.emit(Events.Stop);
     methods.refresh();
   });
-  ui.$countdown2.onStop(() => {
+  ui.$stopwatch.onStop(() => {
     _running = false;
     _paused = true;
     bus.emit(Events.Stop);
@@ -79,18 +82,17 @@ export function SetCountdownViewModel(props: {
     ui,
     state: _state,
     start() {
-      _running = true;
-      bus.emit(Events.Start);
-      ui.$countdown1.start(new Date().valueOf());
+      console.log("[BIZ]workout_day/SetCountdown - start", _running, _paused);
+      ui.$countdown.start(new Date().valueOf());
       bus.emit(Events.StateChange, { ..._state });
     },
     pause() {
       console.log("[BIZ]workout_day/SetCountdown - pause", _paused);
-      if (ui.$countdown1.state.running) {
-        ui.$countdown1.pause();
+      if (ui.$countdown.state.running) {
+        ui.$countdown.pause();
         return;
       }
-      ui.$countdown2.pause();
+      ui.$stopwatch.pause();
     },
     ready() {},
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
@@ -124,13 +126,13 @@ export function SetCountdownView(props: {
   let $sub_seconds2: undefined | HTMLDivElement;
 
   const [state, vm] = useViewModelStore(props.store);
-  const [countdown1, setCountdown1State] = createSignal(props.store.ui.$countdown1.state);
-  const [countdown2, setCountdown2State] = createSignal(props.store.ui.$countdown2.state);
+  const [countdown1, setCountdown1State] = createSignal(props.store.ui.$countdown.state);
+  const [countdown2, setCountdown2State] = createSignal(props.store.ui.$stopwatch.state);
   // if (props.onCompleted) {
   //   props.store.ui.$countdown1.onComplete(props.onCompleted);
   // }
 
-  props.store.ui.$countdown1.onStateChange((v) => {
+  props.store.ui.$countdown.onStateChange((v) => {
     // console.log("[COMPONENT]set-countdown - update")
     if ($minutes1) {
       $minutes1.innerText = v.minutes1;
@@ -152,7 +154,7 @@ export function SetCountdownView(props: {
     }
     setCountdown1State(v);
   });
-  props.store.ui.$countdown2.onStateChange((v) => {
+  props.store.ui.$stopwatch.onStateChange((v) => {
     if ($sub_minutes1) {
       $sub_minutes1.innerText = v.minutes1;
     }
@@ -251,12 +253,12 @@ export function SetCountdownView(props: {
         </div>
       </div>
       <div class="flex items-center gap-2 px-4">
-        <div
-          classList={{
-            "flex items-center justify-center p-2 rounded-full bg-white": true,
-          }}
-        >
-          <Show when={countdown1().pending}>
+        <Show when={countdown1().pending}>
+          <div
+            classList={{
+              "flex items-center justify-center p-2 rounded-full bg-white": true,
+            }}
+          >
             <div
               class="text-gray-400"
               onClick={() => {
@@ -268,8 +270,14 @@ export function SetCountdownView(props: {
             >
               <Play class="w-4 h-4" />
             </div>
-          </Show>
-          <Show when={state().running}>
+          </div>
+        </Show>
+        <Show when={state().running}>
+          <div
+            classList={{
+              "flex items-center justify-center p-2 rounded-full bg-white": true,
+            }}
+          >
             <div
               class="text-gray-400"
               onClick={() => {
@@ -278,8 +286,8 @@ export function SetCountdownView(props: {
             >
               <Pause class="w-4 h-4" />
             </div>
-          </Show>
-        </div>
+          </div>
+        </Show>
         <Show when={countdown1().completed && countdown2().time !== 0}>
           <div
             classList={{

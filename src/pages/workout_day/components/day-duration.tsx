@@ -3,8 +3,13 @@ import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
 import { CountdownViewModel } from "@/biz/countdown";
+import { StopWatchViewModel } from "@/biz/stopwatch";
 
-export function DayCountdown(props: { store: CountdownViewModel; onStart?: () => void; onCompleted?: () => void }) {
+export function DayDurationTextView(props: {
+  store: StopWatchViewModel;
+  onStart?: () => void;
+  onCompleted?: () => void;
+}) {
   let $hours1: undefined | HTMLDivElement;
   let $hours2: undefined | HTMLDivElement;
   let $minutes1: undefined | HTMLDivElement;
@@ -58,14 +63,14 @@ export function DayCountdown(props: { store: CountdownViewModel; onStart?: () =>
         </div>
         <div
           classList={{
-            "text-center w-[8px]": true,
+            "text-center w-[12px]": true,
           }}
         >
-          :
+          h
         </div>
         <div
           classList={{
-            "text-center w-[12px]": true,
+            "ml-1 text-center w-[12px]": true,
           }}
           ref={$minutes1}
         >
@@ -78,6 +83,13 @@ export function DayCountdown(props: { store: CountdownViewModel; onStart?: () =>
           ref={$minutes2}
         >
           {state().minutes2}
+        </div>
+        <div
+          classList={{
+            "text-center w-[8px]": true,
+          }}
+        >
+          min
         </div>
       </div>
     </div>

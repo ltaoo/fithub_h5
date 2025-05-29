@@ -25,7 +25,7 @@ export function SetActionCountdownBtn(props: {
             props.onClick({ x, y, finished: vm.state.running });
           }
           if (vm.state.running) {
-            vm.stop();
+            vm.pause();
             return;
           }
           vm.start();

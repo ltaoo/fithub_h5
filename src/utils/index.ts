@@ -85,6 +85,7 @@ export function has_num_value(v: any) {
 /**
  * 弹出键盘时，希望指定元素不被键盘遮挡，将整个页面向上移动一定距离
  * 该方法用于计算所需要移动的「一定距离」
+ * @todo 还是存在问题，弹出键盘后，滚动一些距离，然后点击靠近键盘的输入框，页面反而往下移动，导致输入框更加看不见了
  */
 export function calc_bottom_padding_need_add(arg: {
   keyboard: { height: number; visible: boolean };

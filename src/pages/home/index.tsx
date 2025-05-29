@@ -99,7 +99,6 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       }),
       defaultValue: "182",
     }),
-    $countdown: CountdownViewModel({ countdown: 30 }),
   };
 
   const week_days = ["日", "一", "二", "三", "四", "五", "六"];
@@ -150,25 +149,11 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$countdown.onStart(() => {
-    console.log("start");
-  });
-  ui.$countdown.onStop(() => {
-    console.log("stop");
-  });
-  ui.$countdown.onResume(() => {
-    console.log("resume");
-  });
-  ui.$countdown.onFinished(() => {
-    console.log("completed");
-  });
-
   return {
     methods,
     ui,
     state: _state,
     async ready() {
-      ui.$countdown.play();
       _timer = setInterval(() => {
         methods.update_time();
       }, 1000);
@@ -262,38 +247,6 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                 }}
               </For>
             </div>
-          </div>
-        </div>
-        <div class="p-4">
-          <Countdown store={vm.ui.$countdown} />
-          <div
-            onClick={() => {
-              vm.ui.$countdown.play();
-            }}
-          >
-            开始
-          </div>
-          <div
-            onClick={() => {
-              vm.ui.$countdown.pause();
-            }}
-          >
-            暂停
-          </div>
-          <div
-            onClick={() => {
-              vm.ui.$countdown.reset();
-            }}
-          >
-            重新开始
-          </div>
-          <div
-            onClick={() => {
-              console.log(1);
-              vm.ui.$countdown.finish();
-            }}
-          >
-            提前完成
           </div>
         </div>
       </ScrollView>

@@ -42,6 +42,7 @@ import { ToolsView } from "@/pages/tools";
 import { RMCalcToolView } from "@/pages/tools/rm_calc";
 import { BMRCalcToolView } from "@/pages/tools/bmr_calc";
 import { StopwatchToolView } from "@/pages/tools/stopwatch";
+import { CountdownToolView } from "@/pages/tools/countdown";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -53,6 +54,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.tools_rm_calc": RMCalcToolView,
   "root.tools_bmr_calc": BMRCalcToolView,
   "root.stopwatch": StopwatchToolView,
+  "root.countdown": CountdownToolView,
   // 训练计划
   "root.workout_plan_list": HomeWorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,
