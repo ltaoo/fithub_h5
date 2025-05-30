@@ -645,24 +645,24 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
       {/* <NavigationBar1 title="创建训练计划" history={props.history} /> */}
       <div class="flex-1 overflow-auto">
         <ScrollView store={vm.ui.$view} class="h-full overflow-auto">
-          <div class="p-4">
+          <div class="p-2">
             <div class="space-y-4">
               <div class="field relative">
                 <div class="flex">
-                  <div class="text-lg text-w-fg-1">标题</div>
+                  <div class=" text-w-fg-0">标题</div>
                   <div class="text-red-500">*</div>
                 </div>
                 <Input store={vm.ui.$input_title} class="mt-1" />
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-lg text-w-fg-1">概要</div>
+                  <div class=" text-w-fg-0">概要</div>
                 </div>
                 <Textarea store={vm.ui.$input_overview} class="mt-1" />
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-w-fg-1">动作</div>
+                  <div class="text-w-fg-0">训练内容</div>
                   <div class="text-red-500">*</div>
                 </div>
                 <div class="w-full space-y-3 my-2">
@@ -681,7 +681,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                             <div>
                               <Plus class="w-8 h-8" />
                             </div>
-                            <div>点击添加动作</div>
+                            <div class="text-sm">点击添加动作</div>
                           </div>
                         </div>
                       }
@@ -695,7 +695,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                             }
                             return (
                               <>
-                                <div class="relative border border-gray-200 rounded-lg bg-w-bg-5 shadow-sm">
+                                <div class="relative border-2 border-w-bg-5 rounded-lg shadow-sm">
                                   <Switch>
                                     <Match when={$inner.field.symbol === "SingleFieldCore"}>
                                       <ActionInput
@@ -721,6 +721,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                   <div class="z-0 absolute right-4 top-2">
                                     <div class="flex items-center gap-2">
                                       <div
+                                        class="bg-w-bg-5 rounded-full p-2"
                                         onClick={(event) => {
                                           vm.ui.$ref_action_in_menu.select({
                                             id: field.id,
@@ -736,9 +737,10 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                           vm.ui.$dialog_act_remark.show();
                                         }}
                                       >
-                                        <Pen class="w-4 h-4" />
+                                        <Pen class="w-4 h-4 text-w-fg-1" />
                                       </div>
                                       <div
+                                        class="bg-w-bg-5 rounded-full p-2"
                                         onClick={(event) => {
                                           const client = event.currentTarget.getBoundingClientRect();
                                           vm.ui.$ref_action_in_menu.select({
@@ -753,7 +755,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                           });
                                         }}
                                       >
-                                        <MoreHorizontal class="w-6 h-6" />
+                                        <MoreHorizontal class="w-4 h-4 text-w-fg-1" />
                                       </div>
                                     </div>
                                   </div>
@@ -772,15 +774,23 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
               <div class="field">
                 <div class="flex">
-                  <div class="text-w-fg-1">预计时长</div>
+                  <div class="text-w-fg-1">标签</div>
                 </div>
-                <InputTextView store={vm.ui.$input_duration} class="mt-1" />
+                <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
               </div>
-              <div class="field">
-                <div class="flex">
-                  <div class="text-w-fg-1">锻炼部位</div>
+              <div class="field border-2 border-w-bg-5 rounded-lg">
+                <div class="p-4 border-b-2 border-w-bg-5">
+                  <div class="text-w-fg-0">预计时长</div>
                 </div>
-                <div class="mt-1">
+                <div class="p-4">
+                  <InputTextView store={vm.ui.$input_duration} class="mt-1" />
+                </div>
+              </div>
+              <div class="field border-2 border-w-bg-5 rounded-lg">
+                <div class="p-4 border-b-2 border-w-bg-5">
+                  <div class="text-w-fg-0">锻炼部位</div>
+                </div>
+                <div class="p-4">
                   <div class="flex flex-wrap gap-2">
                     <For each={state().muscles}>
                       {(v) => {
@@ -794,11 +804,11 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                   </div>
                 </div>
               </div>
-              <div class="field">
-                <div class="flex">
-                  <div class="text-w-fg-1">所需器械</div>
+              <div class="field border-2 border-w-bg-5 rounded-lg">
+                <div class="p-4 border-b-2 border-w-bg-5">
+                  <div class="text-w-fg-0">所需器械</div>
                 </div>
-                <div class="mt-1">
+                <div class="p-4">
                   <div class="flex flex-wrap gap-2">
                     <For each={state().equipments}>
                       {(v) => {
@@ -812,17 +822,11 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                   </div>
                 </div>
               </div>
-              <div class="field">
-                <div class="flex">
-                  <div class="text-w-fg-1">标签</div>
-                </div>
-                <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
-              </div>
             </div>
           </div>
         </ScrollView>
       </div>
-      <div class="z-10 p-4 bg-w-bg-0 border-t-2 border-w-bg-5">
+      <div class="z-10 p-2 bg-w-bg-0 border-t-2 border-w-bg-5">
         <div class="flex items-center gap-4">
           <div class="p-2 rounded-full bg-w-bg-5" onClick={vm.methods.back}>
             <ChevronLeft class="w-6 h-6 text-w-fg-1" />
@@ -839,12 +843,12 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
         <div class="safe-height"></div>
       </div>
       <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-white">
+        <div class="w-screen bg-w-bg-0">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_act_remark} position="bottom" size="sm">
-        <div class="w-screen bg-white p-2">
+        <div class="w-screen bg-w-bg-0 p-2">
           <div>
             <div class="text-xl">备注</div>
             <div class="mt-8">

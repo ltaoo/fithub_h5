@@ -40,7 +40,7 @@ const configure = {
                 pathname: "/home/workout_plan/exercise",
               },
               mine: {
-                title: "我的",
+                title: "个人中心",
                 pathname: "/home/workout_plan/mine",
               },
             },

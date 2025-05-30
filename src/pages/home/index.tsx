@@ -1,13 +1,13 @@
 /**
  * @file 首页
  */
-import { Switch, Match, For } from "solid-js";
+import { Switch, Match, For, Show } from "solid-js";
 import { Bell, Menu, BicepsFlexed } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { WorkoutPlanCard } from "@/components/workout-plan-card";
-import { ScrollView } from "@/components/ui";
+import { ScrollView, Skeleton } from "@/components/ui";
 import { DragSelectView } from "@/components/drag-select";
 import { Sheet } from "@/components/ui/sheet";
 
@@ -21,6 +21,8 @@ import { fetchWorkoutPlanSetList, fetchWorkoutPlanSetListProcess } from "@/biz/w
 import { HomeViewTabHeader } from "./components/tabs";
 import { Countdown } from "@/components/countdown";
 import { CountdownViewModel } from "@/biz/countdown";
+import { Divider } from "@/components/divider";
+import { sleep } from "@/utils";
 
 function HomeIndexPageViewModel(props: ViewComponentProps) {
   const request = {
@@ -65,7 +67,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     },
   };
   const ui = {
-    $view: new ScrollViewCore(),
+    $view: new ScrollViewCore({
+      async onPullToRefresh() {
+        await sleep(800);
+        ui.$view.finishPullToRefresh();
+      },
+    }),
     $tab: new TabHeaderCore({
       options: [
         {
@@ -192,29 +199,37 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="relative whitespace-nowrap">
-        <div class="absolute right-4 top-6">
+      <div class="z-0 fixed top-0 left-0 w-full">
+        <div class="absolute right-2 top-2">
           <div class="flex gap-2">
             <div>
-              <div class="flex items-center justify-center p-4 rounded-full bg-w-bg-5 text-w-fg-1">
-                <Bell class="w-6 h-6" />
+              <div
+                class="p-2 rounded-full bg-w-bg-5"
+                onClick={() => {
+                  props.app.tip({
+                    icon: "loading",
+                    text: ["请等待.."],
+                  });
+                }}
+              >
+                <Bell class="w-6 h-6 text-w-fg-1" />
               </div>
             </div>
             <div>
               <div
-                class="flex items-center justify-center p-4 rounded-full bg-w-bg-5 text-w-fg-1"
+                class="p-2 rounded-full bg-w-bg-5"
                 onClick={() => {
                   vm.methods.gotoWorkoutDayPrepareView();
                 }}
               >
-                <BicepsFlexed class="w-6 h-6" />
+                <BicepsFlexed class="w-6 h-6 text-w-fg-1" />
               </div>
             </div>
           </div>
         </div>
-        <div class="flex flex-col items-start gap-2 p-4 text-lg">
+        <div class="flex flex-col items-start p-2 text-lg">
           <div class="text-3xl font-bold">{state().time}</div>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-4 text-w-fg-1">
             <span>{state().month}</span>
             <span>{state().week}</span>
           </div>
@@ -228,28 +243,36 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               }}
             />
           </div>
-          <div class="px-4 pb-8">
-            <div class="space-y-2">
-              <For each={state().dataSource}>
-                {(vv) => {
-                  return (
-                    <WorkoutPlanCard
-                      title={vv.title}
-                      overview={vv.overview}
-                      estimated_duration_text="58分钟"
-                      cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
-                      tags={vv.tags}
-                      onClick={() => {
-                        vm.methods.gotoWorkoutPlanProfileView({ id: vv.id });
-                      }}
-                    />
-                  );
-                }}
-              </For>
-            </div>
-          </div>
         </div>
-      </ScrollView>
+      </div>
+      <div class="absolute top-[122px] bottom-0 left-0 w-full">
+        <ScrollView store={vm.ui.$view} class="">
+          <div class="p-2 pb-8 relative whitespace-nowrap">
+            <Show when={state().dataSource.length} fallback={<div class="p-4 h-[160px] rounded-xl border-2 border-w-bg-5">
+              <Skeleton class="w-[120px] h-[32px]" />
+            </div>}>
+              <div class="space-y-2">
+                <For each={state().dataSource}>
+                  {(vv) => {
+                    return (
+                      <WorkoutPlanCard
+                        title={vv.title}
+                        overview={vv.overview}
+                        estimated_duration_text="58分钟"
+                        cover_path="https://static.funzm.com/assets/images/682e277957709aef.png"
+                        tags={vv.tags}
+                        onClick={() => {
+                          vm.methods.gotoWorkoutPlanProfileView({ id: vv.id });
+                        }}
+                      />
+                    );
+                  }}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </ScrollView>
+      </div>
     </>
   );
 };

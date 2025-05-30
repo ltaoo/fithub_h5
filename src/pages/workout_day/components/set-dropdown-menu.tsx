@@ -1,5 +1,6 @@
 /**
  * @file 下拉菜单
+ * @deprecated
  */
 import { For, createSignal, JSX } from "solid-js";
 import { Portal as PortalPrimitive } from "solid-js/web";
@@ -32,7 +33,7 @@ export const SetDropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAtt
       <DropdownMenuPrimitive.Portal store={props.store.menu} class="relative">
         <div
           classList={{
-            "fixed inset-0 bg-w-bg-0 opacity-20 duration-200": true,
+            "fixed inset-0 bg-black opacity-20 duration-200": true,
             "animate-in fade-in": state().enter,
             "animate-out fade-out": state().exit,
           }}
@@ -57,7 +58,7 @@ export const SetDropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAtt
         >
           <div
             classList={{
-              "z-50 min-w-[88px] overflow-hidden rounded-md border-2 border-slate-100 bg-w-bg-0 p-1 text-slate-700 shadow-md dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400 duration-200":
+              "z-50 min-w-[4rem] w-36 overflow-hidden rounded-xl border-2 border-w-bg-5 border-slate-100 bg-w-bg-0 p-1 text-w-fg-0 shadow-md duration-200":
                 true,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,

@@ -28,7 +28,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
     <div class="relative">
       <div
         class={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-10 w-full items-center justify-between rounded-xl border-2 border-w-bg-5 bg-w-bg-2 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           props.class
         )}
         onClick={(event) => {
@@ -45,7 +45,16 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
           props.store.presence.show();
         }}
       >
-        {state().value2?.label || state().value || state().placeholder}
+        <Show
+          when={state().value2?.label || state().value}
+          fallback={
+            <Show when={state().placeholder}>
+              <div class="text-w-fg-2">{state().placeholder}</div>
+            </Show>
+          }
+        >
+          <div class="text-w-fg-0">{state().value2?.label || state().value}</div>
+        </Show>
         <SelectPrimitive.Icon>
           <ChevronDown class="h-4 w-4 opacity-50" />
         </SelectPrimitive.Icon>
@@ -76,14 +85,14 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
           >
             <div
               classList={{
-                "min-w-[120px] border rounded-md bg-white duration-200": true,
+                "min-w-[120px] duration-200": true,
                 "animate-in fade-in": state().enter,
                 "animate-out fade-out": state().exit,
               }}
             >
               <div
                 classList={{
-                  "z-50 min-w-[4rem] w-36 overflow-hidden rounded-md border-2 border-slate-100 bg-white p-1 text-slate-700 shadow-md dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400":
+                  "z-50 min-w-[4rem] w-36 overflow-hidden rounded-xl border-2 border-w-bg-2 bg-w-bg-0 p-1 text-w-fg-0 shadow-md":
                     true,
                   "__a ": true,
                 }}
@@ -97,9 +106,9 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
                     return (
                       <div
                         classList={{
-                          "relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700":
+                          "relative flex cursor-default select-none items-center rounded-xl py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50":
                             true,
-                          "bg-gray-100": opt.selected,
+                          "bg-w-bg-5": opt.selected,
                         }}
                         onClick={() => {
                           props.store.select(opt.value);

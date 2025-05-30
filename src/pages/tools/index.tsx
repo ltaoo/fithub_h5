@@ -147,36 +147,39 @@ export function ToolsView(props: ViewComponentProps) {
 
   return (
     <ScrollView store={vm.ui.$view}>
-      <div class="p-4">
-        <div class="text-3xl text-w-fg-0">常用工具</div>
-        <div class="mt-8">
-          <div class="space-y-4">
-            <For each={state().groups}>
-              {(group) => {
-                return (
-                  <div class="w-full ">
-                    <div class="text-xl text-w-fg-0">查询</div>
-                    <div class="grid grid-cols-5 gap-4 mt-4">
-                      <For each={group.menus}>
-                        {(menu) => {
-                          return (
-                            <div class="relative pb-8">
-                              <div class="w-full h-full min-h-[48px] bg-w-bg-5" onClick={menu.onClick}></div>
-                              <div class="relative mt-2">
-                                <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-w-fg-1 text-sm text-center">
-                                  {menu.title}
-                                </div>
+      <div class="p-2">
+        {/* <div class="flex items-center justify-between gap-2">
+          <div class="text-xl text-w-fg-0">常用工具</div>
+          <div></div>
+        </div> */}
+        <div class="space-y-4">
+          <For each={state().groups}>
+            {(group) => {
+              return (
+                <div class="w-full border-2 border-w-bg-5 rounded-lg">
+                  <div class="p-4 border-b-2 border-w-bg-5">
+                    <div class="text-w-fg-0">查询</div>
+                  </div>
+                  <div class="grid grid-cols-5 gap-4 p-4 ">
+                    <For each={group.menus}>
+                      {(menu) => {
+                        return (
+                          <div class="relative pb-8">
+                            <div class="w-full h-full rounded-xl min-h-[48px] bg-w-bg-5" onClick={menu.onClick}></div>
+                            <div class="relative mt-2">
+                              <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-w-fg-1 text-sm text-center">
+                                {menu.title}
                               </div>
                             </div>
-                          );
-                        }}
-                      </For>
-                    </div>
+                          </div>
+                        );
+                      }}
+                    </For>
                   </div>
-                );
-              }}
-            </For>
-          </div>
+                </div>
+              );
+            }}
+          </For>
         </div>
       </div>
       <div class="h-[68px]"></div>

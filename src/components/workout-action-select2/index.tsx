@@ -41,10 +41,10 @@ export function WorkoutActionSelect2View(props: { store: WorkoutActionSelectDial
           <Select store={vm.ui.$input_type_select} />
         </div>
         <Input store={vm.ui.$input_keyword} />
-        <Button class="w-20" store={vm.ui.$btn_submit}>
+        <Button class="w-20" store={vm.ui.$btn_search_submit}>
           搜索
         </Button>
-        <Button variant="subtle" store={vm.ui.$btn_reset}>
+        <Button variant="subtle" store={vm.ui.$btn_search_reset}>
           重置
         </Button>
       </div>

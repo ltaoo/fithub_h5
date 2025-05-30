@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { Check, Plus } from "lucide-solid";
+import { Check, ChevronLeft, Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -69,6 +69,9 @@ function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
     },
   };
   const ui = {
@@ -207,78 +210,86 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="开始训练" history={props.history} />
-      </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view} class="">
-          <div class="p-4">
-            <div class="space-y-8">
-              <div class="field">
-                <div>参与者</div>
-                <div class="mt-2">
-                  <div class="flex items-center gap-2">
-                    <For each={state().selected_students}>
-                      {(student) => {
-                        return (
-                          <div class="p-2 rounded-full bg-gray-100 text-center">
-                            <div class="w-6 h-6">{student.nickname}</div>
-                          </div>
-                        );
-                      }}
-                    </For>
-                    <div
-                      class="p-2 rounded-full bg-gray-100"
-                      onClick={() => {
-                        vm.ui.$dialog_student_select.show();
-                      }}
-                    >
-                      <Plus class="w-6 h-6 text-gray-800" />
-                    </div>
+      <ScrollView store={vm.ui.$view} class="">
+        <div class="p-4">
+          <div class="space-y-8">
+            <div class="field">
+              <div>参与者</div>
+              <div class="mt-2">
+                <div class="flex items-center gap-2">
+                  <For each={state().selected_students}>
+                    {(student) => {
+                      return (
+                        <div class="p-2 rounded-full bg-w-bg-5 text-center">
+                          <div class="w-6 h-6">{student.nickname}</div>
+                        </div>
+                      );
+                    }}
+                  </For>
+                  <div
+                    class="p-2 rounded-full bg-w-bg-5"
+                    onClick={() => {
+                      vm.ui.$dialog_student_select.show();
+                    }}
+                  >
+                    <Plus class="w-6 h-6 text-w-fg-1" />
                   </div>
                 </div>
               </div>
-              <div>
-                <div>训练计划</div>
-                <div class="mt-2">
-                  <Show
-                    when={state().selected_workout_plans.length}
-                    fallback={
-                      <div
-                        class="flex items-center justify-center py-4 rounded-md bg-gray-100"
-                        onClick={() => {
-                          vm.ui.$dialog_workout_plan_select.show();
-                        }}
-                      >
-                        <Plus class="w-6 h-6 text-gray-800" />
-                      </div>
-                    }
-                  >
+            </div>
+            <div>
+              <div>训练计划</div>
+              <div class="mt-2">
+                <Show
+                  when={state().selected_workout_plans.length}
+                  fallback={
                     <div
-                      class="flex items-center justify-center py-4 rounded-md bg-gray-100"
+                      class="flex items-center justify-center py-4 rounded-md bg-w-bg-5"
                       onClick={() => {
                         vm.ui.$dialog_workout_plan_select.show();
                       }}
                     >
-                      <div>
-                        <div>{state().selected_workout_plans[0].title}</div>
+                      <Plus class="w-6 h-6 text-w-fg-1" />
+                    </div>
+                  }
+                >
+                  <div
+                    class="p-4 border-2 border-w-bg-5 rounded-lg"
+                    onClick={() => {
+                      vm.ui.$dialog_workout_plan_select.show();
+                    }}
+                  >
+                    <div class="">
+                      <div class="text-w-fg-1">{state().selected_workout_plans[0].title}</div>
+                      <div class="flex flex-wrap gap-2 mt-4">
+                        <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">背部</div>
                       </div>
                     </div>
-                  </Show>
-                </div>
+                  </div>
+                </Show>
               </div>
             </div>
           </div>
-          <div class="fixed bottom-0 w-full p-2">
-            <div class="p-4 rounded-md bg-green-500">
+        </div>
+        <div class="fixed bottom-0 w-full p-2 bg-w-bg-2">
+          <div class="flex items-center gap-2">
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.back();
+              }}
+            >
+              <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+            </div>
+            <div class="w-full py-2 rounded-md bg-w-bg-5">
               <div class="text-white text-center">下一步</div>
             </div>
-            <div class="safe-height"></div>
           </div>
-        </ScrollView>
-      </div>
+          <div class="safe-height"></div>
+        </div>
+      </ScrollView>
       <Sheet class="" store={vm.ui.$dialog_student_select}>
-        <div class="w-screen p-4 bg-white">
+        <div class="w-screen p-2 bg-w-bg-2">
           <ListView store={vm.request.student.list}>
             <For each={state().student_response}>
               {(student) => {
@@ -308,29 +319,33 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet class="" store={vm.ui.$dialog_workout_plan_select}>
-        <div class="w-screen p-4 bg-white">
-          <ListView store={vm.request.workout_plan.list} class="space-y-2">
-            <For each={state().workout_plan_response}>
-              {(vv) => {
-                return (
-                  <div
-                    classList={{
-                      "flex items-center justify-between p-4 rounded-md bg-gray-100": true,
-                    }}
-                    onClick={() => {
-                      vm.ui.$input_workout_plan_select.methods.select(vv);
-                    }}
-                  >
-                    <div>{vv.title}</div>
-                    <Show when={vv.selected}>
-                      <Check class="w-4 h-4 text-gray-500" />
-                    </Show>
-                  </div>
-                );
-              }}
-            </For>
-          </ListView>
-          <div class="mt-2">
+        <div class="w-screen bg-w-bg-2 max-h-screen">
+          <div class="p-2 ">
+            <ListView store={vm.request.workout_plan.list} class="space-y-2">
+              <For each={state().workout_plan_response}>
+                {(vv) => {
+                  return (
+                    <div
+                      classList={{
+                        "flex items-center justify-between p-4 rounded-md bg-w-bg-5": true,
+                      }}
+                      onClick={() => {
+                        vm.ui.$input_workout_plan_select.methods.select(vv);
+                      }}
+                    >
+                      <div class="text-sm text-w-fg-1">{vv.title}</div>
+                      <Show when={vv.selected}>
+                        <div class="">
+                          <Check class="w-4 h-4 text-w-fg-1" />
+                        </div>
+                      </Show>
+                    </div>
+                  );
+                }}
+              </For>
+            </ListView>
+          </div>
+          <div class="p-2">
             <Button class="w-full" store={vm.ui.$btn_confirm_workout_plan}>
               确定
             </Button>

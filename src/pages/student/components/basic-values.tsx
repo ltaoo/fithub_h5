@@ -22,7 +22,7 @@ export function MemberBasicValues(props: { store: ReturnType<typeof MemberValues
             }
             return (
               <div>
-                <div>{field.label}</div>
+                <div class="text-w-fg-1">{field.label}</div>
                 {(() => {
                   if ($inner.symbol === "SingleFieldCore") {
                     const field = $inner.state;

@@ -138,19 +138,19 @@ export function WorkoutActionSelectDialogViewModel(props: {
       defaultValue: "",
       placeholder: "请输入关键字搜索",
       onEnter() {
-        ui.$btn_submit.click();
+        ui.$btn_search_submit.click();
       },
     }),
-    $btn_submit: new ButtonCore({
+    $btn_search_submit: new ButtonCore({
       async onClick() {
         const v = ui.$input_keyword.value;
         // if (!v) {
         //   bus.emit(Events.Error, new BizError("请输入关键字搜索"));
         //   return;
         // }
-        ui.$btn_submit.setLoading(true);
+        ui.$btn_search_submit.setLoading(true);
         const r = await request.action.list.search({ keyword: v });
-        ui.$btn_submit.setLoading(false);
+        ui.$btn_search_submit.setLoading(false);
         if (r.error) {
           bus.emit(Events.Error, r.error);
           return;
@@ -159,12 +159,12 @@ export function WorkoutActionSelectDialogViewModel(props: {
         bus.emit(Events.StateChange, { ..._state });
       },
     }),
-    $btn_reset: new ButtonCore({
+    $btn_search_reset: new ButtonCore({
       onClick() {
         request.action.list.reset();
       },
     }),
-    $btn_dialog_show: new ButtonCore({
+    $btn_show_dialog: new ButtonCore({
       onClick() {
         ui.$dialog.show();
       },
@@ -175,6 +175,16 @@ export function WorkoutActionSelectDialogViewModel(props: {
       },
       onCancel() {
         _disabled = [];
+      },
+    }),
+    $btn_submit: new ButtonCore({
+      onClick() {
+        methods.handleOk();
+      },
+    }),
+    $btn_cancel: new ButtonCore({
+      onClick() {
+        ui.$dialog.hide();
       },
     }),
     $view: new ScrollViewCore({

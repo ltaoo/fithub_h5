@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { Send } from "lucide-solid";
+import { ChevronLeft, Send } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -144,41 +144,45 @@ export function HomeStudentCreatePage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
+      {/* <div class="z-0 fixed top-0 left-0 w-full">
         <NavigationBar1 history={props.history} title="新增学员" />
-      </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view} class="scroll-view w-full h-full overflow-y-auto bg-white">
-          <div class="">
-            <div class="panel p-4 relative flex-shrink-0">
-              <div
-                onClick={() => {
-                  //
-                }}
-              >
-                <MemberBasicValues store={vm.ui.$values_basic} />
-              </div>
-            </div>
-            <div class="fixed bottom-0 left-0 w-full pb-8">
-              <div class="relative flex items-center justify-center py-4">
-                <div
-                  class="p-4 rounded-full bg-gray-200"
-                  onClick={() => {
-                    vm.methods.submit();
-                  }}
-                >
-                  <Send class="w-8 h-8 text-gray-800" />
-                </div>
-              </div>
-              <Show when={state().can_submit}>
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
-                  <div class="whitespace-nowrap text-sm text-gray-300">提交后仍可编辑所有信息</div>
-                </div>
-              </Show>
-              <div class="safe-height"></div>
+      </div> */}
+      <ScrollView store={vm.ui.$view}>
+        <div class="">
+          <div class="panel p-4 relative flex-shrink-0">
+            <div
+              onClick={() => {
+                //
+              }}
+            >
+              <MemberBasicValues store={vm.ui.$values_basic} />
             </div>
           </div>
-        </ScrollView>
+        </div>
+      </ScrollView>
+      <div class="fixed bottom-0 left-0 w-full bg-w-bg-1 p-2">
+        <div class="flex items-center gap-2">
+          <div
+            class="p-2 rounded-full bg-w-bg-5"
+            onClick={() => {
+              vm.methods.back();
+            }}
+          >
+            <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+          </div>
+          <div
+            class="w-full py-2 rounded-lg bg-w-bg-5 text-center text-w-fg-1"
+            onClick={() => {
+              vm.methods.submit();
+            }}
+          >
+            创建
+          </div>
+        </div>
+        <Show when={state().can_submit}>
+          <div class="whitespace-nowrap text-sm text-center text-w-fg-3">创建后仍可编辑所有信息</div>
+        </Show>
+        <div class="safe-height"></div>
       </div>
     </>
   );

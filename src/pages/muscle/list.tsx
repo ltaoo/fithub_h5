@@ -295,7 +295,7 @@ export function MuscleListView(props: ViewComponentProps) {
       <div class="z-0 fixed top-0 left-0 w-full">
         <NavigationBar1 title="肌肉" history={props.history} />
       </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
+      <div class="absolute top-[58px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>
           <div class="p-4">
             <div class="grid grid-cols-2 gap-2">

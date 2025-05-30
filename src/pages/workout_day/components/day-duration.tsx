@@ -1,24 +1,17 @@
+/**
+ * @file 训练持续时间
+ */
 import { createSignal, Show } from "solid-js";
-import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
 
-import { useViewModelStore } from "@/hooks";
-import { CountdownViewModel } from "@/biz/countdown";
 import { StopWatchViewModel } from "@/biz/stopwatch";
 
-export function DayDurationTextView(props: {
-  store: StopWatchViewModel;
-  onStart?: () => void;
-  onCompleted?: () => void;
-}) {
+export function DayDurationTextView(props: { store: StopWatchViewModel; onStart?: () => void }) {
   let $hours1: undefined | HTMLDivElement;
   let $hours2: undefined | HTMLDivElement;
   let $minutes1: undefined | HTMLDivElement;
   let $minutes2: undefined | HTMLDivElement;
 
   const [state, setState] = createSignal(props.store.state);
-  if (props.onCompleted) {
-    props.store.onFinished(props.onCompleted);
-  }
 
   props.store.onStateChange((v) => {
     // console.log("[COMPONENT]set-countdown - update")
@@ -38,39 +31,41 @@ export function DayDurationTextView(props: {
   });
 
   return (
-    <div class="flex items-center justify-between">
+    <div class="day-duration flex items-center justify-between">
       <div
         classList={{
           "flex items-center text-xl text-w-fg-1 transition-all duration-200": true,
           // "text-gray-100": state().finished,
         }}
       >
+        <Show when={state().hours1 !== "0" || state().hours2 !== "0"}>
+          <div
+            classList={{
+              "text-center w-[12px]": true,
+            }}
+            ref={$hours1}
+          >
+            {state().hours1}
+          </div>
+          <div
+            classList={{
+              "text-center w-[12px]": true,
+            }}
+            ref={$hours2}
+          >
+            {state().hours2}
+          </div>
+          <div
+            classList={{
+              "mr-1 text-center w-[12px]": true,
+            }}
+          >
+            h
+          </div>
+        </Show>
         <div
           classList={{
             "text-center w-[12px]": true,
-          }}
-          ref={$hours1}
-        >
-          {state().hours1}
-        </div>
-        <div
-          classList={{
-            "text-center w-[12px]": true,
-          }}
-          ref={$hours2}
-        >
-          {state().hours2}
-        </div>
-        <div
-          classList={{
-            "text-center w-[12px]": true,
-          }}
-        >
-          h
-        </div>
-        <div
-          classList={{
-            "ml-1 text-center w-[12px]": true,
           }}
           ref={$minutes1}
         >

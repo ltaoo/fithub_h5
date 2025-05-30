@@ -4,10 +4,20 @@ import { JSX } from "solid-js/jsx-runtime";
 import { ViewComponentProps } from "@/store/types";
 import { Show } from "solid-js";
 
-export function NavigationBar1(props: { title?: string; extra?: JSX.Element; history: ViewComponentProps["history"] }) {
+export function NavigationBar1(props: {
+  title?: string;
+  hide_border?: boolean;
+  extra?: JSX.Element;
+  history: ViewComponentProps["history"];
+}) {
   return (
     <>
-      <div class="flex items-center justify-between gap-2 p-4 border-b-2 border-w-bg-5">
+      <div
+        class="flex items-center justify-between gap-2 p-2 "
+        classList={{
+          "border-b-2 border-w-bg-5": !props.hide_border,
+        }}
+      >
         <div class="flex items-center gap-2">
           <div
             class="p-2 rounded-full bg-w-bg-5"

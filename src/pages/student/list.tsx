@@ -2,13 +2,13 @@
  * @file 学员列表 页面
  */
 import { For } from "solid-js";
-import { Plus } from "lucide-solid";
+import { Plus, Search } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, ListView, ScrollView } from "@/components/ui";
+import { Button, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
 
-import { ButtonCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { base, Handler } from "@/domains/base";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
@@ -34,19 +34,29 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
+    search() {},
     gotoStudentProfileView(v: { id: number | string }) {
       props.history.push("root.student_profile", {
         id: String(v.id),
       });
     },
+    gotoStudentCreateView() {
+      props.history.push("root.student_create");
+    },
   };
   const ui = {
-    $view: new ScrollViewCore(),
+    $view: new ScrollViewCore({
+      async onPullToRefresh() {
+        await request.student.list.refresh();
+        ui.$view.finishPullToRefresh();
+      },
+    }),
     $create_btn: new ButtonCore({
       onClick() {
         props.history.push("root.student_create");
       },
     }),
+    $input_search: new InputCore({ defaultValue: "" }),
   };
   let _state = {
     get response() {
@@ -81,35 +91,62 @@ export function HomeStudentListPage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(HomeStudentListPageViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view}>
-      <div class="p-4">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-3xl">我的学员</div>
-          <Button
-            class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-            icon={<Plus class="w-6 h-6 text-gray-800" />}
-            store={vm.ui.$create_btn}
-          ></Button>
-        </div>
-        <div class="mt-8">
-          <ListView store={vm.request.student.list} class="space-y-2">
-            <For each={state().response.dataSource}>
-              {(student) => {
-                return (
-                  <div
-                    class="p-2 border border-rounded"
-                    onClick={() => {
-                      vm.methods.gotoStudentProfileView(student);
-                    }}
-                  >
-                    <div>{student.nickname}</div>
-                  </div>
-                );
+    <>
+      <ScrollView store={vm.ui.$view}>
+        <div class="p-2">
+          <div class="flex items-center justify-between gap-2">
+            {/* <div class="text-xl text-w-fg-0"></div> */}
+            <Input class="w-full" store={vm.ui.$input_search} />
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.search();
               }}
-            </For>
-          </ListView>
+            >
+              <Search class="w-6 h-6 text-w-fg-1" />
+            </div>
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.gotoStudentCreateView();
+              }}
+            >
+              <Plus class="w-6 h-6 text-w-fg-1" />
+            </div>
+          </div>
+          <div class="mt-4">
+            <ListView
+              store={vm.request.student.list}
+              class="space-y-2"
+              skeleton={
+                <>
+                  <div class="p-4 rounded-lg border-2 border-w-bg-5">
+                    <Skeleton class="w-[32px] h-[24px]" />
+                  </div>
+                </>
+              }
+            >
+              <For each={state().response.dataSource}>
+                {(student) => {
+                  return (
+                    <div
+                      class="p-4 rounded-lg border-2 border-w-bg-5"
+                      onClick={() => {
+                        vm.methods.gotoStudentProfileView(student);
+                      }}
+                    >
+                      <div>{student.nickname}</div>
+                    </div>
+                  );
+                }}
+              </For>
+            </ListView>
+          </div>
         </div>
+      </ScrollView>
+      <div class="fixed bottom-32 w-full">
+        <div class="safe-height"></div>
       </div>
-    </ScrollView>
+    </>
   );
 }

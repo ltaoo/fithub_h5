@@ -23,7 +23,7 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
 
   return (
     <div
-      class="relative bg-white"
+      class="relative"
       style={{
         height: `${vm.cell_height * state().visible_count}px`,
       }}
@@ -65,11 +65,11 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
             height: `${vm.cell_height * state().bottom_padding_count}px`,
           }}
         ></div>
-        <div class="pointer-events-none absolute inset-0 w-full border-b border-t border-white dark:border-black">
+        <div class="pointer-events-none absolute inset-0 w-full border-b-2 border-t-2 border-w-bg-5">
           <div
             class="border-b border-black/10 bg-gradient-to-b from-white to-white/60 dark:border-white/20 dark:from-black dark:to-black/60"
             style={{
-              height: `${vm.cell_height * state().top_padding_count - 1}px`,
+              height: `${vm.cell_height * state().top_padding_count - 2}px`,
             }}
           ></div>
           <div
@@ -80,7 +80,7 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
           <div
             class="border-t border-black/10 bg-gradient-to-t from-white to-white/60 dark:border-white/20 dark:from-black dark:to-black/60"
             style={{
-              height: `${vm.cell_height * state().top_padding_count - 1}px`,
+              height: `${vm.cell_height * state().top_padding_count - 2}px`,
             }}
           ></div>
         </div>

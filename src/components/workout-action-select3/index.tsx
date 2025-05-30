@@ -3,7 +3,7 @@
  */
 import { For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
-import { X } from "lucide-solid";
+import { MoreHorizontal, X } from "lucide-solid";
 import { Check } from "lucide-solid";
 
 import * as PopoverPrimitive from "@/packages/ui/popover";
@@ -18,34 +18,34 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
 
   return (
     <div class="">
-      <div class="z-10 fixed inset-0 bg-w-bg-0 opacity-40"></div>
+      <div class="z-10 fixed inset-0 bg-black opacity-40"></div>
       <div class="z-50 relative w-screen">
         <div class="flex flex-col bg-w-bg-0 border-t-2 border-w-bg-5" style={{ height: "100vh" }}>
-          <div class="flex gap-2 py-3 px-4 h-[62px]">
+          <div class="flex gap-2 p-2">
             <div class="w-[240px]">
               <Select store={vm.ui.$input_type_select} />
             </div>
             <Input store={vm.ui.$input_keyword} />
-            <Button store={vm.ui.$btn_submit}>搜索</Button>
-            {/* <Button variant="subtle" store={vm.ui.$search_reset_btn}>
-            重置
-          </Button> */}
+            <Button store={vm.ui.$btn_search_submit} size="sm">
+              搜索
+            </Button>
           </div>
-          <div class="flex-1 flex h-0 border-t">
-            <div class="w-[90px] h-full pt-2 px-2 overflow-y-auto border-r-2 border-w-bg-5">
+          <div class="flex-1 flex h-0 border-t-2 border-w-bg-5">
+            <div class="scroll--hidden w-[90px] h-full pt-2 px-2 overflow-y-auto border-r-2 border-w-bg-5">
               <For each={state().tags}>
                 {(tag) => {
                   return (
                     <div
                       classList={{
-                        "py-2 rounded-md text-center text-w-fg-2": true,
-                        "bg-w-bg-3": tag.selected,
+                        "py-2 rounded-md text-center border-2 border-w-bg-0 ": true,
+                        "text-w-fg-0": tag.selected,
+                        "text-w-fg-2": !tag.selected,
                       }}
                       onClick={() => {
                         vm.methods.handleClickTag(tag);
                       }}
                     >
-                      <div class="text-center">{tag.text}</div>
+                      <div class="text-center text-sm">{tag.text}</div>
                     </div>
                   );
                 }}
@@ -53,24 +53,31 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
             </div>
             <ScrollView store={vm.ui.$view} class="flex-1 h-full overflow-y-auto">
               <ListView store={vm.request.action.list}>
-                <div class="grid grid-cols-3 gap-2 p-2">
+                <div class="actions grid grid-cols-3 gap-2 p-2">
                   <For each={state().actions}>
                     {(action) => {
                       return (
                         <div
                           classList={{
-                            "p-2 flex justify-between border-2 border-w-bg-5 rounded-md text-w-fg-1": true,
-                            "border-green-500 bg-green-100": !!state().value.find((act) => act.id === action.id),
+                            "relative p-2 flex justify-between border-2 border-w-bg-5 rounded-md text-w-fg-1": true,
+                            "border-w-fg-2 bg-w-bg-5": !!state().value.find((act) => act.id === action.id),
                             "text-gray-100": !!state().disabled.includes(action.id),
                           }}
                           onClick={() => {
                             vm.methods.select(action);
                           }}
                         >
-                          <div>
-                            <div class="text-sm">{action.zh_name}</div>
-                            {/* <div class="text-sm">{action.name}</div> */}
+                          <div class="absolute inset-0 p-2">
+                            <div class="overflow-hidden  truncate line-clamp-2 break-all whitespace-pre-wrap">
+                              <div class="text-sm">{action.zh_name}</div>
+                            </div>
+                            <div class="absolute right-1 bottom-1">
+                              <div class="p-1 rounded-full">
+                                <MoreHorizontal class="w-4 h-4 text-w-fg-2" />
+                              </div>
+                            </div>
                           </div>
+                          <div class="w-full" style="padding-bottom: 100%"></div>
                         </div>
                       );
                     }}
@@ -79,35 +86,18 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </ListView>
             </ScrollView>
           </div>
-          <div class="h-[88px] bg-w-bg-0 border-t-2 border-w-bg-5">
-            <div class="flex items-center gap-2 p-4">
-              <div
-                classList={{
-                  "flex items-center justify-center flex-1 py-4 rounded-md ": true,
-                  "bg-w-bg-5 text-w-fg-1": !state().selected.length,
-                  "bg-blue-500 text-white": !!state().selected.length,
-                }}
-                onClick={() => {
-                  vm.handleOk();
-                }}
-              >
-                <div class="">确定</div>
-              </div>
-              <div
-                classList={{
-                  "flex items-center justify-center w-[88px] py-4 rounded-md bg-w-bg-5 text-w-fg-1": true,
-                }}
-                onClick={() => {
-                  vm.ui.$dialog.hide();
-                }}
-              >
-                <div class="">取消</div>
-              </div>
+          <div class="bg-w-bg-0 border-t-2 border-w-bg-5">
+            <div class="flex items-center gap-2 p-2">
+              <Button store={vm.ui.$btn_submit} class="w-full">
+                确定
+              </Button>
+              <Button store={vm.ui.$btn_cancel} class="w-[88px]">
+                取消
+              </Button>
             </div>
           </div>
         </div>
       </div>
-      {/* <div class="z-50 absolute bottom-0 w-full bg-white"></div> */}
     </div>
   );
 }

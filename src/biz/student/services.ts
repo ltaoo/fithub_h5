@@ -43,5 +43,29 @@ export function updateStudent(data: { id: string; name: string; phone: string; e
 }
 
 export function fetchStudentProfile(body: { id: number }) {
-  return request.post<{}>("/api/student/profile", { id: body.id });
+  return request.post<{
+    nickname: string;
+    profile1: {
+      nickname: string;
+      avatar_url: string;
+      /** 年龄 */
+      age: number;
+      /** 性别 1男 2女 */
+      gender: number;
+      /** 身高 */
+      height: number;
+    };
+  }>("/api/student/profile", { id: body.id });
+}
+export function fetchStudentProfileProcess(r: TmpRequestResp<typeof fetchStudentProfile>) {
+  if (r.error) {
+    return Result.Err(r.error.message);
+  }
+  const data = r.data;
+  return Result.Ok({
+    nickname: data.profile1.nickname,
+    avatar_url: data.profile1.avatar_url,
+    age: data.profile1.age,
+    gender: data.profile1.gender,
+  });
 }

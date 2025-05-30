@@ -6,7 +6,7 @@ import { Clock, Plus, Search } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, Input, ListView, ScrollView } from "@/components/ui";
+import { Button, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
 import { WorkoutPlanPreviewCard } from "@/components/workout-plan-share-card";
 import { WorkoutPlanCard } from "@/components/workout-plan-card";
 import { NavigationBar1 } from "@/components/navigation-bar1";
@@ -18,12 +18,29 @@ import { RequestCore } from "@/domains/request";
 import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
 
 function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
-  let _state = {
-    get response() {
-      return request.workout_plan.list.response;
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
+    },
+    search() {
+      const v = ui.$input_keyword.value;
+      if (!v) {
+        props.app.tip({
+          text: ["请输入查询关键词"],
+        });
+        return;
+      }
+      request.workout_plan.list.search({
+        keyword: v,
+      });
+    },
+    gotoPlanCreateView() {
+      props.history.push("root.workout_plan_create");
     },
   };
-  const methods = {};
   const request = {
     workout_plan: {
       list: new ListCore(
@@ -54,19 +71,14 @@ function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
     }),
     $input_keyword: new InputCore({ defaultValue: "", placeholder: "请输入关键词" }),
     $btn_submit: new ButtonCore({
-      onClick() {
-        const v = ui.$input_keyword.value;
-        if (!v) {
-          props.app.tip({
-            text: ["请输入查询关键词"],
-          });
-          return;
-        }
-        request.workout_plan.list.search({
-          keyword: v,
-        });
-      },
+      onClick() {},
     }),
+  };
+
+  let _state = {
+    get response() {
+      return request.workout_plan.list.response;
+    },
   };
   enum Events {
     StateChange,
@@ -77,9 +89,10 @@ function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   return {
-    state: _state,
-    ui,
     request,
+    methods,
+    ui,
+    state: _state,
     ready() {
       request.workout_plan.list.init();
     },
@@ -100,55 +113,68 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
           extra={
             <div class="flex items-center gap-2">
               <Input store={vm.ui.$input_keyword} />
-              <Button
-                store={vm.ui.$btn_submit}
-                icon={<Search class="w-6 h-6 text-w-fg-1" />}
-                class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
-              ></Button>
-              <Button
-                store={vm.ui.$btn_create}
-                icon={<Plus class="w-6 h-6 text-w-fg-1" />}
-                class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
-              ></Button>
+              <div
+                class="p-2 rounded-full bg-w-bg-5"
+                onClick={() => {
+                  vm.methods.search();
+                }}
+              >
+                <Search class="w-6 h-6 text-w-fg-1" />
+              </div>
+              <div
+                class="p-2 rounded-full bg-w-bg-5"
+                onClick={() => {
+                  vm.methods.gotoPlanCreateView();
+                }}
+              >
+                <Plus class="w-6 h-6 text-w-fg-1" />
+              </div>
             </div>
           }
         />
       </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
+      <div class="absolute top-[58px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view} class="">
-          <div class="p-4">
+          <div class="p-2">
             <div class="">
-              <ListView store={vm.request.workout_plan.list} class="space-y-4">
+              <ListView
+                store={vm.request.workout_plan.list}
+                class="space-y-2"
+                skeleton={
+                  <div class="p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1">
+                    <Skeleton class="w-[68px] h-[24px]" />
+                  </div>
+                }
+              >
                 <For each={state().response.dataSource}>
                   {(plan) => {
                     return (
                       <div
+                        class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1"
                         onClick={() => {
                           props.history.push("root.workout_plan_profile", {
                             id: plan.id.toString(),
                           });
                         }}
                       >
-                        <div class="overflow-hidden relative w-full h-[160px] rounded-lg border">
-                          <div class="z-10 absolute inset-0 p-4">
-                            <div class="">
-                              <div class="text-2xl">{plan.title}</div>
-                              <div>{plan.overview}</div>
-                              <div class="mt-2">
-                                <div class="flex items-center gap-1">
-                                  <Clock class="w-4 h-4" />
-                                  <div class="text-sm">{plan.estimated_duration_text}</div>
-                                </div>
-                              </div>
-                              <div class="flex flex-wrap gap-2 mt-4">
-                                <For each={plan.tags}>
-                                  {(text) => {
-                                    return <div class="px-2 py-1 rounded-full border text-sm text-white">{text}</div>;
-                                  }}
-                                </For>
-                              </div>
-                            </div>
+                        <div class="">{plan.title}</div>
+                        <div class="mt-2 text-sm">{plan.overview}</div>
+                        <div class="mt-2">
+                          <div class="flex items-center gap-1">
+                            <Clock class="w-4 h-4" />
+                            <div class="text-sm">{plan.estimated_duration_text}</div>
                           </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                          <For each={plan.tags}>
+                            {(text) => {
+                              return (
+                                <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">
+                                  {text}
+                                </div>
+                              );
+                            }}
+                          </For>
                         </div>
                       </div>
                     );

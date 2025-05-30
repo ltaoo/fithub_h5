@@ -138,16 +138,17 @@ export function RMCalcToolView(props: ViewComponentProps) {
           history={props.history}
           extra={
             <div
+              class="p-2 rounded-full bg-w-bg-5"
               onClick={() => {
                 vm.methods.showDialogOfRMStep();
               }}
             >
-              <MoreHorizontal class="w-6 h-6" />
+              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
             </div>
           }
         />
       </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
+      <div class="absolute top-[58px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>
           <div class="p-4">
             <div class="space-y-2">
@@ -196,7 +197,7 @@ export function RMCalcToolView(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_rm_step}>
-        <div class="w-screen min-h-[80px] p-4 bg-white text-gray-800">
+        <div class="w-screen min-h-[80px] p-4 bg-w-bg-1 text-w-fg-1">
           <div class="text-xl">最大重量（1RM）测试方案</div>
           <div class="mt-2">
             <div>以预期 1RM 重量的 50% 的重量做 10 次</div>

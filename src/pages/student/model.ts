@@ -39,8 +39,19 @@ export function MemberValuesViewModel() {
       age: new SingleFieldCore({
         label: "年龄",
         name: "age",
-        input: new InputCore({
+        // input: new InputCore({
+        //   defaultValue: 18,
+        // }),
+        input: DragSelectViewModel({
           defaultValue: 18,
+          visible_count: 7,
+          direction: "horizontal",
+          options: Array.from({ length: 80 }, (_, i) => 12 + i * 1).map((v) => {
+            return {
+              label: String(v),
+              value: v,
+            };
+          }),
         }),
       }),
       // height: new SingleFieldCore({

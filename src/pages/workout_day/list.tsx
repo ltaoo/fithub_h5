@@ -87,25 +87,25 @@ export function WorkoutDayListView(props: ViewComponentProps) {
       <div class="z-0 fixed top-0 left-0 w-full">
         <NavigationBar1 title="训练记录列表" history={props.history} />
       </div>
-      <div class="absolute top-[74px] bottom-0 left-0 w-full">
+      <div class="absolute top-[58px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view}>
-          <div class="p-4">
+          <div class="p-2">
             <ListView store={vm.request.workout_day.list} class="space-y-2">
               <For each={state().response.dataSource}>
                 {(value) => {
                   return (
                     <div
-                      class="border p-4 rounded-md"
+                      class="border-2 border-w-bg-5 p-4 rounded-lg"
                       onClick={() => {
                         vm.methods.gotoWorkoutDayProfileView(value);
                       }}
                     >
-                      <div class="text-xl">{value.started_at_text}</div>
+                      <div class="text-w-fg-1">{value.started_at_text}</div>
                       {/* <Show when={value.finished_at}>
                     <div class="">{value.finished_at}</div>
                   </Show> */}
                       <div class="flex flex-wrap mt-2">
-                        <div class="inline-block border px-2 py-1 rounded-full text-sm">
+                        <div class="px-2 py-1 rounded-xl border-2 border-w-bg-5 text-sm text-w-fg-1">
                           {WorkoutDayStatusTextMap[value.status]}
                         </div>
                       </div>

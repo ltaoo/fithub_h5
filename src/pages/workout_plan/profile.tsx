@@ -2,7 +2,7 @@
  * @file 训练计划详情
  */
 import { Show, For, Switch, Match } from "solid-js";
-import { BicepsFlexed, ChevronLeft, Loader } from "lucide-solid";
+import { BicepsFlexed, ChevronLeft, Loader, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -144,7 +144,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         {/* <div class="z-0 absolute inset-0 bg-gradient-to-b from-gray-600 to-transparent"></div> */}
       </div>
       <ScrollView store={vm.ui.$view} class="relative">
-        <NavigationBar1 title="计划详情" history={props.history} />
+        <NavigationBar1 title="计划详情" history={props.history} hide_border />
         <Show when={state().error}>
           <div class="error">
             <div>加载失败</div>
@@ -156,8 +156,9 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
         </Show>
         <Show when={state().profile}>
-          <div class="relative content p-4 rounded-lg bg-white">
-            <div class="header">
+          <div class="relative content p-2 bg-w-bg-0 space-y-4">
+            <div class="h-[24px]"></div>
+            <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
               <div class="text-2xl font-bold">{state().profile!.title}</div>
               <div>作者</div>
               <div>
@@ -180,93 +181,50 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 </For>
               </div>
             </div>
-            <div class="steps py-4 space-y-2.5">
-              <For each={state().profile!.steps}>
-                {(step, index) => (
-                  <div class="rounded-xl">
-                    <div class="relative">
-                      {/* <div class="absolute left-1 -top-2 text-sm">{WorkoutSetTypeTextMap[step.set_type] || ""}</div> */}
-                      <Switch>
-                        <Match when={[WorkoutPlanSetType.Normal].includes(step.set_type)}>
-                          <div class="flex items-center gap-3">
-                            <div class="flex-shrink-0 flex items-center justify-center h-7 text-blue-400 font-medium text-sm">
-                              {index() + 1}
-                            </div>
-                            <div class="flex-1">
-                              <For each={step.actions}>
-                                {(action) => (
-                                  <div class="flex items-center gap-2 text-sm">
-                                    <span class="text-gray-800">{action.action.zh_name}</span>
-                                    <span class="text-blue-400 font-medium">
-                                      {action.reps}
-                                      {action.reps_unit}
-                                    </span>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                            <div class="">
-                              <div class="text-sm text-gray-400 ">x{step.set_count}组</div>
-                            </div>
-                          </div>
-                        </Match>
-                        <Match when={[WorkoutPlanSetType.Super].includes(step.set_type)}>
-                          <div class="flex items-center gap-3">
-                            <div class="flex-shrink-0 w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-medium text-sm">
-                              {index() + 1}
-                            </div>
-                            <div class="flex-1">
-                              <For each={step.actions}>
-                                {(action) => (
-                                  <div class="flex items-center gap-2 text-sm">
-                                    <span class="text-gray-200">{action.action.zh_name}</span>
-                                    <span class="text-blue-400 font-medium">
-                                      {action.reps}
-                                      {action.reps_unit}
-                                    </span>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                            <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
-                          </div>
-                        </Match>
-                        <Match when={[WorkoutPlanSetType.HIIT].includes(step.set_type)}>
-                          <div class="flex items-center gap-3">
-                            <div class="flex-shrink-0 w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-medium text-sm">
-                              {index() + 1}
-                            </div>
-                            <div class="flex-1">
-                              <For each={step.actions}>
-                                {(action) => (
-                                  <div class="flex items-center gap-2 text-sm">
-                                    <span class="text-gray-200">{action.action.zh_name}</span>
-                                    <span class="text-blue-400 font-medium">
-                                      {action.reps}
-                                      {action.reps_unit}
-                                    </span>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                            <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
-                          </div>
-                        </Match>
-                        <Match
-                          when={[WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(step.set_type)}
-                        >
-                          <div class="flex items-center gap-3">
-                            <div class="flex-shrink-0 w-7 h-7 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-medium text-sm">
-                              {index() + 1}
-                            </div>
-                            <div class="flex-1">
-                              <div class="text-sm">
-                                <span class="text-gray-200">{step.actions[0].action.zh_name}</span>
+            <div class="steps border-2 border-w-bg-5 rounded-lg">
+              <div class="p-4 border-b-2 border-w-bg-5">
+                <div>内容明细</div>
+              </div>
+              <div class="p-4 space-y-2">
+                <For each={state().profile!.steps}>
+                  {(step, index) => (
+                    <div class="rounded-xl">
+                      <div class="relative">
+                        {/* <div class="absolute left-1 -top-2 text-sm">{WorkoutSetTypeTextMap[step.set_type] || ""}</div> */}
+                        <Switch>
+                          <Match when={[WorkoutPlanSetType.Normal].includes(step.set_type)}>
+                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                              <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
+                                {index() + 1}
                               </div>
-                              <div class="flex gap-2">
+                              <div class="flex-1">
                                 <For each={step.actions}>
                                   {(action) => (
                                     <div class="flex items-center gap-2 text-sm">
+                                      <span class="text-w-fg-0">{action.action.zh_name}</span>
+                                      <span class="flex items-center text-blue-400 font-medium">
+                                        <div>{action.reps}</div>
+                                        <div class="text-sm">{action.reps_unit}</div>
+                                      </span>
+                                    </div>
+                                  )}
+                                </For>
+                              </div>
+                              <div class="">
+                                <div class="text-sm text-gray-400 ">x{step.set_count}组</div>
+                              </div>
+                            </div>
+                          </Match>
+                          <Match when={[WorkoutPlanSetType.Super].includes(step.set_type)}>
+                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                              <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
+                                {index() + 1}
+                              </div>
+                              <div class="flex-1">
+                                <For each={step.actions}>
+                                  {(action) => (
+                                    <div class="flex items-center gap-2 text-sm">
+                                      <span class="text-gray-200">{action.action.zh_name}</span>
                                       <span class="text-blue-400 font-medium">
                                         {action.reps}
                                         {action.reps_unit}
@@ -275,30 +233,86 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   )}
                                 </For>
                               </div>
+                              <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
                             </div>
-                            <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
-                          </div>
-                        </Match>
-                      </Switch>
+                          </Match>
+                          <Match when={[WorkoutPlanSetType.HIIT].includes(step.set_type)}>
+                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                              <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
+                                {index() + 1}
+                              </div>
+                              <div class="flex-1">
+                                <For each={step.actions}>
+                                  {(action) => (
+                                    <div class="flex items-center gap-2 text-sm">
+                                      <span class="text-w-fg-0">{action.action.zh_name}</span>
+                                      <span class="flex items-center text-blue-400 font-medium">
+                                        <div>{action.reps}</div>
+                                        <div class="text-sm">{action.reps_unit}</div>
+                                      </span>
+                                    </div>
+                                  )}
+                                </For>
+                              </div>
+                              <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
+                            </div>
+                          </Match>
+                          <Match
+                            when={[WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
+                              step.set_type
+                            )}
+                          >
+                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                              <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
+                                {index() + 1}
+                              </div>
+                              <div class="flex-1">
+                                <div class="text-sm">
+                                  <span class="text-w-fg-0">{step.actions[0].action.zh_name}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                  <For each={step.actions}>
+                                    {(action) => (
+                                      <div class="flex items-center gap-2 text-sm">
+                                        <span class="flex items-center text-blue-400 font-medium">
+                                          <div>{action.reps}</div>
+                                          <div class="text-sm">{action.reps_unit}</div>
+                                        </span>
+                                      </div>
+                                    )}
+                                  </For>
+                                </div>
+                              </div>
+                              <div class="flex-shrink-0 text-sm text-w-fg-1">x{step.set_count}</div>
+                            </div>
+                          </Match>
+                        </Switch>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </For>
-            </div>
-            <div class="muscle">
-              <div class="">锻炼肌肉</div>
-              <BodyMusclePreview highlighted={["gluteus_minimus"]} />
-              <div class="">
-                <For each={state().profile!.muscles}>
-                  {(muscle) => <div class="text-sm text-gray-400">{muscle.zh_name}</div>}
+                  )}
                 </For>
               </div>
             </div>
-            <div class="equipment">
-              <div class="">所需器械</div>
-              <div class="">
+            <div class="muscle rounded-lg border-2 border-w-bg-5">
+              <div class="p-4 border-b border-w-bg-5">
+                <div class="">锻炼肌肉</div>
+              </div>
+              <div class="p-4">
+                <BodyMusclePreview highlighted={["gluteus_minimus"]} />
+                <div class="">
+                  <For each={state().profile!.muscles}>
+                    {(muscle) => <div class="text-sm text-w-fg-1">{muscle.zh_name}</div>}
+                  </For>
+                </div>
+              </div>
+            </div>
+            <div class="equipment rounded-lg border-2 border-w-bg-5">
+              <div class="p-4 border-b-2 border-w-bg-5">
+                <div class="">所需器械</div>
+              </div>
+              <div class="p-4">
                 <For each={state().profile!.equipments}>
-                  {(equipment) => <div class="text-sm text-gray-400">{equipment.zh_name}</div>}
+                  {(equipment) => <div class="text-sm text-w-fg-1">{equipment.zh_name}</div>}
                 </For>
               </div>
             </div>
@@ -306,15 +320,15 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         </Show>
         <div class="h-[112px]"></div>
       </ScrollView>
-      <div class="fixed bottom-0 left-0 w-full">
+      <div class="fixed bottom-0 left-0 w-full bg-w-bg-1">
         <div>
-          <div class="flex justify-center p-4">
-            <Button
-              class="w-full py-4 rounded-md bg-gray-900 text-gray-100 text-center"
-              store={vm.ui.$btn_start_workout}
-            >
+          <div class="flex justify-center gap-2 p-2">
+            <Button class="w-full py-2.5 rounded-md bg-w-bg-5 text-w-fg-1 text-center" store={vm.ui.$btn_start_workout}>
               开始训练
             </Button>
+            <div class="p-2 rounded-full bg-w-bg-5">
+              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+            </div>
           </div>
           <div class="safe-height"></div>
         </div>

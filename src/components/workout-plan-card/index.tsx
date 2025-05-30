@@ -11,7 +11,7 @@ export function WorkoutPlanCard(props: {
 }) {
   return (
     <div
-      class="overflow-hidden relative w-full h-[160px] rounded-lg"
+      class="overflow-hidden relative w-full h-[160px] rounded-xl"
       style={
         props.cover_path
           ? {

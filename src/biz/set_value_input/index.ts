@@ -91,6 +91,7 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
       bus.emit(Events.Submit, _text);
     },
   };
+  console.log("[BIZ]set_value_input - before ui", props.defaultValue, props.placeholder);
   const ui = {
     $input: new InputCore({
       defaultValue: props.defaultValue,
@@ -154,6 +155,9 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     },
     get unit() {
       return _unit;
+    },
+    get placeholder() {
+      return ui.$input.placeholder;
     },
     setValue(value: string) {
       _text = value === "" ? "0" : String(value);

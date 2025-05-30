@@ -21,7 +21,7 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
   });
 
   return (
-    <div class="w-full bg-white p-1  border ">
+    <div class="flex justify-center w-full border-2 border-w-bg-5 rounded-xl bg-w-bg-2">
       <div
         class="relative "
         style={{
@@ -30,7 +30,7 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
       >
         <div
           ref={$container}
-          class="scroll--hidden dialog-touch-container h-[120px] overflow-x-auto whitespace-nowrap"
+          class="scroll--hidden dialog-touch-container h-[120px] pt-4 overflow-x-auto whitespace-nowrap"
           style={{
             "vertical-align": "middle",
           }}
@@ -71,11 +71,11 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
               width: `${vm.cell_height * state().bottom_padding_count}px`,
             }}
           ></div>
-          <div class="pointer-events-none absolute inset-0 w-full border-b border-t border-white dark:border-black">
+          <div class="pointer-events-none absolute inset-0 w-full">
             <div
               classList={{
-                "inline-block h-full": true,
-                "bg-gradient-to-r from-white to-white/60 dark:border-white/20 dark:from-black dark:to-black/60": true,
+                "inline-block h-full border-r-2 border-w-bg-5": true,
+                "bg-gradient-to-r from-w-bg-2 to-w-bg-2/60": true,
               }}
               style={{
                 width: `${vm.cell_height * state().top_padding_count}px`,
@@ -89,12 +89,12 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
                 transform: "translateY(-280%)",
               }}
             >
-              <div>⬆️</div>
+              {/* <div>⬆️</div> */}
             </div>
             <div
               classList={{
-                "inline-block h-full": true,
-                "bg-gradient-to-l from-white to-white/60 dark:border-white/20 dark:from-black dark:to-black/60": true,
+                "inline-block h-full border-l-2 border-w-bg-5": true,
+                "bg-gradient-to-l from-w-bg-2 to-w-bg-2/60 dark:border-white/20 dark:from-black dark:to-black/60": true,
               }}
               style={{
                 width: `${vm.cell_height * state().top_padding_count}px`,

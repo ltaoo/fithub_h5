@@ -125,7 +125,7 @@ export function Sheet(props: SheetProps) {
           <DialogPrimitive.Overlay
             store={vm}
             classList={{
-              "fixed inset-0 z-0 bg-black/50 backdrop-blur-sm transition-all duration-200": true,
+              "fixed inset-0 z-0 bg-black/50 transition-all duration-200": true,
               block: state().visible,
               hidden: !state().visible,
               "animate-in fade-in": state().enter,

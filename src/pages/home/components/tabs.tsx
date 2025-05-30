@@ -2,6 +2,7 @@ import { For, Show, createSignal, onMount } from "solid-js";
 
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { cn } from "@/utils";
+import { MoreHorizontal } from "lucide-solid";
 
 export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClick?: () => void }) => {
   const { store } = props;
@@ -70,16 +71,18 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
             }}
           </For>
           <div
-            classList={{ "absolute right-0 px-4 py-2 text-w-fg-1 break-keep cursor-pointer": true }}
+            classList={{ "absolute right-0 bg-w-bg-0": true }}
             onClick={() => {
               props.onMoreClick?.();
             }}
           >
-            全部
+            <div class="p-2 rounded-full">
+              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+            </div>
           </div>
           {left() !== null ? (
             <div
-              class="absolute bottom-0 w-4 bg-w-bg-1 transition-all"
+              class="absolute bottom-0 w-4 bg-w-fg-1 transition-all"
               style={{
                 left: `${left()}px`,
                 height: "4px",

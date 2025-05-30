@@ -36,15 +36,15 @@ export const Toast = (props: { store: ToastCore }) => {
             store={props.store}
             classList={{
               "p-6 w-120 h-120 ": true,
-              " duration-200": true,
+              "duration-200": true,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,
             }}
           >
-            <div class="absolute left-1/2 -translate-x-1/2 space-y-4 p-6 w-120 h-120 rounded-md bg-gray-800 text-white">
+            <div class="absolute left-1/2 -translate-x-1/2 space-y-4 p-6 w-120 h-120 rounded-xl bg-w-bg-5 text-w-fg-1">
               <Show when={state().icon === "loading"}>
-                <div class="relative left-1/2 w-10 h-10 -translate-x-1/2">
-                  <Loader class=" w-full h-full animate-spin" />
+                <div class="relative left-1/2 w-6 h-6 -translate-x-1/2">
+                  <Loader class="w-full h-full animate-spin" />
                 </div>
               </Show>
               <Show when={state().texts.length}>

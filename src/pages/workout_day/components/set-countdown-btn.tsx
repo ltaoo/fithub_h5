@@ -16,7 +16,7 @@ export function SetActionCountdownBtn(props: {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="overflow-hidden relative flex items-center gap-2">
+    <div class="set-countdown-btn overflow-hidden relative flex items-center gap-2">
       <div
         class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
         onClick={(event) => {
@@ -34,12 +34,12 @@ export function SetActionCountdownBtn(props: {
         <Show
           when={state().running}
           fallback={
-            <div class="text-gray-400">
+            <div class="text-w-fg-1">
               <Play class="w-4 h-4" />
             </div>
           }
         >
-          <div class="text-gray-400">
+          <div class="text-w-fg-1">
             <Pause class="w-4 h-4" />
           </div>
         </Show>

@@ -57,7 +57,7 @@ export const DropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAttrib
         >
           <div
             classList={{
-              "z-50 min-w-[4rem] w-36 overflow-hidden rounded-md border-2 border-w-bg-5 border-slate-100 bg-w-bg-0 p-1 text-w-fg-0 shadow-md duration-200":
+              "z-50 min-w-[4rem] w-36 overflow-hidden rounded-xl border-2 border-w-bg-5 border-slate-100 bg-w-bg-0 p-1 text-w-fg-0 shadow-md duration-200":
                 true,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,
@@ -80,19 +80,19 @@ export const DropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAttrib
                       when={!!item.menu}
                       fallback={
                         <DropdownMenuPrimitive.Item
-                          class={cn(
-                            "relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700",
-                            "focus:bg-slate-100",
-                            {
-                              "bg-slate-100": item.state.focused,
-                            }
-                          )}
+                          classList={{
+                            "relative flex cursor-default select-none items-center rounded-xl py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700":
+                              true,
+                            "bg-w-bg-5": item.state.focused,
+                          }}
                           store={item}
                         >
                           <Show when={!!item.icon}>
                             <div class="mr-2">{item.icon as Element}</div>
                           </Show>
-                          <div title={item.tooltip}>{item.label}</div>
+                          <div class="text-w-fg-0" title={item.tooltip}>
+                            {item.label}
+                          </div>
                           <Show when={item.shortcut}>{item.shortcut}</Show>
                         </DropdownMenuPrimitive.Item>
                       }

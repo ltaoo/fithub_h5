@@ -80,27 +80,25 @@ const Label = (props: {} & JSX.HTMLAttributes<HTMLElement>) => {
 };
 
 const Item = (props: { store: MenuItemCore; disabled?: boolean } & JSX.HTMLAttributes<HTMLElement>) => {
-  const { store } = props;
-
   return (
-    <ItemImpl class={props.class} store={store}>
+    <ItemImpl class={props.class} classList={props.classList} store={props.store}>
       {props.children}
     </ItemImpl>
   );
 };
 const ItemImpl = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store: item } = props;
+  // const { store: item } = props;
   let $item: HTMLDivElement;
 
-  const [state, setState] = createSignal(item.state);
+  const [state, setState] = createSignal(props.store.state);
 
-  item.onStateChange((nextState) => {
-    setState(nextState);
+  props.store.onStateChange((v) => {
+    setState(v);
   });
-  item.onFocus(() => {
+  props.store.onFocus(() => {
     // $item.focus();
   });
-  item.onBlur(() => {
+  props.store.onBlur(() => {
     $item.blur();
   });
   // onCleanup(() => {
@@ -119,6 +117,7 @@ const ItemImpl = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTMLDivEle
         props.ref = $item;
       }}
       class={cn("menu__item-impl", props.class)}
+      classList={props.classList}
       role="menuitem"
       aria-haspopup="menu"
       aria-disabled={state().disabled || undefined}
@@ -143,14 +142,14 @@ const ItemImpl = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTMLDivEle
       // }}
       onClick={() => {
         // console.log("[COMPONENT]MenuItemImpl - on click");
-        item.handleClick();
+        props.store.handleClick();
       }}
       onFocus={() => {
         // console.log("[COMPONENT]MenuItemImpl - on focus");
-        item.handleFocus();
+        props.store.handleFocus();
       }}
       onBlur={() => {
-        item.handleBlur();
+        props.store.handleBlur();
       }}
     >
       {props.children}

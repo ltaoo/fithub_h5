@@ -264,7 +264,36 @@ export function SetActionCountdownView(props: {
   // });
 
   return (
-    <div class="flex items-center gap-4">
+    <div class="set-act-countdown flex items-center gap-4">
+      <div class="set-countdown-btn overflow-hidden relative flex items-center gap-2">
+        <div
+          class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
+          onClick={(event) => {
+            const { x, y } = event;
+            // if (props.onClick) {
+            //   props.onClick({ x, y, finished: vm.state.running });
+            // }
+            if (vm.state.running) {
+              vm.pause();
+              return;
+            }
+            vm.start();
+          }}
+        >
+          <Show
+            when={state().running}
+            fallback={
+              <div class="text-w-fg-1">
+                <Play class="w-4 h-4" />
+              </div>
+            }
+          >
+            <div class="text-w-fg-1">
+              <Pause class="w-4 h-4" />
+            </div>
+          </Show>
+        </div>
+      </div>
       <div
         classList={{
           "flex items-center text-w-fg-1 transition-all duration-200": true,

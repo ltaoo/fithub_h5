@@ -15,34 +15,32 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
 
   return (
     <>
-      <div class="flex flex-col gap-4 w-full px-4 py-4 bg-black">
+      <div class="flex flex-col gap-4 w-full p-4">
         <div class="headers flex items-center justify-between px-2">
-          <span class="text-3xl font-bold text-white">{state().text}</span>
-          <div>
-            <div class="flex items-center border border-gray-600 rounded-md">
-              <For each={state().unitOptions}>
-                {(unit) => {
-                  return (
-                    <div
-                      classList={{
-                        "text-sm px-4 py-2 text-white": true,
-                        "bg-gray-600": state().unit === unit.value,
-                      }}
-                      onClick={() => {
-                        vm.setUnit(unit.value);
-                      }}
-                    >
-                      {unit.label}
-                    </div>
-                  );
-                }}
-              </For>
-            </div>
+          <span class="text-3xl font-bold text-w-fg-0">{state().text}</span>
+          <div class="overflow-hidden flex items-center border-2 border-w-bg-5 rounded-xl">
+            <For each={state().unitOptions}>
+              {(unit) => {
+                return (
+                  <div
+                    classList={{
+                      "text-sm px-4 py-2 text-w-fg-0": true,
+                      "bg-w-bg-5": state().unit === unit.value,
+                    }}
+                    onClick={() => {
+                      vm.setUnit(unit.value);
+                    }}
+                  >
+                    {unit.label}
+                  </div>
+                );
+              }}
+            </For>
           </div>
         </div>
         <div class="grid grid-cols-4 gap-2">
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("1");
             }}
@@ -50,7 +48,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             1
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("2");
             }}
@@ -58,7 +56,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             2
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("3");
             }}
@@ -66,7 +64,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             3
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-orange-500 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-orange-500 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickDelete();
             }}
@@ -74,7 +72,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             删除
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("4");
             }}
@@ -82,7 +80,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             4
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("5");
             }}
@@ -90,18 +88,18 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             5
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("6");
             }}
           >
             6
           </button>
-          <button class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-gray-800 text-white rounded-full opacity-0">
+          <button class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-w-bg-5 text-w-fg-0 rounded-full opacity-0">
             上
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("7");
             }}
@@ -109,7 +107,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             7
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("8");
             }}
@@ -117,18 +115,18 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             8
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("9");
             }}
           >
             9
           </button>
-          <button class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-gray-800 text-white rounded-full opacity-0">
+          <button class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-w-bg-5 text-w-fg-0 rounded-full opacity-0">
             下
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickSub();
             }}
@@ -136,7 +134,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             -
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickNumber("0");
             }}
@@ -144,7 +142,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             0
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-gray-800 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-2xl bg-w-bg-5 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleClickDot();
             }}
@@ -152,7 +150,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
             .
           </button>
           <button
-            class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-orange-500 text-white rounded-full"
+            class="flex items-center justify-center w-[72px] h-[72px] text-xl bg-orange-500 text-w-fg-0 rounded-full"
             onClick={() => {
               vm.methods.handleSubmit();
             }}

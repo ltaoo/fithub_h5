@@ -99,11 +99,8 @@ const Item = (
     store: MenuItemCore;
   } & JSX.HTMLAttributes<HTMLElement>
 ) => {
-  const { store } = props;
-  // const store = useContext(DropdownMenuContext);
-
   return (
-    <MenuPrimitive.Item class={props.class} store={store}>
+    <MenuPrimitive.Item class={props.class} classList={props.classList} store={props.store}>
       {props.children}
     </MenuPrimitive.Item>
   );

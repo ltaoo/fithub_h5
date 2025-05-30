@@ -344,7 +344,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         }
         return { type: "unknown", v: prev_weight };
       })();
-      const next_reps = Number($first.field.value.reps) * (idx + 1);
+      const next_reps = Number($first.field.value.reps);
       const next_weight = (() => {
         if (value_weight.type === "RM") {
           return Number(value_weight.v) * (idx + 1) + "RM";
@@ -385,8 +385,8 @@ export type ActionInputViewModel = ReturnType<typeof ActionInputViewModel>;
 function WorkoutActionNameView(props: { name?: string }) {
   return (
     <div class="relative inline-block">
-      <div class="absolute -left-2 -bottom-0 w-[4px] h-full bg-blue-500"></div>
-      <div class="relative inline-block">{props.name}</div>
+      <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div>
+      <div class="relative left-[4px] text-w-fg-0">{props.name}</div>
     </div>
   );
 }
@@ -431,8 +431,8 @@ function SetActionView(props: {
               return null;
             }
             return (
-              <div>
-                <div class="text-sm text-gray-600">{field.label}</div>
+              <div class="mt-2">
+                <div class="text-sm text-w-fg-2">{field.label}</div>
                 <Switch>
                   <Match when={$inner.symbol === "SingleFieldCore"}>
                     {(() => {
@@ -466,7 +466,7 @@ export function ActionInput(props: {
   return (
     <div class="relative p-4">
       <div class="absolute left-3 -top-4">
-        <div class="text-sm bg-white p-1">
+        <div class="text-sm p-1 text-w-fg-1">
           <div>{WorkoutSetTypeTextMap[state().type] || "未知"}</div>
         </div>
       </div>
@@ -475,7 +475,7 @@ export function ActionInput(props: {
           <WorkoutActionNameView name={state().action?.action.zh_name} />
         </Show>
       </Show>
-      <div class="space-y-1">
+      <div class="space-y-4">
         <For each={state().fields}>
           {(field, index) => {
             const $inner = vm.ui.$sets.mapFieldWithIndex(index());
@@ -491,11 +491,27 @@ export function ActionInput(props: {
             );
           }}
         </For>
+        <div class="flex items-center gap-2">
+          <div class="">
+            <div class="text-sm text-w-fg-2">组数</div>
+            <Input store={vm.ui.$input_set_count} />
+          </div>
+          <div class="">
+            <div class="text-sm text-w-fg-2">组间歇</div>
+            <Input store={vm.ui.$input_set_rest} />
+          </div>
+          <Show when={[WorkoutPlanSetType.HIIT].includes(state().type)}>
+            <div class="">
+              <div class="text-sm text-w-fg-2">强度</div>
+              <Input store={vm.ui.$input_set_weight} />
+            </div>
+          </Show>
+        </div>
       </div>
       <Show when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(state().type)}>
-        <div class="flex justify-center mt-2">
+        <div class="flex justify-center mt-4">
           <div
-            class="inline-block px-2 py-1 border rounded"
+            class="inline-block px-2 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
               if (props.onShowActionSelect) {
                 props.onShowActionSelect({ type: "add_action" });
@@ -507,9 +523,9 @@ export function ActionInput(props: {
         </div>
       </Show>
       <Show when={[WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(state().type)}>
-        <div class="flex justify-center mt-2">
+        <div class="flex justify-center mt-4">
           <div
-            class="inline-block px-2 py-1 border rounded"
+            class="inline-block px-2 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
               vm.appendSet();
             }}
@@ -518,21 +534,7 @@ export function ActionInput(props: {
           </div>
         </div>
       </Show>
-      <div class="absolute right-4 -bottom-8 bg-white">
-        <div class="flex gap-2">
-          <div class="w-[45px]">
-            <Input store={vm.ui.$input_set_count} />
-          </div>
-          <div class="w-[45px]">
-            <Input store={vm.ui.$input_set_rest} />
-          </div>
-          <Show when={[WorkoutPlanSetType.HIIT].includes(state().type)}>
-            <div class="w-[88px]">
-              <Input store={vm.ui.$input_set_weight} />
-            </div>
-          </Show>
-        </div>
-      </div>
+      <div class="absolute right-4 -bottom-8"></div>
     </div>
   );
 }

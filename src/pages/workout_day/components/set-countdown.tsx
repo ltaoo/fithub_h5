@@ -55,7 +55,7 @@ export function SetCountdownViewModel(props: {
   const bus = base<TheTypesOfEvents>();
 
   ui.$countdown.onStart(() => {
-      console.log("[BIZ]workout_day/SetCountdown - countdown.onStart", _running, _paused);
+    console.log("[BIZ]workout_day/SetCountdown - countdown.onStart", _running, _paused);
     _running = true;
     _paused = false;
     bus.emit(Events.Start);
@@ -171,13 +171,32 @@ export function SetCountdownView(props: {
   });
 
   return (
-    <div class="flex items-center justify-between">
+    <div class="set-countdown flex items-center justify-between gap-2">
+      <Show when={countdown1().pending}>
+        <div
+          class="p-2 rounded-full bg-w-bg-5"
+          onClick={() => {
+            props.store.start();
+          }}
+        >
+          <Play class="w-4 h-4 text-w-fg-1 " />
+        </div>
+      </Show>
+      <Show when={state().running}>
+        <div
+          class="p-2 rounded-full bg-w-bg-5"
+          onClick={() => {
+            props.store.pause();
+          }}
+        >
+          <Pause class="w-4 h-4 text-w-fg-1" />
+        </div>
+      </Show>
       <div
         classList={{
-          "flex items-center text-w-fg-1 transition-all duration-200": true,
-          // "text-xl": state().pending,
-          "text-4xl": state().running,
-          // "text-gray-100": state().finished,
+          "flex items-center transition-all duration-200": true,
+          "text-4xl text-w-fg-0": state().running,
+          "text-w-fg-2 ": !state().running,
         }}
       >
         <div
@@ -253,41 +272,6 @@ export function SetCountdownView(props: {
         </div>
       </div>
       <div class="flex items-center gap-2 px-4">
-        <Show when={countdown1().pending}>
-          <div
-            classList={{
-              "flex items-center justify-center p-2 rounded-full bg-white": true,
-            }}
-          >
-            <div
-              class="text-gray-400"
-              onClick={() => {
-                if (props.onStart) {
-                  props.onStart();
-                }
-                props.store.start();
-              }}
-            >
-              <Play class="w-4 h-4" />
-            </div>
-          </div>
-        </Show>
-        <Show when={state().running}>
-          <div
-            classList={{
-              "flex items-center justify-center p-2 rounded-full bg-white": true,
-            }}
-          >
-            <div
-              class="text-gray-400"
-              onClick={() => {
-                props.store.pause();
-              }}
-            >
-              <Pause class="w-4 h-4" />
-            </div>
-          </div>
-        </Show>
         <Show when={countdown1().completed && countdown2().time !== 0}>
           <div
             classList={{
