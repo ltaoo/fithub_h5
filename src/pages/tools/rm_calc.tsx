@@ -192,12 +192,12 @@ export function RMCalcToolView(props: ViewComponentProps) {
         </ScrollView>
       </div>
       <Sheet store={vm.ui.$dialog_rm_calc_rule}>
-        <div class="w-screen min-h-[80px] p-4 bg-white">
+        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
           <div>{state().text}</div>
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_rm_step}>
-        <div class="w-screen min-h-[80px] p-4 bg-w-bg-1 text-w-fg-1">
+        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1 text-w-fg-1">
           <div class="text-xl">最大重量（1RM）测试方案</div>
           <div class="mt-2">
             <div>以预期 1RM 重量的 50% 的重量做 10 次</div>

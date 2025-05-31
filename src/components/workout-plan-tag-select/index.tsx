@@ -43,7 +43,7 @@ export function WorkoutPlanTagSelectView(
         </div>
       </div>
       <Sheet store={vm.ui.$dialog} position="bottom" size="lg">
-        <div class="w-screen p-4 bg-white">
+        <div class="w-screen p-2 bg-w-bg-1">
           <div class="flex justify-between">
             <div></div>
             <div

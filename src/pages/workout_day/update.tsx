@@ -39,9 +39,9 @@ import {
   completeWorkoutDay,
   giveUpHWorkoutDay,
   updateWorkoutDayStepContent,
-  WorkoutDayStepProgressJSON250424,
   updateWorkoutDayPlanDetails,
   WorkoutDayStepDetailsJSON250424,
+  WorkoutDayStepProgressJSON250531,
 } from "@/biz/workout_day/services";
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
@@ -65,6 +65,7 @@ import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 
 export type HomeWorkoutDayUpdateViewModel = ReturnType<typeof HomeWorkoutDayUpdateViewModel>;
 export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
@@ -100,7 +101,6 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-
     getField(opt: { key: string; for: "reps" | "weight" }) {
       if (opt.for === "reps") {
         return ui.$fields_reps.get(opt.key) ?? null;
@@ -184,7 +184,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         ui.$set_actions.delete(k);
         ui.$fields_reps.delete(k);
         ui.$fields_weight.delete(k);
-        ui.$action_countdowns.delete(k);
+        ui.$set_act_countdowns.delete(k);
         ui.$inputs_completed.delete(k);
       }
       // 删不了，不能用 idx 下标，改成 id
@@ -208,7 +208,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         weight: string;
         rest_duration: number;
       };
-      pending_set?: WorkoutDayStepProgressJSON250424["sets"][number];
+      pending_set?: WorkoutDayStepProgressJSON250531["sets"][number];
     }) {
       const { step_idx: a, set_idx: b, idx: c, action, pending_set } = opt;
       const set_k = `${a}-${b}`;
@@ -262,7 +262,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             step_idx: opt.step_idx,
             set_idx: opt.set_idx,
           });
-          const $prev_act_countdown = ui.$action_countdowns.get(prev_k);
+          const $prev_act_countdown = ui.$set_act_countdowns.get(prev_k);
           if ($prev_act_countdown) {
             $prev_act_countdown.pause();
           }
@@ -276,14 +276,14 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           /** 在动作倒计时结束后，尝试去将动作「完成」 */
           const $cur_act_check = ui.$inputs_completed.get(k);
           if ($cur_act_check) {
-            methods.handleCompleteSetAction({
+            methods.completeSetAct({
               step_idx: a,
               set_idx: b,
               act_idx: c,
               ignore_when_completed: true,
             });
           }
-          const $next_act_countdown = ui.$action_countdowns.get(next_k);
+          const $next_act_countdown = ui.$set_act_countdowns.get(next_k);
           if ($next_act_countdown) {
             $next_act_countdown.start();
           }
@@ -295,7 +295,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             }
           }
         });
-        ui.$action_countdowns.set(k, $action_countdown);
+        ui.$set_act_countdowns.set(k, $action_countdown);
       }
       ui.$inputs_completed.set(
         k,
@@ -309,6 +309,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       act_idx: number;
       /** 如果当前组动作是已完成状态，再次完成，是否需要忽略掉该操作，也就是说不要（取消完成） */
       ignore_when_completed?: boolean;
+      /** 是否忽略更新当前步骤到后端，当完成最后一个动作时会尝试完成前面的动作，此时会重复调用多次后端接口，传入 true 就不会重复多次调用后端接口了 */
+      ignore_update_steps?: boolean;
     }) {
       console.log("[PAGE]workout_day/create - handleCompleteSet", opt);
       const kk = `${opt.step_idx}-${opt.set_idx}`;
@@ -396,15 +398,18 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       $input_completed.setValue(dayjs().unix());
       _cur_step_idx = opt.step_idx;
       _next_set_idx = opt.set_idx;
-      methods.updateSteps({
-        step_idx: _cur_step_idx,
-        set_idx: _next_set_idx,
-      });
+      if (!opt.ignore_update_steps) {
+        methods.updateSteps({
+          step_idx: _cur_step_idx,
+          set_idx: _next_set_idx,
+        });
+      }
       if (is_last_act) {
         const has_multiple_act = [
           WorkoutPlanSetType.Decreasing,
           WorkoutPlanSetType.Increasing,
           WorkoutPlanSetType.Super,
+          WorkoutPlanSetType.HIIT,
         ].includes(set.type);
         if (has_multiple_act) {
           for (let i = 0; i < set.actions.length - 1; i += 1) {
@@ -413,6 +418,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               set_idx: opt.set_idx,
               act_idx: i,
               ignore_when_completed: true,
+              ignore_update_steps: true,
             });
           }
         }
@@ -437,6 +443,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if ($countdown && !$countdown.state.paused) {
         $countdown.start();
       }
+      /** 使用当前的表单值，作为下一组的备用表单值 */
       let next_set_idx = opt.set_idx + 1;
       let next_set = _steps[opt.step_idx].sets[next_set_idx];
       if (next_set) {
@@ -468,11 +475,12 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     setCurSet(opt: { step_idx: number; set_idx: number }) {
       _cur_step_idx = opt.step_idx;
       _next_set_idx = opt.set_idx;
+      console.log("[PAGE]workout_day/update setCurSet before methods.updateSteps", opt);
       methods.updateSteps({
         step_idx: _cur_step_idx,
         set_idx: _next_set_idx,
       });
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     nextSet() {
       const cur_step = _steps[_cur_step_idx];
@@ -489,7 +497,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250424",
+          v: "250531",
           step_idx: _cur_step_idx,
           set_idx: _next_set_idx,
           act_idx: _cur_act_idx,
@@ -498,9 +506,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         },
       });
       console.log("[PAGE]workout_day/update - nextSet before refresh", _cur_step_idx, _cur_step_idx);
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
-
     /**
      * 完成一个组动作
      */
@@ -510,6 +517,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       act_idx: number;
       ignore_when_completed?: boolean;
     }) {
+      console.log("[PAGE]workout_day/update handleCompleteSetAction", opt);
       const r = methods.completeSetAct(opt);
       if (r.error) {
         props.app.tip({
@@ -517,11 +525,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      const set = _steps[opt.step_idx].sets[opt.set_idx];
-      if (set && r.data.is_last_act && r.data.completed) {
-        const has_multiple_set_act = [WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(set.type);
-      }
-      bus.emit(Events.StateChange, { ..._state });
+      // const set = _steps[opt.step_idx].sets[opt.set_idx];
+      // if (set && r.data.is_last_act && r.data.completed) {
+      //   const has_multiple_set_act = [WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(set.type);
+      // }
+      methods.refresh();
     },
     handleDeleteAction(opt: { step_idx: number; set_idx: number; act_idx: number }) {
       console.log("[PAGE]workout_day/create - handleDeleteSet", opt);
@@ -534,7 +542,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       await request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250424",
+          v: "250531",
           step_idx: 0,
           set_idx: 0,
           act_idx: 0,
@@ -557,7 +565,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       }
       _stats.sets = [];
       _stats.finished_at = dayjs().format("YYYY-MM-DD");
-      _stats.duration = dayjs().diff(profile.started_at, "minutes") + "分钟";
+      _stats.duration = dayjs().diff(profile.started_at, "minutes") + "min";
       let total_volume = 0;
       const uncompleted_actions: { step_idx: number; set_idx: number; act_idx: number }[] = [];
       for (let a = 0; a < _steps.length; a += 1) {
@@ -568,9 +576,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             const k = `${a}-${b}-${c}`;
             const $field_reps = ui.$fields_reps.get(k);
             const $field_weight = ui.$fields_weight.get(k);
-            const $input_check = ui.$inputs_completed.get(k);
-            if ($input_check && $field_reps && $field_weight) {
-              if ($input_check.value && $field_reps.input.value && $field_weight.input.value) {
+            const $input_completed = ui.$inputs_completed.get(k);
+            if ($input_completed && $field_reps && $field_weight) {
+              if ($input_completed.value && $field_reps.input.value && $field_weight.input.value) {
                 const v_reps = Number($field_reps.input.value);
                 const v_weight = Number($field_weight.input.value);
                 let volume = v_weight;
@@ -587,7 +595,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
                   weight_unit: $field_weight.input.unit,
                 });
               }
-              if (!$input_check.value) {
+              if (!$input_completed.value) {
                 uncompleted_actions.push({
                   step_idx: a,
                   set_idx: b,
@@ -606,7 +614,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       _stats.total_volume = total_volume;
       _stats.uncompleted_actions = uncompleted_actions;
       ui.$dialog_confirm_complete.show();
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     toBody() {
       const total = {
@@ -614,7 +622,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         weight: 0,
         tips: [] as string[],
       };
-      const data: WorkoutDayStepProgressJSON250424["sets"] = [];
+      console.log("[PAGE]workout_day/update - toBody 1", _touched_set_idx);
+      const data: WorkoutDayStepProgressJSON250531["sets"] = [];
       for (let a = 0; a < _steps.length; a++) {
         const step = _steps[a];
         for (let b = 0; b < step.sets.length; b++) {
@@ -623,13 +632,13 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }
           const set = step.sets[b];
           let set_completed = false;
-          const actions: WorkoutDayStepProgressJSON250424["sets"][number]["actions"] = [];
+          const actions: WorkoutDayStepProgressJSON250531["sets"][number]["actions"] = [];
           for (let c = 0; c < set.actions.length; c++) {
             const kkk = `${a}-${b}-${c}`;
             const $field_weight = ui.$fields_weight.get(kkk);
             const $field_reps = ui.$fields_reps.get(kkk);
             const $input_check = ui.$inputs_completed.get(kkk);
-            const $act_countdown = ui.$action_countdowns.get(kkk);
+            const $act_countdown = ui.$set_act_countdowns.get(kkk);
 
             const completed = $input_check?.value;
             if (!completed) {
@@ -682,6 +691,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             actions,
             remaining_time: $countdown?.state.remaining ?? 0,
             exceed_time: $countdown?.state.exceed ?? 0,
+            completed: set_completed,
             remark: "",
           });
           if (set_completed === false) {
@@ -723,11 +733,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 更新动作执行进度 */
     updateSteps(opt: { step_idx: number; set_idx: number }) {
       const { data } = methods.toBody();
-      // console.log("[PAGE]workout_day/create - total", total);
+      console.log("[PAGE]workout_day/update - updateSteps before update_steps.run", data, _touched_set_idx);
       return request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250424",
+          v: "250531",
           step_idx: opt.step_idx,
           set_idx: opt.set_idx,
           act_idx: _cur_act_idx,
@@ -749,7 +759,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       _cur_workout_action = r.data;
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     async submit() {
       // const { data } = methods.toBody();
@@ -782,7 +792,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     setHeight(height: number) {
       _height = height;
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
   };
   const $set_actions = new Map<string, SetActionViewModel>();
@@ -797,7 +807,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $fields_weight,
     $fields_reps,
     $inputs_completed,
-    $action_countdowns: $set_act_countdowns,
+    $set_act_countdowns,
     $set_countdowns,
     btns_more,
     $menu_set: new DropdownMenuCore({
@@ -986,7 +996,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           ui.$ref_cur_step.clear();
           ui.$workout_action_dialog.methods.clear();
           ui.$workout_action_dialog.ui.$dialog.hide();
-          bus.emit(Events.StateChange, { ..._state });
+          methods.refresh();
           return;
         }
         _steps = [
@@ -1009,7 +1019,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         ];
         ui.$workout_action_dialog.methods.clear();
         ui.$workout_action_dialog.ui.$dialog.hide();
-        bus.emit(Events.StateChange, { ..._state });
+        methods.refresh();
       },
       onError(error) {
         props.app.tip({
@@ -1074,6 +1084,10 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       items: [
         new MenuItemCore({
           label: "增加动作",
+          onClick() {
+            ui.$menu_workout_day.hide();
+            ui.$workout_action_select.ui.$dialog.show();
+          },
         }),
         new MenuItemCore({
           label: "使用说明",
@@ -1089,9 +1103,31 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             ui.$dialog_give_up_confirm.show();
           },
         }),
+        new MenuItemCore({
+          label: "重置",
+          async onClick() {
+            ui.$menu_workout_day.hide();
+            props.app.tip({
+              icon: "loading",
+              text: ["提交中..."],
+            });
+            await methods.resetPendingSteps();
+          },
+        }),
       ],
     }),
     $dialog_give_up_confirm: new DialogCore({}),
+    $workout_action_select: WorkoutActionSelectDialogViewModel({
+      defaultValue: [],
+      list: $workout_action_list,
+      client: props.client,
+      async onOk(actions) {},
+      onError(error) {
+        props.app.tip({
+          text: [error.message],
+        });
+      },
+    }),
   };
   let _height = 0;
   let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
@@ -1210,7 +1246,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $field.input.setUnit(ui.$set_value_input.state.unit);
   });
   request.workout_action.profile.onStateChange((v) => {
-    bus.emit(Events.StateChange, { ..._state });
+    methods.refresh();
   });
 
   return {
@@ -1219,7 +1255,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     request,
     methods,
     async ready() {
-      console.log("[PAGE]home_workout_day");
+      console.log("[PAGE]home_workout_day/update ready");
       const id = props.view.query.id;
       if (!id) {
         return;
@@ -1233,7 +1269,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       const { status, steps, pending_steps, started_at } = r.data;
-      console.log("[PAGE]workout_day/update - ready", steps);
+      console.log("[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started", steps);
       if (status === WorkoutDayStatus.Started) {
         console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
         ui.$day_duration.setStartedAt(started_at.valueOf());
@@ -1247,8 +1283,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       _steps = steps;
       /** 预计花费时间 */
       let estimated_duration = 0;
-      for (let a = 0; a < steps.length; a += 1) {
-        const step = steps[a];
+      for (let a = 0; a < _steps.length; a += 1) {
+        const step = _steps[a];
         for (let b = 0; b < step.sets.length; b += 1) {
           const set = step.sets[b];
           const pending_set = pending_steps.sets.find((set) => {
@@ -1266,23 +1302,25 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               },
             })
           );
-          let is_completed = a < pending_steps.step_idx;
-          if (a === pending_steps.step_idx) {
-            is_completed = b < pending_steps.set_idx;
-          }
+          // let is_completed = a < pending_steps.step_idx;
+          // if (a === pending_steps.step_idx) {
+          //   is_completed = b < pending_steps.set_idx;
+          // }
+          let the_set_completed = pending_set?.completed ?? false;
           if (set.rest_duration) {
             const $countdown = SetCountdownViewModel({
               // countdown: 10,
               countdown: set.rest_duration,
               remaining: pending_set?.remaining_time ?? 0,
               exceed: pending_set?.exceed_time ?? 0,
-              finished: is_completed,
+              finished: the_set_completed,
             });
             $countdown.onStart(() => {
+              console.log("[PAGE]workout_day/update - after $countdown.onStart", set);
               if ([WorkoutPlanSetType.HIIT].includes(set.type)) {
                 const k = `${a}-${b}-${set.actions.length - 1}`;
-                console.log("[]the k is", k);
-                const $last_action_countdown = ui.$action_countdowns.get(k);
+                // console.log("[]the k is", k);
+                const $last_action_countdown = ui.$set_act_countdowns.get(k);
                 if ($last_action_countdown && $last_action_countdown.state.running) {
                   $last_action_countdown.pause();
                 }
@@ -1293,7 +1331,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               methods.nextSet();
             });
             ui.$set_countdowns.set(`${a}-${b}`, $countdown);
-            if (!is_completed) {
+            if (!the_set_completed) {
               estimated_duration += set.rest_duration;
             }
           }
@@ -1309,13 +1347,13 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             });
             estimated_set_duration += action.reps * 5;
           }
-          if (!is_completed) {
+          if (!the_set_completed) {
             estimated_duration += estimated_set_duration;
           }
         }
         _estimated_duration = `${Math.floor(estimated_duration / 60)}分钟`;
       }
-      bus.emit(Events.StateChange, { ..._state });
+      methods.refresh();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -1348,8 +1386,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                 <div
                   class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-1 text-sm"
                   onClick={() => {
-                    // vm.methods.showWorkoutDayCompleteConfirmDialog();
-                    vm.methods.resetPendingSteps();
+                    vm.methods.showWorkoutDayCompleteConfirmDialog();
                   }}
                 >
                   完成
@@ -1392,18 +1429,18 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                       <div class="space-y-2 w-full">
                         <For each={step.sets}>
                           {(set, b) => {
-                            const is_cur_set = state().cur_step_idx === a() && state().next_set_idx === b();
-                            const is_last_set = a() === state().steps.length - 1 && b() === step.sets.length - 1;
+                            const is_cur_set = () => state().cur_step_idx === a() && state().next_set_idx === b();
+                            const is_last_set = () => a() === state().steps.length - 1 && b() === step.sets.length - 1;
                             return (
                               <>
                                 <div class="overflow-hidden relative w-full">
-                                  <Show when={!is_cur_set}>
+                                  <Show when={!is_cur_set()}>
                                     <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
                                   </Show>
                                   <div
                                     classList={{
                                       "flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg": true,
-                                      "border-w-fg-2": is_cur_set,
+                                      "border-w-fg-2": is_cur_set(),
                                     }}
                                   >
                                     <div
@@ -1511,10 +1548,10 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                     />
                                                   </Show>
                                                 </div>
-                                                <Show when={is_countdown_reps && vm.ui.$action_countdowns.get(act_k)}>
+                                                <Show when={is_countdown_reps && vm.ui.$set_act_countdowns.get(act_k)}>
                                                   <div class="rounded-md p-2 mt-1 bg-w-bg-5">
                                                     <SetActionCountdownView
-                                                      store={vm.ui.$action_countdowns.get(act_k)!}
+                                                      store={vm.ui.$set_act_countdowns.get(act_k)!}
                                                     />
                                                   </div>
                                                 </Show>
@@ -1526,15 +1563,15 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                     </div>
                                   </div>
                                 </div>
-                                <Show when={!is_last_set}>
+                                <Show when={!is_last_set()}>
                                   <div class="relative w-full overflow-hidden">
-                                    <Show when={!is_cur_set}>
+                                    <Show when={!is_cur_set()}>
                                       <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
                                     </Show>
                                     <div
                                       classList={{
                                         "flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg": true,
-                                        "border-w-fg-2": is_cur_set,
+                                        "border-w-fg-2": is_cur_set(),
                                       }}
                                     >
                                       <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
@@ -1555,23 +1592,23 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
             </div>
           </div>
           <div class="py-4">
-            <div class="text-sm text-w-fg-5 text-center">胜利就在眼前 加油!</div>
+            <div class="text-sm text-w-fg-3 text-center">胜利就在眼前 加油!</div>
           </div>
           <div class="h-[32px]"></div>
         </ScrollView>
       </div>
       <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen">
+        <div class="w-screen bg-w-bg-1">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_num_keyboard} position="bottom" size="sm">
-        <div class="w-screen p-2 bg-w-bg-2">
+        <div class="w-screen p-2 bg-w-bg-1">
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
-        <div class="relative w-screen min-h-[320px] border border-t-gray-200 bg-white">
+        <div class="relative w-screen min-h-[320px] border border-t-gray-200 bg-w-bg-1">
           <Show when={state().loading}>
             <div class="absolute inset-0">
               <div class="absolute inset-0 bg-white opacity-40"></div>
@@ -1596,21 +1633,21 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_confirm_complete} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-0">
+        <div class="w-screen bg-w-bg-1">
           <WorkoutDayOverviewView store={vm} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_remark}>
-        <div class="relative w-screen p-4 border-t bg-white">
+        <div class="relative w-screen p-2 bg-w-bg-1">
           <div class="flex items-center justify-between h-12">
-            <div class="text-lg">备注</div>
+            <div class="text-lg text-center">备注</div>
             <div
-              class="p-2 rounded-full bg-gray-200"
+              class="p-2 rounded-full bg-w-bg-5"
               onClick={() => {
                 vm.ui.$dialog_remark.hide();
               }}
             >
-              <X class="w-6 h-6 text-gray-800" />
+              <X class="w-4 h-4 text-w-fg-0" />
             </div>
           </div>
           <div class="mt-4">
@@ -1622,7 +1659,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_give_up_confirm}>
-        <div class="w-screen p-2 bg-w-bg-2">
+        <div class="w-screen p-2 bg-w-bg-1">
           <div>
             <div class="text-xl text-center">确认放弃本次训练？</div>
             <div class="mt-4 flex items-center gap-2">
@@ -1637,7 +1674,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_using_guide}>
-        <div class="w-screen p-2 bg-w-bg-2">
+        <div class="w-screen p-2 bg-w-bg-1">
           <div class="text-w-fg-0">
             <div class="text-xl text-center">使用说明</div>
             <div class="mt-4 space-y-2">
@@ -1689,6 +1726,11 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
               </div>
             </div>
           </div>
+        </div>
+      </Sheet>
+      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
+        <div class="w-screen bg-w-bg-1">
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
         </div>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>

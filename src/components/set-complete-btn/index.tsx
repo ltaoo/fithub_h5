@@ -19,15 +19,15 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
       <div
         class=""
         classList={{
-          "flex items-center justify-center p-2 rounded-full bg-w-bg-5": true,
-          "bg-gray-100": !state().value,
-          "bg-white": state().value,
+          "flex items-center justify-center p-2 rounded-full": true,
+          "bg-w-bg-5": !state().value,
+          "": state().value,
         }}
       >
         <Show
           when={state().value}
           fallback={
-            <div class="text-gray-400">
+            <div class="text-w-fg-1">
               <Check class="w-4 h-4" />
             </div>
           }

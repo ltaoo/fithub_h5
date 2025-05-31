@@ -1,4 +1,4 @@
-import { Accessor, createSignal, onMount } from "solid-js";
+import { Accessor, createSignal, onCleanup, onMount } from "solid-js";
 
 export function useViewModel<
   T extends (...args: any[]) => {
@@ -29,20 +29,19 @@ export function useViewModelStore<
     destroy?: () => void;
     onStateChange: (handler: (v: any) => any) => any;
   }
->(vm: T): [Accessor<T["state"]>, T] {
+>(vm: T, opt: Partial<{ silence: boolean }> = {}): [Accessor<T["state"]>, T] {
   const [state, setState] = createSignal(vm.state);
 
   vm.onStateChange((v) => {
     setState(v);
   });
-  onMount(() => {
-    return () => {
-      if (vm.destroy) {
-        vm.destroy();
-      }
-    };
+  onMount(() => {});
+  onCleanup(() => {
+    if (vm.destroy) {
+      vm.destroy();
+    }
   });
-  if (vm.ready) {
+  if (vm.ready && !opt.silence) {
     vm.ready();
   }
   return [state, vm];

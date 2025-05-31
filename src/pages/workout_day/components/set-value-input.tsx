@@ -17,7 +17,7 @@ export function SetValueInput(
       tabIndex={-1}
       classList={{
         "set-value-input relative flex items-center w-[88px] h-[36px] px-1 border-2 rounded-xl bg-w-bg-2": true,
-        "border-w-bg-5 ": field().status === "normal",
+        "border-w-bg-5": field().status === "normal",
         "border-yellow-500": field().status === "focus",
         "border-red-500 dark:border-red-800": field().status === "error",
       }}
@@ -29,10 +29,10 @@ export function SetValueInput(
         $field.setStatus("focus");
       }}
     >
-      <Show when={input().value !== ""} fallback={<div class="text-w-fg-5">{input().placeholder}</div>}>
+      <Show when={input().value !== ""} fallback={<div class="text-w-fg-2">{input().placeholder}</div>}>
         <div class="text-w-fg-0">{input().value}</div>
       </Show>
-      <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-w-fg-5">{input().unit}</div>
+      <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-w-fg-2">{input().unit}</div>
     </div>
   );
 }

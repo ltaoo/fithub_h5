@@ -824,9 +824,10 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </div>
             </div>
           </div>
+          <div class="h-[68px]"></div>
         </ScrollView>
       </div>
-      <div class="z-10 p-2 bg-w-bg-0 border-t-2 border-w-bg-5">
+      <div class="z-10 p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
         <div class="flex items-center gap-4">
           <div class="p-2 rounded-full bg-w-bg-5" onClick={vm.methods.back}>
             <ChevronLeft class="w-6 h-6 text-w-fg-1" />
@@ -843,12 +844,12 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
         <div class="safe-height"></div>
       </div>
       <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-0">
+        <div class="w-screen bg-w-bg-1">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_act_remark} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-0 p-2">
+        <div class="w-screen p-2 bg-w-bg-1">
           <div>
             <div class="text-xl">备注</div>
             <div class="mt-8">

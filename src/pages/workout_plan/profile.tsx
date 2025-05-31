@@ -125,26 +125,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
 
   return (
     <>
-      <div
-        style={{
-          "z-index": 0,
-          position: "absolute",
-          width: "100%",
-          height: "360px",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            "background-size": "100% auto",
-            "background-image": "url('https://static.funzm.com/assets/images/682e277957709aef.png')",
-          }}
-        ></div>
-        {/* <div class="z-0 absolute inset-0 bg-gradient-to-b from-gray-600 to-transparent"></div> */}
-      </div>
       <ScrollView store={vm.ui.$view} class="relative">
-        <NavigationBar1 title="计划详情" history={props.history} hide_border />
         <Show when={state().error}>
           <div class="error">
             <div>加载失败</div>
@@ -157,7 +138,6 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         </Show>
         <Show when={state().profile}>
           <div class="relative content p-2 bg-w-bg-0 space-y-4">
-            <div class="h-[24px]"></div>
             <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
               <div class="text-2xl font-bold">{state().profile!.title}</div>
               <div>作者</div>
@@ -323,6 +303,14 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
       <div class="fixed bottom-0 left-0 w-full bg-w-bg-1">
         <div>
           <div class="flex justify-center gap-2 p-2">
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.back();
+              }}
+            >
+              <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+            </div>
             <Button class="w-full py-2.5 rounded-md bg-w-bg-5 text-w-fg-1 text-center" store={vm.ui.$btn_start_workout}>
               开始训练
             </Button>

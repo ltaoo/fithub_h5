@@ -217,7 +217,7 @@ export function HomeMineView(props: ViewComponentProps) {
         </div>
       </ScrollView>
       <Sheet store={vm.ui.$dialog_nickname_update}>
-        <div class="w-screen bg-w-bg-0 p-4">
+        <div class="w-screen bg-w-bg-1 p-2">
           <div class="space-y-4">
             <div class="text-xl">修改昵称</div>
             <div>

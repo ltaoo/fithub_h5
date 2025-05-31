@@ -9,7 +9,7 @@ import { useViewModelStore } from "@/hooks";
 import { HomeWorkoutDayUpdateViewModel } from "../update";
 
 export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewModel }) {
-  const [state, vm] = useViewModelStore(props.store);
+  const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (
     <>

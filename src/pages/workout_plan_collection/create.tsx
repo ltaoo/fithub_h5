@@ -140,7 +140,7 @@ export function WorkoutPlanCollectionCreateView(props: ViewComponentProps) {
         </div>
       </ScrollView>
       <Sheet store={vm.ui.$workout_plan_select.ui.$dialog} position="bottom" size="lg">
-        <div class="w-screen bg-w-bg-0">
+        <div class="w-screen bg-w-bg-1">
           <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
           <div class="flex">
             <div

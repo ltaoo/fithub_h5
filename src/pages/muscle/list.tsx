@@ -360,7 +360,7 @@ export function MuscleListView(props: ViewComponentProps) {
         </ScrollView>
       </div>
       <Sheet store={vm.ui.$dialog_muscle_profile}>
-        <div class="overflow-y-auto w-screen max-h-screen bg-white p-4">
+        <div class="overflow-y-auto w-screen max-h-screen bg-w-bg-1 p-2">
           <div class="">
             <h3 class="text-xl text-gray-800">{state().muscle?.zh_name}</h3>
             <span class="text-gray-500">{state().muscle?.name}</span>
@@ -387,17 +387,17 @@ export function MuscleListView(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_muscle_create}>
-        <div class="w-[720px]">
+        <div class="w-screen p-2 bg-w-bg-1">
           <MuscleValueView store={vm.ui.$values} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_muscle_edit}>
-        <div class="w-[720px]">
+        <div class="w-screen p-2 bg-w-bg-1">
           <MuscleValueView store={vm.ui.$values} />
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_muscle_delete_confirm}>
-        <div class="w-[520px]">
+        <div class="w-screen p-2 bg-w-bg-1">
           <div>
             <h3>确认删除吗？</h3>
           </div>

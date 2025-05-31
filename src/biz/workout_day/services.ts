@@ -92,12 +92,61 @@ export type WorkoutDayStepProgressJSON250424 = {
   }[];
 };
 
+export type WorkoutDayStepProgressJSON250531 = {
+  v: "250531";
+  /** 当前做到第几个动作了 */
+  step_idx: number;
+  /** 当前做到动作的第几组了 */
+  set_idx: number;
+  /** 当前做到动作的组中第几个动作了 */
+  act_idx: number;
+  /** 作用暂定吧 */
+  touched_set_idx: string[];
+  /** 动作/组  */
+  sets: {
+    step_idx: number;
+    idx: number;
+    actions: {
+      idx: number;
+      /** 动作id，用于后面记录该记录动作执行历史，获取最大重量、最大次数等统计参考数据 */
+      action_id: number | string;
+      /** 计数数量 */
+      reps: number;
+      /** 计数单位 */
+      reps_unit: SetValueUnit;
+      /** 重量数值 */
+      weight: number;
+      /** 重量单位 */
+      weight_unit: SetValueUnit;
+      /** 是否完成 */
+      completed: boolean;
+      /** 完成时间 */
+      completed_at: number;
+      /** 如果该动作是计时，还剩多久 */
+      time1: number;
+      /** 如果该动作是计时，休息时间还剩多久 */
+      time2: number;
+      /** 如果该动作是计时，休息已过去多久 */
+      time3: number;
+    }[];
+    /** 休息时间还剩多久 */
+    remaining_time: number;
+    /** 休息时间已过去多久 */
+    exceed_time: number;
+    /** 组是否完成 */
+    completed: boolean;
+    /** 备注 */
+    remark: string;
+  }[];
+};
+
 /**
  * 更新训练日执行内容
  * @param body
  * @returns
  */
-export function updateWorkoutDayStepContent(body: { id: number | string; content: WorkoutDayStepProgressJSON250424 }) {
+export function updateWorkoutDayStepContent(body: { id: number | string; content: WorkoutDayStepProgressJSON250531 }) {
+  console.log("[SERVICE]workout_day - updateWorkoutDayStepContent", body.content);
   return request.post("/api/workout_day/update_steps", {
     id: Number(body.id),
     data: JSON.stringify(body.content),
@@ -107,7 +156,6 @@ export function updateWorkoutDayStepContent(body: { id: number | string; content
 /** 用于动作执行的具体内容 */
 export type WorkoutDayStepDetailsJSON250424 = {
   v: "250424";
-  /** 这个是传统意义上大家说的「动作」 */
   steps: {
     idx: number;
     sets: {
@@ -240,8 +288,10 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       const seconds = dayjs(workout_day.started_at).valueOf() / 1000 - dayjs(workout_day.finished_at).valueOf() / 1000;
       return seconds_to_hour_with_template(seconds, seconds_to_hour_template1);
     })(),
-    pending_steps: ((): Omit<WorkoutDayStepProgressJSON250424, "v"> => {
-      const r = parseJSONStr<WorkoutDayStepProgressJSON250424>(workout_day.pending_steps);
+    pending_steps: ((): Omit<WorkoutDayStepProgressJSON250531, "v"> => {
+      const r = parseJSONStr<WorkoutDayStepProgressJSON250424 | WorkoutDayStepProgressJSON250531>(
+        workout_day.pending_steps
+      );
       if (r.error) {
         return {
           step_idx: 0,
@@ -249,6 +299,22 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
           act_idx: 0,
           touched_set_idx: [],
           sets: [],
+        };
+      }
+      if (r.data.v === "250424") {
+        const d = r.data as WorkoutDayStepProgressJSON250424;
+        return {
+          step_idx: r.data.step_idx,
+          set_idx: r.data.set_idx,
+          act_idx: r.data.act_idx,
+          touched_set_idx: r.data.touched_set_idx,
+          sets:
+            r.data.sets.map((set) => {
+              return {
+                ...set,
+                completed: false,
+              };
+            }) || [],
         };
       }
       return {

@@ -292,7 +292,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
         </ScrollView>
       </div>
       <Sheet store={vm.ui.$dialog_rm_calc_rule}>
-        <div class="w-screen min-h-[80px] p-4 bg-white">
+        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
           <div class="text-gray-800">
             <Show when={state().idx === 0}>
               <div class="text-xl">哈里斯 - Benedict公式</div>
