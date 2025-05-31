@@ -10,11 +10,15 @@ import { BizError } from "@/domains/error";
 import { ScrollViewCore } from "@/domains/ui";
 import { StopwatchViewModel } from "@/biz/stopwatch";
 import { CountdownViewModel } from "@/biz/countdown";
+import { PageView } from "@/components/page-view";
 
 function CountdownToolViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
     },
     reset() {
       ui.$countdown.reset();
@@ -106,92 +110,88 @@ export function CountdownToolView(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="倒计时" history={props.history} />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view}>
-          <div class="p-4">
+      <PageView store={vm}>
+        <div class="">
+          <div
+            classList={{
+              "time-text flex items-center transition-all duration-200": true,
+              "text-4xl": true,
+            }}
+          >
             <div
               classList={{
-                "time-text flex items-center transition-all duration-200": true,
-                "text-4xl": true,
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$minutes1}
+            >
+              {state().stopwatch.minutes1}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$minutes2}
+            >
+              {state().stopwatch.minutes2}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
               }}
             >
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$minutes1}
-              >
-                {state().stopwatch.minutes1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$minutes2}
-              >
-                {state().stopwatch.minutes2}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-              >
-                :
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$seconds1}
-              >
-                {state().stopwatch.seconds1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$seconds2}
-              >
-                {state().stopwatch.seconds2}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-              >
-                .
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$ms1}
-              >
-                {state().stopwatch.ms1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$ms2}
-              >
-                {state().stopwatch.ms2}
-              </div>
+              :
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$seconds1}
+            >
+              {state().stopwatch.seconds1}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$seconds2}
+            >
+              {state().stopwatch.seconds2}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+            >
+              .
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$ms1}
+            >
+              {state().stopwatch.ms1}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$ms2}
+            >
+              {state().stopwatch.ms2}
             </div>
           </div>
-          <div class="flex items-center justify-between p-4">
-            {/* <div
+        </div>
+        <div class="flex items-center justify-between p-4">
+          {/* <div
               class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
               onClick={() => {
                 if (state().stopwatch.running) {
@@ -215,41 +215,40 @@ export function CountdownToolView(props: ViewComponentProps) {
                 <div>暂停</div>
               </Show>
             </div> */}
-            <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                vm.ui.$countdown.play();
-              }}
-            >
-              <div>开始</div>
-            </div>
-            <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                vm.ui.$countdown.pause();
-              }}
-            >
-              <div>暂停</div>
-            </div>
-            <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                vm.ui.$countdown.reset();
-              }}
-            >
-              <div>重新开始</div>
-            </div>
-            <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                vm.ui.$countdown.finish();
-              }}
-            >
-              <div>提前完成</div>
-            </div>
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              vm.ui.$countdown.play();
+            }}
+          >
+            <div>开始</div>
           </div>
-        </ScrollView>
-      </div>
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              vm.ui.$countdown.pause();
+            }}
+          >
+            <div>暂停</div>
+          </div>
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              vm.ui.$countdown.reset();
+            }}
+          >
+            <div>重新开始</div>
+          </div>
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              vm.ui.$countdown.finish();
+            }}
+          >
+            <div>提前完成</div>
+          </div>
+        </div>
+      </PageView>
     </>
   );
 }

@@ -26,6 +26,7 @@ import {
   fetchWorkoutActionProfileProcess,
 } from "@/biz/workout_action/services";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
+import { PageView } from "@/components/page-view";
 
 function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
   const request = {
@@ -210,84 +211,73 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="">
-        <div class="p-4">
-          <div class="space-y-8">
-            <div class="field">
-              <div>参与者</div>
-              <div class="mt-2">
-                <div class="flex items-center gap-2">
-                  <For each={state().selected_students}>
-                    {(student) => {
-                      return (
-                        <div class="p-2 rounded-full bg-w-bg-5 text-center">
-                          <div class="w-6 h-6">{student.nickname}</div>
-                        </div>
-                      );
-                    }}
-                  </For>
-                  <div
-                    class="p-2 rounded-full bg-w-bg-5"
-                    onClick={() => {
-                      vm.ui.$dialog_student_select.show();
-                    }}
-                  >
-                    <Plus class="w-6 h-6 text-w-fg-1" />
-                  </div>
+      <PageView
+        store={vm}
+        operations={
+          <div class="w-full py-2 rounded-md bg-w-bg-5">
+            <div class="text-white text-center">下一步</div>
+          </div>
+        }
+      >
+        <div class="space-y-8">
+          <div class="field">
+            <div>参与者</div>
+            <div class="mt-2">
+              <div class="flex items-center gap-2">
+                <For each={state().selected_students}>
+                  {(student) => {
+                    return (
+                      <div class="p-2 rounded-full bg-w-bg-5 text-center">
+                        <div class="w-6 h-6">{student.nickname}</div>
+                      </div>
+                    );
+                  }}
+                </For>
+                <div
+                  class="p-2 rounded-full bg-w-bg-5"
+                  onClick={() => {
+                    vm.ui.$dialog_student_select.show();
+                  }}
+                >
+                  <Plus class="w-6 h-6 text-w-fg-1" />
                 </div>
               </div>
             </div>
-            <div>
-              <div>训练计划</div>
-              <div class="mt-2">
-                <Show
-                  when={state().selected_workout_plans.length}
-                  fallback={
-                    <div
-                      class="flex items-center justify-center py-4 rounded-md bg-w-bg-5"
-                      onClick={() => {
-                        vm.ui.$dialog_workout_plan_select.show();
-                      }}
-                    >
-                      <Plus class="w-6 h-6 text-w-fg-1" />
-                    </div>
-                  }
-                >
+          </div>
+          <div>
+            <div>训练计划</div>
+            <div class="mt-2">
+              <Show
+                when={state().selected_workout_plans.length}
+                fallback={
                   <div
-                    class="p-4 border-2 border-w-bg-5 rounded-lg"
+                    class="flex items-center justify-center py-4 rounded-md bg-w-bg-5"
                     onClick={() => {
                       vm.ui.$dialog_workout_plan_select.show();
                     }}
                   >
-                    <div class="">
-                      <div class="text-w-fg-1">{state().selected_workout_plans[0].title}</div>
-                      <div class="flex flex-wrap gap-2 mt-4">
-                        <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">背部</div>
-                      </div>
+                    <Plus class="w-6 h-6 text-w-fg-1" />
+                  </div>
+                }
+              >
+                <div
+                  class="p-4 border-2 border-w-bg-5 rounded-lg"
+                  onClick={() => {
+                    vm.ui.$dialog_workout_plan_select.show();
+                  }}
+                >
+                  <div class="">
+                    <div class="text-w-fg-1">{state().selected_workout_plans[0].title}</div>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                      <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">背部</div>
                     </div>
                   </div>
-                </Show>
-              </div>
+                </div>
+              </Show>
             </div>
           </div>
         </div>
-        <div class="fixed bottom-0 w-full p-2 bg-w-bg-2">
-          <div class="flex items-center gap-2">
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.back();
-              }}
-            >
-              <ChevronLeft class="w-6 h-6 text-w-fg-1" />
-            </div>
-            <div class="w-full py-2 rounded-md bg-w-bg-5">
-              <div class="text-white text-center">下一步</div>
-            </div>
-          </div>
-          <div class="safe-height"></div>
-        </div>
-      </ScrollView>
+      </PageView>
       <Sheet class="" store={vm.ui.$dialog_student_select}>
         <div class="w-screen p-2 bg-w-bg-1">
           <ListView store={vm.request.student.list}>

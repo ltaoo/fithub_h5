@@ -19,6 +19,7 @@ import { createWorkoutDay } from "@/biz/workout_day/services";
 import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { WorkoutPlanViewModel } from "@/biz/workout_plan/workout_plan";
+import { PageView } from "@/components/page-view";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -125,7 +126,19 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="relative">
+      <PageView
+        store={vm}
+        operations={
+          <div class="flex items-center gap-2 w-full">
+            <Button class="w-full py-2.5 rounded-md bg-w-bg-5 text-w-fg-1 text-center" store={vm.ui.$btn_start_workout}>
+              开始训练
+            </Button>
+            <div class="p-2 rounded-full bg-w-bg-5">
+              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+            </div>
+          </div>
+        }
+      >
         <Show when={state().error}>
           <div class="error">
             <div>加载失败</div>
@@ -137,7 +150,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
         </Show>
         <Show when={state().profile}>
-          <div class="relative content p-2 bg-w-bg-0 space-y-4">
+          <div class="relative content bg-w-bg-0 space-y-4">
             <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
               <div class="text-2xl font-bold">{state().profile!.title}</div>
               <div>作者</div>
@@ -298,9 +311,8 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
             </div>
           </div>
         </Show>
-        <div class="h-[112px]"></div>
-      </ScrollView>
-      <div class="fixed bottom-0 left-0 w-full bg-w-bg-1">
+      </PageView>
+      {/* <div class="fixed bottom-0 left-0 w-full bg-w-bg-1">
         <div>
           <div class="flex justify-center gap-2 p-2">
             <div
@@ -320,7 +332,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
           <div class="safe-height"></div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

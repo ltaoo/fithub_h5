@@ -16,6 +16,7 @@ import { ButtonCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
+import { PageView } from "@/components/page-view";
 
 function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
   const methods = {
@@ -107,84 +108,77 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1
-          history={props.history}
-          extra={
-            <div class="flex items-center gap-2">
-              <Input store={vm.ui.$input_keyword} />
-              <div
-                class="p-2 rounded-full bg-w-bg-5"
-                onClick={() => {
-                  vm.methods.search();
-                }}
-              >
-                <Search class="w-6 h-6 text-w-fg-1" />
-              </div>
-              <div
-                class="p-2 rounded-full bg-w-bg-5"
-                onClick={() => {
-                  vm.methods.gotoPlanCreateView();
-                }}
-              >
-                <Plus class="w-6 h-6 text-w-fg-1" />
-              </div>
+      <PageView
+        store={vm}
+        operations={
+          <div class="flex items-center gap-2">
+            <Input store={vm.ui.$input_keyword} />
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.search();
+              }}
+            >
+              <Search class="w-6 h-6 text-w-fg-1" />
             </div>
-          }
-        />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view} class="">
-          <div class="p-2">
-            <div class="">
-              <ListView
-                store={vm.request.workout_plan.list}
-                class="space-y-2"
-                skeleton={
-                  <div class="p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1">
-                    <Skeleton class="w-[68px] h-[24px]" />
-                  </div>
-                }
-              >
-                <For each={state().response.dataSource}>
-                  {(plan) => {
-                    return (
-                      <div
-                        class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1"
-                        onClick={() => {
-                          props.history.push("root.workout_plan_profile", {
-                            id: plan.id.toString(),
-                          });
-                        }}
-                      >
-                        <div class="">{plan.title}</div>
-                        <div class="mt-2 text-sm">{plan.overview}</div>
-                        <div class="mt-2">
-                          <div class="flex items-center gap-1">
-                            <Clock class="w-4 h-4" />
-                            <div class="text-sm">{plan.estimated_duration_text}</div>
-                          </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-4">
-                          <For each={plan.tags}>
-                            {(text) => {
-                              return (
-                                <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">
-                                  {text}
-                                </div>
-                              );
-                            }}
-                          </For>
-                        </div>
-                      </div>
-                    );
-                  }}
-                </For>
-              </ListView>
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.gotoPlanCreateView();
+              }}
+            >
+              <Plus class="w-6 h-6 text-w-fg-1" />
             </div>
           </div>
-        </ScrollView>
-      </div>
+        }
+      >
+        <div class="">
+          <ListView
+            store={vm.request.workout_plan.list}
+            class="space-y-2"
+            skeleton={
+              <div class="p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1">
+                <Skeleton class="w-[68px] h-[24px]" />
+              </div>
+            }
+          >
+            <For each={state().response.dataSource}>
+              {(plan) => {
+                return (
+                  <div
+                    class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1"
+                    onClick={() => {
+                      props.history.push("root.workout_plan_profile", {
+                        id: plan.id.toString(),
+                      });
+                    }}
+                  >
+                    <div class="">{plan.title}</div>
+                    <div class="mt-2 text-sm">{plan.overview}</div>
+                    <div class="mt-2">
+                      <div class="flex items-center gap-1">
+                        <Clock class="w-4 h-4" />
+                        <div class="text-sm">{plan.estimated_duration_text}</div>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                      <For each={plan.tags}>
+                        {(text) => {
+                          return (
+                            <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">
+                              {text}
+                            </div>
+                          );
+                        }}
+                      </For>
+                    </div>
+                  </div>
+                );
+              }}
+            </For>
+          </ListView>
+        </div>
+      </PageView>
     </>
   );
 }

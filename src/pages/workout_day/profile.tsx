@@ -13,6 +13,7 @@ import { fetchWorkoutDayProfile, fetchWorkoutDayProfileProcess } from "@/biz/wor
 import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
 import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 import { ListCore } from "@/domains/list";
+import { PageView } from "@/components/page-view";
 
 function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -100,47 +101,34 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(WorkoutDayProfileViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view}>
-      <div class="flex items-center gap-2 p-4  border-b">
-        <div
-          class="flex items-center justify-center p-2 rounded-full bg-gray-200"
-          onClick={() => {
-            vm.methods.back();
-          }}
-        >
-          <ChevronLeft class="w-6 h-6 text-gray-800" />
-        </div>
-        <div class="text-gray-600">训练记录列表</div>
-      </div>
-      <div class="p-4">
-        <div class="mt-4">
-          <Show when={state().profile}>
-            <div class="p-2 border rounded-md">
-              <div class="text-xl">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
-              <div class="mt-2">{state().profile!.duration_text}</div>
-              <div class="mt-2">{state().profile!.started_at_text}</div>
-            </div>
-          </Show>
-          <div class="mt-4 space-y-2">
-            <For each={state().action_histories.dataSource}>
-              {(value) => {
-                return (
-                  <div>
-                    <div>{value.created_at}</div>
-                    <div>{value.action.zh_name}</div>
-                    <div class="flex text-sm">
-                      <div>{value.weight}</div>
-                      <div>{value.weight_unit}</div>
-                      <div>x{value.reps}</div>
-                      <div>{value.reps_unit}</div>
-                    </div>
-                  </div>
-                );
-              }}
-            </For>
+    <>
+      <PageView store={vm}>
+        <Show when={state().profile}>
+          <div class="p-2 border rounded-md">
+            <div class="text-xl">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
+            <div class="mt-2">{state().profile!.duration_text}</div>
+            <div class="mt-2">{state().profile!.started_at_text}</div>
           </div>
+        </Show>
+        <div class="mt-4 space-y-2">
+          <For each={state().action_histories.dataSource}>
+            {(value) => {
+              return (
+                <div>
+                  <div>{value.created_at}</div>
+                  <div>{value.action.zh_name}</div>
+                  <div class="flex text-sm">
+                    <div>{value.weight}</div>
+                    <div>{value.weight_unit}</div>
+                    <div>x{value.reps}</div>
+                    <div>{value.reps_unit}</div>
+                  </div>
+                </div>
+              );
+            }}
+          </For>
         </div>
-      </div>
-    </ScrollView>
+      </PageView>
+    </>
   );
 }

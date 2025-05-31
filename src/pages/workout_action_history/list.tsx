@@ -12,6 +12,7 @@ import { base, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
+import { PageView } from "@/components/page-view";
 
 function WorkoutActionHistoryViewModel(props: ViewComponentProps) {
   const request = {
@@ -22,6 +23,11 @@ function WorkoutActionHistoryViewModel(props: ViewComponentProps) {
           client: props.client,
         })
       ),
+    },
+  };
+  const methods = {
+    back() {
+      props.history.back();
     },
   };
   const ui = {
@@ -47,6 +53,7 @@ function WorkoutActionHistoryViewModel(props: ViewComponentProps) {
   request.workout_action_history.list.onStateChange((v) => bus.emit(Events.StateChange, { ..._state }));
 
   return {
+    methods,
     ui,
     state: _state,
     ready() {
@@ -62,34 +69,32 @@ export function WorkoutActionHistoryListView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(WorkoutActionHistoryViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view} class="h-full">
-      <div class="p-4">
-        <div class="space-y-2">
-          <For each={state().response.dataSource}>
-            {(v) => {
-              return (
-                <div class=" p-4 border rounded-md">
-                  <div>
-                    <div>{v.action.zh_name}</div>
-                  </div>
-                  <div class="flex">
-                    <div class="flex">
-                      {v.weight}
-                      {v.weight_unit}
-                    </div>
-                    <div class="ml-4">x</div>
-                    <div class="flex">
-                      {v.reps}
-                      {v.reps_unit}
-                    </div>
-                  </div>
-                  <div class="text-sm text-gray-600">{v.created_at}</div>
+    <PageView store={vm}>
+      <div class="space-y-2">
+        <For each={state().response.dataSource}>
+          {(v) => {
+            return (
+              <div class=" p-4 border rounded-md">
+                <div>
+                  <div>{v.action.zh_name}</div>
                 </div>
-              );
-            }}
-          </For>
-        </div>
+                <div class="flex">
+                  <div class="flex">
+                    {v.weight}
+                    {v.weight_unit}
+                  </div>
+                  <div class="ml-4">x</div>
+                  <div class="flex">
+                    {v.reps}
+                    {v.reps_unit}
+                  </div>
+                </div>
+                <div class="text-sm text-gray-600">{v.created_at}</div>
+              </div>
+            );
+          }}
+        </For>
       </div>
-    </ScrollView>
+    </PageView>
   );
 }

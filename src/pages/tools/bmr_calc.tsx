@@ -16,6 +16,7 @@ import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@
 import { RefCore } from "@/domains/ui/cur";
 import { toFixed, update_arr_item } from "@/utils";
 import { Result } from "@/domains/result";
+import { PageView } from "@/components/page-view";
 
 export function BMRCalcViewModel(props: ViewComponentProps) {
   const methods = {
@@ -197,88 +198,83 @@ export function BMRCalcToolView(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="基础代谢计算" history={props.history} />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view}>
-          <div class="p-4">
-            <div class="space-y-2">
-              <div>
-                <div>年龄</div>
-                <Input store={vm.ui.$input_age} />
+      <PageView store={vm}>
+        <div class="space-y-2">
+          <div>
+            <div>年龄</div>
+            <Input store={vm.ui.$input_age} />
+          </div>
+          <div>
+            <div>体重(单位KG)</div>
+            <Input store={vm.ui.$input_weight} />
+          </div>
+          <div>
+            <div>身高(单位cm)</div>
+            <Input store={vm.ui.$input_height} />
+          </div>
+          <div>
+            <div>性别</div>
+            <div class="flex gap-2">
+              <div
+                classList={{
+                  "w-[60px] p-2 border rounded-md text-center": true,
+                  "bg-green-200": state().gender === "man",
+                }}
+                onClick={() => {
+                  vm.ui.$input_gender.select("man");
+                }}
+              >
+                <div>男</div>
               </div>
-              <div>
-                <div>体重(单位KG)</div>
-                <Input store={vm.ui.$input_weight} />
+              <div
+                classList={{
+                  "w-[60px] p-2 border rounded-md text-center": true,
+                  "bg-green-200": state().gender === "woman",
+                }}
+                onClick={() => {
+                  vm.ui.$input_gender.select("woman");
+                }}
+              >
+                <div>女</div>
               </div>
-              <div>
-                <div>身高(单位cm)</div>
-                <Input store={vm.ui.$input_height} />
-              </div>
-              <div>
-                <div>性别</div>
-                <div class="flex gap-2">
+            </div>
+          </div>
+          <div>
+            <div>活动系数</div>
+            <Select store={vm.ui.$input_activity} />
+          </div>
+        </div>
+        <div class="mt-8">
+          <Button class="w-full" store={vm.ui.$btn_submit}>
+            计算
+          </Button>
+        </div>
+        <div class="mt-8 pb-12">
+          <div class="flex items-center justify-between">
+            <For each={state().values}>
+              {(v) => {
+                return (
                   <div
-                    classList={{
-                      "w-[60px] p-2 border rounded-md text-center": true,
-                      "bg-green-200": state().gender === "man",
-                    }}
+                    class="p-4 border rounded-md text-center"
                     onClick={() => {
-                      vm.ui.$input_gender.select("man");
+                      vm.methods.showDialogWithSpecialRule(v.idx);
                     }}
                   >
-                    <div>男</div>
+                    <div>
+                      <div class="text-sm text-gray-800">基础代谢</div>
+                      <div class="text-2xl">{v.v}</div>
+                    </div>
+                    <div class="mt-2">
+                      <div class="text-sm text-gray-800">总消耗</div>
+                      <div class="text-2xl">{v.tdee}</div>
+                    </div>
                   </div>
-                  <div
-                    classList={{
-                      "w-[60px] p-2 border rounded-md text-center": true,
-                      "bg-green-200": state().gender === "woman",
-                    }}
-                    onClick={() => {
-                      vm.ui.$input_gender.select("woman");
-                    }}
-                  >
-                    <div>女</div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div>活动系数</div>
-                <Select store={vm.ui.$input_activity} />
-              </div>
-            </div>
-            <div class="mt-8">
-              <Button class="w-full" store={vm.ui.$btn_submit}>
-                计算
-              </Button>
-            </div>
-            <div class="mt-8 pb-12">
-              <div class="flex items-center justify-between">
-                <For each={state().values}>
-                  {(v) => {
-                    return (
-                      <div
-                        class="p-4 border rounded-md text-center"
-                        onClick={() => {
-                          vm.methods.showDialogWithSpecialRule(v.idx);
-                        }}
-                      >
-                        <div>
-                          <div class="text-sm text-gray-800">基础代谢</div>
-                          <div class="text-2xl">{v.v}</div>
-                        </div>
-                        <div class="mt-2">
-                          <div class="text-sm text-gray-800">总消耗</div>
-                          <div class="text-2xl">{v.tdee}</div>
-                        </div>
-                      </div>
-                    );
-                  }}
-                </For>
-              </div>
-            </div>
-            {/* <div class="mt-8">
+                );
+              }}
+            </For>
+          </div>
+        </div>
+        {/* <div class="mt-8">
               <div>
                 <Select store={vm.ui.$input_activity} />
               </div>
@@ -288,9 +284,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
                 </Button>
               </div>
             </div> */}
-          </div>
-        </ScrollView>
-      </div>
+      </PageView>
       <Sheet store={vm.ui.$dialog_rm_calc_rule}>
         <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
           <div class="text-gray-800">

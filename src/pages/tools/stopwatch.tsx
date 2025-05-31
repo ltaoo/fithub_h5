@@ -8,11 +8,15 @@ import { useViewModel } from "@/hooks";
 import { ScrollViewCore } from "@/domains/ui";
 import { StopwatchViewModel } from "@/biz/stopwatch";
 import { For, Show } from "solid-js";
+import { PageView } from "@/components/page-view";
 
 function StopwatchToolViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
     },
     segment() {
       ui.$stopwatch.segment();
@@ -50,7 +54,7 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-//       ui.$stopwatch.setStartedAt(new Date("2025/05/29 18:00").valueOf());
+      //       ui.$stopwatch.setStartedAt(new Date("2025/05/29 18:00").valueOf());
       ui.$stopwatch.setStartedAt(new Date("2025-05-29 18:05").valueOf());
     },
     destroy() {
@@ -95,130 +99,125 @@ export function StopwatchToolView(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="秒表" history={props.history} />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view}>
-          <div class="p-4">
+      <PageView store={vm}>
+        <div class="">
+          <div
+            classList={{
+              "time-text flex items-center transition-all duration-200": true,
+              "text-4xl": true,
+            }}
+          >
             <div
               classList={{
-                "time-text flex items-center transition-all duration-200": true,
-                "text-4xl": true,
+                "text-center": true,
+                "w-[20px]": true,
               }}
+              ref={$minutes1}
             >
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$minutes1}
-              >
-                {state().stopwatch.minutes1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$minutes2}
-              >
-                {state().stopwatch.minutes2}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-              >
-                :
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$seconds1}
-              >
-                {state().stopwatch.seconds1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$seconds2}
-              >
-                {state().stopwatch.seconds2}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-              >
-                .
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$ms1}
-              >
-                {state().stopwatch.ms1}
-              </div>
-              <div
-                classList={{
-                  "text-center": true,
-                  "w-[20px]": true,
-                }}
-                ref={$ms2}
-              >
-                {state().stopwatch.ms2}
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center justify-between p-4">
-            <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                if (state().stopwatch.running) {
-                  vm.methods.segment();
-                  return;
-                }
-                vm.methods.reset();
-              }}
-            >
-              <Show when={state().stopwatch.running} fallback={<div>复位</div>}>
-                <div>分段</div>
-              </Show>
+              {state().stopwatch.minutes1}
             </div>
             <div
-              class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
-              onClick={() => {
-                vm.methods.toggle();
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$minutes2}
+            >
+              {state().stopwatch.minutes2}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
               }}
             >
-              <Show when={state().stopwatch.running} fallback={<div>开始</div>}>
-                <div>暂停</div>
-              </Show>
+              :
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$seconds1}
+            >
+              {state().stopwatch.seconds1}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$seconds2}
+            >
+              {state().stopwatch.seconds2}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+            >
+              .
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$ms1}
+            >
+              {state().stopwatch.ms1}
+            </div>
+            <div
+              classList={{
+                "text-center": true,
+                "w-[20px]": true,
+              }}
+              ref={$ms2}
+            >
+              {state().stopwatch.ms2}
             </div>
           </div>
-          <div class="p-4 space-y-4">
-            <For each={state().stopwatch.segments}>
-              {(seg) => {
-                return (
-                  <div class="flex items-center justify-between">
-                    <div>分段{seg.idx}</div>
-                    <div>{seg.text}</div>
-                  </div>
-                );
-              }}
-            </For>
+        </div>
+        <div class="flex items-center justify-between p-4">
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              if (state().stopwatch.running) {
+                vm.methods.segment();
+                return;
+              }
+              vm.methods.reset();
+            }}
+          >
+            <Show when={state().stopwatch.running} fallback={<div>复位</div>}>
+              <div>分段</div>
+            </Show>
           </div>
-        </ScrollView>
-      </div>
+          <div
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            onClick={() => {
+              vm.methods.toggle();
+            }}
+          >
+            <Show when={state().stopwatch.running} fallback={<div>开始</div>}>
+              <div>暂停</div>
+            </Show>
+          </div>
+        </div>
+        <div class="p-4 space-y-4">
+          <For each={state().stopwatch.segments}>
+            {(seg) => {
+              return (
+                <div class="flex items-center justify-between">
+                  <div>分段{seg.idx}</div>
+                  <div>{seg.text}</div>
+                </div>
+              );
+            }}
+          </For>
+        </div>
+      </PageView>
     </>
   );
 }

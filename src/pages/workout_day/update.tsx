@@ -196,6 +196,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
       console.log(opt);
       methods.refresh();
     },
+    pauseAllRunningSetCountdowns() {
+      ui.$running_set_countdowns.forEach(($countdown) => {
+        $countdown.pause();
+      });
+    },
     appendSetAct(opt: {
       step_idx: number;
       set_idx: number;
@@ -801,7 +806,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const $inputs_completed = new Map<string, InputCore<any>>();
   const $set_act_countdowns = new Map<string, SetActionCountdownViewModel>();
   const $set_countdowns = new Map<string, SetCountdownViewModel>();
-  const btns_more = new Map<string, ButtonCore>();
+  const $running_set_countdowns = new Map<string, SetCountdownViewModel>();
+  const $btns_more = new Map<string, ButtonCore>();
   const ui = {
     $set_actions,
     $fields_weight,
@@ -809,7 +815,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $inputs_completed,
     $set_act_countdowns,
     $set_countdowns,
-    btns_more,
+    $running_set_countdowns,
+    $btns_more,
     $menu_set: new DropdownMenuCore({
       // side: "left",
       align: "start",
@@ -1269,7 +1276,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       const { status, steps, pending_steps, started_at } = r.data;
-      console.log("[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started", steps);
+      console.log(
+        "[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started",
+        steps,
+        pending_steps
+      );
       if (status === WorkoutDayStatus.Started) {
         console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
         ui.$day_duration.setStartedAt(started_at.valueOf());
@@ -1291,7 +1302,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             return set.step_idx === a && set.idx === b;
           });
           const kk = `${a}-${b}`;
-          ui.btns_more.set(
+          ui.$btns_more.set(
             kk,
             new ButtonCore({
               onClick() {
@@ -1307,6 +1318,22 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
           //   is_completed = b < pending_steps.set_idx;
           // }
           let the_set_completed = pending_set?.completed ?? false;
+          let all_act_completed = false;
+          const pending_set_actions = pending_set?.actions ?? [];
+          if (pending_set_actions.length) {
+            // 如果默认 all_act_completed true，当 set 没有被编辑过，也默认所有动作完成，逻辑肯定不对，所以这里判断是编辑过的组
+            all_act_completed = true;
+            for (let i = 0; i < pending_set_actions.length; i += 1) {
+              const act = pending_set_actions[i];
+              if (!act.completed) {
+                all_act_completed = false;
+                break;
+              }
+            }
+          }
+          if (all_act_completed) {
+            the_set_completed = true;
+          }
           if (set.rest_duration) {
             const $countdown = SetCountdownViewModel({
               // countdown: 10,
@@ -1316,7 +1343,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               finished: the_set_completed,
             });
             $countdown.onStart(() => {
+              methods.pauseAllRunningSetCountdowns();
               console.log("[PAGE]workout_day/update - after $countdown.onStart", set);
+              ui.$running_set_countdowns.set(`${a}-${b}`, $countdown);
               if ([WorkoutPlanSetType.HIIT].includes(set.type)) {
                 const k = `${a}-${b}-${set.actions.length - 1}`;
                 // console.log("[]the k is", k);
@@ -1328,6 +1357,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               methods.setCurSet({ step_idx: a, set_idx: b });
             });
             $countdown.onStop(() => {
+              ui.$running_set_countdowns.delete(`${a}-${b}`);
               methods.nextSet();
             });
             ui.$set_countdowns.set(`${a}-${b}`, $countdown);

@@ -14,6 +14,7 @@ import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { toFixed } from "@/utils";
+import { PageView } from "@/components/page-view";
 
 export function RMCalcViewModel(props: ViewComponentProps) {
   const methods = {
@@ -132,65 +133,59 @@ export function RMCalcToolView(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1
-          title="RM换算"
-          history={props.history}
-          extra={
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.showDialogOfRMStep();
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+      <PageView
+        store={vm}
+        operations={
+          <div
+            class="p-2 rounded-full bg-w-bg-5"
+            onClick={() => {
+              vm.methods.showDialogOfRMStep();
+            }}
+          >
+            <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+          </div>
+        }
+      >
+        <div class="">
+          <div class="space-y-2">
+            <div>
+              <div>重量(单位KG)</div>
+              <Input store={vm.ui.$input_weight} />
             </div>
-          }
-        />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view}>
-          <div class="p-4">
-            <div class="space-y-2">
-              <div>
-                <div>重量(单位KG)</div>
-                <Input store={vm.ui.$input_weight} />
-              </div>
-              <div>
-                <div>次数</div>
-                <Input store={vm.ui.$input_reps} />
-              </div>
-              <div>
-                <Button class="w-full" store={vm.ui.$btn_submit}>
-                  计算
-                </Button>
-              </div>
+            <div>
+              <div>次数</div>
+              <Input store={vm.ui.$input_reps} />
             </div>
-            <div class="mt-8">
-              <div class="flex items-center justify-between">
-                <For each={state().values}>
-                  {(v) => {
-                    return (
-                      <div
-                        class="p-4 border rounded-md text-center"
-                        onClick={() => {
-                          vm.methods.showDialogWithText(v.text);
-                        }}
-                      >
-                        <div class="text-2xl">{v.v}</div>
-                        <div>KG</div>
-                        {/* <div class="flex justify-center mt-4">
-                          <Info class="w-4 h-4 text-gray-600" />
-                        </div> */}
-                      </div>
-                    );
-                  }}
-                </For>
-              </div>
+            <div>
+              <Button class="w-full" store={vm.ui.$btn_submit}>
+                计算
+              </Button>
             </div>
           </div>
-        </ScrollView>
-      </div>
+          <div class="mt-8">
+            <div class="flex items-center justify-between">
+              <For each={state().values}>
+                {(v) => {
+                  return (
+                    <div
+                      class="p-4 border rounded-md text-center"
+                      onClick={() => {
+                        vm.methods.showDialogWithText(v.text);
+                      }}
+                    >
+                      <div class="text-2xl">{v.v}</div>
+                      <div>KG</div>
+                      {/* <div class="flex justify-center mt-4">
+                          <Info class="w-4 h-4 text-gray-600" />
+                        </div> */}
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </div>
+        </div>
+      </PageView>
       <Sheet store={vm.ui.$dialog_rm_calc_rule}>
         <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
           <div>{state().text}</div>

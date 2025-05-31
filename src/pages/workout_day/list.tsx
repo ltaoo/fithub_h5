@@ -12,6 +12,7 @@ import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
 import { WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
+import { PageView } from "@/components/page-view";
 
 function WorkoutDayListViewModel(props: ViewComponentProps) {
   const request = {
@@ -84,39 +85,32 @@ export function WorkoutDayListView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(WorkoutDayListViewModel, [props]);
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 title="训练记录列表" history={props.history} />
-      </div>
-      <div class="absolute top-[58px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view}>
-          <div class="p-2">
-            <ListView store={vm.request.workout_day.list} class="space-y-2">
-              <For each={state().response.dataSource}>
-                {(value) => {
-                  return (
-                    <div
-                      class="border-2 border-w-bg-5 p-4 rounded-lg"
-                      onClick={() => {
-                        vm.methods.gotoWorkoutDayProfileView(value);
-                      }}
-                    >
-                      <div class="text-w-fg-1">{value.started_at_text}</div>
-                      {/* <Show when={value.finished_at}>
+      <PageView store={vm}>
+        <ListView store={vm.request.workout_day.list} class="space-y-2">
+          <For each={state().response.dataSource}>
+            {(value) => {
+              return (
+                <div
+                  class="border-2 border-w-bg-5 p-4 rounded-lg"
+                  onClick={() => {
+                    vm.methods.gotoWorkoutDayProfileView(value);
+                  }}
+                >
+                  <div class="text-w-fg-1">{value.started_at_text}</div>
+                  {/* <Show when={value.finished_at}>
                     <div class="">{value.finished_at}</div>
                   </Show> */}
-                      <div class="flex flex-wrap mt-2">
-                        <div class="px-2 py-1 rounded-xl border-2 border-w-bg-5 text-sm text-w-fg-1">
-                          {WorkoutDayStatusTextMap[value.status]}
-                        </div>
-                      </div>
+                  <div class="flex flex-wrap mt-2">
+                    <div class="px-2 py-1 rounded-xl border-2 border-w-bg-5 text-sm text-w-fg-1">
+                      {WorkoutDayStatusTextMap[value.status]}
                     </div>
-                  );
-                }}
-              </For>
-            </ListView>
-          </div>
-        </ScrollView>
-      </div>
+                  </div>
+                </div>
+              );
+            }}
+          </For>
+        </ListView>
+      </PageView>
     </>
   );
 }
