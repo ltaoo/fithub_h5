@@ -671,7 +671,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                         when={state().fields.length}
                         fallback={
                           <div
-                            class="flex justify-center p-4 rounded-md bg-w-bg-5"
+                            class="flex justify-center p-4 border-2 border-w-bg-5 rounded-lg"
                             onClick={() => {
                               vm.ui.$ref_action_in_menu.clear();
                               vm.ui.$workout_action_select.ui.$dialog.show();
@@ -681,7 +681,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                               <div>
                                 <Plus class="w-8 h-8" />
                               </div>
-                              <div class="text-sm">点击添加动作</div>
+                              <div class="">点击添加动作</div>
                             </div>
                           </div>
                         }
@@ -833,7 +833,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               <ChevronLeft class="w-6 h-6 text-w-fg-1" />
             </div>
             <div class="flex items-center gap-2 w-full">
-              <Button class="w-full" store={vm.ui.$btn_add_act}>
+              <Button class="w-full" icon={<Plus class="w-4 h-4 text-w-fg-1" />} store={vm.ui.$btn_add_act}>
                 添加动作
               </Button>
               <Button class="w-full" store={vm.ui.$btn_submit}>

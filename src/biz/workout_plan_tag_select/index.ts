@@ -1,7 +1,7 @@
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { MultipleSelectionCore } from "@/domains/multiple";
-import { DialogCore } from "@/domains/ui";
+import { ButtonCore, DialogCore } from "@/domains/ui";
 
 export function WorkoutPlanTagSelectViewModel() {
   const methods = {
@@ -10,24 +10,47 @@ export function WorkoutPlanTagSelectViewModel() {
     },
     select(tag: string) {
       (() => {
-        if (_selected_tags.includes(tag)) {
-          _selected_tags = _selected_tags.filter((v) => v !== tag);
+        if (_tmp_selected_tags.includes(tag)) {
+          _tmp_selected_tags = _tmp_selected_tags.filter((v) => v !== tag);
           return;
         }
-        _selected_tags.push(tag);
+        _tmp_selected_tags.push(tag);
       })();
       methods.refresh();
     },
     clear() {
       _selected_tags = [];
+      _tmp_selected_tags = [];
       methods.refresh();
+    },
+    showDialog() {
+      _tmp_selected_tags = [..._selected_tags];
+      ui.$dialog.show();
+      methods.refresh();
+    },
+    submit() {
+      _selected_tags = [..._tmp_selected_tags];
+      ui.$dialog.hide();
+      methods.refresh();
+    },
+    cancel() {
+      ui.$dialog.hide();
     },
   };
   const ui = {
-    $dialog: new DialogCore({}),
-    $select: new MultipleSelectionCore<string>({
-      defaultValue: [],
-      options: [],
+    $dialog: new DialogCore({
+      onCancel() {
+        methods.refresh();
+      },
+    }),
+    // $select: new MultipleSelectionCore<string>({
+    //   defaultValue: [],
+    //   options: [],
+    // }),
+    $btn_submit: new ButtonCore({
+      onClick() {
+        methods.submit();
+      },
     }),
   };
   let _tag_groups = [
@@ -133,6 +156,7 @@ export function WorkoutPlanTagSelectViewModel() {
     },
   ];
   let _selected_tags: string[] = [];
+  let _tmp_selected_tags: string[] = [];
   let _state = {
     get value() {
       return _selected_tags;
@@ -145,7 +169,7 @@ export function WorkoutPlanTagSelectViewModel() {
             return {
               label: opt.label,
               value: opt.value,
-              selected: _selected_tags.includes(opt.value),
+              selected: _tmp_selected_tags.includes(opt.value),
             };
           }),
         };

@@ -61,7 +61,7 @@ export function LoginPage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(LoginViewModel, [props]);
 
   return (
-    <div class="pt-12 px-4 min-h-screen bg-w-bg-0">
+    <div class="pt-12 px-4 min-h-screen">
       <div class="h-[160px] mx-auto">
         <div class="relative cursor-pointer">
           <div class="z-20 relative text-6xl text-center italic">Fit Hub</div>
@@ -70,11 +70,11 @@ export function LoginPage(props: ViewComponentProps) {
       <div class="space-y-4 rounded-md">
         <div>
           <div>邮箱</div>
-          <Input class="mt-1 bg-w-bg-0" store={vm.ui.$input_email} />
+          <Input class="mt-1" store={vm.ui.$input_email} />
         </div>
         <div>
           <div>密码</div>
-          <Input class="mt-1 bg-w-bg-0" store={vm.ui.$input_pwd} />
+          <Input class="mt-1" store={vm.ui.$input_pwd} />
         </div>
       </div>
       <div class="w-full mt-8">

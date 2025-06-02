@@ -137,7 +137,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       if (!resp) {
         return [];
       }
-      const curId = ui.$tab.state.curId ?? resp.list[0].id;
+      const curId = ui.$tab.state.curId ?? resp.list[0]?.id;
       if (!curId) {
         return [];
       }
@@ -248,9 +248,14 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
       <div class="absolute top-[122px] bottom-0 left-0 w-full">
         <ScrollView store={vm.ui.$view} class="">
           <div class="p-2 pb-8 relative whitespace-nowrap">
-            <Show when={state().dataSource.length} fallback={<div class="p-4 h-[160px] rounded-xl border-2 border-w-bg-5">
-              <Skeleton class="w-[120px] h-[32px]" />
-            </div>}>
+            <Show
+              when={state().dataSource.length}
+              fallback={
+                <div class="p-4 h-[160px] rounded-xl border-2 border-w-bg-5">
+                  <Skeleton class="w-[120px] h-[32px]" />
+                </div>
+              }
+            >
               <div class="space-y-2">
                 <For each={state().dataSource}>
                   {(vv) => {

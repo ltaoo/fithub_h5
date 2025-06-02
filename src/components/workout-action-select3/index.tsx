@@ -3,8 +3,7 @@
  */
 import { For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
-import { MoreHorizontal, X } from "lucide-solid";
-import { Check } from "lucide-solid";
+import { ChevronDown, ChevronLeft, MoreHorizontal, X } from "lucide-solid";
 
 import * as PopoverPrimitive from "@/packages/ui/popover";
 import { Button, Dialog, Input, ListView, ScrollView } from "@/components/ui";
@@ -17,9 +16,9 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="">
+    <div class="w-full">
       <div class="z-10 fixed inset-0 bg-black opacity-40"></div>
-      <div class="z-50 relative w-screen">
+      <div class="z-50 relative w-full">
         <div class="flex flex-col bg-w-bg-0 border-t-2 border-w-bg-5" style={{ height: "100vh" }}>
           <div class="flex gap-2 p-2">
             <div class="w-[240px]">
@@ -60,7 +59,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
                         <div
                           classList={{
                             "relative p-2 flex justify-between border-2 border-w-bg-5 rounded-md text-w-fg-1": true,
-                            "border-w-fg-2 bg-w-bg-5": !!state().value.find((act) => act.id === action.id),
+                            "border-w-fg-2 bg-w-bg-5 text-w-fg-0": !!state().value.find((act) => act.id === action.id),
                             "text-gray-100": !!state().disabled.includes(action.id),
                           }}
                           onClick={() => {
@@ -86,13 +85,13 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </ListView>
             </ScrollView>
           </div>
-          <div class="bg-w-bg-0 border-t-2 border-w-bg-5">
-            <div class="flex items-center gap-2 p-2">
+          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-bg-5">
+            <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
+              <ChevronDown class="w-6 h-6 text-w-fg-0" />
+            </div>
+            <div class="flex-1 flex items-center gap-2">
               <Button store={vm.ui.$btn_submit} class="w-full">
                 确定
-              </Button>
-              <Button store={vm.ui.$btn_cancel} class="w-[88px]">
-                取消
               </Button>
             </div>
           </div>

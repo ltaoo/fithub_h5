@@ -159,46 +159,51 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
     return Result.Err(r.error);
   }
   const plan = r.data;
-  const steps = parseWorkoutPlanStepsString(plan.details);
-  return Result.Ok({
-    id: plan.id,
-    title: plan.title,
-    overview: plan.overview,
-    tags: plan.tags.split(",").filter(Boolean),
-    level: plan.level,
-    steps,
-    estimated_duration: plan.estimated_duration,
-    estimated_duration_text: seconds_to_hour_with_template(plan.estimated_duration, seconds_to_hour_template1),
-    points: (() => {
-      const r = parseJSONStr<string[]>(plan.points);
-      if (r.error) {
-        return [];
-      }
-      return r.data;
-    })(),
-    suggestions: (() => {
-      const r = parseJSONStr<string[]>(plan.suggestions);
-      if (r.error) {
-        return [];
-      }
-      return r.data;
-    })(),
-    action_ids: (() => {
-      const ids: number[] = [];
-      for (let a = 0; a < steps.length; a += 1) {
-        const step = steps[a];
-        for (let b = 0; b < step.actions.length; b += 1) {
-          const act = step.actions[b];
-          if (!ids.includes(act.action.id)) {
-            ids.push(act.action.id);
+  try {
+    const steps = parseWorkoutPlanStepsString(plan.details);
+    return Result.Ok({
+      id: plan.id,
+      title: plan.title,
+      overview: plan.overview,
+      tags: plan.tags.split(",").filter(Boolean),
+      level: plan.level,
+      steps,
+      estimated_duration: plan.estimated_duration,
+      estimated_duration_text: seconds_to_hour_with_template(plan.estimated_duration, seconds_to_hour_template1),
+      points: (() => {
+        const r = parseJSONStr<string[]>(plan.points);
+        if (r.error) {
+          return [];
+        }
+        return r.data;
+      })(),
+      suggestions: (() => {
+        const r = parseJSONStr<string[]>(plan.suggestions);
+        if (r.error) {
+          return [];
+        }
+        return r.data;
+      })(),
+      action_ids: (() => {
+        const ids: number[] = [];
+        for (let a = 0; a < steps.length; a += 1) {
+          const step = steps[a];
+          for (let b = 0; b < step.actions.length; b += 1) {
+            const act = step.actions[b];
+            if (!ids.includes(act.action.id)) {
+              ids.push(act.action.id);
+            }
           }
         }
-      }
-      return ids;
-    })(),
-    muscle_ids: plan.muscle_ids.split(",").map((v) => Number(v)),
-    equipment_ids: plan.equipment_ids.split(",").map((v) => Number(v)),
-  });
+        return ids;
+      })(),
+      muscle_ids: plan.muscle_ids.split(",").map((v) => Number(v)),
+      equipment_ids: plan.equipment_ids.split(",").map((v) => Number(v)),
+    });
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.stack ?? e.message);
+  }
 }
 
 export function fetchWorkoutPlanList(params: Partial<FetchParams> & { keyword?: string }) {

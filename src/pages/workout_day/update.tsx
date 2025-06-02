@@ -31,6 +31,7 @@ import { RefCore } from "@/domains/ui/cur";
 import { buildSetAct } from "@/biz/workout_plan/workout_plan";
 import { SingleFieldCore } from "@/domains/ui/formv2";
 import { Result } from "@/domains/result";
+import { ListCore } from "@/domains/list";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 import { StopwatchViewModel } from "@/biz/stopwatch";
 import {
@@ -45,7 +46,11 @@ import {
 } from "@/biz/workout_day/services";
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
-import { WorkoutActionProfile } from "@/biz/workout_action/services";
+import {
+  fetchWorkoutActionHistoryList,
+  fetchWorkoutActionHistoryListProcess,
+  WorkoutActionProfile,
+} from "@/biz/workout_action/services";
 import { CountdownViewModel } from "@/biz/countdown";
 import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 import { getSetValueUnit, SetValueInputViewModel, SetValueUnit } from "@/biz/set_value_input";
@@ -65,7 +70,6 @@ import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
-import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 
 export type HomeWorkoutDayUpdateViewModel = ReturnType<typeof HomeWorkoutDayUpdateViewModel>;
 export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
@@ -85,6 +89,15 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         process: fetchWorkoutActionProfileProcess,
         client: props.client,
       }),
+    },
+    workout_action_history: {
+      list: new ListCore(
+        new RequestCore(fetchWorkoutActionHistoryList, {
+          process: fetchWorkoutActionHistoryListProcess,
+          client: props.client,
+        }),
+        { pageSize: 3 }
+      ),
     },
     workout_day: {
       profile: new RequestCore(fetchWorkoutDayProfile, {
@@ -753,6 +766,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     async showWorkoutActionProfile(action: { id: number | string }) {
       ui.$workout_action_profile_dialog.show();
+      request.workout_action_history.list.init({
+        workout_action_id: Number(action.id),
+      });
       if (request.workout_action.profile.response && request.workout_action.profile.response.id === action.id) {
         return;
       }
@@ -768,9 +784,11 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     async submit() {
       // const { data } = methods.toBody();
+      ui.$btn_workout_day_submit.setLoading(true);
       const r = await request.workout_day.complete.run({
         id: props.view.query.id,
       });
+      ui.$btn_workout_day_submit.setLoading(false);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -785,7 +803,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         icon: "loading",
         text: [],
       });
+      ui.$btn_workout_day_give_up.setLoading(true);
       const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
+      ui.$btn_workout_day_give_up.setLoading(false);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -884,7 +904,6 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $workout_plan_dialog_btn: new ButtonCore(),
     $action_select_dialog: new DialogCore({}),
     $action_select_view: new ScrollViewCore(),
-
     $start_btn: new ButtonCore(),
     /** 动作选择弹窗 */
     $workout_action_dialog: WorkoutActionSelectDialogViewModel({
@@ -1135,6 +1154,16 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         });
       },
     }),
+    $btn_workout_day_submit: new ButtonCore({
+      onClick() {
+        methods.submit();
+      },
+    }),
+    $btn_workout_day_give_up: new ButtonCore({
+      onClick() {
+        methods.giveUp();
+      },
+    }),
   };
   let _height = 0;
   let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
@@ -1177,6 +1206,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     get cur_workout_action() {
       return _cur_workout_action;
+    },
+    get cur_workout_action_history() {
+      return request.workout_action_history.list.response.dataSource;
     },
     get next_set_idx() {
       return _next_set_idx;
@@ -1486,25 +1518,32 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                     <div class="space-y-2 w-full">
                                       <Show
                                         when={
-                                          [WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                          vm.ui.$set_actions.get(`${a()}-${b()}-0`)
+                                          [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
+                                            set.type
+                                          ) && vm.ui.$set_actions.get(`${a()}-${b()}-0`)
                                         }
                                       >
                                         <SetActionView
                                           store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
+                                          idx={b() + 1}
                                           onClick={() => {
                                             vm.methods.showWorkoutActionProfile(set.actions[0]);
                                           }}
                                         />
                                       </Show>
+                                      <Show
+                                        when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)}
+                                      >
+                                        <div class="inline-flex items-center justify-center px-2 rounded-full bg-blue-500">
+                                          <div class="text-sm">{b() + 1}</div>
+                                        </div>
+                                      </Show>
                                       <div class="space-y-2 w-full">
                                         <For each={set.actions}>
                                           {(action, c) => {
                                             const act_k = `${a()}-${b()}-${c()}`;
-                                            const is_countdown_reps = [
-                                              getSetValueUnit("秒"),
-                                              getSetValueUnit("分"),
-                                            ].includes(action.reps_unit);
+                                            const is_countdown_reps = () =>
+                                              [getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps_unit);
                                             return (
                                               <div class="gap-2">
                                                 <Show
@@ -1515,6 +1554,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                 >
                                                   <SetActionView
                                                     store={vm.ui.$set_actions.get(act_k)!}
+                                                    idx={[WorkoutPlanSetType.Normal].includes(set.type) ? b() + 1 : 0}
                                                     onClick={() => {
                                                       vm.methods.showWorkoutActionProfile(action);
                                                     }}
@@ -1578,7 +1618,9 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                     />
                                                   </Show>
                                                 </div>
-                                                <Show when={is_countdown_reps && vm.ui.$set_act_countdowns.get(act_k)}>
+                                                <Show
+                                                  when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_k)}
+                                                >
                                                   <div class="rounded-md p-2 mt-1 bg-w-bg-5">
                                                     <SetActionCountdownView
                                                       store={vm.ui.$set_act_countdowns.get(act_k)!}
@@ -1638,27 +1680,52 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
-        <div class="relative w-screen min-h-[320px] border border-t-gray-200 bg-w-bg-1">
+        <div class="relative w-screen min-h-[320px] p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
+          <div class="h-[32px]"></div>
           <Show when={state().loading}>
             <div class="absolute inset-0">
-              <div class="absolute inset-0 bg-white opacity-40"></div>
+              {/* <div class="absolute inset-0 bg-white opacity-40"></div> */}
               <div class="absolute inset-0 flex items-center justify-center">
-                <div class="flex items-center justify-center p-4 rounded-md bg-gray-200">
+                <div class="flex items-center justify-center p-4 rounded-lg text-w-fg-0 bg-w-bg-5">
                   <Loader class="w-8 h-8 animate-spin" />
                 </div>
               </div>
             </div>
           </Show>
           <Show when={state().cur_workout_action}>
-            <WorkoutActionCard {...state().cur_workout_action!} />
+            <div class="mt-2 border-2 rounded-lg border-w-bg-5">
+              <WorkoutActionCard {...state().cur_workout_action!} />
+            </div>
           </Show>
+          <div class="space-y-2 mt-2">
+            <For each={state().cur_workout_action_history}>
+              {(history) => {
+                return (
+                  <div class="p-4 rounded-lg border-2 border-w-bg-5">
+                    <div class="flex items-center">
+                      <div class="flex items-center text-w-fg-0">
+                        <div class="text-lg">{history.weight}</div>
+                        <div class="text-sm">{history.weight_unit}</div>
+                      </div>
+                      <div class="mx-2 text-w-fg-1 text-sm">x</div>
+                      <div class="flex items-center text-w-fg-0">
+                        <div class="text-lg">{history.reps}</div>
+                        <div class="text-sm">{history.reps_unit}</div>
+                      </div>
+                    </div>
+                    <div class="text-sm text-w-fg-1">{history.created_at}</div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
           <div
-            class="absolute right-4 top-4 p-2 rounded-full bg-gray-200"
+            class="absolute right-2 top-2 p-2 rounded-full bg-w-bg-5"
             onClick={() => {
               vm.ui.$workout_action_profile_dialog.hide();
             }}
           >
-            <X class="w-6 h-6 text-gray-800" />
+            <X class="w-4 h-4 text-w-fg-1" />
           </div>
         </div>
       </Sheet>

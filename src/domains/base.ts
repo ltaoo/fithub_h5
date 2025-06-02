@@ -201,7 +201,7 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
       bus.emit(Events.StateChange, { ..._state });
     },
   };
-
+  const ui = {};
   let _state = {};
   enum Events {
     StateChange,
@@ -215,6 +215,7 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
 
   return {
     methods,
+    ui,
     state: _state,
     ready() {},
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {

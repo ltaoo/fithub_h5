@@ -51,7 +51,14 @@ export function get_token() {
  * @returns
  */
 export function fetch_user_profile() {
-  return request.get("/api/admin/user/profile");
+  return request.get<{
+    nickname: string;
+    avatar_url: string;
+    subscription: {
+      visible: boolean;
+      text: string;
+    };
+  }>("/api/mine/profile");
 }
 
 /**

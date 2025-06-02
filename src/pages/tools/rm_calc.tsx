@@ -136,24 +136,27 @@ export function RMCalcToolView(props: ViewComponentProps) {
       <PageView
         store={vm}
         operations={
-          <div
-            class="p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.methods.showDialogOfRMStep();
-            }}
-          >
-            <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+          <div class="flex items-center justify-between">
+            <div></div>
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.showDialogOfRMStep();
+              }}
+            >
+              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+            </div>
           </div>
         }
       >
         <div class="">
           <div class="space-y-2">
             <div>
-              <div>重量(单位KG)</div>
+              <div class="text-w-fg-0">重量(单位kg)</div>
               <Input store={vm.ui.$input_weight} />
             </div>
             <div>
-              <div>次数</div>
+              <div class="text-w-fg-0">次数</div>
               <Input store={vm.ui.$input_reps} />
             </div>
             <div>
@@ -168,13 +171,13 @@ export function RMCalcToolView(props: ViewComponentProps) {
                 {(v) => {
                   return (
                     <div
-                      class="p-4 border rounded-md text-center"
+                      class="p-4 border-2 border-w-bg-5 rounded-lg text-center text-w-fg-0"
                       onClick={() => {
                         vm.methods.showDialogWithText(v.text);
                       }}
                     >
                       <div class="text-2xl">{v.v}</div>
-                      <div>KG</div>
+                      <div>kg</div>
                       {/* <div class="flex justify-center mt-4">
                           <Info class="w-4 h-4 text-gray-600" />
                         </div> */}
@@ -192,9 +195,9 @@ export function RMCalcToolView(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_rm_step}>
-        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1 text-w-fg-1">
-          <div class="text-xl">最大重量（1RM）测试方案</div>
-          <div class="mt-2">
+        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1 text-w-fg-0">
+          <div class="">最大重量（1RM）测试方案</div>
+          <div class="mt-2 text-sm">
             <div>以预期 1RM 重量的 50% 的重量做 10 次</div>
             <div>休息 30s</div>
             <div>以预期 1RM 重量的 75% 的重量做 5 次</div>

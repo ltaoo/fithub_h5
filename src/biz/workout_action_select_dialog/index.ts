@@ -40,6 +40,9 @@ export function WorkoutActionSelectDialogViewModel(props: {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
+    cancel() {
+      ui.$dialog.hide();
+    },
     select(action: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
       console.log("[BIZ]workout_action_select2 - select", action);
       const disabled = _disabled.includes(action.id);

@@ -1,4 +1,6 @@
-import { onMount } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
+
+import { BodyPartWithMuscles } from "@/biz/muscle/types";
 
 // 默认的肌肉名称到SVG路径ID的映射
 const default_muscle_id_map: Record<string, string[]> = {
@@ -12,10 +14,242 @@ const default_muscle_id_map: Record<string, string[]> = {
   forearms: ["path80", "path86", "path92", "path94", "path144", "path146", "path154", "path156"], // 前臂左右
   abdominals: ["path108", "path110", "path116", "path118", "path120", "path122", "path124", "path126"], // 腹直肌
   obliques: ["path112", "path114", "path128", "path130", "path192", "path194"], // 腹外斜肌左右
+  glutes: ["path42", "path66"], // 臀大肌
   quads: ["path170", "path172", "path174", "path176", "path180", "path182", "path186", "path188"], // 股四头肌左右
   hamstrings: ["path38", "path40", "path48", "path58", "path70", "path74"], // 腘绳肌左右
   calves: ["path46", "path50", "path54", "path62", "path64", "path68", "path166", "path168", "path178", "path184"], // 小腿三头肌左右
-  glutes: ["path42", "path66"], // 臀大肌
+};
+
+const muscle_id_details_map: Record<string, BodyPartWithMuscles> = {
+  traps: {
+    title: "斜方肌",
+    muscles: [
+      {
+        name: "斜方肌上部",
+        en_name: "Upper trapezius",
+      },
+      {
+        name: "斜方肌中部",
+        en_name: "Middle Trapezius",
+      },
+      {
+        name: "斜方肌下部",
+        en_name: "Lower Trapezius",
+      },
+      {
+        name: "菱形肌",
+        en_name: "Rhomboid",
+      },
+    ],
+  },
+  lats: {
+    title: "背阔肌",
+    muscles: [
+      {
+        name: "背阔肌",
+        en_name: "Latissimus dorsi",
+      },
+      {
+        name: "竖脊肌",
+        en_name: "Erector spinae",
+      },
+    ],
+  },
+  lower_back: {
+    title: "下背部",
+    muscles: [],
+  },
+  shoulders: {
+    title: "肩膀",
+    muscles: [
+      {
+        name: "三角肌前束",
+        en_name: "Anterior deltoid",
+      },
+      {
+        name: "三角肌中束",
+        en_name: "Lateral deltoid",
+      },
+      {
+        name: "三角肌后束",
+        en_name: "Posterior deltoid",
+      },
+      {
+        name: "冈下肌",
+        en_name: "Infraspinatus",
+      },
+      {
+        name: "小圆肌",
+        en_name: "Teres minor",
+      },
+      {
+        name: "大圆肌",
+        en_name: "Teres major",
+      },
+    ],
+  },
+  chest: {
+    title: "胸部",
+    muscles: [
+      {
+        name: "胸大肌",
+        en_name: "Pectoralis major",
+      },
+      {
+        name: "胸小肌",
+        en_name: "Pectoralis minor",
+      },
+    ],
+  },
+  biceps: {
+    title: "二头肌",
+    muscles: [
+      {
+        name: "肱二头肌",
+        en_name: "Biceps brachii",
+      },
+      {
+        name: "肱肌",
+        en_name: "Brachialis",
+      },
+    ],
+  },
+  triceps: {
+    title: "三头肌",
+    muscles: [
+      {
+        name: "肱三头肌",
+        en_name: "Triceps brachii",
+      },
+    ],
+  },
+  forearms: {
+    title: "小臂",
+    muscles: [
+      {
+        name: "肱桡肌",
+        en_name: "Brachioradialis",
+      },
+    ],
+  },
+  abdominals: {
+    title: "腹直肌",
+    muscles: [
+      {
+        name: "腹直肌",
+        en_name: "Abdominals",
+      },
+    ],
+  },
+  obliques: {
+    title: "腹外斜肌",
+    muscles: [
+      {
+        name: "腹外斜肌",
+        en_name: "Obliquus externus abdominis",
+      },
+      {
+        name: "前锯肌",
+        en_name: "Serratus anterior",
+      },
+    ],
+  },
+  glutes: {
+    title: "臀大肌",
+    muscles: [
+      {
+        name: "臀大肌",
+        en_name: "Gluteus maximus",
+      },
+      {
+        name: "臀中肌",
+        en_name: "Gluteus medius",
+      },
+    ],
+  },
+  quads: {
+    title: "股四头肌",
+    muscles: [
+      {
+        name: "缝匠肌",
+        en_name: "Sartorius",
+      },
+      {
+        name: "耻骨肌",
+        en_name: "Pectineus",
+      },
+      {
+        name: "髂腰肌",
+        en_name: "Iliopsoas",
+      },
+      {
+        name: "长收肌",
+        en_name: "Adductor longus",
+      },
+      {
+        name: "股薄肌",
+        en_name: "Gracilis",
+      },
+      {
+        name: "股直肌",
+        en_name: "Rectus femoris",
+      },
+      {
+        name: "股内侧肌",
+        en_name: "Vastus medialis",
+      },
+      {
+        name: "阔筋膜张肌",
+        en_name: "Tensor fascia latae",
+      },
+    ],
+  },
+  hamstrings: {
+    title: "腘绳肌",
+    muscles: [
+      {
+        name: "股二头肌",
+        en_name: "Biceps femoris",
+      },
+      {
+        name: "半腱肌",
+        en_name: "Semitendinosus",
+      },
+      {
+        name: "半膜肌",
+        en_name: "Semimembranosus",
+      },
+      {
+        name: "大收肌",
+        en_name: "Adductor magnus",
+      },
+      {
+        name: "股外侧肌",
+        en_name: "Vastus lateralis",
+      },
+    ],
+  },
+  calves: {
+    title: "小腿",
+    muscles: [
+      {
+        name: "腓骨长肌",
+        en_name: "Peroneus longus",
+      },
+      {
+        name: "胫骨前肌",
+        en_name: "Tibialis anterior",
+      },
+      {
+        name: "比目鱼肌",
+        en_name: "Soleus",
+      },
+      {
+        name: "腓肠肌",
+        en_name: "Gastrocnemius",
+      },
+    ],
+  },
 };
 const muscle_name_map: Record<string, string> = {
   // 斜方肌
@@ -50,6 +284,8 @@ const muscle_name_map: Record<string, string> = {
   rectus_abdominis: "abdominals",
   // 腹横肌
   transversus_abdominis: "abdominals",
+  // 腹外斜肌
+  oblique: "obliques",
   // 核心肌群
   // "core_muscles": "abdominals",
   // 股四头肌
@@ -73,11 +309,72 @@ const muscle_name_map: Record<string, string> = {
   // 阔筋膜张肌
   tensor_fasciae_latae: "glutes",
 };
-export default function _BodyMusclePreview(props: { highlighted: string[] }) {
-  onMount(() => {
-    for (let i = 0; i < props.highlighted.length; i += 1) {
+const reverse_muscle_name_map = Object.keys(muscle_name_map)
+  .map((n) => {
+    const v = muscle_name_map[n];
+    return {
+      [v]: n,
+    };
+  })
+  .reduce((a, b) => {
+    return { ...a, ...b };
+  }, {});
+const disabled_parts = [
+  "path164",
+  "path190",
+  "path202",
+  "path204",
+  "path162",
+  "path34",
+  "path90",
+  "path76",
+  "path52",
+  "path72",
+  "path136",
+  "path132",
+  "path134",
+  "path22",
+  "path20",
+];
+
+export default function _BodyMusclePreview(props: {
+  highlighted: string[];
+  onClick?: (part: BodyPartWithMuscles) => void;
+}) {
+  let elm: SVGSVGElement | undefined;
+  let _cur_highlighted_muscles: string[] = [];
+
+  function handleClick(e: MouseEvent) {
+    const target = e.target as HTMLDivElement;
+    if (!target) {
+      return;
+    }
+    const id = target.id;
+    const matched_muscle_name = Object.keys(default_muscle_id_map).find((name) => {
+      const paths = default_muscle_id_map[name];
+      return paths.includes(id);
+    });
+    if (!matched_muscle_name) {
+      return;
+    }
+    const name = reverse_muscle_name_map[matched_muscle_name];
+    if (!name) {
+      return;
+    }
+    unhighlight(_cur_highlighted_muscles);
+    _cur_highlighted_muscles = [name];
+    highlight(_cur_highlighted_muscles);
+    if (props.onClick) {
+      const m = muscle_id_details_map[matched_muscle_name];
+      if (m) {
+        props.onClick(m);
+      }
+    }
+  }
+  function highlight(muscles: string[]) {
+    for (let i = 0; i < muscles.length; i += 1) {
       (() => {
-        const id = props.highlighted[i];
+        const id = muscles[i];
         const mm = muscle_name_map[id];
         if (!mm) {
           return;
@@ -86,18 +383,49 @@ export default function _BodyMusclePreview(props: { highlighted: string[] }) {
         if (!ids) {
           return;
         }
-        for (let j = 0; j < ids.length; j += 1) {
-          const elm = document.querySelector(`#${ids[j]}`) as SVGElement | null;
-          if (elm) {
-            elm.style.fill = "#f87777";
-          }
-        }
+        set_paths_color(ids, "#f87777");
       })();
     }
+  }
+  function unhighlight(muscles: string[]) {
+    for (let i = 0; i < muscles.length; i += 1) {
+      (() => {
+        const id = muscles[i];
+        const mm = muscle_name_map[id];
+        if (!mm) {
+          return;
+        }
+        const ids = default_muscle_id_map[mm];
+        if (!ids) {
+          return;
+        }
+        set_paths_color(ids, "#757575");
+      })();
+    }
+  }
+  function disable_paths(paths: string[]) {
+    set_paths_color(paths, "#1c1c1c");
+  }
+  function set_paths_color(paths: string[], color: string) {
+    for (let j = 0; j < paths.length; j += 1) {
+      const elm = document.querySelector(`#${paths[j]}`) as SVGElement | null;
+      if (elm) {
+        elm.style.fill = color;
+      }
+    }
+  }
+
+  onMount(() => {
+    elm?.addEventListener("click", handleClick);
+    highlight(props.highlighted);
+    disable_paths(disabled_parts);
+  });
+  onCleanup(() => {
+    elm?.removeEventListener("click", handleClick);
   });
 
   return (
-    <svg class="w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 535 462">
+    <svg ref={elm} class="w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 535 462">
       <path
         id="path14"
         fill="#f5f5f5"

@@ -81,7 +81,7 @@ export const RegisterPage = (props: ViewComponentProps) => {
   const [state, vm] = useViewModel(RegisterViewModel, [props]);
 
   return (
-    <div class="pt-12 min-h-screen px-4 bg-w-bg-0">
+    <div class="pt-12 min-h-screen px-4">
       <div class="h-[160px] mx-auto">
         <div class="relative cursor-pointer">
           <div class="z-10 absolute left-14 top-[32px] w-[82%] h-[32px] rounded-xl bg-green-500"></div>
@@ -91,15 +91,15 @@ export const RegisterPage = (props: ViewComponentProps) => {
       <div class="space-y-4 rounded-md">
         <div>
           <div>邮箱</div>
-          <Input class="mt-1 bg-w-bg-0" store={vm.ui.$input_email} />
+          <Input class="mt-1" store={vm.ui.$input_email} />
         </div>
         <div>
           <div>密码</div>
-          <Input class="mt-1 bg-w-bg-0" store={vm.ui.$input_pwd} />
+          <Input class="mt-1" store={vm.ui.$input_pwd} />
         </div>
         <div>
           <div>邀请码</div>
-          <Input class="mt-1 bg-w-bg-0" store={vm.ui.$input_code} />
+          <Input class="mt-1" store={vm.ui.$input_code} />
         </div>
       </div>
       <div class="w-full mt-4">

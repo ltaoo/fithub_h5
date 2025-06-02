@@ -1,8 +1,10 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
+import { ChevronRight, MoreHorizontal, Pen } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Input, ScrollView } from "@/components/ui";
+import { Sheet } from "@/components/ui/sheet";
 
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
@@ -11,11 +13,13 @@ import { RequestCore } from "@/domains/request";
 import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
-import { ChevronRight, MoreHorizontal, Pen } from "lucide-solid";
-import { Sheet } from "@/components/ui/sheet";
+import { fetch_user_profile } from "@/biz/user/services";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
+    mine: {
+      profile: new RequestCore(fetch_user_profile, { client: props.client }),
+    },
     workout_action_history: {
       list: new ListCore(
         new RequestCore(fetchWorkoutActionHistoryList, {
@@ -40,6 +44,49 @@ function HomeMineViewModel(props: ViewComponentProps) {
     gotoWorkoutDayListView() {
       props.history.push("root.workout_day_list");
     },
+    gotoSubscriptionView() {
+      props.history.push("root.subscription");
+    },
+    showDialogUpdateNickname() {
+      ui.$input_nickname.setValue(_nickname);
+      ui.$dialog_nickname_update.show();
+    },
+    async refreshWorkoutCalendar() {
+      const r = await request.workout_day.list.init();
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      const { dataSource } = r.data;
+      const vv = dataSource.filter((v) => {
+        return v.day !== null;
+      }) as { day: string }[];
+      ui.$calendar.methods.setData(
+        vv.map((v) => {
+          return {
+            day: v.day,
+            num: 1,
+          };
+        })
+      );
+    },
+    async refreshMyProfile() {
+      const r = await request.mine.profile.run();
+      if (r.error) {
+        return;
+      }
+      const { nickname, avatar_url, subscription } = r.data;
+      _nickname = nickname;
+      _avatar_url = avatar_url;
+      if (subscription.visible) {
+        _subscription = {
+          text: subscription.text,
+        };
+      }
+      methods.refresh();
+    },
   };
   const ui = {
     $view: new ScrollViewCore({}),
@@ -62,7 +109,19 @@ function HomeMineViewModel(props: ViewComponentProps) {
       },
     }),
   };
+  let _nickname = "...";
+  let _avatar_url = "";
+  let _subscription: { text: string } | null = null;
   let _state = {
+    get nickname() {
+      return _nickname;
+    },
+    get avatar_url() {
+      return _avatar_url;
+    },
+    get subscription() {
+      return _subscription;
+    },
     get response() {
       return request.workout_action_history.list.response;
     },
@@ -88,25 +147,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     async ready() {
-      const r = await request.workout_day.list.init();
-      if (r.error) {
-        props.app.tip({
-          text: [r.error.message],
-        });
-        return;
-      }
-      const { dataSource } = r.data;
-      const vv = dataSource.filter((v) => {
-        return v.day !== null;
-      }) as { day: string }[];
-      ui.$calendar.methods.setData(
-        vv.map((v) => {
-          return {
-            day: v.day,
-            num: 1,
-          };
-        })
-      );
+      methods.refreshWorkoutCalendar();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -125,8 +166,7 @@ export function HomeMineView(props: ViewComponentProps) {
             <div
               class="p-2 rounded-full bg-w-bg-5"
               onClick={() => {
-                vm.ui.$input_nickname.setValue("用户名");
-                vm.ui.$dialog_nickname_update.show();
+                vm.methods.showDialogUpdateNickname();
               }}
             >
               <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
@@ -134,13 +174,43 @@ export function HomeMineView(props: ViewComponentProps) {
           </div>
           <div class="person_profile p-2">
             <div class="flex flex-col items-center gap-2">
-              <div class="w-16 h-16 rounded-full bg-w-bg-5">{/* 头像占位 */}</div>
+              <div>
+                <Show
+                  when={state().avatar_url}
+                  fallback={<div class="w-16 h-16 rounded-full bg-w-bg-5">{/* 头像占位 */}</div>}
+                >
+                  <div class="w-16 h-16 rounded-full">
+                    <img class="w-full h-full object-contain" src={state().avatar_url} />
+                  </div>
+                </Show>
+              </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h3 class="text-lg text-w-fg-0 text-center font-semibold">用户名</h3>
+                  <div class="text-lg text-w-fg-0 text-center font-semibold">{state().nickname}</div>
                 </div>
-                {/* <p class="text- text-sm">会员等级</p> */}
               </div>
+              <Show
+                when={state().subscription}
+                fallback={
+                  <div
+                    class="py-1 px-4 border-2 border-w-bg-5 rounded-full"
+                    onClick={() => {
+                      vm.methods.gotoSubscriptionView();
+                    }}
+                  >
+                    <div class="text-sm text-w-fg-0">成为VIP</div>
+                  </div>
+                }
+              >
+                <div
+                  class="py-1 px-4 border-2 border-w-bg-5 rounded-full"
+                  onClick={() => {
+                    vm.methods.gotoSubscriptionView();
+                  }}
+                >
+                  <div class="text-w-fg-0 text-sm">{state().subscription?.text}</div>
+                </div>
+              </Show>
             </div>
             {/* <div class="mt-4 flex justify-between">
             <div class="text-center">

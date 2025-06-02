@@ -134,22 +134,35 @@ const configure = {
           require: ["login"],
         },
       },
+      tools_bmi_calc: {
+        title: "BMI计算",
+        pathname: "/tools_bmi_calc",
+        options: {},
+      },
       tools_rm_calc: {
         title: "RM换算",
-        pathname: "/tools1",
+        pathname: "/tools_rm_calc",
         options: {},
       },
       tools_bmr_calc: {
         title: "基础代谢计算",
-        pathname: "/tools2",
+        pathname: "/tools_bmr_calc",
       },
-      stopwatch: {
+      tools_heart_rate: {
+        title: "心率换算",
+        pathname: "/tools_heart_rate",
+      },
+      tools_stopwatch: {
         title: "秒表",
-        pathname: "/tools3",
+        pathname: "/tools_stopwatch",
       },
-      countdown: {
+      tools_countdown: {
         title: "倒计时",
-        pathname: "/tools4",
+        pathname: "/tools_countdown",
+      },
+      tools_metronome: {
+        title: "节拍器",
+        pathname: "/tools_metronome",
       },
       fake_chat: {
         title: "沟通",
@@ -174,7 +187,14 @@ const configure = {
       },
       equipment: {
         title: "器械列表",
-        pathname: "/home/equipment",
+        pathname: "/equipment/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      equipment_manage: {
+        title: "我的器械",
+        pathname: "/equipment/mine",
         options: {
           require: ["login"],
         },
@@ -236,6 +256,13 @@ const configure = {
       workout_plan_collection_update: {
         title: "编辑训练计划合集",
         pathname: "/workout_plan_collect/update",
+        options: {
+          require: ["login"],
+        },
+      },
+      subscription: {
+        title: "订阅",
+        pathname: "/subscription",
         options: {
           require: ["login"],
         },

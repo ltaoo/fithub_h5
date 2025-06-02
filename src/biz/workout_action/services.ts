@@ -245,7 +245,14 @@ export function updateWorkoutAction(body: {
   return request.post<void>("/api/workout_action/update", body);
 }
 
-export function fetchWorkoutActionHistoryList(params: Partial<FetchParams> & { workout_day_id?: number }) {
+/**
+ * 获取动作历史记录
+ * 可以获取指定「训练日」内的所有动作历史记录
+ * 也可以获取指定「动作」的历史记录
+ */
+export function fetchWorkoutActionHistoryList(
+  body: Partial<FetchParams> & { workout_day_id?: number; workout_action_id?: number }
+) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -284,9 +291,10 @@ export function fetchWorkoutActionHistoryList(params: Partial<FetchParams> & { w
       };
     }>
   >("/api/workout_action_history/list", {
-    page: params.page,
-    page_size: params.pageSize,
-    workout_day_id: params.workout_day_id,
+    page: body.page,
+    page_size: body.pageSize,
+    workout_day_id: body.workout_day_id,
+    workout_action_id: body.workout_action_id,
   });
 }
 

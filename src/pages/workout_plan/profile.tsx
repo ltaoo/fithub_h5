@@ -2,7 +2,7 @@
  * @file 训练计划详情
  */
 import { Show, For, Switch, Match } from "solid-js";
-import { BicepsFlexed, ChevronLeft, Loader, MoreHorizontal } from "lucide-solid";
+import { BicepsFlexed, ChevronLeft, CircleX, Loader, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -106,6 +106,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   ui.$profile.onStateChange(() => methods.refresh());
+  ui.$profile.onError(() => methods.refresh());
 
   return {
     state: _state,
@@ -140,17 +141,22 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         }
       >
         <Show when={state().error}>
-          <div class="error">
-            <div>加载失败</div>
+          <div class="error max-w-[screen] p-2">
+            <div class="flex flex-col items-center text-red-500">
+              <div>
+                <CircleX class="w-12 h-12" />
+              </div>
+              <div class="mt-2 text-w-fg-0 text-center break-all">{state().error?.message}</div>
+            </div>
           </div>
         </Show>
         <Show when={state().loading}>
           <div class="loading flex justify-center items-center h-full">
-            <Loader class="animate-spin" />
+            <Loader class="w-8 h-8 text-w-fg-1 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>
-          <div class="relative content bg-w-bg-0 space-y-4">
+          <div class="relative content space-y-4">
             <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
               <div class="text-2xl font-bold">{state().profile!.title}</div>
               <div>作者</div>

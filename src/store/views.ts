@@ -24,8 +24,7 @@ import { HomeStudentListPage } from "@/pages/student/list";
 import { HomeStudentCreatePage } from "@/pages/student/create";
 import { HomeStudentUpdatePage } from "@/pages/student/update";
 import { HomeStudentProfilePage } from "@/pages/student/profile";
-import { MuscleListView } from "@/pages/muscle/list";
-import { HomeEquipmentPage } from "@/pages/equipment";
+import { EquipmentListView } from "@/pages/equipment/list";
 import { HomeWorkoutDayUpdatePage } from "@/pages/workout_day/update";
 import { WorkoutDayPreparingPage } from "@/pages/workout_day/prepare";
 import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
@@ -43,6 +42,12 @@ import { RMCalcToolView } from "@/pages/tools/rm_calc";
 import { BMRCalcToolView } from "@/pages/tools/bmr_calc";
 import { StopwatchToolView } from "@/pages/tools/stopwatch";
 import { CountdownToolView } from "@/pages/tools/countdown";
+import { MineSubscriptionView } from "@/pages/mine/subscription";
+import { MuscleInPersonView } from "@/pages/muscle/overview";
+import { MyEquipmentManageView } from "@/pages/equipment/manage";
+import { BMICalcToolView } from "@/pages/tools/bmi_calc";
+import { HeartRateCalcToolView } from "@/pages/tools/heart_rate_calc";
+import { MetronomeToolView } from "@/pages/tools/Metronome";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -53,8 +58,12 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout.tools": ToolsView,
   "root.tools_rm_calc": RMCalcToolView,
   "root.tools_bmr_calc": BMRCalcToolView,
-  "root.stopwatch": StopwatchToolView,
-  "root.countdown": CountdownToolView,
+  "root.tools_bmi_calc": BMICalcToolView,
+  "root.tools_stopwatch": StopwatchToolView,
+  "root.tools_countdown": CountdownToolView,
+  "root.tools_heart_rate": HeartRateCalcToolView,
+  "root.tools_metronome": MetronomeToolView,
+  "root.subscription": MineSubscriptionView,
   // 训练计划
   "root.workout_plan_list": HomeWorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,
@@ -81,9 +90,10 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.workout_day_profile": WorkoutDayProfileView,
   "root.action_history_list": WorkoutActionHistoryListView,
   // 肌肉
-  "root.muscle": MuscleListView,
+  "root.muscle": MuscleInPersonView,
   // 器材、设备
-  "root.equipment": HomeEquipmentPage,
+  "root.equipment": EquipmentListView,
+  "root.equipment_manage": MyEquipmentManageView,
   // 健身动作
   "root.action_list": HomeActionListPage,
   "root.action_create": HomeActionCreatePage,

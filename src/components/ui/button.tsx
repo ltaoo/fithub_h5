@@ -11,11 +11,11 @@ import { Show } from "@/packages/ui/show";
 import { cn } from "@/utils";
 
 const buttonVariants = cva(
-  "active:scale-95 inline-flex items-center justify-center text-md rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:hover:bg-slate-800 dark:hover:text-slate-100 disabled:opacity-50 dark:focus:ring-slate-400 disabled:pointer-events-none dark:focus:ring-offset-slate-900",
+  "overflow-hidden inline-flex items-center justify-center text-md rounded-xl transition-colors disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-w-bg-5 text-w-fg-0 hover:bg-w-bg-3",
+        default: "bg-w-bg-5 text-w-fg-0",
         destructive: "bg-red-500 text-white hover:bg-red-600 dark:hover:bg-red-600",
         outline: "bg-transparent border-2 border-w-bg-5",
         subtle: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100",

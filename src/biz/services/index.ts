@@ -14,3 +14,4 @@ import { parseJSONStr } from "@/utils";
 export function createEquipment(params: { name: string; zh_name: string; overview: string; media: string }) {
   return request.post<void>("/api/equipment/create", params);
 }
+

@@ -2,20 +2,22 @@
  * @file 训练内容概览
  */
 import { For, Show } from "solid-js";
-import { CircleCheck, Info } from "lucide-solid";
+import { ChevronDown, CircleCheck, Info } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
 
 import { HomeWorkoutDayUpdateViewModel } from "../update";
+import { PageView } from "@/components/page-view";
+import { Button } from "@/components/ui";
 
 export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewModel }) {
   const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (
     <>
-      <div class="flex flex-col h-[100vh]">
+      <div class="flex flex-col h-[100vh] bg-w-bg-0">
         <div class="flex-1 overflow-y-auto">
-          <div class="p-4">
+          <div class="p-2">
             <div class="text-3xl text-w-fg-0">{state().stats.finished_at}</div>
             <div class="text-w-fg-1">
               <div class="flex">
@@ -92,34 +94,26 @@ export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewM
             </div>
           </div>
         </div>
-        <div class="h-[88px] p-4">
-          <div class="flex gap-2">
+        <div>
+          <div class="flex items-center justify-between gap-2 p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
             <div
-              class="flex flex-1 items-center justify-center py-2 bg-green-500 rounded-md"
-              onClick={() => {
-                vm.methods.submit();
-              }}
-            >
-              <div class="text-white">提交</div>
-            </div>
-            <div
-              class="flex flex-1 items-center justify-center py-2 bg-gray-500 rounded-md"
-              onClick={() => {
-                vm.methods.giveUp();
-              }}
-            >
-              <div class="text-white">放弃</div>
-            </div>
-            <div
-              class="flex flex-1 items-center justify-center py-2 bg-gray-300 rounded-md"
+              class="w-[40px] p-2 bg-w-bg-5 rounded-full"
               onClick={() => {
                 vm.ui.$dialog_confirm_complete.hide();
               }}
             >
-              <div class="text-white">取消</div>
+              <ChevronDown class="w-6 h-6 text-w-fg-1" />
+            </div>
+            <div class="flex-1 flex items-center gap-2">
+              <Button class="w-full" store={vm.ui.$btn_workout_day_give_up}>
+                放弃
+              </Button>
+              <Button class="w-full" store={vm.ui.$btn_workout_day_submit}>
+                提交
+              </Button>
             </div>
           </div>
-          <div class="h-[34px]"></div>
+          <div class="safe-height"></div>
         </div>
       </div>
     </>

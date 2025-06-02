@@ -142,6 +142,9 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
     request,
     state: _state,
     ready() {},
+    onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+      return bus.on(Events.Error, handler);
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

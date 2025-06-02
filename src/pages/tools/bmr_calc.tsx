@@ -201,24 +201,24 @@ export function BMRCalcToolView(props: ViewComponentProps) {
       <PageView store={vm}>
         <div class="space-y-2">
           <div>
-            <div>年龄</div>
+            <div class="text-w-fg-0">年龄</div>
             <Input store={vm.ui.$input_age} />
           </div>
           <div>
-            <div>体重(单位KG)</div>
+            <div class="text-w-fg-0">体重(单位kg)</div>
             <Input store={vm.ui.$input_weight} />
           </div>
           <div>
-            <div>身高(单位cm)</div>
+            <div class="text-w-fg-0">身高(单位cm)</div>
             <Input store={vm.ui.$input_height} />
           </div>
           <div>
-            <div>性别</div>
+            <div class="text-w-fg-0">性别</div>
             <div class="flex gap-2">
               <div
                 classList={{
-                  "w-[60px] p-2 border rounded-md text-center": true,
-                  "bg-green-200": state().gender === "man",
+                  "w-[60px] p-2 border-2 border-w-bg-5 text-w-fg-1 rounded-lg text-center": true,
+                  "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "man",
                 }}
                 onClick={() => {
                   vm.ui.$input_gender.select("man");
@@ -228,8 +228,8 @@ export function BMRCalcToolView(props: ViewComponentProps) {
               </div>
               <div
                 classList={{
-                  "w-[60px] p-2 border rounded-md text-center": true,
-                  "bg-green-200": state().gender === "woman",
+                  "w-[60px] p-2 border-2 border-w-bg-5 text-w-fg-1 rounded-lg text-center": true,
+                  "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "woman",
                 }}
                 onClick={() => {
                   vm.ui.$input_gender.select("woman");
@@ -240,7 +240,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
             </div>
           </div>
           <div>
-            <div>活动系数</div>
+            <div class="text-w-fg-0">活动系数</div>
             <Select store={vm.ui.$input_activity} />
           </div>
         </div>
@@ -250,22 +250,22 @@ export function BMRCalcToolView(props: ViewComponentProps) {
           </Button>
         </div>
         <div class="mt-8 pb-12">
-          <div class="flex items-center justify-between">
+          <div class="grid grid-cols-3 gap-2">
             <For each={state().values}>
               {(v) => {
                 return (
                   <div
-                    class="p-4 border rounded-md text-center"
+                    class="p-4 border-2 border-w-bg-5 rounded-lg text-center text-w-fg-0"
                     onClick={() => {
                       vm.methods.showDialogWithSpecialRule(v.idx);
                     }}
                   >
                     <div>
-                      <div class="text-sm text-gray-800">基础代谢</div>
+                      <div class="text-sm text-w-fg-1">基础代谢</div>
                       <div class="text-2xl">{v.v}</div>
                     </div>
                     <div class="mt-2">
-                      <div class="text-sm text-gray-800">总消耗</div>
+                      <div class="text-sm text-w-fg-1">总消耗</div>
                       <div class="text-2xl">{v.tdee}</div>
                     </div>
                   </div>
@@ -287,7 +287,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
       </PageView>
       <Sheet store={vm.ui.$dialog_rm_calc_rule}>
         <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
-          <div class="text-gray-800">
+          <div class="text-w-fg-0">
             <Show when={state().idx === 0}>
               <div class="text-xl">哈里斯 - Benedict公式</div>
               <div class="mt-4 space-y-2">

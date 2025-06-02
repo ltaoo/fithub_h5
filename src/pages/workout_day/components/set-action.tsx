@@ -1,3 +1,5 @@
+import { Show } from "solid-js";
+
 import { useViewModelStore } from "@/hooks";
 import { base, Handler } from "@/domains/base";
 
@@ -36,19 +38,24 @@ export function SetActionViewModel(props: { id: number | string; zh_name: string
 }
 export type SetActionViewModel = ReturnType<typeof SetActionViewModel>;
 
-export function SetActionView(props: { store: SetActionViewModel; onClick?: () => void }) {
+export function SetActionView(props: { store: SetActionViewModel; idx?: number; onClick?: () => void }) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
     <div
-      class="relative"
+      class="relative flex items-center gap-2"
       onClick={(event) => {
         if (props.onClick) {
           props.onClick();
         }
       }}
     >
-      <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div>
+      {/* <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div> */}
+      <Show when={props.idx}>
+        <div class="flex items-center justify-center px-2 rounded-full bg-blue-500">
+          <div class="text-sm">{props.idx}</div>
+        </div>
+      </Show>
       <div class="relative left-[4px] text-w-fg-0">{state().zh_name}</div>
     </div>
   );
