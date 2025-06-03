@@ -199,32 +199,6 @@ const configure = {
           require: ["login"],
         },
       },
-      action_list: {
-        title: "动作列表",
-        pathname: "/home/actions",
-        options: {
-          require: ["login"],
-        },
-      },
-      action_create: {
-        title: "动作创建",
-        pathname: "/home/action_create",
-        options: {
-          require: ["login"],
-        },
-      },
-      action_update: {
-        title: "动作编辑",
-        pathname: "/home/action_update",
-        options: {
-          require: ["login"],
-        },
-      },
-      action_profile: {
-        title: "动作详情",
-        pathname: "/action_profile",
-        options: {},
-      },
       workout_plan_list: {
         title: "训练计划列表",
         pathname: "/workout_plan/list",
@@ -267,6 +241,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_action_list: {
+        title: "动作库",
+        pathname: "/workout_action/list",
+        options: {
+          require: ["login"],
+        },
+      },
       paper_list: {
         title: "题库",
         pathname: "/paper/list",
@@ -284,6 +265,34 @@ const configure = {
       exam_result: {
         title: "答题结果",
         pathname: "/exam/result",
+        options: {
+          require: ["login"],
+        },
+      },
+      exam_result_list: {
+        title: "答题记录",
+        pathname: "/exam/result_list",
+        options: {
+          require: ["login"],
+        },
+      },
+      report_list: {
+        title: "反馈记录",
+        pathname: "/report/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      report_create: {
+        title: "意见反馈",
+        pathname: "/report/create",
+        options: {
+          require: ["login"],
+        },
+      },
+      report_profile: {
+        title: "反馈信息",
+        pathname: "/report/profile",
         options: {
           require: ["login"],
         },

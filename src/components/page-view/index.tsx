@@ -11,6 +11,7 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
     store: T;
     home?: boolean;
     operations?: JSX.Element;
+    no_padding?: boolean;
     no_extra_bottom?: boolean;
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
@@ -18,7 +19,12 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
     <div class="flex flex-col h-screen">
       <div class="flex-1 overflow-auto">
         <ScrollView store={props.store.ui.$view} class="">
-          <div class="h-full p-2">
+          <div
+            class="h-full"
+            classList={{
+              "p-2": !props.no_padding,
+            }}
+          >
             {props.children}
             <Show when={!props.no_extra_bottom}>
               <div class="h-[68px]"></div>

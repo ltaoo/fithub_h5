@@ -13,12 +13,12 @@ import { RequestCore } from "@/domains/request";
 import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
-import { fetch_user_profile } from "@/biz/user/services";
+import { fetch_mine_profile } from "@/biz/user/services";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
     mine: {
-      profile: new RequestCore(fetch_user_profile, { client: props.client }),
+      profile: new RequestCore(fetch_mine_profile, { client: props.client }),
     },
     workout_action_history: {
       list: new ListCore(
@@ -75,12 +75,15 @@ function HomeMineViewModel(props: ViewComponentProps) {
     async refreshMyProfile() {
       const r = await request.mine.profile.run();
       if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
         return;
       }
       const { nickname, avatar_url, subscription } = r.data;
       _nickname = nickname;
       _avatar_url = avatar_url;
-      if (subscription.visible) {
+      if (subscription && subscription.visible) {
         _subscription = {
           text: subscription.text,
         };
@@ -148,6 +151,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
     state: _state,
     async ready() {
       methods.refreshWorkoutCalendar();
+      methods.refreshMyProfile();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -289,13 +293,13 @@ export function HomeMineView(props: ViewComponentProps) {
       <Sheet store={vm.ui.$dialog_nickname_update}>
         <div class="w-screen bg-w-bg-1 p-2">
           <div class="space-y-4">
-            <div class="text-xl">修改昵称</div>
+            <div class="text-xl text-center text-w-fg-0">修改昵称</div>
             <div>
               <Input store={vm.ui.$input_nickname} />
             </div>
             <div class="flex items-center justify-between">
               <div></div>
-              <Button store={vm.ui.$btn_nickname_submit}>提交</Button>
+              <Button class="w-full" store={vm.ui.$btn_nickname_submit}>提交</Button>
             </div>
           </div>
         </div>

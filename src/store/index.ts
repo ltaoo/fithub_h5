@@ -11,7 +11,6 @@ import { ListCore } from "@/domains/list/index";
 import { ImageCore } from "@/domains/ui/index";
 import { Application } from "@/domains/app/index";
 import { NavigatorCore } from "@/domains/navigator/index";
-import { BizError } from "@/domains/error/index";
 import { RouteViewCore } from "@/domains/route_view";
 import { RouteConfig } from "@/domains/route_view/utils";
 import { HistoryCore } from "@/domains/history/index";
@@ -30,10 +29,15 @@ if (window.location.hostname === "t.fithub.top") {
 }
 onRequestCreated((ins) => {
   ins.onFailed((e) => {
+    console.log("[STORE]store/index - onRequestCreated ins.onFailed", e.code);
     app.tip({
-      text: [e.message],
+      text: [e.message ?? "未知错误"],
     });
     if (e.code === 900) {
+      history.push("root.login");
+    }
+    if (e.code === 401) {
+      storage.remove("user");
       history.push("root.login");
     }
   });
@@ -47,7 +51,7 @@ ImageCore.prefix = window.location.origin;
 
 class ExtendsUser extends UserCore {
   say() {
-    console.log(`My name is ${this.nickname}`);
+    console.log(`Hello, My name is ${this.nickname}`);
   }
 }
 const user = new ExtendsUser(storage.get("user"), client);
@@ -118,7 +122,7 @@ export const $workout_action_list = new ListCore(
     client,
   }),
   {
-    pageSize: 30,
+    pageSize: 24,
   }
 );
 export const $muscle_select = new ListCore(

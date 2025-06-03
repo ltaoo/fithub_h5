@@ -35,7 +35,7 @@ export function fetchStartedWorkoutDayList() {
 }
 export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetchStartedWorkoutDayList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   return Result.Ok({
     list: r.data.list.map((v) => {
@@ -400,7 +400,7 @@ export function fetchWorkoutDayList(body: { page: number; page_size: number }) {
 
 export function fetchWorkoutDayListProcess(r: TmpRequestResp<typeof fetchWorkoutDayList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const data = r.data;
   return Result.Ok({

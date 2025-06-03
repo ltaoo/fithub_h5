@@ -3,14 +3,12 @@ import { ChevronLeft, Send } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { ScrollView } from "@/components/ui";
-import { Sheet } from "@/components/ui/sheet";
-import { DragSelectView } from "@/components/drag-select";
-import { NavigationBar1 } from "@/components/navigation-bar1";
+import { Button, ScrollView } from "@/components/ui";
+import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
-import { DialogCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { createStudent } from "@/biz/student/services";
 
 import { MemberValuesViewModel } from "./model";
@@ -64,11 +62,13 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
         });
         return;
       }
+      ui.$btn_submit.setLoading(true);
       const r = await request.student.create.run({
         name: values.name,
         age: Number(values.age),
         gender: Number(values.gender),
       });
+      ui.$btn_submit.setLoading(false);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -85,6 +85,11 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
     $view: new ScrollViewCore({ disabled: true }),
     $values_basic: vm.ui.$basic_values,
     $dialog_test: new DialogCore(),
+    $btn_submit: new ButtonCore({
+      onClick() {
+        methods.submit();
+      },
+    }),
   };
   const steps = [
     {
@@ -135,55 +140,33 @@ export function HomeStudentCreatePage(props: ViewComponentProps) {
 
   const [state, vm] = useViewModel(MemberCreateViewModel, [props]);
 
-  vm.onStepChange((step) => {
-    if (!$content) {
-      return;
-    }
-    $content.style.transform = `translate(-${step * 100}%)`;
-  });
+  // vm.onStepChange((step) => {
+  //   if (!$content) {
+  //     return;
+  //   }
+  //   $content.style.transform = `translate(-${step * 100}%)`;
+  // });
 
   return (
     <>
-      {/* <div class="z-0 fixed top-0 left-0 w-full">
-        <NavigationBar1 history={props.history} title="新增学员" />
-      </div> */}
-      <ScrollView store={vm.ui.$view}>
-        <div class="">
-          <div class="panel p-4 relative flex-shrink-0">
-            <div
-              onClick={() => {
-                //
-              }}
-            >
-              <MemberBasicValues store={vm.ui.$values_basic} />
-            </div>
-          </div>
-        </div>
-      </ScrollView>
-      <div class="fixed bottom-0 left-0 w-full bg-w-bg-1 p-2">
-        <div class="flex items-center gap-2">
-          <div
-            class="p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.methods.back();
-            }}
-          >
-            <ChevronLeft class="w-6 h-6 text-w-fg-1" />
-          </div>
-          <div
-            class="w-full py-2 rounded-lg bg-w-bg-5 text-center text-w-fg-1"
-            onClick={() => {
-              vm.methods.submit();
-            }}
-          >
+      <PageView
+        store={vm}
+        operations={
+          <Button class="w-full" store={vm.ui.$btn_submit}>
             创建
+          </Button>
+        }
+      >
+        <div class="panel relative flex-shrink-0">
+          <div
+            onClick={() => {
+              //
+            }}
+          >
+            <MemberBasicValues store={vm.ui.$values_basic} />
           </div>
         </div>
-        <Show when={state().can_submit}>
-          <div class="whitespace-nowrap text-sm text-center text-w-fg-3">创建后仍可编辑所有信息</div>
-        </Show>
-        <div class="safe-height"></div>
-      </div>
+      </PageView>
     </>
   );
 }

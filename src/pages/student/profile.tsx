@@ -106,7 +106,7 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
             </div>
           </Show>
         </div>
-        <div class="relative space-y-2">
+        <div class="relative space-y-2 mt-4">
           <div class="relative border-2 border-w-bg-5 rounded-lg">
             <div class="extra absolute right-2 top-2">
               <div class="p-2 rounded-full bg-w-bg-5">

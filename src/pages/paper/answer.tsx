@@ -2,7 +2,7 @@
  * @file 试卷答题页面
  */
 import { For, Show } from "solid-js";
-import { ChevronDown, Loader2, MoreHorizontal } from "lucide-solid";
+import { Check, ChevronDown, Clock, Loader2, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -24,6 +24,7 @@ import {
 } from "@/biz/paper/services";
 import { PaperQuiz, PaperQuizAnswer } from "@/biz/paper/types";
 import { Result } from "@/domains/result";
+import { map_choice_value_text } from "@/biz/paper/utils";
 
 function ExamAnswerViewModel(props: ViewComponentProps) {
   const request = {
@@ -243,16 +244,7 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
           return {
             ...choice,
             idx,
-            value_text: (() => {
-              const v: Record<number, string> = {
-                0: "A",
-                1: "B",
-                2: "C",
-                3: "D",
-                4: "E",
-              };
-              return v[idx] ?? "A";
-            })(),
+            value_text: map_choice_value_text(choice.value),
             selected: _cur_choices_value.includes(choice.value),
           };
         }),
@@ -263,6 +255,23 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
     },
     get is_last_quiz() {
       return _cur_quiz_idx === _quizzes.length - 1;
+    },
+    get overview() {
+      const all_completed = Object.keys(_existing_answers).length === _quizzes.length;
+      return {
+        can_submit: (() => {
+          if (all_completed) {
+            return 1;
+          }
+          return 0;
+        })(),
+        text: (() => {
+          if (all_completed) {
+            return "所有题目均已作答";
+          }
+          return "有遗漏未作答的题目";
+        })(),
+      };
     },
   };
   enum Events {
@@ -354,8 +363,10 @@ export function ExamAnswerView(props: ViewComponentProps) {
               <div class="text-xl text-w-fg-0">{state().quiz?.idx}、</div>
               <div class="text-xl text-w-fg-0">{state().quiz?.content}</div>
             </div>
-            <div>{state().quiz?.type_text}</div>
-            <div class="mt-8 space-y-2">
+            <div class="mt-4 flex">
+              <div class="border-2 border-w-bg-5 px-2 rounded-full text-w-fg-1 text-sm">{state().quiz?.type_text}</div>
+            </div>
+            <div class="mt-4 space-y-2">
               <For each={state().quiz?.choices}>
                 {(choice) => {
                   return (
@@ -382,25 +393,47 @@ export function ExamAnswerView(props: ViewComponentProps) {
         <div class="w-screen h-[480px] bg-w-bg-1">
           <div class="flex flex-col h-full">
             <div class="flex-1 p-2">
-              <div class="grid grid-cols-10 gap-2">
-                <For each={state().quizzes}>
-                  {(quiz) => {
-                    return (
-                      <div
-                        classList={{
-                          "flex items-center justify-center h-[30px] text-w-fg-0": true,
-                          "bg-w-bg-5": !quiz.selected,
-                          "bg-green-500 dark:bg-green-800": quiz.selected,
-                        }}
-                        onClick={() => {
-                          vm.methods.directToQuiz({ idx: quiz.idx });
-                        }}
-                      >
-                        <div class="text-center text-sm">{quiz.idx}</div>
-                      </div>
-                    );
-                  }}
-                </For>
+              <div class="flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg">
+                <Show
+                  when={state().overview.can_submit}
+                  fallback={
+                    <div>
+                      <Clock class="w-8 h-8 text-w-fg-0" />
+                    </div>
+                  }
+                >
+                  <Check class="w-8 h-8 text-w-fg-0" />
+                </Show>
+                <div class="text-w-fg-0">{state().overview.text}</div>
+              </div>
+              <div class="mt-4">
+                <div class="grid grid-cols-10 gap-2 mt-2">
+                  <For each={state().quizzes}>
+                    {(quiz) => {
+                      return (
+                        <div>
+                          <div
+                            classList={{
+                              "flex items-center justify-center h-[30px] border-2 border-w-bg-5 rounded-md bg-w-bg-5 text-w-fg-0":
+                                true,
+                              // "bg-green-500 dark:bg-green-800": quiz.selected,
+                            }}
+                            onClick={() => {
+                              vm.methods.directToQuiz({ idx: quiz.idx });
+                            }}
+                          >
+                            <div class="text-center text-sm">{quiz.idx}</div>
+                          </div>
+                          <Show when={quiz.selected}>
+                            <div class="flex justify-center">
+                              <Check class="w-4 h-4 text-w-fg-1" />
+                            </div>
+                          </Show>
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
               </div>
             </div>
             <div class="h-[56px] p-2">
@@ -411,7 +444,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
                     vm.ui.$dialog_overview.hide();
                   }}
                 >
-                  <ChevronDown class="w-6 h-6 text-w-fg-0" />
+                  <ChevronDown class="w-6 h-6 text-w-fg-1" />
                 </div>
                 <div class="flex-1 flex items-center gap-2">
                   <Button class="w-full" store={vm.ui.$btn_give_up}>

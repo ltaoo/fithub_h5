@@ -12,8 +12,7 @@ export function login(body: { email: string; password: string }) {
     avatar_url: string;
     verified: string;
     token: string;
-  }>("/api/coach/login", {
-    provider_type: "email_password",
+  }>("/api/auth/web_login", {
     email: body.email,
     password: body.password,
   });
@@ -31,15 +30,18 @@ export function register(body: { email: string; password: string }) {
     avatar_url: string;
     verified: string;
     token: string;
-  }>("/api/coach/register", {
-    provider_type: "email_password",
+  }>("/api/auth/web_register", {
     email: body.email,
     password: body.password,
   });
 }
 
 export function logout(body: { email: string; password: string }) {
-  return request.post("/api/admin/user/logout", body);
+  return request.post("/api/auth/web_logout", body);
+}
+
+export function refresh_token() {
+  return request.post("/api/auth/refresh_token", {});
 }
 
 export function get_token() {
@@ -50,20 +52,17 @@ export function get_token() {
  * 获取当前登录用户信息详情
  * @returns
  */
-export function fetch_user_profile() {
-  return request.get<{
+export function fetch_mine_profile() {
+  return request.post<{
     nickname: string;
     avatar_url: string;
     subscription: {
       visible: boolean;
       text: string;
     };
-  }>("/api/mine/profile");
+  }>("/api/auth/profile");
 }
 
-/**
- * 成员通过授权链接访问首页时，验证该链接是否有效
- */
 export function validate(token: string) {
-  return request.post<{ token: string }>("/api/admin/user/validate", { token });
+  return request.post<{ token: string }>("/api/auth/validate", { token });
 }

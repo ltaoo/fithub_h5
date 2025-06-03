@@ -15,7 +15,7 @@ export function ListView(
   // console.log("[COMPONENT]ListView - state", props.store.response.dataSource);
 
   props.store.onStateChange((v) => {
-    console.log("[COMPONENT]ListView - store.onStateChange", v.dataSource);
+    // console.log("[COMPONENT]ListView - store.onStateChange", v.dataSource);
     setState(v);
   });
 

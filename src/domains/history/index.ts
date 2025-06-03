@@ -297,22 +297,22 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
     this.emit(Events.StateChange, { ...this.state });
   }
   back() {
-    const targetCursor = this.cursor - 1;
-    const viewPrepareShow = this.stacks[targetCursor];
+    const target_cursor = this.cursor - 1;
+    const view_prepare_to_show = this.stacks[target_cursor];
     // console.log("[DOMAIN]history - back", this.cursor, targetCursor, viewPrepareShow);
-    if (!viewPrepareShow) {
+    if (!view_prepare_to_show) {
       // this.$view.showView(this.$view.subViews[0]);
       return;
     }
-    const href = viewPrepareShow.href;
-    if (!viewPrepareShow.parent) {
+    const href = view_prepare_to_show.href;
+    if (!view_prepare_to_show.parent) {
       // this.$view.showView(this.$view.subViews[0]);
       return;
     }
     this.$router.href = href;
-    this.$router.name = viewPrepareShow.name;
-    this.cursor = targetCursor;
-    const viewsAfter = this.stacks.slice(targetCursor + 1);
+    this.$router.name = view_prepare_to_show.name;
+    this.cursor = target_cursor;
+    const viewsAfter = this.stacks.slice(target_cursor + 1);
     // console.log("[DOMAIN]history - back before viewsAfter.length", viewsAfter);
     for (let i = 0; i < viewsAfter.length; i += 1) {
       const v = viewsAfter[i];
@@ -321,18 +321,24 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
         reason: "back",
         destroy: true,
         callback: () => {
+          // console.log("[DOMAIN]history - before delete  this.views", v.href);
           delete this.views[v.href];
         },
       });
     }
-    viewPrepareShow.parent.showView(viewPrepareShow, { reason: "back", destroy: true });
+    // console.log(
+    //   "[DOMAIN]history - before .parent.showView",
+    //   view_prepare_to_show.parent.title,
+    //   view_prepare_to_show.parent.curView?.title
+    // );
+    view_prepare_to_show.parent.showView(view_prepare_to_show, { reason: "back", destroy: true });
     this.emit(Events.RouteChange, {
       reason: "back",
-      view: viewPrepareShow,
-      name: viewPrepareShow.name,
-      href: viewPrepareShow.href,
-      pathname: viewPrepareShow.pathname,
-      query: viewPrepareShow.query,
+      view: view_prepare_to_show,
+      name: view_prepare_to_show.name,
+      href: view_prepare_to_show.href,
+      pathname: view_prepare_to_show.pathname,
+      query: view_prepare_to_show.query,
     });
     this.emit(Events.Back);
     this.emit(Events.StateChange, { ...this.state });

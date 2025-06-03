@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { Loader2 } from "lucide-solid";
+import { Check, Loader2, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -10,7 +10,7 @@ import { BizError } from "@/domains/error";
 import { DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
 import { fetchExamResult, fetchExamResultProcess } from "@/biz/paper/services";
-import { QuizAnswerStatus } from "@/biz/paper/constants";
+import { QuizAnswerStatus, QuizChoiceInAnswerStatus } from "@/biz/paper/constants";
 import { Sheet } from "@/components/ui/sheet";
 
 function ExamResultViewModel(props: ViewComponentProps) {
@@ -107,7 +107,7 @@ export function PaperResultView(props: ViewComponentProps) {
                     return (
                       <div
                         classList={{
-                          "flex items-center justify-center h-[26px]": true,
+                          "flex items-center justify-center h-[26px] rounded-md": true,
                           "bg-green-500": quiz.status === QuizAnswerStatus.Correct,
                           "bg-red-500": quiz.status === QuizAnswerStatus.Incorrect,
                           "bg-w-bg-5":
@@ -128,10 +128,45 @@ export function PaperResultView(props: ViewComponentProps) {
         </Show>
       </PageView>
       <Sheet store={vm.ui.$dialog_quiz}>
-        <div class="w-screen bg-w-bg-1 p-2">
+        <div class="w-screen bg-w-bg-1 p-2 min-h-[240px]">
           <Show when={state().cur_quiz}>
-            <div>{state().cur_quiz?.content}</div>
-            <div>{state().cur_quiz?.analysis}</div>
+            <div class="text-w-fg-0">{state().cur_quiz?.content}</div>
+            <div class="mt-2 space-y-2">
+              <For each={state().cur_quiz?.choices}>
+                {(v) => {
+                  return (
+                    <div
+                      class="flex items-center justify-between p-2 border-2 rounded-md text-w-fg-0 text-sm"
+                      classList={{
+                        "border-green-500": v.is_correct,
+                        "border-w-bg-5 ": !v.is_correct,
+                      }}
+                    >
+                      <div class="flex items-center">
+                        <div class="w-[24px]">{v.value_text}、</div>
+                        <div>{v.text}</div>
+                      </div>
+                      <Show when={v.select_status === QuizChoiceInAnswerStatus.Correct}>
+                        <Check class="w-4 h-4 text-green-500" />
+                      </Show>
+                      <Show when={v.select_status === QuizChoiceInAnswerStatus.Incorrect}>
+                        <X class="w-4 h-4 text-red-500" />
+                      </Show>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+            <div class="mt-4">
+              <Show
+                when={state().cur_quiz?.analysis}
+                fallback={<div class="p-2 text-w-fg-1 text-sm text-center">暂无解析</div>}
+              >
+                <div class="p-2 border-2 border-w-bg-5 rounded-lg text-w-fg-1 text-sm">
+                  <pre class="w-full break-all whitespace-pre-wrap">{state().cur_quiz?.analysis}</pre>
+                </div>
+              </Show>
+            </div>
           </Show>
         </div>
       </Sheet>

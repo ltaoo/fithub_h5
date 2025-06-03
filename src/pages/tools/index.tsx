@@ -40,6 +40,9 @@ function ToolsViewModel(props: ViewComponentProps) {
       menus: [
         {
           title: "动作库",
+          onClick() {
+            props.history.push("root.workout_action_list");
+          },
         },
         {
           title: "肌肉",
@@ -119,9 +122,9 @@ function ToolsViewModel(props: ViewComponentProps) {
     {
       title: "学习",
       menus: [
-        {
-          title: "学习资料",
-        },
+        // {
+        //   title: "学习资料",
+        // },
         {
           title: "答题挑战",
           onClick() {

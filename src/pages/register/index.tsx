@@ -84,30 +84,29 @@ export const RegisterPage = (props: ViewComponentProps) => {
     <div class="pt-12 min-h-screen px-4">
       <div class="h-[160px] mx-auto">
         <div class="relative cursor-pointer">
-          <div class="z-10 absolute left-14 top-[32px] w-[82%] h-[32px] rounded-xl bg-green-500"></div>
-          <div class="z-20 relative text-6xl text-center italic">FamilyFlix</div>
+          <div class="z-20 relative text-6xl text-center italic">Fit Hub</div>
         </div>
       </div>
-      <div class="space-y-4 rounded-md">
+      <div class="space-y-4 rounded-md text-w-fg-0">
         <div>
           <div>邮箱</div>
           <Input class="mt-1" store={vm.ui.$input_email} />
         </div>
         <div>
-          <div>密码</div>
+          <div class="">密码</div>
           <Input class="mt-1" store={vm.ui.$input_pwd} />
         </div>
-        <div>
+        {/* <div>
           <div>邀请码</div>
           <Input class="mt-1" store={vm.ui.$input_code} />
-        </div>
+        </div> */}
       </div>
-      <div class="w-full mt-4">
+      <div class="w-full mt-8">
         <Button class="w-full" store={vm.ui.$btn_submit}>
           注册
         </Button>
         <div
-          class="mt-1 py-2 text-center text-w-fg-1 cursor-pointer hover:underline"
+          class="mt-1 py-2 text-center text-sm text-w-fg-1 cursor-pointer hover:underline"
           onClick={() => {
             props.history.push("root.login");
           }}

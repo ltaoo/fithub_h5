@@ -19,7 +19,7 @@ export function fetchStudentList(params: Partial<FetchParams>) {
 }
 export function fetchStudentListProcess(r: TmpRequestResp<typeof fetchStudentList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const data = r.data;
   return Result.Ok({
@@ -59,7 +59,7 @@ export function fetchStudentProfile(body: { id: number }) {
 }
 export function fetchStudentProfileProcess(r: TmpRequestResp<typeof fetchStudentProfile>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const data = r.data;
   return Result.Ok({

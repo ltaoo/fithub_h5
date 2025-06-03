@@ -300,7 +300,7 @@ export function fetchWorkoutActionHistoryList(
 
 export function fetchWorkoutActionHistoryListProcess(r: TmpRequestResp<typeof fetchWorkoutActionHistoryList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const { page_size, list, total } = r.data;
   return Result.Ok({

@@ -2,23 +2,23 @@
  * @file 训练计划列表
  */
 import { For, Show } from "solid-js";
-import { Clock, Plus, Search } from "lucide-solid";
+import { Clock, MoreHorizontal, Plus, Search } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
+import { Button, DropdownMenu, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
 import { WorkoutPlanPreviewCard } from "@/components/workout-plan-share-card";
 import { WorkoutPlanCard } from "@/components/workout-plan-card";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 
 import { base, Handler } from "@/domains/base";
-import { ButtonCore, InputCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
 import { PageView } from "@/components/page-view";
 
-function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
+function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -74,6 +74,24 @@ function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
     $btn_submit: new ButtonCore({
       onClick() {},
     }),
+    $dropdown_menu: new DropdownMenuCore({
+      items: [
+        new MenuItemCore({
+          label: "创建训练计划",
+          onClick() {
+            ui.$dropdown_menu.hide();
+            methods.gotoPlanCreateView();
+          },
+        }),
+        // new MenuItemCore({
+        //   label: "我创建的计划",
+        //   onClick() {
+        //     ui.$dropdown_menu.hide();
+        //     methods.gotoPlanCreateView();
+        //   },
+        // }),
+      ],
+    }),
   };
 
   let _state = {
@@ -103,8 +121,8 @@ function HomeWorkoutPlanListPageViewModel(props: ViewComponentProps) {
   };
 }
 
-export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(HomeWorkoutPlanListPageViewModel, [props]);
+export function WorkoutPlanListPage(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(WorkoutPlanListPageViewModel, [props]);
 
   return (
     <>
@@ -119,15 +137,16 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
                 vm.methods.search();
               }}
             >
-              <Search class="w-6 h-6 text-w-fg-1" />
+              <Search class="w-6 h-6 text-w-fg-0" />
             </div>
             <div
               class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.gotoPlanCreateView();
+              onClick={(event) => {
+                const { x, y } = event.currentTarget.getBoundingClientRect();
+                vm.ui.$dropdown_menu.toggle({ x, y });
               }}
             >
-              <Plus class="w-6 h-6 text-w-fg-1" />
+              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
             </div>
           </div>
         }
@@ -146,7 +165,7 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
               {(plan) => {
                 return (
                   <div
-                    class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-1"
+                    class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-0"
                     onClick={() => {
                       props.history.push("root.workout_plan_profile", {
                         id: plan.id.toString(),
@@ -156,7 +175,7 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
                     <div class="">{plan.title}</div>
                     <div class="mt-2 text-sm">{plan.overview}</div>
                     <div class="mt-2">
-                      <div class="flex items-center gap-1">
+                      <div class="flex items-center gap-1 text-w-fg-1">
                         <Clock class="w-4 h-4" />
                         <div class="text-sm">{plan.estimated_duration_text}</div>
                       </div>
@@ -179,6 +198,7 @@ export function HomeWorkoutPlanListPage(props: ViewComponentProps) {
           </ListView>
         </div>
       </PageView>
+      <DropdownMenu store={vm.ui.$dropdown_menu} />
     </>
   );
 }

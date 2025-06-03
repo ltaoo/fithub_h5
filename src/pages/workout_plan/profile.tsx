@@ -2,7 +2,7 @@
  * @file 训练计划详情
  */
 import { Show, For, Switch, Match } from "solid-js";
-import { BicepsFlexed, ChevronLeft, CircleX, Loader, MoreHorizontal } from "lucide-solid";
+import { BicepsFlexed, ChevronLeft, CircleX, Hourglass, Loader, Loader2, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -131,17 +131,17 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         store={vm}
         operations={
           <div class="flex items-center gap-2 w-full">
-            <Button class="w-full py-2.5 rounded-md bg-w-bg-5 text-w-fg-1 text-center" store={vm.ui.$btn_start_workout}>
+            <Button class="w-full" store={vm.ui.$btn_start_workout}>
               开始训练
             </Button>
-            <div class="p-2 rounded-full bg-w-bg-5">
+            {/* <div class="p-2 rounded-full bg-w-bg-5">
               <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
-            </div>
+            </div> */}
           </div>
         }
       >
         <Show when={state().error}>
-          <div class="error max-w-[screen] p-2">
+          <div class="error max-w-[screen] p-4">
             <div class="flex flex-col items-center text-red-500">
               <div>
                 <CircleX class="w-12 h-12" />
@@ -151,26 +151,28 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
         </Show>
         <Show when={state().loading}>
-          <div class="loading flex justify-center items-center h-full">
-            <Loader class="w-8 h-8 text-w-fg-1 animate-spin" />
+          <div class="loading flex justify-center items-center p-4">
+            <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>
           <div class="relative content space-y-4">
             <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
-              <div class="text-2xl font-bold">{state().profile!.title}</div>
-              <div>作者</div>
+              <div class="text-2xl font-bold text-w-fg-0">{state().profile!.title}</div>
+              {/* <div>作者</div> */}
               <div>
-                <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-colors">
-                  {state().profile!.overview}
-                </div>
+                <div class="">{state().profile!.overview}</div>
               </div>
               <div class="tags">
                 <For each={state().profile!.tags}>{(tag) => <div class="text-sm text-gray-400">{tag}</div>}</For>
               </div>
-              <div class="duration flex items-center gap-2">
-                <div>预计耗时</div>
-                <div>{state().profile!.estimated_duration_text}</div>
+              <div class="flex mt-2">
+                <div class="duration flex items-center gap-2 px-2 border-2 border-w-bg-5 rounded-full">
+                  <div class="text-w-fg-1">
+                    <Hourglass class="w-3 h-3 text-w-fg-1" />
+                  </div>
+                  <div class="text-sm text-w-fg-1">{state().profile!.estimated_duration_text}</div>
+                </div>
               </div>
               <div>
                 <For each={state().profile!.tags}>
@@ -182,7 +184,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
             </div>
             <div class="steps border-2 border-w-bg-5 rounded-lg">
               <div class="p-4 border-b-2 border-w-bg-5">
-                <div>内容明细</div>
+                <div class="text-w-fg-0">内容明细</div>
               </div>
               <div class="p-4 space-y-2">
                 <For each={state().profile!.steps}>
@@ -209,8 +211,9 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   )}
                                 </For>
                               </div>
-                              <div class="">
-                                <div class="text-sm text-gray-400 ">x{step.set_count}组</div>
+                              <div class="flex items-center text-sm text-w-fg-1">
+                                <div>x{step.set_count}</div>
+                                <div class="text-sm">组</div>
                               </div>
                             </div>
                           </Match>
@@ -232,7 +235,10 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   )}
                                 </For>
                               </div>
-                              <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
+                              <div class="flex items-center text-sm text-w-fg-1">
+                                <div>x{step.set_count}</div>
+                                <div class="text-sm">组</div>
+                              </div>
                             </div>
                           </Match>
                           <Match when={[WorkoutPlanSetType.HIIT].includes(step.set_type)}>
@@ -253,7 +259,10 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   )}
                                 </For>
                               </div>
-                              <div class="flex-shrink-0 text-sm text-gray-400">x{step.set_count}</div>
+                              <div class="flex items-center text-sm text-w-fg-1">
+                                <div>x{step.set_count}</div>
+                                <div class="text-sm">组</div>
+                              </div>
                             </div>
                           </Match>
                           <Match
@@ -282,7 +291,10 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   </For>
                                 </div>
                               </div>
-                              <div class="flex-shrink-0 text-sm text-w-fg-1">x{step.set_count}</div>
+                              <div class="flex items-center text-sm text-w-fg-1">
+                                <div>x{step.set_count}</div>
+                                <div class="text-sm">组</div>
+                              </div>
                             </div>
                           </Match>
                         </Switch>
@@ -294,7 +306,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
             </div>
             <div class="muscle rounded-lg border-2 border-w-bg-5">
               <div class="p-4 border-b border-w-bg-5">
-                <div class="">锻炼肌肉</div>
+                <div class="text-w-fg-0">锻炼肌肉</div>
               </div>
               <div class="p-4">
                 <BodyMusclePreview highlighted={["gluteus_minimus"]} />
@@ -307,7 +319,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
             </div>
             <div class="equipment rounded-lg border-2 border-w-bg-5">
               <div class="p-4 border-b-2 border-w-bg-5">
-                <div class="">所需器械</div>
+                <div class="text-w-fg-0">所需器械</div>
               </div>
               <div class="p-4">
                 <For each={state().profile!.equipments}>

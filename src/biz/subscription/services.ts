@@ -18,7 +18,7 @@ export function fetchSubscriptionPlanList() {
 
 export function fetchSubscriptionPlanListProcess(r: TmpRequestResp<typeof fetchSubscriptionPlanList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const data = r.data;
   return Result.Ok({

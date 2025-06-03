@@ -110,6 +110,9 @@ export class StorageCore<T extends Record<string, unknown>> extends BaseDomain<T
     this.client.setItem(this.key, JSON.stringify(this.values));
     this.emit(Events.StateChange, { ...this.state });
   }
+  remove<K extends keyof T>(key: K) {
+    this.clear(key);
+  }
 
   onStateChange(handler: Handler<TheTypesOfEvents<T>[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);

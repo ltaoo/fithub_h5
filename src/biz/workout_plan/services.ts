@@ -343,7 +343,7 @@ export function fetchWorkoutPlanCollectionProfile(body: { id: number | string })
 }
 export function fetchWorkoutPlanCollectionProfileProcess(r: TmpRequestResp<typeof fetchWorkoutPlanCollectionProfile>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const profile = r.data;
   return Result.Ok({
@@ -381,7 +381,7 @@ export function fetchWorkoutPlanSetList() {
 
 export function fetchWorkoutPlanSetListProcess(r: TmpRequestResp<typeof fetchWorkoutPlanSetList>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const { list } = r.data;
   return Result.Ok({

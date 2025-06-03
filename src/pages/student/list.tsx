@@ -40,6 +40,10 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
         await request.student.list.refresh();
         ui.$view.finishPullToRefresh();
       },
+      async onReachBottom() {
+        await request.student.list.loadMore();
+        ui.$view.finishLoadingMore();
+      },
     }),
     $create_btn: new ButtonCore({
       onClick() {
@@ -125,7 +129,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                         vm.methods.gotoStudentProfileView(student);
                       }}
                     >
-                      <div>{student.nickname}</div>
+                      <div class="text-w-fg-0">{student.nickname}</div>
                     </div>
                   );
                 }}

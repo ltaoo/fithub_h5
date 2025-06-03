@@ -67,7 +67,7 @@ export function LoginPage(props: ViewComponentProps) {
           <div class="z-20 relative text-6xl text-center italic">Fit Hub</div>
         </div>
       </div>
-      <div class="space-y-4 rounded-md">
+      <div class="space-y-4 rounded-md text-w-fg-0">
         <div>
           <div>邮箱</div>
           <Input class="mt-1" store={vm.ui.$input_email} />
@@ -82,7 +82,7 @@ export function LoginPage(props: ViewComponentProps) {
           登录
         </Button>
         <div
-          class="mt-1 py-2 text-center text-w-fg-1 cursor-pointer hover:underline"
+          class="mt-1 py-2 text-center text-sm text-w-fg-1 cursor-pointer hover:underline"
           onClick={() => {
             props.history.push("root.register");
           }}

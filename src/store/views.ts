@@ -8,10 +8,8 @@ import { RegisterPage } from "@/pages/register";
 import { NotFoundPage } from "@/pages/notfound";
 import { HomeLayout } from "@/pages/home/layout";
 import { HomeIndexPage } from "@/pages/home";
-import { HomeActionListPage } from "@/pages/workout_action/list";
-import { HomeActionCreatePage } from "@/pages/workout_action/create";
-import { HomeActionUpdatePage } from "@/pages/workout_action/update";
-import { HomeWorkoutPlanListPage } from "@/pages/workout_plan/list";
+import { WorkoutActionListView } from "@/pages/workout_action/list";
+import { WorkoutPlanListPage } from "@/pages/workout_plan/list";
 import { WorkoutPlanCreatePage } from "@/pages/workout_plan/create";
 import { HomeWorkoutPlanProfilePage } from "@/pages/workout_plan/profile";
 import { HomeWorkoutPlanUpdatePage } from "@/pages/workout_plan/update";
@@ -51,6 +49,10 @@ import { MetronomeToolView } from "@/pages/tools/metronome";
 import { ExamAnswerView } from "@/pages/paper/answer";
 import { PaperResultView } from "@/pages/paper/result";
 import { PaperListView } from "@/pages/paper/list";
+import { ReportListView } from "@/pages/report/list";
+import { ReportCreateView } from "@/pages/report/create";
+import { ReportProfileView } from "@/pages/report/profile";
+import { PaperResultListView } from "@/pages/paper/result_list";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -68,7 +70,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.tools_metronome": MetronomeToolView,
   "root.subscription": MineSubscriptionView,
   // 训练计划
-  "root.workout_plan_list": HomeWorkoutPlanListPage,
+  "root.workout_plan_list": WorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,
   "root.workout_plan_update": HomeWorkoutPlanUpdatePage,
   "root.home_layout.workout_plan_layout": WorkoutPlanRecommendLayout,
@@ -98,10 +100,11 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.equipment": EquipmentListView,
   "root.equipment_manage": MyEquipmentManageView,
   // 健身动作
-  "root.action_list": HomeActionListPage,
-  "root.action_create": HomeActionCreatePage,
-  "root.action_update": HomeActionUpdatePage,
-  "root.action_profile": WorkoutActionProfileView,
+  "root.workout_action_list": WorkoutActionListView,
+  // 意见反馈
+  "root.report_list": ReportListView,
+  "root.report_create": ReportCreateView,
+  "root.report_profile": ReportProfileView,
   // 假聊
   "root.fake_chat": MemberListInFakeChatPage,
   "root.fake_chat_profile": ChatProfileInFakeChatPage,
@@ -109,4 +112,5 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.paper_list": PaperListView,
   "root.exam": ExamAnswerView,
   "root.exam_result": PaperResultView,
+  "root.exam_result_list": PaperResultListView,
 };

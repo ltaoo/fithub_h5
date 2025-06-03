@@ -32,6 +32,7 @@ type TheTypesOfEvents<T> = {
   [Events.ResponseChange]: T | null;
 };
 type RequestState<T> = {
+  initial: boolean;
   loading: boolean;
   error: BizError | null;
   response: T | null;
@@ -85,8 +86,9 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
   service: F;
   process?: ProcessFunction<Result<UnpackedRequestPayload<ReturnType<F>>>, P>;
   client?: HttpClientCore;
-  delay: null | number = 800;
+  delay: number | null = null;
   loading = false;
+  initial = true;
   /** 处于请求中的 promise */
   // pending: Promise<UnpackedRequestPayload<ReturnType<F>>> | null = null;
   pending: Promise<Result<P>> | null = null;
@@ -100,6 +102,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
 
   get state(): RequestState<P> {
     return {
+      initial: this.initial,
       loading: this.loading,
       error: this.error,
       response: this.response,
@@ -181,6 +184,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     }
     // this.args = args;
     this.loading = true;
+    this.initial = false;
     this.response = this.defaultResponse;
     this.args = args;
     this.error = null;

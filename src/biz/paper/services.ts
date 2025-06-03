@@ -1,13 +1,22 @@
-import { FetchParams } from "@/domains/list/typing";
-import { ListResponse } from "@/biz/requests/types";
-import { request } from "@/biz/requests";
+import dayjs from "dayjs";
 
-import { ExamStatus, ExamStatusTextMap, QuizAnswerStatus, QuizAnswerStatusTextMap, QuizTypes } from "./constants";
+import { FetchParams } from "@/domains/list/typing";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
+import { ListResponse } from "@/biz/requests/types";
+import { request } from "@/biz/requests";
 import { parseJSONStr } from "@/utils";
+
+import {
+  ExamStatus,
+  ExamStatusTextMap,
+  QuizAnswerStatus,
+  QuizAnswerStatusTextMap,
+  QuizChoiceInAnswerStatus,
+  QuizTypes,
+} from "./constants";
 import { PaperQuizAnswer } from "./types";
-import dayjs from "dayjs";
+import { map_choice_value_text } from "./utils";
 
 export function fetchPaperList(body: FetchParams) {
   return request.post<
@@ -52,6 +61,37 @@ export function fetchRunningExam() {
     list: { id: number }[];
   }>("/api/exam/running", {});
 }
+export function fetchExamList(body: FetchParams) {
+  return request.post<
+    ListResponse<{
+      id: number;
+      status: ExamStatus;
+      paper: {
+        name: string;
+      };
+    }>
+  >("/api/exam/list", {
+    page_size: body.pageSize,
+    page: body.page,
+  });
+}
+export function fetchExamListProcess(r: TmpRequestResp<typeof fetchExamList>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const resp = r.data;
+  return Result.Ok({
+    ...resp,
+    list: resp.list.map((v) => {
+      return {
+        id: v.id,
+        name: v.paper.name,
+        status: v.status,
+        status_text: ExamStatusTextMap[v.status],
+      };
+    }),
+  });
+}
 
 export function fetchExamProfile(body: { id: number }) {
   return request.post<{
@@ -83,7 +123,7 @@ export function fetchExamProfile(body: { id: number }) {
 
 export function fetchExamProfileProcess(r: TmpRequestResp<typeof fetchExamProfile>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const resp = r.data;
   const quizzes = resp.quiz_answers.map((answer) => {
@@ -207,6 +247,7 @@ export function fetchExamResult(body: { id: number }) {
       status: QuizAnswerStatus;
       quiz: {
         id: number;
+        answer: string;
         type: QuizTypes;
         content: string;
         analysis: string;
@@ -221,7 +262,7 @@ export function fetchExamResult(body: { id: number }) {
 
 export function fetchExamResultProcess(r: TmpRequestResp<typeof fetchExamResult>) {
   if (r.error) {
-    return Result.Err(r.error.message);
+    return Result.Err(r.error);
   }
   const resp = r.data;
   return Result.Ok({
@@ -239,21 +280,62 @@ export function fetchExamResultProcess(r: TmpRequestResp<typeof fetchExamResult>
     pass: resp.exam.pass === 1,
     started_at: dayjs(resp.exam.started_at),
     quizzes: resp.quiz_answers.map((answer, idx) => {
+      const quiz_choices = (() => {
+        const r = parseJSONStr<{ value: number; text: string }[]>(answer.quiz.choices);
+        if (r.error) {
+          return [] as { value: number; text: string }[];
+        }
+        return r.data;
+      })();
+      // 用户选择的答案
+      const user_answer = (() => {
+        const r = parseJSONStr<PaperQuizAnswer>(answer.answer);
+        if (r.error) {
+          return { type: QuizTypes.Single, choices: [], content: "" };
+        }
+        return {
+          type: r.data.type ?? QuizTypes.Single,
+          choices: r.data.choices ?? [],
+          content: r.data.content ?? "",
+        };
+      })();
+      // 正确答案
+      const quiz_answer = (() => {
+        const r = parseJSONStr<{ value: number[]; content: "" }>(answer.quiz.answer);
+        if (r.error) {
+          return { value: [] as number[], content: "" };
+        }
+        return {
+          value: r.data.value ?? [],
+          content: r.data.content ?? "",
+        };
+      })();
       return {
         idx: idx + 1,
         status: answer.status,
         status_text: QuizAnswerStatusTextMap[answer.status],
-        answer: (() => {
-          const r = parseJSONStr<PaperQuizAnswer>(answer.answer);
-          if (r.error) {
-            return { type: QuizTypes.Single, choices: [], content: "" };
-          }
+        choices: quiz_choices.map((choice) => {
+          const selected = user_answer.choices.includes(choice.value);
+          const is_correct_quiz_answer = quiz_answer.value.includes(choice.value);
           return {
-            type: r.data.type ?? QuizTypes.Single,
-            choices: r.data.choices ?? [],
-            content: r.data.content ?? "",
+            value: choice.value,
+            value_text: map_choice_value_text(choice.value),
+            text: choice.text,
+            select_status: (() => {
+              // 选项的状态，如果没选，但是是多选中应该要选的，算什么状态？
+              // 选了就好说，要么对要么错
+              if (!selected) {
+                return QuizChoiceInAnswerStatus.Normal;
+              }
+              if (is_correct_quiz_answer) {
+                return QuizChoiceInAnswerStatus.Correct;
+              }
+              return QuizChoiceInAnswerStatus.Incorrect;
+            })(),
+            is_correct: is_correct_quiz_answer,
           };
-        })(),
+        }),
+        answer: user_answer,
         quiz_id: answer.quiz.id,
         content: answer.quiz.content,
         type: answer.quiz.type,

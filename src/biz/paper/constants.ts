@@ -46,3 +46,20 @@ export const QuizAnswerStatusTextMap: Record<QuizAnswerStatus, string> = {
   [QuizAnswerStatus.Incorrect]: "错误",
   [QuizAnswerStatus.Skipped]: "跳过",
 };
+
+export const QuizChoiceValueTextMap: Record<number, string> = {
+  1: "A",
+  2: "B",
+  3: "C",
+  4: "D",
+  5: "E",
+};
+
+export enum QuizChoiceInAnswerStatus {
+  // 没有选择
+  Normal = 1,
+  // 选择了并且正确
+  Correct = 2,
+  // 选择了并且错误
+  Incorrect = 3,
+}

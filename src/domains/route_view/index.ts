@@ -180,18 +180,16 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
       this.mounted = !!mounted;
       this.emit(Events.StateChange, { ...this.state });
     });
-    // this.$presence.onShow(() => {
-    //   this.showed();
-    // });
-    // this.$presence.onHidden(() => {
-    //   this.hidden();
-    // });
+    this.$presence.onUnmounted(() => {
+      this.emit(Events.Unmounted);
+    });
     emitViewCreated(this);
   }
 
   appendView(view: RouteViewCore) {
     view.parent = this;
     if (this.subViews.length === 0 && view.visible) {
+      console.log("[DOMAIN]route_view - before this.curView = view 1", view.title);
       this.curView = view;
     }
     if (!this.subViews.includes(view)) {
@@ -209,26 +207,31 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     view: RouteViewCore,
     options: Partial<{ reason: "show_sibling" | "back" | "forward"; destroy: boolean; callback: () => void }> = {}
   ) {
-    const { reason, destroy, callback } = options;
+    // const { reason, destroy, callback } = options;
     // console.log("[DOMAIN]route_view - removeView", this.title, view.title);
-    console.log("[DOMAIN]route_view - removeView", this.title, view.title);
+    // console.log("[DOMAIN]route_view - removeView", this.title, view.title);
     if (!this.subViews.includes(view)) {
+      console.warn("the view is not the child view");
       return;
     }
     view.onUnmounted(() => {
-      console.log("[DOMAIN]route_view - removeView.onUnmounted", this.title, view.title);
+      // console.log("[DOMAIN]route_view - removeView in removeView.onUnmounted", this.title, view.title);
       // console.log(performance.now());
       view.destroy();
       // view.setUnmounted();
       this.subViews = this.subViews.filter((v) => v !== view);
-      if (callback) {
-        callback();
+      if (options.callback) {
+        options.callback();
       }
-      console.log("[DOMAIN]route_view - removeView before Events.ViewsChange", this.title, view.title);
+      // console.log("[DOMAIN]route_view - removeView before Events.ViewsChange", this.title, view.title);
       this.emit(Events.ViewsChange, [...this.subViews]);
     });
-    // console.log(performance.now());
-    view.hide({ reason, destroy });
+    // console.log();
+    // console.log("[DOMAIN]route_view - removeView before view.hide", this.title, view.title, performance.now());
+    view.hide({
+      reason: options.reason,
+      destroy: options.destroy,
+    });
     this.emit(Events.ViewsChange, [...this.subViews]);
   }
   findCurView(): RouteViewCore | null {
@@ -241,14 +244,14 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.Ready);
   }
   /** 让自身的一个子视图变为可见 */
-  showView(subView: RouteViewCore, options: Partial<{ reason: "show_sibling" | "back"; destroy: boolean }> = {}) {
-    // console.log("[DOMAIN]route_view - showSubView", this.title, subView.title, this.curView?.title);
-    if (subView === this) {
+  showView(sub_view: RouteViewCore, options: Partial<{ reason: "show_sibling" | "back"; destroy: boolean }> = {}) {
+    console.log("[DOMAIN]route_view - showView", this.title, sub_view.title, this.curView?.title);
+    if (sub_view === this) {
       console.warn("cannot show self");
       return;
     }
-    if (subView.visible) {
-      console.warn("the sub view has been visible");
+    if (sub_view.visible) {
+      console.warn("the sub view has been visible", sub_view.name);
       return;
     }
     (() => {
@@ -264,13 +267,14 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
         this.parent.showView(this, options);
       }
     })();
-    if (this.curView) {
+    if (options.reason === "show_sibling" && this.curView) {
       this.curView.hide(options);
     }
-    this.appendView(subView);
+    this.appendView(sub_view);
     this.emit(Events.BeforeShow);
-    this.curView = subView;
-    subView.show();
+    console.log("[DOMAIN]route_view - before this.curView = view 2", sub_view.title);
+    this.curView = sub_view;
+    sub_view.show();
     this.emit(Events.CurViewChange, this.curView);
   }
   /** 主动展示视图 */
@@ -285,9 +289,9 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 主动隐藏自身视图 */
   hide(options: Partial<{ reason: "show_sibling" | "back" | "forward"; destroy: boolean }> = {}) {
-    console.log("[DOMAIN]route_view - hide", this.title, options);
+    // console.log("[DOMAIN]route_view - hide", this.title, options);
     if (this.visible === false) {
-      console.warn("has been un visible");
+      console.warn("has been hide");
       return;
     }
     for (let i = 0; i < this.subViews.length; i += 1) {
@@ -296,11 +300,14 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
       view.hide(options);
     }
     this.emit(Events.BeforeHide);
-    this.$presence.hide(options);
+    this.$presence.hide({
+      reason: options.reason,
+      destroy: options.destroy,
+    });
   }
   /** 视图在页面上展示（变为可见） */
   setShow() {
-    console.log("[DOMAIN]route_view/index - showed", this.title, this._showed);
+    // console.log("[DOMAIN]route_view/index - showed", this.title, this._showed);
     if (this._showed) {
       return;
     }
