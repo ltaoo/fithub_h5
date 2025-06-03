@@ -9,6 +9,7 @@ import { Show } from "solid-js";
 export function PageView<T extends { methods: { back: () => void }; ui: { $view: ScrollViewCore } }>(
   props: {
     store: T;
+    home?: boolean;
     operations?: JSX.Element;
     no_extra_bottom?: boolean;
   } & JSX.HTMLAttributes<HTMLDivElement>
@@ -25,7 +26,7 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
           </div>
         </ScrollView>
       </div>
-      <BottomNavigationBar1 back={props.store.methods.back} extra={props.operations} />
+      <BottomNavigationBar1 back={props.store.methods.back} home={props.home} extra={props.operations} />
     </div>
   );
 }

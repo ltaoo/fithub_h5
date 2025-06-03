@@ -3,9 +3,11 @@ import { createSignal, onCleanup, onMount } from "solid-js";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
+
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ScrollViewCore } from "@/domains/ui";
+import { StopwatchViewModel } from "@/biz/stopwatch";
 
 function MetronomeToolViewModel(props: ViewComponentProps) {
   const methods = {
@@ -15,14 +17,88 @@ function MetronomeToolViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
+    playTick() {
+      if (!_audio_context) {
+        _audio_context = new AudioContext();
+      }
+      const oscillator = _audio_context.createOscillator();
+      const gainNode = _audio_context.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(_audio_context.destination);
+
+      // 第四个节拍使用不同的音高和音量
+      if (_cur_beat === _beat_num - 1) {
+        oscillator.frequency.value = 1500; // 更高的音高
+        gainNode.gain.value = 0.2; // 更大的音量
+      } else {
+        oscillator.frequency.value = 1000;
+        gainNode.gain.value = 0.1;
+      }
+      oscillator.start();
+      gainNode.gain.exponentialRampToValueAtTime(0.001, _audio_context.currentTime + 0.1);
+      oscillator.stop(_audio_context.currentTime + 0.1);
+    },
+    toggle() {
+      if (_is_playing) {
+        methods.pause();
+        return;
+      }
+      methods.play(_tempo);
+    },
+    pause() {
+      _is_playing = false;
+      methods.refresh();
+      ui.$stopwatch.pause();
+      if (_timer_id) {
+        clearInterval(_timer_id);
+        _timer_id = null;
+      }
+    },
+    play(tempo: number) {
+      _is_playing = true;
+      methods.refresh();
+      const interval = (60 / tempo) * 1000;
+      ui.$stopwatch.play();
+      _timer_id = window.setInterval(() => {
+        methods.playTick();
+        _cur_beat = (_cur_beat + 1) % _beat_num;
+        methods.refresh();
+      }, interval);
+    },
+    handleTempoChange(value: number) {
+      _tempo = value;
+      if (_is_playing) {
+        methods.pause();
+        methods.play(value);
+      }
+    },
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $stopwatch: StopwatchViewModel({}),
   };
+
+  let _audio_context: AudioContext | null = null;
+  let _timer_id: number | null = null;
+  let _is_playing = false;
+  let _cur_beat = 0;
+  let _beat_num = 4;
+  let _tempo = 120;
+
   let _state = {
-    tempo: 120,
-    isPlaying: false,
-    currentBeat: 0,
+    get tempo() {
+      return _tempo;
+    },
+    get is_playing() {
+      return _is_playing;
+    },
+    get cur_beat() {
+      return _cur_beat;
+    },
+    get stopwatch() {
+      return ui.$stopwatch.state;
+    },
   };
   enum Events {
     StateChange,
@@ -39,6 +115,14 @@ function MetronomeToolViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      if (_timer_id) {
+        clearInterval(_timer_id);
+      }
+      if (_audio_context) {
+        _audio_context.close();
+      }
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -47,96 +131,69 @@ function MetronomeToolViewModel(props: ViewComponentProps) {
 
 export function MetronomeToolView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(MetronomeToolViewModel, [props]);
-  const [tempo, setTempo] = createSignal(120);
-  const [isPlaying, setIsPlaying] = createSignal(false);
-  const [currentBeat, setCurrentBeat] = createSignal(0);
-  let audioContext: AudioContext | null = null;
-  let timerId: number | null = null;
 
-  onCleanup(() => {
-    if (timerId) {
-      clearInterval(timerId);
+  let $minutes1: undefined | HTMLDivElement;
+  let $minutes2: undefined | HTMLDivElement;
+  let $seconds1: undefined | HTMLDivElement;
+  let $seconds2: undefined | HTMLDivElement;
+  let $ms1: undefined | HTMLDivElement;
+  let $ms2: undefined | HTMLDivElement;
+
+  vm.ui.$stopwatch.onStateChange((v) => {
+    if ($minutes1) {
+      $minutes1.innerText = v.minutes1;
     }
-    if (audioContext) {
-      audioContext.close();
+    if ($minutes2) {
+      $minutes2.innerText = v.minutes2;
+    }
+    if ($seconds1) {
+      $seconds1.innerText = v.seconds1;
+    }
+    if ($seconds2) {
+      $seconds2.innerText = v.seconds2;
+    }
+    if ($ms1) {
+      $ms1.innerText = v.ms1;
+    }
+    if ($ms2) {
+      $ms2.innerText = v.ms2;
     }
   });
-
-  const playClick = () => {
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.value = 1000;
-    gainNode.gain.value = 0.1;
-
-    oscillator.start();
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-    oscillator.stop(audioContext.currentTime + 0.1);
-  };
-
-  const toggleMetronome = () => {
-    if (isPlaying()) {
-      if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-      }
-    } else {
-      const interval = (60 / tempo()) * 1000;
-      timerId = window.setInterval(() => {
-        playClick();
-        setCurrentBeat((prev) => (prev + 1) % 4);
-      }, interval);
-    }
-    setIsPlaying(!isPlaying());
-  };
-
-  const handleTempoChange = (e: Event) => {
-    const value = parseInt((e.target as HTMLInputElement).value);
-    setTempo(value);
-    if (isPlaying()) {
-      if (timerId) {
-        clearInterval(timerId);
-      }
-      const interval = (60 / value) * 1000;
-      timerId = window.setInterval(() => {
-        playClick();
-        setCurrentBeat((prev) => (prev + 1) % 4);
-      }, interval);
-    }
-  };
 
   return (
     <PageView store={vm}>
       <div style={{ padding: "20px", "text-align": "center" }}>
         <div style={{ "margin-bottom": "20px" }}>
-          <div style={{ "font-size": "24px", "font-weight": "bold" }}>{tempo()} BPM</div>
+          <div style={{ "font-size": "24px", "font-weight": "bold" }}>{state().tempo} BPM</div>
         </div>
-
         <div style={{ "margin-bottom": "20px" }}>
-          <input type="range" min="40" max="208" value={tempo()} onInput={handleTempoChange} style={{ width: "80%" }} />
+          <input
+            type="range"
+            min="40"
+            max="208"
+            value={state().tempo}
+            style={{ width: "80%" }}
+            onInput={(event) => {
+              const v = Number(event.currentTarget.value);
+              vm.methods.handleTempoChange(v);
+            }}
+          />
         </div>
-
         <button
-          onClick={toggleMetronome}
           style={{
             padding: "10px 20px",
             "font-size": "16px",
-            "background-color": isPlaying() ? "#ff4d4f" : "#1890ff",
+            "background-color": state().is_playing ? "#ff4d4f" : "#1890ff",
             color: "white",
             border: "none",
             "border-radius": "4px",
-            cursor: "pointer",
+          }}
+          onClick={() => {
+            vm.methods.toggle();
           }}
         >
-          {isPlaying() ? "停止" : "开始"}
+          {state().is_playing ? "停止" : "开始"}
         </button>
-
         <div
           style={{
             display: "flex",
@@ -151,11 +208,90 @@ export function MetronomeToolView(props: ViewComponentProps) {
                 width: "20px",
                 height: "20px",
                 "border-radius": "50%",
-                "background-color": currentBeat() === beat ? "#1890ff" : "#d9d9d9",
+                "background-color": state().cur_beat === beat ? "#1890ff" : "#d9d9d9",
                 transition: "background-color 0.1s ease",
               }}
             />
           ))}
+        </div>
+      </div>
+      <div class="flex justify-center">
+        <div
+          classList={{
+            "time-text flex items-center transition-all duration-200": true,
+            "text-4xl": true,
+          }}
+        >
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$minutes1}
+          >
+            {state().stopwatch.minutes1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$minutes2}
+          >
+            {state().stopwatch.minutes2}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+          >
+            :
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$seconds1}
+          >
+            {state().stopwatch.seconds1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$seconds2}
+          >
+            {state().stopwatch.seconds2}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+          >
+            .
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$ms1}
+          >
+            {state().stopwatch.ms1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "w-[20px]": true,
+            }}
+            ref={$ms2}
+          >
+            {state().stopwatch.ms2}
+          </div>
         </div>
       </div>
     </PageView>

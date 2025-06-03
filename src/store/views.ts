@@ -47,7 +47,10 @@ import { MuscleInPersonView } from "@/pages/muscle/overview";
 import { MyEquipmentManageView } from "@/pages/equipment/manage";
 import { BMICalcToolView } from "@/pages/tools/bmi_calc";
 import { HeartRateCalcToolView } from "@/pages/tools/heart_rate_calc";
-import { MetronomeToolView } from "@/pages/tools/Metronome";
+import { MetronomeToolView } from "@/pages/tools/metronome";
+import { ExamAnswerView } from "@/pages/paper/answer";
+import { PaperResultView } from "@/pages/paper/result";
+import { PaperListView } from "@/pages/paper/list";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -102,4 +105,8 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   // 假聊
   "root.fake_chat": MemberListInFakeChatPage,
   "root.fake_chat_profile": ChatProfileInFakeChatPage,
+  // 答题
+  "root.paper_list": PaperListView,
+  "root.exam": ExamAnswerView,
+  "root.exam_result": PaperResultView,
 };

@@ -15,6 +15,7 @@ type ButtonState = {
   disabled: boolean;
 };
 type ButtonProps<T = unknown> = {
+  disabled?: boolean;
   onClick: (record: T | null) => void;
 };
 export class ButtonCore<T = unknown> extends BaseDomain<TheTypesOfEvents<T>> {
@@ -27,14 +28,16 @@ export class ButtonCore<T = unknown> extends BaseDomain<TheTypesOfEvents<T>> {
     disabled: false,
   };
 
-  constructor(options: Partial<{ _name: string } & ButtonProps<T>> = {}) {
-    super(options);
+  constructor(props: Partial<{ _name: string } & ButtonProps<T>> = {}) {
+    super(props);
 
+    if (props.disabled !== undefined) {
+      this.state.disabled = props.disabled;
+    }
     this.cur = new RefCore();
-    const { onClick } = options;
-    if (onClick) {
+    if (props.onClick) {
       this.onClick(() => {
-        onClick(this.cur.value);
+        props.onClick?.(this.cur.value);
       });
     }
   }

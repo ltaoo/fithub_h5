@@ -198,6 +198,7 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     this._dirty = true;
     this._input.setValue(value);
   }
+  ready() {}
   destroy() {
     if (this._input.destroy) {
       this._input.destroy();
@@ -522,6 +523,7 @@ export class ArrayFieldCore<
     this.fields[field_idx] = next_idx;
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
+  ready() {}
   destroy() {
     for (let i = 0; i < this.fields.length; i += 1) {
       const f = this.fields[i];
@@ -540,7 +542,7 @@ type ObjectValue<O extends Record<string, SingleFieldCore<any> | ArrayFieldCore<
   [K in keyof O]: O[K] extends SingleFieldCore<any>
     ? O[K]["value"]
     : O[K] extends ArrayFieldCore<any>
-    ? O[K]["value"][]
+    ? O[K]["value"]
     : O[K] extends ObjectFieldCore<any>
     ? O[K]["value"]
     : never;
@@ -758,6 +760,7 @@ export class ObjectFieldCore<
         return { ...a, ...b };
       }, {});
   }
+  ready() {}
   destroy() {
     const _fields = Object.values(this.fields);
     for (let i = 0; i < _fields.length; i += 1) {

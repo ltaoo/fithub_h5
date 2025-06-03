@@ -5,7 +5,7 @@ import { For, Show } from "solid-js";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, Dialog, ScrollView } from "@/components/ui";
+import { Button, Dialog, ScrollView, Skeleton } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
 
@@ -112,7 +112,15 @@ export function EquipmentListView(props: ViewComponentProps) {
         // }
       >
         <div class="grid grid-cols-2 gap-2">
-          <For each={state().list}>
+          <For
+            each={state().list}
+            fallback={
+              <div class="p-4 rounded-lg border-2 border-w-bg-5">
+                <Skeleton class="w-[36px] h-[24px]" />
+                <Skeleton class="mt-[2px] w-[48px] h-[16px]" />
+              </div>
+            }
+          >
             {(equipment) => {
               return (
                 <div

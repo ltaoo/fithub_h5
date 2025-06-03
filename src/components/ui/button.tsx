@@ -40,6 +40,7 @@ function Button<T = unknown>(
   props: {
     store: ButtonCore<T>;
     icon?: JSX.Element;
+    // disabled?: boolean;
   } & VariantProps<typeof buttonVariants> &
     JSX.HTMLAttributes<HTMLButtonElement>
 ) {

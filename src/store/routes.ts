@@ -267,6 +267,27 @@ const configure = {
           require: ["login"],
         },
       },
+      paper_list: {
+        title: "题库",
+        pathname: "/paper/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      exam: {
+        title: "答题",
+        pathname: "/exam",
+        options: {
+          require: ["login"],
+        },
+      },
+      exam_result: {
+        title: "答题结果",
+        pathname: "/exam/result",
+        options: {
+          require: ["login"],
+        },
+      },
       login: {
         title: "教练登录",
         pathname: "/login",

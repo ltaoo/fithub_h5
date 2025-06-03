@@ -169,7 +169,7 @@ export function HomeMineView(props: ViewComponentProps) {
                 vm.methods.showDialogUpdateNickname();
               }}
             >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
             </div>
           </div>
           <div class="person_profile p-2">
@@ -189,7 +189,7 @@ export function HomeMineView(props: ViewComponentProps) {
                   <div class="text-lg text-w-fg-0 text-center font-semibold">{state().nickname}</div>
                 </div>
               </div>
-              <Show
+              {/* <Show
                 when={state().subscription}
                 fallback={
                   <div
@@ -210,7 +210,7 @@ export function HomeMineView(props: ViewComponentProps) {
                 >
                   <div class="text-w-fg-0 text-sm">{state().subscription?.text}</div>
                 </div>
-              </Show>
+              </Show> */}
             </div>
             {/* <div class="mt-4 flex justify-between">
             <div class="text-center">
@@ -235,7 +235,7 @@ export function HomeMineView(props: ViewComponentProps) {
           >
             <div class="rounded-lg border-2 border-w-bg-5">
               <div class="flex items-center justify-between p-4 border-b-2 border-w-bg-5">
-                <h3 class="text-lg font-semibold text-w-fg-1">训练记录</h3>
+                <h3 class="font-semibold text-w-fg-0">训练记录</h3>
                 <div
                   class="p-1 rounded-full bg-w-bg-5"
                   onClick={() => {

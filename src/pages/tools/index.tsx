@@ -53,12 +53,12 @@ function ToolsViewModel(props: ViewComponentProps) {
             props.history.push("root.equipment");
           },
         },
-        {
-          title: "评估参考",
-        },
-        {
-          title: "常见问题",
-        },
+        // {
+        //   title: "评估参考",
+        // },
+        // {
+        //   title: "常见问题",
+        // },
       ],
     },
     {
@@ -91,18 +91,7 @@ function ToolsViewModel(props: ViewComponentProps) {
       ],
     },
     {
-      title: "学习",
-      menus: [
-        {
-          title: "学习资料",
-        },
-        {
-          title: "答题挑战",
-        },
-      ],
-    },
-    {
-      title: "小工具",
+      title: "工具",
       menus: [
         {
           title: "节拍器",
@@ -125,6 +114,20 @@ function ToolsViewModel(props: ViewComponentProps) {
         // {
         //   title: "抽签",
         // },
+      ],
+    },
+    {
+      title: "学习",
+      menus: [
+        {
+          title: "学习资料",
+        },
+        {
+          title: "答题挑战",
+          onClick() {
+            props.history.push("root.paper_list");
+          },
+        },
       ],
     },
   ];

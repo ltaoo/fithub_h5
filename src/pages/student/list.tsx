@@ -17,17 +17,7 @@ import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/service
 function HomeStudentListPageViewModel(props: ViewComponentProps) {
   const request = {
     student: {
-      list: new ListCore(
-        new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client }),
-        {
-          extraDataSource: [
-            {
-              id: 0,
-              nickname: "我",
-            },
-          ],
-        }
-      ),
+      list: new ListCore(new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client })),
     },
   };
   const methods = {

@@ -55,7 +55,7 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
     state: _state,
     ready() {
       //       ui.$stopwatch.setStartedAt(new Date("2025/05/29 18:00").valueOf());
-      ui.$stopwatch.setStartedAt(new Date("2025-05-29 18:05").valueOf());
+      // ui.$stopwatch.setStartedAt(new Date("2025-05-29 18:05").valueOf());
     },
     destroy() {
       ui.$stopwatch.destroy();
@@ -100,10 +100,10 @@ export function StopwatchToolView(props: ViewComponentProps) {
   return (
     <>
       <PageView store={vm}>
-        <div class="">
+        <div class="flex justify-center">
           <div
             classList={{
-              "time-text flex items-center transition-all duration-200": true,
+              "time-text flex items-center text-w-fg-0 transition-all duration-200": true,
               "text-4xl": true,
             }}
           >
@@ -181,7 +181,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
         </div>
         <div class="flex items-center justify-between p-4">
           <div
-            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-w-bg-5 text-w-fg-0"
             onClick={() => {
               if (state().stopwatch.running) {
                 vm.methods.segment();
@@ -195,7 +195,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
             </Show>
           </div>
           <div
-            class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100"
+            class="flex items-center justify-center w-16 h-16 rounded-full bg-w-bg-5 text-w-fg-0"
             onClick={() => {
               vm.methods.toggle();
             }}
@@ -209,7 +209,7 @@ export function StopwatchToolView(props: ViewComponentProps) {
           <For each={state().stopwatch.segments}>
             {(seg) => {
               return (
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between text-w-fg-0">
                   <div>分段{seg.idx}</div>
                   <div>{seg.text}</div>
                 </div>

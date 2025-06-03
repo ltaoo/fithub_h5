@@ -1,7 +1,7 @@
 {
-  "name": "@family-flix/admin",
+  "name": "@fithub/h5",
   "private": true,
-  "version": "2.6.0",
+  "version": "0.1.0",
   "scripts": {
     "dev": "vite --port 3100 --host",
     "build": "tsc && vite build",

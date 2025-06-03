@@ -1,10 +1,17 @@
-import { ChevronLeft } from "lucide-solid";
+import { ChevronLeft, Home } from "lucide-solid";
 import { JSX } from "solid-js/jsx-runtime";
 
 import { ViewComponentProps } from "@/store/types";
 import { Show } from "solid-js";
 
-export function BottomNavigationBar1(props: { hide_border?: boolean; extra?: JSX.Element; back: () => void }) {
+export function BottomNavigationBar1(props: {
+  /** 到首页按钮 */
+  home?: boolean;
+  /** 隐藏边框线 */
+  hide_border?: boolean;
+  extra?: JSX.Element;
+  back: () => void;
+}) {
   return (
     <>
       <div
@@ -19,7 +26,9 @@ export function BottomNavigationBar1(props: { hide_border?: boolean; extra?: JSX
             props.back();
           }}
         >
-          <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+          <Show when={!props.home} fallback={<Home class="w-6 h-6 text-w-fg-1" />}>
+            <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+          </Show>
         </div>
         <Show when={props.extra}>
           <div class="extra flex-1">{props.extra}</div>
