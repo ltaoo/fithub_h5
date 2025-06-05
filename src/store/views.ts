@@ -28,9 +28,9 @@ import { WorkoutDayPreparingPage } from "@/pages/workout_day/prepare";
 import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
 import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
 import { HomeMineView } from "@/pages/mine";
-import { WorkoutPlanCollectionCreateView } from "@/pages/workout_plan_collection/create";
-import { WorkoutPlanCollectionUpdateView } from "@/pages/workout_plan_collection/update";
-import { WorkoutPlanCollectionCreateSuccessView } from "@/pages/workout_plan_collection/success";
+import { WorkoutScheduleCreateView } from "@/pages/workout_schedule/create";
+import { WorkoutScheduleUpdateView } from "@/pages/workout_schedule/update";
+import { WorkoutScheduleCreateSuccessView } from "@/pages/workout_schedule/success";
 import { WorkoutActionProfileView } from "@/pages/workout_action/profile";
 import { WorkoutActionHistoryListView } from "@/pages/workout_action_history/list";
 import { WorkoutDayListView } from "@/pages/workout_day/list";
@@ -53,6 +53,7 @@ import { ReportListView } from "@/pages/report/list";
 import { ReportCreateView } from "@/pages/report/create";
 import { ReportProfileView } from "@/pages/report/profile";
 import { PaperResultListView } from "@/pages/paper/result_list";
+import { WorkoutScheduleProfileView } from "@/pages/workout_schedule/profile";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -79,9 +80,10 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout.workout_plan_layout.single": WorkoutPlanSingleView,
   "root.home_layout.workout_plan_layout.mine": WorkoutPlanMineView,
   "root.workout_plan_profile": HomeWorkoutPlanProfilePage,
-  "root.workout_plan_collection_create": WorkoutPlanCollectionCreateView,
-  "root.workout_plan_collection_update": WorkoutPlanCollectionUpdateView,
-  "root.workout_plan_collection_create_success": WorkoutPlanCollectionCreateSuccessView,
+  "root.workout_schedule_create": WorkoutScheduleCreateView,
+  "root.workout_schedule_update": WorkoutScheduleUpdateView,
+  "root.workout_schedule_create_success": WorkoutScheduleCreateSuccessView,
+  "root.workout_schedule_profile": WorkoutScheduleProfileView,
   // 学员管理
   "root.home_layout.student_list": HomeStudentListPage,
   "root.student_create": HomeStudentCreatePage,

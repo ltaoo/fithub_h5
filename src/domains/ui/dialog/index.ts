@@ -120,6 +120,13 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
       this.hide();
     });
   }
+  toggle() {
+    if (this.open) {
+      this.present.hide();
+      return;
+    }
+    this.present.show();
+  }
   /** 显示弹窗 */
   show() {
     // if (this.open) {

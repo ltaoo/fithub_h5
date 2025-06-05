@@ -14,6 +14,7 @@ import { InputTextView } from "@/components/ui/input-text";
 import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
 import { Presence } from "@/components/ui/presence";
 import { NavigationBar1 } from "@/components/navigation-bar1";
+import { BodyMusclePreview } from "@/components/body-muscle-preview";
 
 import { base, Handler } from "@/domains/base";
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
@@ -26,6 +27,9 @@ import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_
 import { WorkoutActionProfile } from "@/biz/workout_action/services";
 import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
 import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
+import { map_parts_with_ids } from "@/biz/muscle/data";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
+import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
 import { WorkoutPlanValuesView } from "./workout_plan_values";
@@ -36,6 +40,9 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const request = {
     workout_plan: {
       create: new RequestCore(createWorkoutPlan, { client: props.client }),
+    },
+    equipment: {
+      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
     },
   };
   const methods = {
@@ -57,20 +64,20 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
           const act = set.actions[j];
           const reps = act.reps;
           const reps_unit = act.reps_unit;
-          if (reps_unit === "秒") {
+          if (reps_unit === getSetValueUnit("秒")) {
             set_duration += Number(reps);
           }
-          if (reps_unit === "分") {
+          if (reps_unit === getSetValueUnit("分")) {
             set_duration += Number(reps) * 60;
           }
-          if (reps_unit === "次") {
+          if (reps_unit === getSetValueUnit("次")) {
             // 一次大概是 6s
             set_duration += Number(reps) * 6;
           }
         }
         duration += set_duration * Number(set.set_count);
       }
-      // console.log("[PAGE]workout_plan/create - estimated duration", duration);
+      console.log("[PAGE]workout_plan/create - estimated duration", duration);
       const text = seconds_to_hour_with_template(duration, seconds_to_hour_template1);
       ui.$input_duration.setValue(text);
       return duration;
@@ -168,7 +175,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
       props.app.tip({
         text: ["创建成功"],
       });
-      props.history.push("root.workout_plan_profile", {
+      props.history.replace("root.workout_plan_profile", {
         id: String(r2.data.id),
       });
     },
@@ -209,6 +216,52 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
             }
           }
         }
+        (() => {
+          const muscle_ids = [
+            ...new Set(
+              Object.keys(_action_profiles)
+                .map((name) => {
+                  const profile = _action_profiles[name];
+                  return profile.muscles.map((m) => m.id);
+                })
+                .reduce((a, b) => {
+                  return [...a, ...b];
+                }, [])
+            ),
+          ];
+          ui.$muscle.highlight_muscles(map_parts_with_ids(muscle_ids));
+        })();
+        (async () => {
+          const equipment_ids = [
+            ...new Set(
+              Object.keys(_action_profiles)
+                .map((name) => {
+                  const profile = _action_profiles[name];
+                  return profile.equipments.map((m) => m.id);
+                })
+                .reduce((a, b) => {
+                  return [...a, ...b];
+                }, [])
+            ),
+          ];
+          const r3 = await request.equipment.list.run({ ids: equipment_ids });
+          if (r3.error) {
+            return;
+          }
+          _equipments = r3.data.list.map((v) => {
+            return {
+              id: v.id,
+              zh_name: v.zh_name,
+            };
+          });
+          methods.refresh();
+        })();
+        // ui.$input_actions.validate().then((r) => {
+        //   console.log("------ fetch the values", r.data);
+        //   if (r.data) {
+        //     methods.calc_estimated_duration(r.data);
+        //   }
+        // });
         const field_value = ui.$ref_action_in_menu.value;
         const menu_type = ui.$ref_menu_type.value;
         console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value, menu_type);
@@ -275,11 +328,6 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
               ],
             });
           }
-          ui.$input_actions.validate().then((r) => {
-            if (r.data) {
-              methods.calc_estimated_duration(r.data);
-            }
-          });
           ui.$workout_action_select.clear();
           ui.$workout_action_select.ui.$dialog.hide();
           return;
@@ -301,7 +349,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
                   zh_name: actions[i].zh_name,
                 },
                 reps: 12,
-                reps_unit: "次",
+                reps_unit: getSetValueUnit("次"),
                 weight: "12RM",
                 rest_duration: 30,
               },
@@ -309,13 +357,14 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
           });
         }
         ui.$input_actions.validate().then((r) => {
+          console.log("before methods.calc_estimated_duration", r.data);
           if (r.data) {
             methods.calc_estimated_duration(r.data);
           }
         });
         ui.$workout_action_select.clear();
         ui.$workout_action_select.ui.$dialog.hide();
-        bus.emit(Events.StateChange, { ..._state });
+        methods.refresh();
       },
       onError(error) {
         props.app.tip({
@@ -572,8 +621,10 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         methods.submit();
       },
     }),
+    $muscle: HumanBodyViewModel({ highlighted: [], disabled: true }),
   };
   let _action_profiles: Record<string, WorkoutActionProfile> = {};
+  let _equipments: { id: number; zh_name: string }[] = [];
   let _state = {
     get actions() {
       return ui.$action_select.state.actions;
@@ -584,23 +635,8 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     get fields() {
       return ui.$input_actions.state.fields;
     },
-    get muscles() {
-      return Object.values(_action_profiles)
-        .map((act) => {
-          return act.muscles;
-        })
-        .reduce((a, b) => {
-          return [...a, ...b];
-        }, []);
-    },
     get equipments() {
-      return Object.values(_action_profiles)
-        .map((act) => {
-          return act.equipments;
-        })
-        .reduce((a, b) => {
-          return [...a, ...b];
-        }, []);
+      return _equipments;
     },
     get enter() {
       return ui.$workout_action_select.ui.$dialog.state.enter;
@@ -671,7 +707,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                         when={state().fields.length}
                         fallback={
                           <div
-                            class="flex justify-center p-4 border-2 border-w-bg-5 rounded-lg"
+                            class="flex justify-center p-4 border-2 border-w-fg-3 rounded-lg"
                             onClick={() => {
                               vm.ui.$ref_action_in_menu.clear();
                               vm.ui.$workout_action_select.ui.$dialog.show();
@@ -695,7 +731,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                               }
                               return (
                                 <>
-                                  <div class="relative border-2 border-w-bg-5 rounded-lg shadow-sm">
+                                  <div class="relative border-2 border-w-fg-3 rounded-lg shadow-sm">
                                     <Switch>
                                       <Match when={$inner.field.symbol === "SingleFieldCore"}>
                                         <ActionInput
@@ -778,48 +814,38 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                   </div>
                   <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
                 </div>
-                <div class="field border-2 border-w-bg-5 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-bg-5">
+                <div class="field border-2 border-w-fg-3 rounded-lg">
+                  <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">预计时长</div>
                   </div>
                   <div class="p-4">
                     <InputTextView store={vm.ui.$input_duration} class="mt-1" />
                   </div>
                 </div>
-                <div class="field border-2 border-w-bg-5 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-bg-5">
+                <div class="field border-2 border-w-fg-3 rounded-lg">
+                  <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">锻炼部位</div>
                   </div>
                   <div class="p-4">
                     <div class="flex flex-wrap gap-2">
-                      <For each={state().muscles}>
-                        {(v) => {
-                          return (
-                            <div>
-                              <div>{v.id}</div>
-                            </div>
-                          );
-                        }}
-                      </For>
+                      <BodyMusclePreview store={vm.ui.$muscle} />
                     </div>
                   </div>
                 </div>
-                <div class="field border-2 border-w-bg-5 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-bg-5">
+                <div class="field border-2 border-w-fg-3 rounded-lg">
+                  <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">所需器械</div>
                   </div>
-                  <div class="p-4">
-                    <div class="flex flex-wrap gap-2">
-                      <For each={state().equipments}>
-                        {(v) => {
-                          return (
-                            <div>
-                              <div>{v.id}</div>
-                            </div>
-                          );
-                        }}
-                      </For>
-                    </div>
+                  <div class="p-4 space-y-2">
+                    <For each={state().equipments}>
+                      {(v) => {
+                        return (
+                          <div>
+                            <div class="text-w-fg-0">{v.zh_name}</div>
+                          </div>
+                        );
+                      }}
+                    </For>
                   </div>
                 </div>
               </div>
@@ -827,7 +853,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
             <div class="h-[68px]"></div>
           </ScrollView>
         </div>
-        <div class="z-10 p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
+        <div class="z-10 p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
           <div class="flex items-center gap-4">
             <div class="p-2 rounded-full bg-w-bg-5" onClick={vm.methods.back}>
               <ChevronLeft class="w-6 h-6 text-w-fg-1" />

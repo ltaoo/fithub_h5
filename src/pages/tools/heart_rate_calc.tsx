@@ -193,7 +193,7 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
                 return (
                   <div
                     classList={{
-                      "p-2 border-2 border-w-bg-5 text-w-fg-1 rounded-lg": true,
+                      "p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg": true,
                       "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().intensity_level === level,
                     }}
                     onClick={() => {
@@ -220,7 +220,7 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
             <For each={state().results}>
               {(result) => {
                 return (
-                  <div class="w-full p-4 border-2 border-w-bg-5 rounded-lg">
+                  <div class="w-full p-4 border-2 border-w-fg-3 rounded-lg">
                     <div class="space-y-1.5">
                       <div class="text-sm text-w-fg-0">{result.title}</div>
                       <div class="text-xl font-bold">{result.text}</div>

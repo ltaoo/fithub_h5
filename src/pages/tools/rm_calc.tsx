@@ -171,7 +171,7 @@ export function RMCalcToolView(props: ViewComponentProps) {
                 {(v) => {
                   return (
                     <div
-                      class="p-4 border-2 border-w-bg-5 rounded-lg text-center text-w-fg-0"
+                      class="p-4 border-2 border-w-fg-3 rounded-lg text-center text-w-fg-0"
                       onClick={() => {
                         vm.methods.showDialogWithText(v.text);
                       }}

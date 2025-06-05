@@ -78,6 +78,7 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
       props.app.tip({
         text: ["创建成功"],
       });
+      props.history.back();
     },
   };
   const vm = MemberValuesViewModel();

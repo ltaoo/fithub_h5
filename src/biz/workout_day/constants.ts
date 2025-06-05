@@ -6,6 +6,7 @@ export enum WorkoutDayStatus {
   Cancelled = 4,
   GiveUp = 5,
 }
+
 export const WorkoutDayStatusTextMap = {
   [WorkoutDayStatus.Pending]: "待进行",
   [WorkoutDayStatus.Started]: "进行中",

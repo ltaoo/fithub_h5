@@ -189,7 +189,7 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
   appendView(view: RouteViewCore) {
     view.parent = this;
     if (this.subViews.length === 0 && view.visible) {
-      console.log("[DOMAIN]route_view - before this.curView = view 1", view.title);
+      // console.log("[DOMAIN]route_view - before this.curView = view 1", view.title);
       this.curView = view;
     }
     if (!this.subViews.includes(view)) {
@@ -245,7 +245,7 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 让自身的一个子视图变为可见 */
   showView(sub_view: RouteViewCore, options: Partial<{ reason: "show_sibling" | "back"; destroy: boolean }> = {}) {
-    console.log("[DOMAIN]route_view - showView", this.title, sub_view.title, this.curView?.title);
+    // console.log("[DOMAIN]route_view - showView", this.title, sub_view.title, this.curView?.title);
     if (sub_view === this) {
       console.warn("cannot show self");
       return;
@@ -272,7 +272,7 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     }
     this.appendView(sub_view);
     this.emit(Events.BeforeShow);
-    console.log("[DOMAIN]route_view - before this.curView = view 2", sub_view.title);
+    // console.log("[DOMAIN]route_view - before this.curView = view 2", sub_view.title);
     this.curView = sub_view;
     sub_view.show();
     this.emit(Events.CurViewChange, this.curView);

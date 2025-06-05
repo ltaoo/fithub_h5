@@ -13,17 +13,19 @@ import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RequestCore } from "@/domains/request";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
 import {
-  createWorkoutPlanCollection,
+  createWorkoutSchedule,
   fetchWorkoutPlanList,
   fetchWorkoutPlanListProcess,
+  updateWorkoutSchedule,
 } from "@/biz/workout_plan/services";
-import { update_arr_item } from "@/utils";
 import { ListCore } from "@/domains/list";
+import { update_arr_item } from "@/utils";
 
-export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
+export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
   const request = {
-    workout_plan_collection: {
-      create: new RequestCore(createWorkoutPlanCollection, { client: props.client }),
+    workout_schedule: {
+      create: new RequestCore(createWorkoutSchedule, { client: props.client }),
+      update: new RequestCore(updateWorkoutSchedule, { client: props.client }),
     },
     workout_plan: {
       list: new ListCore(
@@ -41,6 +43,10 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
     handleClickWeekday(day: CalendarCore["state"]["weekdays"][number]) {
       if (ui.$workout_plan_select.ui.$dialog.open) {
         return;
+      }
+      const matched = _selected_plans.find((v) => v.day_id === day.id);
+      if (matched) {
+        ui.$workout_plan_select.setValue([{ id: matched.plan_id, title: "" }]);
       }
       ui.$ref_weekday.select(day);
       ui.$workout_plan_select.ui.$dialog.show();
@@ -120,14 +126,14 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
       }
       const body = r.data;
       console.log(body);
-      const r2 = await request.workout_plan_collection.create.run(body);
+      const r2 = await request.workout_schedule.create.run(body);
       if (r2.error) {
         props.app.tip({
           text: [r2.error.message],
         });
         return;
       }
-      props.history.push("root.workout_plan_collection_create_success", {
+      props.history.replace("root.workout_schedule_create_success", {
         id: String(r2.data.id),
       });
     },
@@ -191,10 +197,10 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
                 label: "月循环",
                 value: 2,
               },
-              {
-                label: "不循环",
-                value: 3,
-              },
+              // {
+              //   label: "不循环",
+              //   value: 3,
+              // },
             ],
           }),
         }),
@@ -202,6 +208,7 @@ export function WorkoutPlanCollectionValuesModel(props: ViewComponentProps) {
     }),
     $workout_plan_select: WorkoutPlanSelectViewModel({
       defaultValue: [],
+      multiple: false,
       list: request.workout_plan.list,
       client: props.client,
     }),

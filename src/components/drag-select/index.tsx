@@ -65,7 +65,7 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
             height: `${vm.cell_height * state().bottom_padding_count}px`,
           }}
         ></div>
-        <div class="pointer-events-none absolute inset-0 w-full border-b-2 border-t-2 border-w-bg-5">
+        <div class="pointer-events-none absolute inset-0 w-full border-b-2 border-t-2 border-w-fg-3">
           <div
             class="border-b border-black/10 bg-gradient-to-b from-white to-white/60 dark:border-white/20 dark:from-black dark:to-black/60"
             style={{

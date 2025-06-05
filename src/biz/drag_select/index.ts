@@ -49,7 +49,11 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       methods.refresh();
     },
     handleMounted() {
+      if (_mounted) {
+        return;
+      }
       _mounted = true;
+      // console.log("[BIZ]drag_select - handleMounted", props.defaultValue);
       if (props.defaultValue === null) {
         return;
       }
@@ -143,7 +147,9 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       return _options[_idx];
     },
     setValue: methods.setValue,
-    ready() {},
+    ready() {
+      // methods.setValue(props.defaultValue);
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

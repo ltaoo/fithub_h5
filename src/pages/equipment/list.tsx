@@ -115,7 +115,7 @@ export function EquipmentListView(props: ViewComponentProps) {
           <For
             each={state().list}
             fallback={
-              <div class="p-4 rounded-lg border-2 border-w-bg-5">
+              <div class="p-4 rounded-lg border-2 border-w-fg-3">
                 <Skeleton class="w-[36px] h-[24px]" />
                 <Skeleton class="mt-[2px] w-[48px] h-[16px]" />
               </div>
@@ -124,7 +124,7 @@ export function EquipmentListView(props: ViewComponentProps) {
             {(equipment) => {
               return (
                 <div
-                  class="p-4 rounded-lg border-2 border-w-bg-5"
+                  class="p-4 rounded-lg border-2 border-w-fg-3"
                   onClick={() => {
                     vm.methods.showDialogEquipmentProfile(equipment);
                   }}

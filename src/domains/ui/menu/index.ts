@@ -78,7 +78,7 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
     this.listen_items(items);
 
     this.popper.onEnter(() => {
-      console.log("[DOMAIN]ui/menu/index - handle Enter popper");
+      // console.log("[DOMAIN]ui/menu/index - handle Enter popper");
       this.state.hover = true;
       this.emit(Events.EnterMenu);
     });
@@ -92,7 +92,7 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
       this.hide();
     });
     this.presence.onHidden(() => {
-      console.log("[DOMAIN]ui/menu/index - presence.onHidden", this.cur_item?.label);
+      // console.log("[DOMAIN]ui/menu/index - presence.onHidden", this.cur_item?.label);
       this.reset();
       if (this.cur_item) {
         this.cur_item.blur();

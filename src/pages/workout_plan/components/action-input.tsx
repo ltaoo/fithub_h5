@@ -262,7 +262,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       bus.emit(Events.StateChange, { ..._state });
     },
     setValue(value: { type?: WorkoutPlanSetType; actions: typeof _set_actions }) {
-      console.log("[COMPONENT]action-input - setValue", value);
+      // console.log("[COMPONENT]action-input - setValue", value);
       if (value.type !== undefined) {
         _type = value.type;
         if ([WorkoutPlanSetType.HIIT].includes(_type)) {
@@ -275,11 +275,11 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         // }
         if ([WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(_type)) {
           const { nodes_added, nodes_removed, nodes_updated } = diff2(_set_actions, value.actions);
-          console.log("[COMPONENT]action-input - setValue diff", nodes_updated);
+          // console.log("[COMPONENT]action-input - setValue diff", nodes_updated);
           for (let i = 0; i < nodes_updated.length; i += 1) {
             const node = nodes_updated[i];
             const field = ui.$sets.fields.find((f) => {
-              console.log("[COMPONENT]action-input - setValue walk $sets.fields", f.id, f.field.value);
+              // console.log("[COMPONENT]action-input - setValue walk $sets.fields", f.id, f.field.value);
               return f.field.value.action?.id === node.action.id;
             });
             if (field) {
@@ -511,7 +511,7 @@ export function ActionInput(props: {
       <Show when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(state().type)}>
         <div class="flex justify-center mt-4">
           <div
-            class="inline-block px-2 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
+            class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
               if (props.onShowActionSelect) {
                 props.onShowActionSelect({ type: "add_action" });
@@ -525,7 +525,7 @@ export function ActionInput(props: {
       <Show when={[WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(state().type)}>
         <div class="flex justify-center mt-4">
           <div
-            class="inline-block px-2 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
+            class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
               vm.appendSet();
             }}

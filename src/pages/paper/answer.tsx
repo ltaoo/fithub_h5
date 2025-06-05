@@ -364,7 +364,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
               <div class="text-xl text-w-fg-0">{state().quiz?.content}</div>
             </div>
             <div class="mt-4 flex">
-              <div class="border-2 border-w-bg-5 px-2 rounded-full text-w-fg-1 text-sm">{state().quiz?.type_text}</div>
+              <div class="border-2 border-w-fg-3 px-2 rounded-full text-w-fg-1 text-sm">{state().quiz?.type_text}</div>
             </div>
             <div class="mt-4 space-y-2">
               <For each={state().quiz?.choices}>
@@ -372,7 +372,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
                   return (
                     <div
                       classList={{
-                        "flex p-4 border-2 border-w-bg-5 rounded-lg": true,
+                        "flex p-4 border-2 border-w-fg-3 rounded-lg": true,
                         "border-w-fg-2 bg-w-bg-5": choice.selected,
                       }}
                       onClick={() => {
@@ -393,7 +393,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
         <div class="w-screen h-[480px] bg-w-bg-1">
           <div class="flex flex-col h-full">
             <div class="flex-1 p-2">
-              <div class="flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg">
+              <div class="flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg">
                 <Show
                   when={state().overview.can_submit}
                   fallback={
@@ -414,7 +414,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
                         <div>
                           <div
                             classList={{
-                              "flex items-center justify-center h-[30px] border-2 border-w-bg-5 rounded-md bg-w-bg-5 text-w-fg-0":
+                              "flex items-center justify-center h-[30px] border-2 border-w-fg-3 rounded-md bg-w-bg-5 text-w-fg-0":
                                 true,
                               // "bg-green-500 dark:bg-green-800": quiz.selected,
                             }}

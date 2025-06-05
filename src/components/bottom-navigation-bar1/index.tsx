@@ -17,7 +17,7 @@ export function BottomNavigationBar1(props: {
       <div
         class="z-10 flex items-center justify-between gap-2 p-2 bg-w-bg-1"
         classList={{
-          "border-t-2 border-w-bg-5": !props.hide_border,
+          "border-t border-w-fg-3": !props.hide_border,
         }}
       >
         <div

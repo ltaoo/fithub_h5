@@ -119,7 +119,7 @@ export function MineSubscriptionView(props: ViewComponentProps) {
             {(plan) => {
               return (
                 <div
-                  class="flex-1 p-4 border-2 border-w-bg-5 rounded-lg"
+                  class="flex-1 p-4 border-2 border-w-fg-3 rounded-lg"
                   onClick={() => {
                     vm.methods.showDialogSubscriptionPlanChoices(plan);
                   }}
@@ -142,7 +142,7 @@ export function MineSubscriptionView(props: ViewComponentProps) {
                     <div
                       class=""
                       classList={{
-                        "flex-1 p-4 rounded-lg border-2 border-w-bg-5 text-w-fg-0": true,
+                        "flex-1 p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-0": true,
                         "border-w-fg-2": choice.selected,
                       }}
                       onClick={() => {

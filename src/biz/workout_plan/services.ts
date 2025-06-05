@@ -1,6 +1,6 @@
 import { request } from "@/biz/requests";
 import { idsMapValue } from "@/biz/services/utils";
-import { ListResponseWithCursor } from "@/biz/requests/types";
+import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
 import { SetValueUnit } from "@/biz/set_value_input";
 import { TheResponseOfFetchFunction } from "@/domains/request";
 import { TmpRequestResp } from "@/domains/request/utils";
@@ -8,9 +8,9 @@ import { Result } from "@/domains/result";
 import { FetchParams } from "@/domains/list/typing";
 import { parseJSONStr, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
-import { WorkoutPlanCollectionType, WorkoutPlanSetType } from "./constants";
+import { WorkoutScheduleType, WorkoutPlanSetType, WorkoutScheduleDayType } from "./constants";
 import { WorkoutPlanStepBody, WorkoutPlanActionPayload, WorkoutPlanPreviewPayload, WorkoutPlanStepResp } from "./types";
-import { map_weekday_text } from "./workout_plan_collection";
+import { map_weekday_text } from "./workout_schedule";
 
 export type WorkoutPlanDetailsJSON250424 = {
   v: "250424";
@@ -209,7 +209,7 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
 export function fetchWorkoutPlanList(params: Partial<FetchParams> & { keyword?: string }) {
   return request.post<
     ListResponseWithCursor<{
-      id: number | string;
+      id: number;
       title: string;
       overview: string;
       tags: string;
@@ -303,33 +303,52 @@ export function fetchMyWorkoutPlanListProcess(r: TmpRequestResp<typeof fetchMyWo
 }
 
 /**
- * 创建训练计划合集
+ * 创建周期训练计划
  * @param body
  * @returns
  */
-export function createWorkoutPlanCollection(body: {
+export function createWorkoutSchedule(body: {
   title: string;
   overview: string;
   tags: string;
   level: number;
-  type: number;
+  type: WorkoutScheduleType;
+  // 安排
   workout_plans: {
     weekday: number;
     day: number;
     workout_plan_id: number;
   }[];
 }) {
-  return request.post<{ id: number }>("/api/workout_plan_collection/create", body);
+  return request.post<{ id: number }>("/api/workout_schedule/create", body);
 }
 
-export function fetchWorkoutPlanCollectionProfile(body: { id: number | string }) {
+export function updateWorkoutSchedule(body: {
+  id: number;
+  title: string;
+  overview: string;
+  tags: string;
+  level: number;
+  type: WorkoutScheduleType;
+  workout_plans: {
+    id: number;
+    weekday: number;
+    day: number;
+    workout_plan_id: number;
+  }[];
+}) {
+  return request.post<{ id: number }>("/api/workout_schedule/update", body);
+}
+
+export function fetchWorkoutScheduleProfile(body: { id: number | string }) {
   return request.post<{
+    id: number;
     title: string;
     overview: string;
-    tags: string;
+    // tags: string;
     level: number;
-    type: WorkoutPlanCollectionType;
-    workout_plans: {
+    type: WorkoutScheduleType;
+    schedules: {
       weekday: number;
       day: number;
       workout_plan: {
@@ -337,34 +356,157 @@ export function fetchWorkoutPlanCollectionProfile(body: { id: number | string })
         estimated_duration: number;
       };
     }[];
-  }>("/api/workout_plan_collection/profile", {
+    /** 是否应用 */
+    applied: number;
+    applied_in_interval: number;
+  }>("/api/workout_schedule/profile", {
     id: Number(body.id),
   });
 }
-export function fetchWorkoutPlanCollectionProfileProcess(r: TmpRequestResp<typeof fetchWorkoutPlanCollectionProfile>) {
+export function fetchWorkoutScheduleProfileProcess(r: TmpRequestResp<typeof fetchWorkoutScheduleProfile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
   const profile = r.data;
   return Result.Ok({
+    id: profile.id,
     title: profile.title,
     overview: profile.overview,
-    tags: profile.tags,
+    // tags: profile.tags,
     level: profile.level,
     type: profile.type,
-    workout_plans: profile.workout_plans.map((plan) => {
+    applied: profile.applied === 1,
+    applied_in_interval: profile.applied_in_interval === 1,
+    schedules: (() => {
+      if (profile.type === WorkoutScheduleType.Weekly) {
+        return [1, 2, 3, 4, 5, 6, 7].map((v) => {
+          const has_plan = profile.schedules.find((p) => p.weekday === v);
+          if (has_plan) {
+            return {
+              type: WorkoutScheduleDayType.Workout,
+              day: v,
+              day_text: map_weekday_text(v),
+              title: has_plan.workout_plan.title,
+              estimated_duration_text: seconds_to_hour_with_template(
+                has_plan.workout_plan.estimated_duration,
+                seconds_to_hour_template1
+              ),
+            };
+          }
+          return {
+            type: WorkoutScheduleDayType.Resting,
+            day: v,
+            day_text: map_weekday_text(v),
+            title: "",
+            estimated_duration_text: "",
+          };
+        });
+      }
+
+      return [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+      ].map((v) => {
+        const has_plan = profile.schedules.find((p) => p.day === v);
+        if (has_plan) {
+          return {
+            type: WorkoutScheduleDayType.Workout,
+            day: v,
+            day_text: `${v}号`,
+            // workout_plan: has_plan.workout_plan,
+            title: has_plan.workout_plan.title,
+            estimated_duration_text: seconds_to_hour_with_template(
+              has_plan.workout_plan.estimated_duration,
+              seconds_to_hour_template1
+            ),
+          };
+        }
+        return {
+          type: WorkoutScheduleDayType.Resting,
+          day: v,
+          day_text: `${v}号`,
+          title: "",
+          estimated_duration_text: "",
+        };
+      });
+    })(),
+  });
+}
+
+export function applyWorkoutSchedule(body: { id: number }) {
+  return request.post<void>("/api/workout_schedule/apply", body);
+}
+export function cancelWorkoutSchedule(body: { id: number }) {
+  return request.post<void>("/api/workout_schedule/cancel", body);
+}
+
+export function fetchWorkoutScheduleList(body: FetchParams) {
+  return request.post<
+    ListResponse<{
+      id: number;
+      title: string;
+      overview: string;
+      level: number;
+      type: WorkoutScheduleType;
+      workout_plans: {
+        day: number;
+        weekday: number;
+        workout_plan_id: number;
+      }[];
+    }>
+  >("/api/workout_schedule/list", {
+    page_size: body.pageSize,
+    page: body.page,
+  });
+}
+export function fetchWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetchWorkoutScheduleList>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const resp = r.data;
+  return Result.Ok({
+    ...resp,
+    list: resp.list.map((v) => {
       return {
-        weekday: plan.weekday,
-        weekday_text: map_weekday_text(plan.weekday),
-        day: plan.day,
-        title: plan.workout_plan.title,
-        estimated_duration_text: seconds_to_hour_with_template(
-          plan.workout_plan.estimated_duration,
-          seconds_to_hour_template1
-        ),
+        id: v.id,
+        title: v.title,
+        overview: v.overview,
+        level: v.level,
+        type: v.type,
+        type_text: (() => {
+          if (v.type === WorkoutScheduleType.Weekly) {
+            return "周计划";
+          }
+          return "月计划";
+        })(),
+        schedules: (() => {
+          return [];
+        })(),
+        schedule_text: (() => {
+          return "";
+        })(),
       };
     }),
   });
+}
+
+export function fetchMyWorkoutScheduleList() {
+  return request.post<{
+    list: {
+      level: number;
+      overview: string;
+      schedules: {
+        day: number;
+        tags: string;
+        title: string;
+        weekday: number;
+        workout_plan_id: number;
+      }[];
+      status: number;
+      title: string;
+      type: number;
+      workout_schedule_id: number;
+    }[];
+  }>("/api/workout_schedule/enabled", {});
 }
 
 export function fetchWorkoutPlanSetList() {
@@ -392,7 +534,7 @@ export function fetchWorkoutPlanSetListProcess(r: TmpRequestResp<typeof fetchWor
         overview: v.overview,
         idx: v.idx,
         ...(() => {
-          const d = parseJSONStr<{ plans: { id: number; title: string; overview: string; tags: string[] }[] }>(
+          const d = parseJSONStr<{ id: number; type: string; title: string; overview: string; tags: string[] }[]>(
             v.details
           );
           if (d.error) {
@@ -400,15 +542,17 @@ export function fetchWorkoutPlanSetListProcess(r: TmpRequestResp<typeof fetchWor
               list: [],
             };
           }
-          if (!d.data.plans) {
-            return {
-              list: [],
-            };
-          }
           return {
-            list: d.data.plans.map((vv) => {
+            list: d.data.map((vv) => {
               return {
                 id: vv.id,
+                type: vv.type,
+                type_text: (() => {
+                  if (vv.type === "workout_plan") {
+                    return "训练计划";
+                  }
+                  return "周期计划";
+                })(),
                 title: vv.title,
                 overview: vv.overview,
                 tags: vv.tags,

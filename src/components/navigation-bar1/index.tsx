@@ -15,7 +15,7 @@ export function NavigationBar1(props: {
       <div
         class="flex items-center justify-between gap-2 p-2 "
         classList={{
-          "border-b-2 border-w-bg-5": !props.hide_border,
+          "border-b-2 border-w-fg-3": !props.hide_border,
         }}
       >
         <div class="flex items-center gap-2">

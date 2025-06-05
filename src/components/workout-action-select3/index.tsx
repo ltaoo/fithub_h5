@@ -19,7 +19,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
     <div class="w-full">
       <div class="z-10 fixed inset-0 bg-black opacity-40"></div>
       <div class="z-50 relative w-full">
-        <div class="flex flex-col bg-w-bg-0 border-t-2 border-w-bg-5" style={{ height: "100vh" }}>
+        <div class="flex flex-col bg-w-bg-0 border-w-fg-3" style={{ height: "100vh" }}>
           <div class="flex gap-2 p-2">
             <div class="w-[240px]">
               <Select store={vm.ui.$input_type_select} />
@@ -29,8 +29,8 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               搜索
             </Button>
           </div>
-          <div class="flex-1 flex h-0 border-t-2 border-w-bg-5">
-            <div class="scroll--hidden w-[90px] h-full pt-2 px-2 overflow-y-auto border-r-2 border-w-bg-5">
+          <div class="flex-1 flex h-0 border-t-2 border-w-fg-3">
+            <div class="scroll--hidden w-[90px] h-full pt-2 px-2 overflow-y-auto border-r-2 border-w-fg-3">
               <For each={state().tags}>
                 {(tag) => {
                   return (
@@ -58,7 +58,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
                       return (
                         <div
                           classList={{
-                            "relative p-2 flex justify-between border-2 border-w-bg-5 rounded-md text-w-fg-1": true,
+                            "relative p-2 flex justify-between border-2 border-w-fg-3 rounded-md text-w-fg-0": true,
                             "border-w-fg-2 bg-w-bg-5 text-w-fg-0": !!state().value.find((act) => act.id === action.id),
                             "text-gray-100": !!state().disabled.includes(action.id),
                           }}
@@ -85,7 +85,7 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </ListView>
             </ScrollView>
           </div>
-          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-bg-5">
+          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-fg-3">
             <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
               <ChevronDown class="w-6 h-6 text-w-fg-0" />
             </div>

@@ -1,5 +1,5 @@
 export type BodyPartWithMuscles = {
-  title: string;
+  // title: string;
   muscles: {
     name: string;
     en_name: string;

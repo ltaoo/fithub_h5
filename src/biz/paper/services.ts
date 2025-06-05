@@ -66,6 +66,7 @@ export function fetchExamList(body: FetchParams) {
     ListResponse<{
       id: number;
       status: ExamStatus;
+      started_at: string;
       paper: {
         name: string;
       };
@@ -88,6 +89,7 @@ export function fetchExamListProcess(r: TmpRequestResp<typeof fetchExamList>) {
         name: v.paper.name,
         status: v.status,
         status_text: ExamStatusTextMap[v.status],
+        started_at: dayjs(v.started_at).format("YYYY-MM-DD HH:mm"),
       };
     }),
   });

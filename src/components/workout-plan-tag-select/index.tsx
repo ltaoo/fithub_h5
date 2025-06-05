@@ -29,7 +29,7 @@ export function WorkoutPlanTagSelectView(
               return (
                 <div
                   classList={{
-                    "px-4 py-1 border-2 border-w-bg-5 rounded-full text-sm text-w-fg-1": true,
+                    "px-4 py-1 border-2 border-w-fg-3 rounded-full text-sm text-w-fg-1": true,
                   }}
                 >
                   <div>{text}</div>
@@ -40,7 +40,7 @@ export function WorkoutPlanTagSelectView(
           <div
             classList={{
               "flex items-center gap-1": true,
-              "px-4 py-1 border-2 border-w-bg-5 rounded-full text-sm text-w-fg-1": true,
+              "px-4 py-1 border-2 border-w-fg-3 rounded-full text-sm text-w-fg-1": true,
             }}
           >
             <Plus class="w-4 h-4" />
@@ -65,8 +65,8 @@ export function WorkoutPlanTagSelectView(
             <For each={state().tagGroups}>
               {(group) => {
                 return (
-                  <div class="border-2 border-w-bg-5 rounded-lg">
-                    <div class="p-2 border-b-2 border-w-bg-5 text-w-fg-1">{group.title}</div>
+                  <div class="border-2 border-w-fg-3 rounded-lg">
+                    <div class="p-2 border-b-2 border-w-fg-3 text-w-fg-1">{group.title}</div>
                     <div class="flex flex-wrap gap-2 p-2">
                       <For each={group.options}>
                         {(opt) => {
@@ -74,7 +74,7 @@ export function WorkoutPlanTagSelectView(
                             <div
                               classList={{
                                 "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
-                                "border-w-bg-5": !opt.selected,
+                                "border-w-fg-3": !opt.selected,
                                 "border-w-fg-2 bg-w-g-5": opt.selected,
                               }}
                               onClick={() => {
@@ -92,7 +92,7 @@ export function WorkoutPlanTagSelectView(
               }}
             </For>
           </div>
-          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-bg-5">
+          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-fg-3">
             <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
               <ChevronDown class="w-6 h-6 text-w-fg-0" />
             </div>

@@ -184,7 +184,7 @@ export function BMICalcToolView(props: ViewComponentProps) {
         </div>
         <div class="mt-8 pb-12">
           <Show when={state().range}>
-            <div class="p-4 border-2 border-w-bg-5 rounded-lg text-center text-w-fg-0">
+            <div class="p-4 border-2 border-w-fg-3 rounded-lg text-center text-w-fg-0">
               <div class="flex justify-center">
                 <Switch>
                   <Match when={state().range?.icon === "smile"}>
@@ -208,7 +208,7 @@ export function BMICalcToolView(props: ViewComponentProps) {
       </PageView>
       <Sheet store={vm.ui.$dialog_bmi_rule}>
         <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
-          <div class="p-4 border-2 border-w-bg-5 rounded-lg text-w-fg-0">
+          <div class="p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0">
             <div>BMI 计算公式为</div>
             <div class="text-sm">体重kg / (身高m * 身高m)</div>
           </div>
@@ -216,7 +216,7 @@ export function BMICalcToolView(props: ViewComponentProps) {
             <For each={state().ranges}>
               {(range) => {
                 return (
-                  <div class="p-4 border-2 border-w-bg-5 rounded-lg text-w-fg-0">
+                  <div class="p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0">
                     <div class="">{range.text}</div>
                     <div class="text-sm">{range.value_text}</div>
                   </div>

@@ -60,8 +60,13 @@ export const WorkoutSetTypeOptions = Object.keys(WorkoutSetTypeTextMap).map((k) 
   };
 });
 
-export enum WorkoutPlanCollectionType {
+export enum WorkoutScheduleType {
   Weekly = 1,
   Monthly = 2,
   None = 3,
+}
+export enum WorkoutScheduleDayType {
+  Empty = 0,
+  Workout = 1,
+  Resting = 2,
 }

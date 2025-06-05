@@ -107,21 +107,21 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </Show>
         </div>
         <div class="relative space-y-2 mt-4">
-          <div class="relative border-2 border-w-bg-5 rounded-lg">
+          <div class="relative border-2 border-w-fg-3 rounded-lg">
             <div class="extra absolute right-2 top-2">
               <div class="p-2 rounded-full bg-w-bg-5">
                 <Edit class="w-4 h-4 text-w-fg-1" />
               </div>
             </div>
-            <div class="header p-4 border-b-2 border-w-bg-5">
+            <div class="header p-4 border-b-2 border-w-fg-3">
               <div class="text-w-fg-1">身体信息</div>
             </div>
             <div class="body p-4">
               <div></div>
             </div>
           </div>
-          <div class="relative border-2 border-w-bg-5 rounded-lg">
-            <div class="header p-4 border-b-2 border-w-bg-5">
+          <div class="relative border-2 border-w-fg-3 rounded-lg">
+            <div class="header p-4 border-b-2 border-w-fg-3">
               <div class="text-w-fg-1">训练日历</div>
             </div>
             <div class="body p-4">
@@ -159,8 +159,8 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               </For>
             </div>
           </div>
-          <div class="relative border-2 border-w-bg-5 rounded-lg">
-            <div class="header p-4 border-b-2 border-w-bg-5">
+          <div class="relative border-2 border-w-fg-3 rounded-lg">
+            <div class="header p-4 border-b-2 border-w-fg-3">
               <div class="text-w-fg-1">问卷调查</div>
             </div>
             <div class="body p-4"></div>

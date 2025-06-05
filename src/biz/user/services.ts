@@ -52,7 +52,7 @@ export function get_token() {
  * 获取当前登录用户信息详情
  * @returns
  */
-export function fetch_mine_profile() {
+export function fetch_user_profile() {
   return request.post<{
     nickname: string;
     avatar_url: string;

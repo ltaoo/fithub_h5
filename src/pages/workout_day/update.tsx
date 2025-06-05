@@ -14,7 +14,6 @@ import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
 import { Sheet } from "@/components/ui/sheet";
 import { SetCompleteBtn } from "@/components/set-complete-btn";
-import { ToolsBar } from "@/components/tools-bar";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
@@ -1129,17 +1128,17 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
             ui.$dialog_give_up_confirm.show();
           },
         }),
-        new MenuItemCore({
-          label: "重置",
-          async onClick() {
-            ui.$menu_workout_day.hide();
-            props.app.tip({
-              icon: "loading",
-              text: ["提交中..."],
-            });
-            await methods.resetPendingSteps();
-          },
-        }),
+        // new MenuItemCore({
+        //   label: "重置",
+        //   async onClick() {
+        //     ui.$menu_workout_day.hide();
+        //     props.app.tip({
+        //       icon: "loading",
+        //       text: ["提交中..."],
+        //     });
+        //     await methods.resetPendingSteps();
+        //   },
+        // }),
       ],
     }),
     $dialog_give_up_confirm: new DialogCore({}),
@@ -1428,7 +1427,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full border-b-2 border-w-bg-5">
+      <div class="z-0 fixed bottom-0 left-0 w-full border-b-2 border-w-fg-3 bg-w-bg-1">
         <div class="p-2">
           <Show
             when={state().profile?.status === WorkoutDayStatus.Started}
@@ -1467,7 +1466,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
           </Show>
         </div>
       </div>
-      <div class="absolute top-[56px] bottom-0 left-0 w-full">
+      <div class="absolute top-0 bottom-[56px] left-0 w-full">
         <ScrollView store={vm.ui.$view} class="">
           <div
             class="p-2 rounded-lg transition-all duration-300"
@@ -1501,7 +1500,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                   </Show>
                                   <div
                                     classList={{
-                                      "flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg": true,
+                                      "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
                                       "border-w-fg-2": is_cur_set(),
                                     }}
                                   >
@@ -1564,7 +1563,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                   <Show when={vm.ui.$fields_weight.get(act_k)}>
                                                     <SetValueInput
                                                       store={vm.ui.$fields_weight.get(act_k)!}
-                                                      class="w-[68px] border-2 border-w-bg-5 rounded-lg p-2"
+                                                      class="w-[68px] border-2 border-w-fg-3 rounded-lg p-2"
                                                       onClick={(event) => {
                                                         const client = event.currentTarget.getBoundingClientRect();
                                                         console.log("[]beforeShowNumInput1", a(), b(), c(), client.y);
@@ -1586,7 +1585,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                                   <Show when={vm.ui.$fields_reps.get(act_k)}>
                                                     <SetValueInput
                                                       store={vm.ui.$fields_reps.get(act_k)!}
-                                                      class="w-[68px] border border-w-bg-5 rounded-md p-2"
+                                                      class="w-[68px] border border-w-fg-3 rounded-md p-2"
                                                       onClick={(event) => {
                                                         const client = event.currentTarget.getBoundingClientRect();
                                                         console.log("[]beforeShowNumInput2", a(), b(), c());
@@ -1642,7 +1641,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                                     </Show>
                                     <div
                                       classList={{
-                                        "flex items-center gap-2 p-4 border-2 border-w-bg-5 rounded-lg": true,
+                                        "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
                                         "border-w-fg-2": is_cur_set(),
                                       }}
                                     >
@@ -1680,7 +1679,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
-        <div class="relative w-screen min-h-[320px] p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
+        <div class="relative w-screen min-h-[320px] p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
           <div class="h-[32px]"></div>
           <Show when={state().loading}>
             <div class="absolute inset-0">
@@ -1693,7 +1692,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
             </div>
           </Show>
           <Show when={state().cur_workout_action}>
-            <div class="mt-2 border-2 rounded-lg border-w-bg-5">
+            <div class="mt-2 border-2 rounded-lg border-w-fg-3">
               <WorkoutActionCard {...state().cur_workout_action!} />
             </div>
           </Show>
@@ -1701,7 +1700,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
             <For each={state().cur_workout_action_history}>
               {(history) => {
                 return (
-                  <div class="p-4 rounded-lg border-2 border-w-bg-5">
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
                     <div class="flex items-center">
                       <div class="flex items-center text-w-fg-0">
                         <div class="text-lg">{history.weight}</div>
@@ -1758,7 +1757,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
       <Sheet store={vm.ui.$dialog_give_up_confirm}>
         <div class="w-screen p-2 bg-w-bg-1">
           <div>
-            <div class="text-xl text-center">确认放弃本次训练？</div>
+            <div class="text-xl text-center text-w-fg-0">确认放弃本次训练？</div>
             <div class="mt-4 flex items-center gap-2">
               <Button class="w-full" store={vm.ui.$btn_give_up_confirm_cancel}>
                 取消
@@ -1773,9 +1772,9 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
       <Sheet store={vm.ui.$dialog_using_guide}>
         <div class="w-screen p-2 bg-w-bg-1">
           <div class="text-w-fg-0">
-            <div class="text-xl text-center">使用说明</div>
+            <div class="text-xl text-center text-w-fg-0">使用说明</div>
             <div class="mt-4 space-y-2">
-              <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                 <div class="">重量</div>
                 <div class="text-sm mt-2 space-y-1">
                   <div>
@@ -1783,7 +1782,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                   </div>
                 </div>
               </div>
-              <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                 <div class="">完成一组动作</div>
                 <div class="text-sm mt-2 space-y-1">
                   <div>
@@ -1808,7 +1807,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
                   </div>
                 </div>
               </div>
-              <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                 <div class="">包含多个动作的组</div>
                 <div class="text-sm mt-2 space-y-1">
                   <div>

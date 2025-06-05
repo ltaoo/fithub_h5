@@ -123,7 +123,7 @@ export function WorkoutActionMultipleSelectViewModel(props: {
   };
   const bus = base<TheTypesOfEvents>();
   request.action.list.onStateChange((state) => {
-    console.log("[BIZ]workout_action_select - request.action.list.onStateChange");
+    // console.log("[BIZ]workout_action_select - request.action.list.onStateChange");
     _actions = state.dataSource;
     bus.emit(Events.ActionsLoaded, _actions);
     bus.emit(Events.StateChange, { ..._state });

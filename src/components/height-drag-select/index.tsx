@@ -17,11 +17,11 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
       return;
     }
     vm.methods.bindNode($container);
-    vm.methods.handleMounted();
+    // vm.methods.handleMounted();
   });
 
   return (
-    <div class="flex justify-center w-full border-2 border-w-bg-5 rounded-xl bg-w-bg-2">
+    <div class="flex justify-center w-full border-2 border-w-fg-3 rounded-xl bg-w-bg-2">
       <div
         class="relative "
         style={{
@@ -48,9 +48,12 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
             {(opt) => {
               return (
                 <div
-                  class="inline-block"
+                  class="__a inline-block"
                   style={{
                     width: `${vm.cell_height}px`,
+                  }}
+                  onAnimationEnd={() => {
+                    vm.methods.handleMounted();
                   }}
                 >
                   <div
@@ -74,7 +77,7 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
           <div class="pointer-events-none absolute inset-0 w-full">
             <div
               classList={{
-                "inline-block h-full border-r-2 border-w-bg-5": true,
+                "inline-block h-full border-r-2 border-w-fg-3": true,
                 "bg-gradient-to-r from-w-bg-2 to-w-bg-2/60": true,
               }}
               style={{
@@ -93,7 +96,7 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
             </div>
             <div
               classList={{
-                "inline-block h-full border-l-2 border-w-bg-5": true,
+                "inline-block h-full border-l-2 border-w-fg-3": true,
                 "bg-gradient-to-l from-w-bg-2 to-w-bg-2/60 dark:border-white/20 dark:from-black dark:to-black/60": true,
               }}
               style={{

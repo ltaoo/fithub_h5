@@ -284,7 +284,7 @@ export class SelectCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
       return;
     }
     const matched = this.options.find((opt) => opt.value === v);
-    console.log("[DOMAIN]ui/select - setValue", v, matched, this.options);
+    // console.log("[DOMAIN]ui/select - setValue", v, matched, this.options);
     this.value = v;
     this.emit(Events.Change, v);
     this.emit(Events.StateChange, { ...this.state });

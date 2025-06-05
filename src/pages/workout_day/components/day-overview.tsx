@@ -95,7 +95,7 @@ export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewM
           </div>
         </div>
         <div>
-          <div class="flex items-center justify-between gap-2 p-2 border-t-2 border-w-bg-5 bg-w-bg-1">
+          <div class="flex items-center justify-between gap-2 p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
             <div
               class="w-[40px] p-2 bg-w-bg-5 rounded-full"
               onClick={() => {

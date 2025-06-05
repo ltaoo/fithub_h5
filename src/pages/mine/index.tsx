@@ -13,12 +13,12 @@ import { RequestCore } from "@/domains/request";
 import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
-import { fetch_mine_profile } from "@/biz/user/services";
+import { fetch_user_profile } from "@/biz/user/services";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
     mine: {
-      profile: new RequestCore(fetch_mine_profile, { client: props.client }),
+      profile: new RequestCore(fetch_user_profile, { client: props.client }),
     },
     workout_action_history: {
       list: new ListCore(
@@ -197,7 +197,7 @@ export function HomeMineView(props: ViewComponentProps) {
                 when={state().subscription}
                 fallback={
                   <div
-                    class="py-1 px-4 border-2 border-w-bg-5 rounded-full"
+                    class="py-1 px-4 border-2 border-w-fg-3 rounded-full"
                     onClick={() => {
                       vm.methods.gotoSubscriptionView();
                     }}
@@ -207,7 +207,7 @@ export function HomeMineView(props: ViewComponentProps) {
                 }
               >
                 <div
-                  class="py-1 px-4 border-2 border-w-bg-5 rounded-full"
+                  class="py-1 px-4 border-2 border-w-fg-3 rounded-full"
                   onClick={() => {
                     vm.methods.gotoSubscriptionView();
                   }}
@@ -216,20 +216,6 @@ export function HomeMineView(props: ViewComponentProps) {
                 </div>
               </Show> */}
             </div>
-            {/* <div class="mt-4 flex justify-between">
-            <div class="text-center">
-              <p class="text-gray-600 text-sm">训练天数</p>
-              <p class="font-semibold">0</p>
-            </div>
-            <div class="text-center">
-              <p class="text-gray-600 text-sm">累计时长</p>
-              <p class="font-semibold">0h</p>
-            </div>
-            <div class="text-center">
-              <p class="text-gray-600 text-sm">消耗热量</p>
-              <p class="font-semibold">0kcal</p>
-            </div>
-          </div> */}
           </div>
           <div
             class="mine-page-content overflow-hidden p-2"
@@ -237,9 +223,9 @@ export function HomeMineView(props: ViewComponentProps) {
               "border-radius": "12px 12px 0 0",
             }}
           >
-            <div class="rounded-lg border-2 border-w-bg-5">
-              <div class="flex items-center justify-between p-4 border-b-2 border-w-bg-5">
-                <h3 class="font-semibold text-w-fg-0">训练记录</h3>
+            <div class="rounded-lg border-2 border-w-fg-3">
+              <div class="flex items-center justify-between p-4 border-b-2 border-w-fg-3">
+                <div class="font-semibold text-w-fg-0">训练记录</div>
                 <div
                   class="p-1 rounded-full bg-w-bg-5"
                   onClick={() => {
@@ -299,7 +285,9 @@ export function HomeMineView(props: ViewComponentProps) {
             </div>
             <div class="flex items-center justify-between">
               <div></div>
-              <Button class="w-full" store={vm.ui.$btn_nickname_submit}>提交</Button>
+              <Button class="w-full" store={vm.ui.$btn_nickname_submit}>
+                提交
+              </Button>
             </div>
           </div>
         </div>

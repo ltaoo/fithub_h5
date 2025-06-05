@@ -86,35 +86,37 @@ export function HomeStudentListPage(props: ViewComponentProps) {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view}>
-        <div class="p-2">
-          <div class="flex items-center justify-between gap-2">
-            {/* <div class="text-xl text-w-fg-0"></div> */}
-            <Input class="w-full" store={vm.ui.$input_search} />
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.search();
-              }}
-            >
-              <Search class="w-6 h-6 text-w-fg-1" />
-            </div>
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.gotoStudentCreateView();
-              }}
-            >
-              <Plus class="w-6 h-6 text-w-fg-1" />
-            </div>
+      <div>
+        <div class="flex items-center justify-between gap-2 p-2">
+          {/* <div class="text-xl text-w-fg-0"></div> */}
+          <Input class="w-full" store={vm.ui.$input_search} />
+          <div
+            class="p-2 rounded-full bg-w-bg-5"
+            onClick={() => {
+              vm.methods.search();
+            }}
+          >
+            <Search class="w-6 h-6 text-w-fg-0" />
           </div>
-          <div class="mt-4">
+          <div
+            class="p-2 rounded-full bg-w-bg-5"
+            onClick={() => {
+              vm.methods.gotoStudentCreateView();
+            }}
+          >
+            <Plus class="w-6 h-6 text-w-fg-0" />
+          </div>
+        </div>
+      </div>
+      <div class="absolute top-[56px] bottom-0 w-full">
+        <ScrollView store={vm.ui.$view}>
+          <div class="p-2">
             <ListView
               store={vm.request.student.list}
               class="space-y-2"
               skeleton={
                 <>
-                  <div class="p-4 rounded-lg border-2 border-w-bg-5">
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
                     <Skeleton class="w-[32px] h-[24px]" />
                   </div>
                 </>
@@ -124,7 +126,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                 {(student) => {
                   return (
                     <div
-                      class="p-4 rounded-lg border-2 border-w-bg-5"
+                      class="p-4 rounded-lg border-2 border-w-fg-3"
                       onClick={() => {
                         vm.methods.gotoStudentProfileView(student);
                       }}
@@ -136,10 +138,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
               </For>
             </ListView>
           </div>
-        </div>
-      </ScrollView>
-      <div class="fixed bottom-32 w-full">
-        <div class="safe-height"></div>
+        </ScrollView>
       </div>
     </>
   );

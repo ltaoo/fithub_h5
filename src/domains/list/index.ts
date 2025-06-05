@@ -10,7 +10,6 @@ import { Result } from "@/domains/result/index";
 import { DEFAULT_RESPONSE, DEFAULT_PARAMS, DEFAULT_CURRENT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_TOTAL } from "./constants";
 import { OriginalResponse, FetchParams, Response, Search, ParamsProcessor, ListProps } from "./typing";
 import { omit } from "./utils";
-import { s } from "vitest/dist/types-e3c9754d";
 
 /**
  * 只处理
@@ -311,7 +310,7 @@ export class ListCore<
     if (responseIsEmpty) {
       response.dataSource = [];
     }
-    console.log("[DOMAIN]list/fetch - before this.extraDataSource.length", this.extraDatSource);
+    // console.log("[DOMAIN]list/fetch - before this.extraDataSource.length", this.extraDatSource);
     if (this.extraDatSource.length !== 0 && this.insertExtraDataSource === false) {
       this.insertExtraDataSource = true;
       response.dataSource = [...this.extraDatSource, ...response.dataSource];
@@ -347,7 +346,7 @@ export class ListCore<
       ...this.response,
       ...res.data,
     };
-    console.log("[DOMAIN]list/init - before Event.StateChange", this.response.dataSource);
+    // console.log("[DOMAIN]list/init - before Event.StateChange", this.response.dataSource);
     this.emit(Events.StateChange, { ...this.response });
     this.emit(Events.DataSourceAdded, [...res.data.dataSource]);
     this.emit(Events.DataSourceChange, [...this.response.dataSource]);

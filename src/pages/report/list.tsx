@@ -84,7 +84,7 @@ export function ReportListView(props: ViewComponentProps) {
           {(v) => {
             return (
               <div
-                class="p-4 border-2 border-w-bg-5 rounded-lg"
+                class="p-4 border-2 border-w-fg-3 rounded-lg"
                 onClick={() => {
                   vm.methods.gotoReportProfileView(v);
                 }}

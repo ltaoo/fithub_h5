@@ -72,7 +72,7 @@ export function MuscleInPersonView(props: ViewComponentProps) {
               <For each={state().part?.muscles}>
                 {(muscle) => {
                   return (
-                    <div class="p-2 border-2 border-w-bg-5 rounded-lg text-w-fg-0">
+                    <div class="p-2 border-2 border-w-fg-3 rounded-lg text-w-fg-0">
                       <div>{muscle.name}</div>
                       <div class="text-sm">{muscle.en_name}</div>
                     </div>

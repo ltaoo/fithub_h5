@@ -20,6 +20,8 @@ import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { WorkoutPlanViewModel } from "@/biz/workout_plan/workout_plan";
 import { PageView } from "@/components/page-view";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
+import { map_parts_with_ids } from "@/biz/muscle/data";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -85,6 +87,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         methods.startWorkoutDay();
       },
     }),
+    $muscle: HumanBodyViewModel({ highlighted: [] }),
   };
   let _state = {
     get loading() {
@@ -115,7 +118,15 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     ui,
     async ready() {
       const id = Number(props.view.query.id);
-      ui.$profile.methods.fetch({ id });
+      if (Number.isNaN(id)) {
+        return;
+      }
+      const r = await ui.$profile.methods.fetch({ id });
+      if (r.error) {
+        return;
+      }
+      const muscle_ids = r.data.muscles.map((m) => m.id);
+      ui.$muscle.highlight_muscles(map_parts_with_ids(muscle_ids));
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -156,8 +167,8 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
         </Show>
         <Show when={state().profile}>
-          <div class="relative content space-y-4">
-            <div class="header p-4 border-2 border-w-bg-5 rounded-lg">
+          <div class="relative content space-y-2">
+            <div class="header p-4 rounded-lg">
               <div class="text-2xl font-bold text-w-fg-0">{state().profile!.title}</div>
               {/* <div>作者</div> */}
               <div>
@@ -167,7 +178,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 <For each={state().profile!.tags}>{(tag) => <div class="text-sm text-gray-400">{tag}</div>}</For>
               </div>
               <div class="flex mt-2">
-                <div class="duration flex items-center gap-2 px-2 border-2 border-w-bg-5 rounded-full">
+                <div class="duration flex items-center gap-2 px-2 border-2 border-w-fg-3 rounded-full">
                   <div class="text-w-fg-1">
                     <Hourglass class="w-3 h-3 text-w-fg-1" />
                   </div>
@@ -182,8 +193,8 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 </For>
               </div>
             </div>
-            <div class="steps border-2 border-w-bg-5 rounded-lg">
-              <div class="p-4 border-b-2 border-w-bg-5">
+            <div class="steps border-2 border-w-fg-3 rounded-lg">
+              <div class="p-4 border-b-2 border-w-fg-3">
                 <div class="text-w-fg-0">内容明细</div>
               </div>
               <div class="p-4 space-y-2">
@@ -194,7 +205,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                         {/* <div class="absolute left-1 -top-2 text-sm">{WorkoutSetTypeTextMap[step.set_type] || ""}</div> */}
                         <Switch>
                           <Match when={[WorkoutPlanSetType.Normal].includes(step.set_type)}>
-                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                            <div class="flex items-center gap-3 p-2 border border-w-fg-3 rounded-md">
                               <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
                                 {index() + 1}
                               </div>
@@ -218,7 +229,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                             </div>
                           </Match>
                           <Match when={[WorkoutPlanSetType.Super].includes(step.set_type)}>
-                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                            <div class="flex items-center gap-3 p-2 border border-w-fg-3 rounded-md">
                               <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
                                 {index() + 1}
                               </div>
@@ -242,7 +253,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                             </div>
                           </Match>
                           <Match when={[WorkoutPlanSetType.HIIT].includes(step.set_type)}>
-                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                            <div class="flex items-center gap-3 p-2 border border-w-fg-3 rounded-md">
                               <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
                                 {index() + 1}
                               </div>
@@ -270,7 +281,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                               step.set_type
                             )}
                           >
-                            <div class="flex items-center gap-3 p-2 border border-w-bg-5 rounded-md">
+                            <div class="flex items-center gap-3 p-2 border border-w-fg-3 rounded-md">
                               <div class="flex-shrink-0 flex items-center justify-center h-7 text-w-fg-0 font-medium text-sm">
                                 {index() + 1}
                               </div>
@@ -304,26 +315,23 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 </For>
               </div>
             </div>
-            <div class="muscle rounded-lg border-2 border-w-bg-5">
-              <div class="p-4 border-b border-w-bg-5">
+            <div class="muscle rounded-lg border-2 border-w-fg-3">
+              <div class="p-4 border-b border-w-fg-3">
                 <div class="text-w-fg-0">锻炼肌肉</div>
               </div>
               <div class="p-4">
-                <BodyMusclePreview highlighted={["gluteus_minimus"]} />
-                <div class="">
-                  <For each={state().profile!.muscles}>
-                    {(muscle) => <div class="text-sm text-w-fg-1">{muscle.zh_name}</div>}
-                  </For>
-                </div>
+                <BodyMusclePreview store={vm.ui.$muscle} />
               </div>
             </div>
-            <div class="equipment rounded-lg border-2 border-w-bg-5">
-              <div class="p-4 border-b-2 border-w-bg-5">
+            <div class="equipment rounded-lg border-2 border-w-fg-3">
+              <div class="p-4 border-b-2 border-w-fg-3">
                 <div class="text-w-fg-0">所需器械</div>
               </div>
               <div class="p-4">
                 <For each={state().profile!.equipments}>
-                  {(equipment) => <div class="text-sm text-w-fg-1">{equipment.zh_name}</div>}
+                  {(equipment) => {
+                    return <div class="text-w-fg-0">{equipment.zh_name}</div>;
+                  }}
                 </For>
               </div>
             </div>

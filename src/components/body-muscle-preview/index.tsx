@@ -2,10 +2,11 @@ import { lazy, Suspense } from "solid-js";
 import { Loader, Loader2 } from "lucide-solid";
 
 import { BodyPartWithMuscles } from "@/biz/muscle/types";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 
 const Preview = lazy(() => import("./preview"));
 
-export function BodyMusclePreview(props: { highlighted: string[]; onClick?: (part: BodyPartWithMuscles) => void }) {
+export function BodyMusclePreview(props: { store: HumanBodyViewModel; onClick?: (part: BodyPartWithMuscles) => void }) {
   return (
     <Suspense
       fallback={

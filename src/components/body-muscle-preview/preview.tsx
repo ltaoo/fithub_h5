@@ -1,6 +1,8 @@
 import { onCleanup, onMount } from "solid-js";
 
 import { BodyPartWithMuscles } from "@/biz/muscle/types";
+import { MusclesInPartMaps } from "@/biz/muscle/data";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 
 // 默认的肌肉名称到SVG路径ID的映射
 const default_muscle_id_map: Record<string, string[]> = {
@@ -20,237 +22,6 @@ const default_muscle_id_map: Record<string, string[]> = {
   calves: ["path46", "path50", "path54", "path62", "path64", "path68", "path166", "path168", "path178", "path184"], // 小腿三头肌左右
 };
 
-const muscle_id_details_map: Record<string, BodyPartWithMuscles> = {
-  traps: {
-    title: "斜方肌",
-    muscles: [
-      {
-        name: "斜方肌上部",
-        en_name: "Upper trapezius",
-      },
-      {
-        name: "斜方肌中部",
-        en_name: "Middle Trapezius",
-      },
-      {
-        name: "斜方肌下部",
-        en_name: "Lower Trapezius",
-      },
-      {
-        name: "菱形肌",
-        en_name: "Rhomboid",
-      },
-    ],
-  },
-  lats: {
-    title: "背阔肌",
-    muscles: [
-      {
-        name: "背阔肌",
-        en_name: "Latissimus dorsi",
-      },
-      {
-        name: "竖脊肌",
-        en_name: "Erector spinae",
-      },
-    ],
-  },
-  lower_back: {
-    title: "下背部",
-    muscles: [],
-  },
-  shoulders: {
-    title: "肩膀",
-    muscles: [
-      {
-        name: "三角肌前束",
-        en_name: "Anterior deltoid",
-      },
-      {
-        name: "三角肌中束",
-        en_name: "Lateral deltoid",
-      },
-      {
-        name: "三角肌后束",
-        en_name: "Posterior deltoid",
-      },
-      {
-        name: "冈下肌",
-        en_name: "Infraspinatus",
-      },
-      {
-        name: "小圆肌",
-        en_name: "Teres minor",
-      },
-      {
-        name: "大圆肌",
-        en_name: "Teres major",
-      },
-    ],
-  },
-  chest: {
-    title: "胸部",
-    muscles: [
-      {
-        name: "胸大肌",
-        en_name: "Pectoralis major",
-      },
-      {
-        name: "胸小肌",
-        en_name: "Pectoralis minor",
-      },
-    ],
-  },
-  biceps: {
-    title: "二头肌",
-    muscles: [
-      {
-        name: "肱二头肌",
-        en_name: "Biceps brachii",
-      },
-      {
-        name: "肱肌",
-        en_name: "Brachialis",
-      },
-    ],
-  },
-  triceps: {
-    title: "三头肌",
-    muscles: [
-      {
-        name: "肱三头肌",
-        en_name: "Triceps brachii",
-      },
-    ],
-  },
-  forearms: {
-    title: "小臂",
-    muscles: [
-      {
-        name: "肱桡肌",
-        en_name: "Brachioradialis",
-      },
-    ],
-  },
-  abdominals: {
-    title: "腹直肌",
-    muscles: [
-      {
-        name: "腹直肌",
-        en_name: "Abdominals",
-      },
-    ],
-  },
-  obliques: {
-    title: "腹外斜肌",
-    muscles: [
-      {
-        name: "腹外斜肌",
-        en_name: "Obliquus externus abdominis",
-      },
-      {
-        name: "前锯肌",
-        en_name: "Serratus anterior",
-      },
-    ],
-  },
-  glutes: {
-    title: "臀大肌",
-    muscles: [
-      {
-        name: "臀大肌",
-        en_name: "Gluteus maximus",
-      },
-      {
-        name: "臀中肌",
-        en_name: "Gluteus medius",
-      },
-    ],
-  },
-  quads: {
-    title: "股四头肌",
-    muscles: [
-      {
-        name: "缝匠肌",
-        en_name: "Sartorius",
-      },
-      {
-        name: "耻骨肌",
-        en_name: "Pectineus",
-      },
-      {
-        name: "髂腰肌",
-        en_name: "Iliopsoas",
-      },
-      {
-        name: "长收肌",
-        en_name: "Adductor longus",
-      },
-      {
-        name: "股薄肌",
-        en_name: "Gracilis",
-      },
-      {
-        name: "股直肌",
-        en_name: "Rectus femoris",
-      },
-      {
-        name: "股内侧肌",
-        en_name: "Vastus medialis",
-      },
-      {
-        name: "阔筋膜张肌",
-        en_name: "Tensor fascia latae",
-      },
-    ],
-  },
-  hamstrings: {
-    title: "腘绳肌",
-    muscles: [
-      {
-        name: "股二头肌",
-        en_name: "Biceps femoris",
-      },
-      {
-        name: "半腱肌",
-        en_name: "Semitendinosus",
-      },
-      {
-        name: "半膜肌",
-        en_name: "Semimembranosus",
-      },
-      {
-        name: "大收肌",
-        en_name: "Adductor magnus",
-      },
-      {
-        name: "股外侧肌",
-        en_name: "Vastus lateralis",
-      },
-    ],
-  },
-  calves: {
-    title: "小腿",
-    muscles: [
-      {
-        name: "腓骨长肌",
-        en_name: "Peroneus longus",
-      },
-      {
-        name: "胫骨前肌",
-        en_name: "Tibialis anterior",
-      },
-      {
-        name: "比目鱼肌",
-        en_name: "Soleus",
-      },
-      {
-        name: "腓肠肌",
-        en_name: "Gastrocnemius",
-      },
-    ],
-  },
-};
 const muscle_name_map: Record<string, string> = {
   // 斜方肌
   trapezius: "traps",
@@ -338,13 +109,16 @@ const disabled_parts = [
 ];
 
 export default function _BodyMusclePreview(props: {
-  highlighted: string[];
+  store: HumanBodyViewModel;
   onClick?: (part: BodyPartWithMuscles) => void;
 }) {
   let elm: SVGSVGElement | undefined;
   let _cur_highlighted_muscles: string[] = [];
 
   function handleClick(e: MouseEvent) {
+    if (props.store.disabled) {
+      return;
+    }
     const target = e.target as HTMLDivElement;
     if (!target) {
       return;
@@ -365,7 +139,7 @@ export default function _BodyMusclePreview(props: {
     _cur_highlighted_muscles = [name];
     highlight(_cur_highlighted_muscles);
     if (props.onClick) {
-      const m = muscle_id_details_map[matched_muscle_name];
+      const m = MusclesInPartMaps[matched_muscle_name];
       if (m) {
         props.onClick(m);
       }
@@ -375,15 +149,15 @@ export default function _BodyMusclePreview(props: {
     for (let i = 0; i < muscles.length; i += 1) {
       (() => {
         const id = muscles[i];
-        const mm = muscle_name_map[id];
-        if (!mm) {
-          return;
-        }
-        const ids = default_muscle_id_map[mm];
+        // const mm = muscle_name_map[id];
+        // if (!mm) {
+        //   return;
+        // }
+        const ids = default_muscle_id_map[id];
         if (!ids) {
           return;
         }
-        set_paths_color(ids, "#f87777");
+        set_paths_color(ids, "#3b82f6");
       })();
     }
   }
@@ -391,11 +165,11 @@ export default function _BodyMusclePreview(props: {
     for (let i = 0; i < muscles.length; i += 1) {
       (() => {
         const id = muscles[i];
-        const mm = muscle_name_map[id];
-        if (!mm) {
-          return;
-        }
-        const ids = default_muscle_id_map[mm];
+        // const mm = muscle_name_map[id];
+        // if (!mm) {
+        //   return;
+        // }
+        const ids = default_muscle_id_map[id];
         if (!ids) {
           return;
         }
@@ -417,11 +191,15 @@ export default function _BodyMusclePreview(props: {
 
   onMount(() => {
     elm?.addEventListener("click", handleClick);
-    highlight(props.highlighted);
+    highlight(props.store.highlighted_muscles);
     disable_paths(disabled_parts);
   });
   onCleanup(() => {
     elm?.removeEventListener("click", handleClick);
+  });
+  props.store.onHighlightChange(({ muscles }) => {
+    // console.log("[COMPONENT]body-muscle-preview - store.onHighlightChange", muscles);
+    highlight(muscles);
   });
 
   return (

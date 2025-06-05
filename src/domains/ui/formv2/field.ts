@@ -703,7 +703,7 @@ export class ObjectFieldCore<
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       const field = this.fields[key];
-      console.log("[DOMAIN]ObjectFieldCore - before field.setValue", key, field);
+      // console.log("[DOMAIN]ObjectFieldCore - before field.setValue", key, field);
       field.setValue(values[key], { key });
     }
   }

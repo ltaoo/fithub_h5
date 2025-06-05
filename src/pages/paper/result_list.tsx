@@ -11,9 +11,8 @@ import { BizError } from "@/domains/error";
 import { DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
-import { fetchExamList, fetchExamListProcess, fetchPaperList, fetchRunningExam, startExam } from "@/biz/paper/services";
 import { Result } from "@/domains/result";
-import { Sheet } from "@/components/ui/sheet";
+import { fetchExamList, fetchExamListProcess, fetchPaperList, fetchRunningExam, startExam } from "@/biz/paper/services";
 
 function PaperResultListViewModel(props: ViewComponentProps) {
   const request = {
@@ -84,9 +83,10 @@ export function PaperResultListView(props: ViewComponentProps) {
     <>
       <PageView store={vm}>
         <ListView
+          class="space-y-2"
           store={vm.request.exam.list}
           skeleton={
-            <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+            <div class="p-4 border-2 border-w-fg-3 rounded-lg">
               <Skeleton class="w-[68px] h-[24px]" />
             </div>
           }
@@ -94,15 +94,15 @@ export function PaperResultListView(props: ViewComponentProps) {
           <For each={state().response.dataSource}>
             {(v) => {
               return (
-                <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+                <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                   <div class="text-w-fg-0">{v.name}</div>
-                  <div class="flex mt-2">
-                    <div class="px-2 py-1 rounded-full border-2 border-w-bg-5 text-sm">{v.status_text}</div>
+                  <div class="flex">
+                    <div class="text-sm text-w-fg-1">{v.status_text}</div>
                   </div>
                   <div class="flex items-center justify-between">
-                    <div></div>
+                    <div class="text-w-fg-1 text-sm">{v.started_at}</div>
                     <div
-                      class="px-4 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-full"
+                      class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full"
                       onClick={() => {
                         vm.methods.gotoExamResultView(v);
                       }}

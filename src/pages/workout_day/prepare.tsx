@@ -261,7 +261,7 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
                 }
               >
                 <div
-                  class="p-4 border-2 border-w-bg-5 rounded-lg"
+                  class="p-4 border-2 border-w-fg-3 rounded-lg"
                   onClick={() => {
                     vm.ui.$dialog_workout_plan_select.show();
                   }}
@@ -269,7 +269,7 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
                   <div class="">
                     <div class="text-w-fg-1">{state().selected_workout_plans[0].title}</div>
                     <div class="flex flex-wrap gap-2 mt-4">
-                      <div class="px-2 py-1 rounded-lg border border-2 border-w-bg-5 text-sm text-w-fg-1">背部</div>
+                      <div class="px-2 py-1 rounded-lg border border-2 border-w-fg-3 text-sm text-w-fg-1">背部</div>
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,7 @@ import { RequestCore } from "@/domains/request/index";
 import { HttpClientCore } from "@/domains/http_client/index";
 import { Result } from "@/domains/result/index";
 
-import { login, register, validate, fetch_mine_profile } from "./services";
+import { login, register, validate, fetch_user_profile } from "./services";
 
 export enum Events {
   Tip,
@@ -156,7 +156,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     if (!this.isLogin) {
       return Result.Err("请先登录");
     }
-    const r = await new RequestCore(fetch_mine_profile).run();
+    const r = await new RequestCore(fetch_user_profile).run();
     if (r.error) {
       return r;
     }

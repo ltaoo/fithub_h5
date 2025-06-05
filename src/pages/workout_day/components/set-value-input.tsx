@@ -17,7 +17,7 @@ export function SetValueInput(
       tabIndex={-1}
       classList={{
         "set-value-input relative flex items-center w-[88px] h-[36px] px-1 border-2 rounded-xl bg-w-bg-2": true,
-        "border-w-bg-5": field().status === "normal",
+        "border-w-fg-3": field().status === "normal",
         "border-yellow-500": field().status === "focus",
         "border-red-500 dark:border-red-800": field().status === "error",
       }}

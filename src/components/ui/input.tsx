@@ -53,7 +53,7 @@ const Input = (props: { store: InputCore<any>; prefix?: JSX.Element; class?: str
       </div>
       <InputPrimitive
         class={cn(
-          "flex items-center h-10 w-full rounded-xl leading-none border border-2 border-w-bg-5 bg-w-bg-2 py-2 px-3 text-w-fg-0 text-sm",
+          "flex items-center h-10 w-full rounded-xl leading-none border-2 border-w-fg-3 py-2 px-3 text-w-fg-0 text-sm bg-transparent",
           "focus:outline-none focus:ring-w-bg-3",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "placeholder:text-w-fg-2",

@@ -151,12 +151,12 @@ export function ReportProfileView(props: ViewComponentProps) {
         <Show
           when={state().profile?.reply_content}
           fallback={
-            <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+            <div class="p-4 border-2 border-w-fg-3 rounded-lg">
               <div class="text-center text-w-fg-1">暂无回复</div>
             </div>
           }
         >
-          <div class="p-4 border-2 border-w-bg-5">{state().profile?.reply_content}</div>
+          <div class="p-4 border-2 border-w-fg-3">{state().profile?.reply_content}</div>
         </Show>
       </Show>
     </PageView>

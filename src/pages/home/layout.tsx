@@ -179,7 +179,7 @@ export const HomeLayout: ViewComponent = (props) => {
           }}
         </For>
       </div>
-      <div class="relative z-10 w-full border-t-2 border-w-bg-5">
+      <div class="relative z-10 w-full border-t border-w-fg-3">
         <div class="relative flex items-center bg-w-bg-1 h-[48px]">
           <For each={vm.menus}>
             {(menu) => {

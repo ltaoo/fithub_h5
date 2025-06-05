@@ -17,7 +17,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-w-bg-5 text-w-fg-0",
         destructive: "bg-red-500 text-white hover:bg-red-600 dark:hover:bg-red-600",
-        outline: "bg-transparent border-2 border-w-bg-5",
+        outline: "bg-transparent border-2 border-w-fg-3",
         subtle: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100",
         ghost:
           "bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-100 dark:hover:text-slate-100 data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent",

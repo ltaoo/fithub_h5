@@ -10,13 +10,13 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
   const [state, setState] = createSignal(store.state);
   const [left, setLeft] = createSignal<null | number>(null);
 
-  console.log("[COMPONENT]ui/tab-header - listen onChange");
+  // console.log("[COMPONENT]ui/tab-header - listen onChange");
   store.onStateChange((v) => {
-    console.log("[COMPONENT]ui/tab-header - onChange", v);
+    // console.log("[COMPONENT]ui/tab-header - onChange", v);
     setState(v);
   });
   store.onLinePositionChange((v) => {
-    console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
+    // console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
     setLeft(v.left);
   });
 

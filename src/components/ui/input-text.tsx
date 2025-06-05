@@ -7,5 +7,5 @@ import { InputCore } from "@/domains/ui";
 export function InputTextView(props: { store: InputCore<any> } & JSX.HTMLAttributes<HTMLDivElement>) {
   const [state, vm] = useViewModelStore(props.store);
 
-  return state().value;
+  return <div>{state().value}</div>;
 }

@@ -18,7 +18,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
       <div class="flex flex-col gap-4 w-full p-4">
         <div class="headers flex items-center justify-between px-2">
           <span class="text-3xl font-bold text-w-fg-0">{state().text}</span>
-          <div class="overflow-hidden flex items-center border-2 border-w-bg-5 rounded-xl">
+          <div class="overflow-hidden flex items-center border-2 border-w-fg-3 rounded-xl">
             <For each={state().unitOptions}>
               {(unit) => {
                 return (

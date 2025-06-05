@@ -2,12 +2,14 @@ import { base, BaseDomain, Handler } from "@/domains/base";
 
 import { getMonthWeeks, getWeeksInMonth } from "./utils";
 import dayjs from "dayjs";
+import { padding_zero } from "@/utils";
 
 type CalendarWeek = {
   id: number;
   dates: {
     id: number;
     text: string;
+    yyyy: string;
     value: Date;
     time: number;
     is_prev_month: boolean;
@@ -53,6 +55,12 @@ export function CalendarCore(props: CalendarCoreProps) {
           return {
             id: i,
             text: date.getDate().toString(),
+            yyyy: (() => {
+              const y = date.getFullYear();
+              const m = padding_zero(date.getMonth() + 1);
+              const d = padding_zero(date.getDate());
+              return `${y}-${m}-${d}`;
+            })(),
             is_prev_month: date.getMonth() < d.getMonth(),
             is_next_month: date.getMonth() > d.getMonth(),
             is_today,
@@ -79,11 +87,13 @@ export function CalendarCore(props: CalendarCoreProps) {
     time: today.valueOf(),
   };
   let _month = {
+    /** 12月 */
     text: buildMonthText(today),
     value: today,
     time: today.valueOf(),
   };
   let _year = {
+    // 2024
     text: today.getFullYear(),
     value: today,
     time: today.valueOf(),

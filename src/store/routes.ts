@@ -213,23 +213,30 @@ const configure = {
           require: ["login"],
         },
       },
-      workout_plan_collection_create: {
-        title: "创建训练计划合集",
-        pathname: "/workout_plan_collect/create",
+      workout_schedule_create: {
+        title: "创建周期安排",
+        pathname: "/workout_schedule/create",
         options: {
           require: ["login"],
         },
       },
-      workout_plan_collection_create_success: {
-        title: "操作成功",
-        pathname: "/workout_plan_collect/success",
+      workout_schedule_create_success: {
+        title: "创建成功",
+        pathname: "/workout_schedule/success",
         options: {
           require: ["login"],
         },
       },
-      workout_plan_collection_update: {
-        title: "编辑训练计划合集",
-        pathname: "/workout_plan_collect/update",
+      workout_schedule_update: {
+        title: "编辑周期安排",
+        pathname: "/workout_schedule/update",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_schedule_profile: {
+        title: "周期安排详情",
+        pathname: "/workout_schedule/profile",
         options: {
           require: ["login"],
         },

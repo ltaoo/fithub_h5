@@ -28,7 +28,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
     <div class="relative">
       <div
         class={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border-2 border-w-bg-5 bg-w-bg-2 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-10 w-full items-center justify-between rounded-xl border-2 border-w-fg-3 bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           props.class
         )}
         onClick={(event) => {
@@ -53,7 +53,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
             </Show>
           }
         >
-          <div class="text-w-fg-0">{state().value2?.label || state().value}</div>
+          <div class="text-w-fg-0 truncate">{state().value2?.label || state().value}</div>
         </Show>
         <SelectPrimitive.Icon>
           <ChevronDown class="h-4 w-4 opacity-50" />

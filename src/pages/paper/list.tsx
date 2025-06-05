@@ -186,7 +186,7 @@ export function PaperListView(props: ViewComponentProps) {
         <ListView
           store={vm.request.paper.list}
           skeleton={
-            <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+            <div class="p-4 border-2 border-w-fg-3 rounded-lg">
               <Skeleton class="w-[68px] h-[24px]" />
             </div>
           }
@@ -194,13 +194,13 @@ export function PaperListView(props: ViewComponentProps) {
           <For each={state().response.dataSource}>
             {(v) => {
               return (
-                <div class="p-4 border-2 border-w-bg-5 rounded-lg">
+                <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                   <div class="text-w-fg-0">{v.name}</div>
                   <div class="text-sm text-w-fg-1">共{v.quiz_count}题</div>
                   <div class="flex items-center justify-between">
                     <div></div>
                     <div
-                      class="px-4 py-1 border-2 border-w-bg-5 bg-w-bg-5 rounded-full"
+                      class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full"
                       onClick={() => {
                         vm.methods.handleStartExam(v);
                       }}
@@ -217,7 +217,7 @@ export function PaperListView(props: ViewComponentProps) {
       <DropdownMenu store={vm.ui.$dropdown_menu} />
       <Show when={state().running_exam}>
         <div class="z-[100] fixed bottom-0 w-full p-4">
-          <div class="p-4 border-2 border-w-bg-5 rounded-lg bg-w-bg-1 text-w-fg-0">
+          <div class="p-4 border-2 border-w-fg-3 rounded-lg bg-w-bg-1 text-w-fg-0">
             <div class="text-center">有未完成的答题</div>
             <div class="flex items-center gap-2 mt-2">
               <Button class="w-full" store={vm.ui.$btn_give_up}>

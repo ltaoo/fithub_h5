@@ -91,7 +91,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
             {(value) => {
               return (
                 <div
-                  class="border-2 border-w-bg-5 p-4 rounded-lg"
+                  class="border-2 border-w-fg-3 p-4 rounded-lg"
                   onClick={() => {
                     vm.methods.gotoWorkoutDayProfileView(value);
                   }}
@@ -101,7 +101,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                     <div class="">{value.finished_at}</div>
                   </Show> */}
                   <div class="flex flex-wrap mt-2">
-                    <div class="px-2 py-1 rounded-xl border-2 border-w-bg-5 text-sm text-w-fg-1">
+                    <div class="px-2 py-1 rounded-xl border-2 border-w-fg-3 text-sm text-w-fg-1">
                       {WorkoutDayStatusTextMap[value.status]}
                     </div>
                   </div>

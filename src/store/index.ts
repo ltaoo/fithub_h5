@@ -34,11 +34,10 @@ onRequestCreated((ins) => {
       text: [e.message ?? "未知错误"],
     });
     if (e.code === 900) {
-      history.push("root.login");
+      user.logout();
     }
     if (e.code === 401) {
-      storage.remove("user");
-      history.push("root.login");
+      user.logout();
     }
   });
   if (!ins.client) {

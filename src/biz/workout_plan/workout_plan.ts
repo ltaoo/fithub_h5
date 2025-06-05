@@ -13,6 +13,7 @@ import {
 } from "@/biz/workout_action/services";
 
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "./services";
+import { Result } from "@/domains/result";
 
 export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
   const request = {
@@ -44,7 +45,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
       const r = await request.workout_plan.profile.run({ id: params.id });
       if (r.error) {
         bus.emit(Events.Error, r.error);
-        return;
+        return Result.Err(r.error);
       }
       const { muscle_ids, equipment_ids, action_ids, steps } = r.data;
       //       if (action_ids.length) {
@@ -71,7 +72,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
       if (muscle_ids.length) {
         const r2 = await request.muscle.list.run({ ids: muscle_ids });
         if (r2.error) {
-          return;
+          return Result.Err(r2.error);
         }
         _muscles = r2.data.list.map((v) => {
           return {
@@ -84,7 +85,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
       if (equipment_ids.length) {
         const r3 = await request.equipment.list.run({ ids: equipment_ids });
         if (r3.error) {
-          return;
+          return Result.Err(r3.error);
         }
         _equipments = r3.data.list.map((v) => {
           return {
@@ -94,6 +95,11 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         });
         methods.refresh();
       }
+      return Result.Ok({
+        id: r.data.id,
+        muscles: [..._muscles],
+        equipments: [..._equipments],
+      });
     },
   };
   let _muscles: { id: number; zh_name: string }[] = [];

@@ -174,8 +174,8 @@ export function ToolsView(props: ViewComponentProps) {
           <For each={state().groups}>
             {(group) => {
               return (
-                <div class="w-full border-2 border-w-bg-5 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-bg-5">
+                <div class="w-full border-2 border-w-fg-3 rounded-lg">
+                  <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">{group.title}</div>
                   </div>
                   <div class="grid grid-cols-5 gap-4 p-4 ">

@@ -217,7 +217,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
             <div class="flex gap-2">
               <div
                 classList={{
-                  "w-[60px] p-2 border-2 border-w-bg-5 text-w-fg-1 rounded-lg text-center": true,
+                  "w-[60px] p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
                   "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "man",
                 }}
                 onClick={() => {
@@ -228,7 +228,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
               </div>
               <div
                 classList={{
-                  "w-[60px] p-2 border-2 border-w-bg-5 text-w-fg-1 rounded-lg text-center": true,
+                  "w-[60px] p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
                   "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "woman",
                 }}
                 onClick={() => {
@@ -255,7 +255,7 @@ export function BMRCalcToolView(props: ViewComponentProps) {
               {(v) => {
                 return (
                   <div
-                    class="p-4 border-2 border-w-bg-5 rounded-lg text-center text-w-fg-0"
+                    class="p-4 border-2 border-w-fg-3 rounded-lg text-center text-w-fg-0"
                     onClick={() => {
                       vm.methods.showDialogWithSpecialRule(v.idx);
                     }}

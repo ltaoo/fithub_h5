@@ -58,7 +58,7 @@ export const SetDropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAtt
         >
           <div
             classList={{
-              "z-50 min-w-[4rem] w-36 overflow-hidden rounded-xl border-2 border-w-bg-5 border-slate-100 bg-w-bg-0 p-1 text-w-fg-0 shadow-md duration-200":
+              "z-50 min-w-[4rem] w-36 overflow-hidden rounded-xl border-2 border-w-fg-3 border-slate-100 bg-w-bg-0 p-1 text-w-fg-0 shadow-md duration-200":
                 true,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,
