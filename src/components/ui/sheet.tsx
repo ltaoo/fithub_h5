@@ -7,6 +7,7 @@ import { DialogCore } from "@/domains/ui/dialog";
 import * as DialogPrimitive from "@/packages/ui/dialog";
 import { Show } from "@/packages/ui/show";
 import { cn } from "@/utils/index";
+import { ViewComponentProps } from "@/store/types";
 
 const sheetVariants = cva("fixed z-50 scale-100 gap-4 bg-w-bg-2 text-w-fg-0 opacity-100", {
   variants: {
@@ -113,6 +114,7 @@ type SheetProps = {
   position?: "bottom" | "top" | "left" | "right";
   size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
   store: DialogCore;
+  app: ViewComponentProps["app"];
 } & JSX.HTMLAttributes<HTMLDivElement>;
 
 export function Sheet(props: SheetProps) {
@@ -120,12 +122,18 @@ export function Sheet(props: SheetProps) {
 
   return (
     <DialogPrimitive.Portal store={props.store}>
-      <div class="fixed w-full bottom-0" style={{ "z-index": 99 }}>
-        <Show when={state().mask}>
+      <Show when={state().mask}>
+        <div
+          classList={{
+            "h-screen": true,
+            "fixed left-1/2 top-0 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
+            "fixed inset-0": !props.app.env.pc,
+          }}
+        >
           <DialogPrimitive.Overlay
             store={vm}
             classList={{
-              "fixed inset-0 z-0 bg-black/50 transition-all duration-200": true,
+              "w-full h-full bg-black/50 transition-all duration-200": true,
               block: state().visible,
               hidden: !state().visible,
               "animate-in fade-in": state().enter,
@@ -135,7 +143,15 @@ export function Sheet(props: SheetProps) {
               vm.hide();
             }}
           />
-        </Show>
+        </div>
+      </Show>
+      <div
+        class="fixed w-full bottom-0"
+        classList={{
+          "left-1/2 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
+        }}
+        style={{ "z-index": 99 }}
+      >
         <DialogPrimitive.Content
           store={props.store}
           classList={{
@@ -145,7 +161,7 @@ export function Sheet(props: SheetProps) {
         >
           <div
             classList={{
-              "duration-200": true,
+              "duration-200  bg-w-bg-1": true,
               block: state().visible,
               hidden: !state().visible,
               "animate-in slide-in-from-bottom": state().enter,
@@ -154,6 +170,7 @@ export function Sheet(props: SheetProps) {
           >
             {props.children}
           </div>
+          <div class="safe-height"></div>
         </DialogPrimitive.Content>
       </div>
     </DialogPrimitive.Portal>

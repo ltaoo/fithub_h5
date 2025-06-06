@@ -166,7 +166,7 @@ export const HomeLayout: ViewComponent = (props) => {
             }}
           </For>
         </div>
-        <div class="safe-height"></div>
+        <div class="safe-height "></div>
       </div>
     </div>
   );

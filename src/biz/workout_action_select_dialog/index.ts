@@ -1,5 +1,5 @@
 /**
- * @file 健身动作单选择
+ * @file 健身动作选择
  */
 import { $workout_action_list } from "@/store";
 import {
@@ -21,19 +21,15 @@ import { BizError } from "@/domains/error";
 
 export function WorkoutActionSelectDialogViewModel(props: {
   defaultValue: { id: number | string; zh_name: string }[];
-  client: HttpClientCore;
-  list?: typeof $workout_action_list;
+  list: typeof $workout_action_list;
+  multiple?: boolean;
   onChange?: (action: WorkoutActionProfile[]) => void;
   onOk?: (actions: { id: number | string; zh_name: string }[]) => void;
   onError?: (error: BizError) => void;
 }) {
   const request = {
     action: {
-      list:
-        props.list ??
-        new ListCore(
-          new RequestCore(fetchWorkoutActionList, { process: fetchWorkoutActionListProcess, client: props.client })
-        ),
+      list: props.list,
     },
   };
   const methods = {
@@ -43,20 +39,29 @@ export function WorkoutActionSelectDialogViewModel(props: {
     cancel() {
       ui.$dialog.hide();
     },
-    select(action: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
-      console.log("[BIZ]workout_action_select2 - select", action);
-      const disabled = _disabled.includes(action.id);
+    select(vv: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
+      console.log("[BIZ]workout_action_select2 - select", vv);
+      const disabled = _disabled.includes(vv.id);
       if (disabled) {
         return;
       }
-      const existing = _selected.find((item) => item.id === action.id);
-      if (existing) {
-        _selected = _selected.filter((item) => item.id !== action.id);
+      const existing = _selected.find((item) => item.id === vv.id);
+      if (_multiple === false) {
+        if (existing) {
+          return;
+        }
+        _selected = [vv];
         bus.emit(Events.Change, _selected);
         bus.emit(Events.StateChange, { ..._state });
         return;
       }
-      const v = _actions.find((item) => item.id === action.id);
+      if (existing) {
+        _selected = _selected.filter((item) => item.id !== vv.id);
+        bus.emit(Events.Change, _selected);
+        bus.emit(Events.StateChange, { ..._state });
+        return;
+      }
+      const v = _actions.find((item) => item.id === vv.id);
       if (!v) {
         bus.emit(Events.Error, new BizError("健身动作不存在"));
         return;
@@ -199,6 +204,7 @@ export function WorkoutActionSelectDialogViewModel(props: {
   };
 
   let _loading = true;
+  let _multiple = props.multiple ?? true;
   let _selected: { id: number | string; zh_name: string }[] = (() => {
     return props.defaultValue;
   })();

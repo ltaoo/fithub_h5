@@ -124,18 +124,18 @@ export const $workout_action_list = new ListCore(
     pageSize: 24,
   }
 );
-export const $muscle_select = new ListCore(
-  new RequestCore(fetchMuscleList, {
-    process: fetchMuscleListProcess,
-    client,
-  })
-);
-export const $equipment_select = new ListCore(
-  new RequestCore(fetchEquipmentList, {
-    process: fetchEquipmentListProcess,
-    client,
-  })
-);
+// export const $muscle_select = new ListCore(
+//   new RequestCore(fetchMuscleList, {
+//     process: fetchMuscleListProcess,
+//     client,
+//   })
+// );
+// export const $equipment_select = new ListCore(
+//   new RequestCore(fetchEquipmentList, {
+//     process: fetchEquipmentListProcess,
+//     client,
+//   })
+// );
 
 app.setEnv({
   prod: import.meta.env.PROD,
@@ -171,12 +171,12 @@ history.onRouteChange(({ ignore, reason, view, href }) => {
   if (app.env.ios) {
     return;
   }
-  if (reason === "push") {
-    history.$router.pushState(href);
-  }
-  if (reason === "replace") {
-    history.$router.replaceState(href);
-  }
+  // if (reason === "push") {
+  //   history.$router.pushState(href);
+  // }
+  // if (reason === "replace") {
+  //   history.$router.replaceState(href);
+  // }
 });
 user.onTip((msg) => {
   app.tip(msg);

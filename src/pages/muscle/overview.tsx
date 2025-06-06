@@ -9,6 +9,7 @@ import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ScrollViewCore } from "@/domains/ui";
 import { BodyPartWithMuscles } from "@/biz/muscle/types";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 
 function MuscleInPersonViewModel(props: ViewComponentProps) {
   const methods = {
@@ -20,11 +21,15 @@ function MuscleInPersonViewModel(props: ViewComponentProps) {
     },
     handleClickBodyPart(part: BodyPartWithMuscles) {
       _part = part;
+      const muscles = part.muscles;
       methods.refresh();
     },
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $muscle: HumanBodyViewModel({
+      highlighted: [],
+    }),
   };
   let _part: BodyPartWithMuscles | null = null;
   let _state = {
@@ -60,7 +65,7 @@ export function MuscleInPersonView(props: ViewComponentProps) {
       <div class="flex flex-col h-full">
         <div class="h-[348px] bg-w-bg-0">
           <BodyMusclePreview
-            highlighted={[]}
+            store={vm.ui.$muscle}
             onClick={(part) => {
               vm.methods.handleClickBodyPart(part);
             }}
@@ -80,7 +85,7 @@ export function MuscleInPersonView(props: ViewComponentProps) {
                 }}
               </For>
             </div>
-	    <div class="h-[32px]"></div>
+            <div class="h-[32px]"></div>
           </Show>
         </div>
       </div>

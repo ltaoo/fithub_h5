@@ -1,24 +1,32 @@
 import { X } from "lucide-solid";
 import { JSX } from "solid-js/jsx-runtime";
 
+import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
 import * as DialogPrimitive from "@/packages/ui/dialog";
 import { Show } from "@/packages/ui/show";
 
 import { DialogCore } from "@/domains/ui/dialog";
 
-type SheetProps = {
-  position?: "bottom" | "top" | "left" | "right";
-  size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
-  store: DialogCore;
-} & JSX.HTMLAttributes<HTMLDivElement>;
-
-export function CalendarSheet(props: SheetProps) {
+export function CalendarSheet(
+  props: {
+    position?: "bottom" | "top" | "left" | "right";
+    size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
+    store: DialogCore;
+    app: ViewComponentProps["app"];
+  } & JSX.HTMLAttributes<HTMLDivElement>
+) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
     <DialogPrimitive.Portal store={props.store}>
-      <div class="fixed w-full top-[92px]" style={{ "z-index": 99 }}>
+      <div
+        class="fixed left-1/2 -translate-x-1/2 w-full top-[92px]"
+        classList={{
+          "w-[375px] mx-auto": props.app.env.pc,
+        }}
+        style={{ "z-index": 99 }}
+      >
         <Show when={state().mask}>
           <DialogPrimitive.Overlay
             store={vm}
@@ -46,8 +54,8 @@ export function CalendarSheet(props: SheetProps) {
               "duration-200": true,
               block: state().visible,
               hidden: !state().visible,
-        //       "animate-in slide-in-from-top": state().enter,
-        //       "animate-out slide-out-to-top": state().exit,
+              //       "animate-in slide-in-from-top": state().enter,
+              //       "animate-out slide-out-to-top": state().exit,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,
             }}

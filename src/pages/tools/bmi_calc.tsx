@@ -206,8 +206,8 @@ export function BMICalcToolView(props: ViewComponentProps) {
           </Show>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_bmi_rule}>
-        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_bmi_rule} app={props.app}>
+        <div class="min-h-[80px] p-2">
           <div class="p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0">
             <div>BMI 计算公式为</div>
             <div class="text-sm">体重kg / (身高m * 身高m)</div>

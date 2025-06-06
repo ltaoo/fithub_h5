@@ -24,8 +24,6 @@ const Input = (props: { store: InputCore<any>; prefix?: JSX.Element; class?: str
     setState(nextState);
   });
 
-  const { loading, value, placeholder, disabled, type } = state();
-
   // React.useEffect(() => {
   //   return () => {
   //     console.log("Input unmounted");
@@ -45,7 +43,7 @@ const Input = (props: { store: InputCore<any>; prefix?: JSX.Element; class?: str
           if (!prefix) {
             return null;
           }
-          if (loading) {
+          if (state().loading) {
             return <Loader2 class="w-4 h-4 animate-spin" />;
           }
           return prefix;

@@ -210,7 +210,6 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       defaultValue: [],
       multiple: false,
       list: request.workout_plan.list,
-      client: props.client,
     }),
     $ref_weekday: new RefCore<CalendarCore["state"]["weekdays"][number]>(),
   };

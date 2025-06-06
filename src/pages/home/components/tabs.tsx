@@ -71,7 +71,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
             }}
           </For>
           <div
-            classList={{ "absolute right-0 bg-w-bg-0": true }}
+            classList={{ "absolute right-2 bg-w-bg-0": true }}
             onClick={() => {
               props.onMoreClick?.();
             }}

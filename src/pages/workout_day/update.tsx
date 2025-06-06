@@ -48,8 +48,6 @@ import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import {
   fetchWorkoutActionHistoryListOfWorkoutAction,
   fetchWorkoutActionHistoryListOfWorkoutActionProcess,
-  fetchWorkoutActionHistoryListOfWorkoutDay,
-  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
 import { CountdownViewModel } from "@/biz/countdown";
@@ -61,9 +59,10 @@ import {
   fetchWorkoutActionProfile,
   fetchWorkoutActionProfileProcess,
 } from "@/biz/workout_action/services";
+import { SetCountdownViewModel } from "@/biz/set_countdown";
 import { calc_bottom_padding_need_add, has_num_value, has_value, remove_arr_item, update_arr_item } from "@/utils";
 
-import { SetCountdownView, SetCountdownViewModel } from "./components/set-countdown";
+import { SetCountdownView } from "./components/set-countdown";
 import { SetValueInput } from "./components/set-value-input";
 import { SetDropdownMenu } from "./components/set-dropdown-menu";
 import { SetActionView, SetActionViewModel } from "./components/set-action";
@@ -78,6 +77,9 @@ import { SetValueView } from "@/components/set-value-view";
 
 export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
 export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
+  /** 页面处于多学员环境中 */
+  const is_multiple_view = !!props.view.query.multiple;
+
   const request = {
     workout_plan: {
       profile: new RequestCore(fetchWorkoutPlanProfile, {
@@ -640,7 +642,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       _stats.total_volume = total_volume;
       _stats.total_set_count = _stats.sets.length;
       _stats.uncompleted_actions = uncompleted_actions;
-      ui.$dialog_confirm_complete.show();
+      ui.$dialog_overview.show();
       methods.refresh();
     },
     toBody() {
@@ -773,11 +775,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         },
       });
     },
-    async showWorkoutActionProfile(action: { id: number | string }) {
+    async handleClickWorkoutAction(action: { id: number | string }) {
       ui.$workout_action_profile_dialog.show();
       (() => {
-        const student_id = Number(props.view.query.student_id);
-        if (Number.isNaN(student_id)) {
+        const student_id = request.workout_day.profile.response?.student_id ?? 0;
+        if (!student_id) {
           return;
         }
         request.workout_action_history.list.init({
@@ -829,9 +831,8 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       props.app.tip({
         text: ["完成！"],
       });
-      ui.$dialog_confirm_complete.hide();
-      const is_multiple = !!props.view.query.student_id;
-      if (!is_multiple) {
+      ui.$dialog_overview.hide();
+      if (!is_multiple_view) {
         props.history.push("root.home_layout.index");
         return;
       }
@@ -855,20 +856,21 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         text: [],
       });
       ui.$btn_workout_day_give_up.setLoading(true);
+      ui.$btn_give_up_confirm_ok.setLoading(true);
       const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
       ui.$btn_workout_day_give_up.setLoading(false);
+      ui.$btn_give_up_confirm_ok.setLoading(false);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
         });
         return;
       }
-      ui.$dialog_confirm_complete.hide();
+      ui.$dialog_overview.hide();
       props.app.tip({
         text: ["操作成功"],
       });
-      const is_multiple = !!props.view.query.student_id;
-      if (!is_multiple) {
+      if (!is_multiple_view) {
         props.history.push("root.home_layout.index");
         return;
       }
@@ -876,7 +878,10 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         title: "",
         name: "",
         pathname: "",
-        query: props.view.query,
+        query: {
+          id: props.view.query.id,
+          hide_bottom_bar: "1",
+        },
       });
       request.workout_day.profile.modifyResponse((v) => {
         return {
@@ -979,7 +984,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 动作选择弹窗 */
     $workout_action_dialog: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
-      client: props.client,
+      // client: props.client,
       list: $workout_action_list,
       onOk(acts) {
         if (acts.length === 0) {
@@ -1139,10 +1144,12 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $countdown_presence: new PresenceCore(),
     $workout_action_profile_dialog: new DialogCore({ footer: false }),
     $tools: new PresenceCore({}),
-    $dialog_confirm_complete: new DialogCore({}),
+    $dialog_overview: new DialogCore({}),
     $dialog_workout_action_select: new DialogCore({}),
     $dialog_remark: new DialogCore({}),
+    /** 备注输入框 */
     $input_remark: new InputCore({ defaultValue: "", placeholder: "请输入备注" }),
+    /** 备注提交 */
     $btn_remark_submit: new ButtonCore({
       onClick() {
         const v = ui.$input_remark.value;
@@ -1156,11 +1163,13 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         ui.$dialog_remark.hide();
       },
     }),
+    /** 确认放弃弹窗中的 取消 按钮 */
     $btn_give_up_confirm_cancel: new ButtonCore({
       onClick() {
         ui.$dialog_give_up_confirm.hide();
       },
     }),
+    /** 确认放弃弹窗中的 确定 按钮 */
     $btn_give_up_confirm_ok: new ButtonCore({
       async onClick() {
         ui.$btn_give_up_confirm_ok.setLoading(true);
@@ -1176,6 +1185,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         props.history.push("root.home_layout.index");
       },
     }),
+    $dialog_finish_confirm: new DialogCore({}),
     $dialog_using_guide: new DialogCore({}),
     $menu_workout_day: new DropdownMenuCore({
       items: [
@@ -1217,7 +1227,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $workout_action_select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: $workout_action_list,
-      client: props.client,
+      // client: props.client,
       async onOk(actions) {},
       onError(error) {
         props.app.tip({
@@ -1230,15 +1240,17 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         methods.submit();
       },
     }),
+    /** 放弃按钮 */
     $btn_workout_day_give_up: new ButtonCore({
       onClick() {
-        methods.giveUp();
+        ui.$dialog_overview.hide();
+        ui.$dialog_give_up_confirm.show();
       },
     }),
   };
   let _height = 0;
   let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
-  let _cur_workout_action: WorkoutActionProfile | null = null;
+  let _cur_workout_action: (WorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
   let _cur_step_idx = 0;
   let _next_set_idx = 0;
   let _cur_act_idx = 0;
@@ -1364,6 +1376,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   request.workout_action.profile.onStateChange((v) => {
     methods.refresh();
   });
+  request.workout_action_history.list.onStateChange(() => methods.refresh());
 
   return {
     state: _state,
@@ -1511,7 +1524,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           hidden: state().profile?.status !== WorkoutDayStatus.Started,
         }}
       >
-        <div class="z-0 fixed bottom-0 left-0 w-full border-b-2 border-w-fg-3 bg-w-bg-1">
+        <div class="z-0 fixed bottom-0 left-0 w-full bg-w-bg-1">
           <div class="p-2">
             <Show
               when={state().profile?.status === WorkoutDayStatus.Started}
@@ -1613,7 +1626,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                             idx={b() + 1}
                                             highlight={is_cur_set()}
                                             onClick={() => {
-                                              vm.methods.showWorkoutActionProfile(set.actions[0]);
+                                              vm.methods.handleClickWorkoutAction(set.actions[0]);
                                             }}
                                           />
                                         </Show>
@@ -1645,7 +1658,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                       idx={[WorkoutPlanSetType.Normal].includes(set.type) ? b() + 1 : 0}
                                                       highlight={is_cur_set()}
                                                       onClick={() => {
-                                                        vm.methods.showWorkoutActionProfile(action);
+                                                        vm.methods.handleClickWorkoutAction(action);
                                                       }}
                                                     />
                                                   </Show>
@@ -1765,30 +1778,27 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
         </div>
       </div>
       <Show when={state().profile_view}>
-        <div class="" classList={{}}>
-          <WorkoutDayProfileView
-            app={props.app}
-            storage={props.storage}
-            pages={props.pages}
-            history={props.history}
-            client={props.client}
-            view={state().profile_view!}
-            hide_bottom
-          />
-        </div>
+        <WorkoutDayProfileView
+          app={props.app}
+          storage={props.storage}
+          pages={props.pages}
+          history={props.history}
+          client={props.client}
+          view={state().profile_view!}
+        />
       </Show>
-      <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-1">
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} />
+      <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} app={props.app}>
+        <div class="">
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} app={props.app} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_num_keyboard} position="bottom" size="sm">
-        <div class="w-screen p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_num_keyboard} app={props.app}>
+        <div class="p-2">
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action_profile_dialog} size="sm">
-        <div class="relative w-screen min-h-[320px] p-2 border-w-fg-3 bg-w-bg-1">
+      <Sheet store={vm.ui.$workout_action_profile_dialog} app={props.app}>
+        <div class="relative min-h-[320px] p-2">
           <Show when={state().loading}>
             <div class="absolute inset-0">
               {/* <div class="absolute inset-0 bg-white opacity-40"></div> */}
@@ -1823,13 +1833,13 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_confirm_complete} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_overview} app={props.app}>
+        <div class="">
           <WorkoutDayOverviewView store={vm} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_remark}>
-        <div class="relative w-screen p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_remark} app={props.app}>
+        <div class="relative p-2">
           <div class="flex items-center justify-between h-12">
             <div class="text-lg text-center">备注</div>
             <div
@@ -1849,8 +1859,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_give_up_confirm}>
-        <div class="w-screen p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_give_up_confirm} app={props.app}>
+        <div class="p-2">
           <div>
             <div class="text-xl text-center text-w-fg-0">确认放弃本次训练？</div>
             <div class="mt-4 flex items-center gap-2">
@@ -1864,8 +1874,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_using_guide}>
-        <div class="w-screen p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_using_guide} app={props.app}>
+        <div class="p-2">
           <div class="text-w-fg-0">
             <div class="text-xl text-center text-w-fg-0">使用说明</div>
             <div class="mt-4 space-y-2">
@@ -1919,9 +1929,9 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-1">
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
+      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
+        <div class="">
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
         </div>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>

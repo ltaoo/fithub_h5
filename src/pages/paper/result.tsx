@@ -145,8 +145,8 @@ export function PaperResultView(props: ViewComponentProps) {
           </div>
         </Show>
       </PageView>
-      <Sheet store={vm.ui.$dialog_quiz}>
-        <div class="w-screen bg-w-bg-1 p-2 min-h-[240px]">
+      <Sheet store={vm.ui.$dialog_quiz} app={props.app}>
+        <div class="p-2 min-h-[240px]">
           <Show when={state().cur_quiz}>
             <div class="text-w-fg-0">{state().cur_quiz?.content}</div>
             <div class="mt-2 space-y-2">

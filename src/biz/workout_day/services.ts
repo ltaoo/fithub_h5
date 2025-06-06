@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 import { request } from "@/biz/requests";
 import { WorkoutPlanActionPayload, WorkoutPlanStepResp } from "@/biz/workout_plan/types";
@@ -294,6 +294,7 @@ export function fetchWorkoutDayProfile(body: { id: number }) {
     pending_steps: string;
     updated_details: string;
     day_number: number;
+    student_id: number;
     // steps: WorkoutPlanStepResp[];
     workout_plan: { title: string; overview: string; tags: string; details: string };
   }>("/api/workout_day/profile", body);
@@ -463,6 +464,7 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       }
       return steps;
     })(),
+    student_id: workout_day.student_id,
   });
 }
 
@@ -490,6 +492,9 @@ export function fetchWorkoutDayList(body: { page: number; page_size: number }) {
       status: WorkoutDayStatus;
       started_at: string;
       finished_at: string;
+      workout_plan: {
+        title: string;
+      };
     }>
   >("/api/workout_day/list", body);
 }
@@ -510,7 +515,45 @@ export function fetchWorkoutDayListProcess(r: TmpRequestResp<typeof fetchWorkout
         started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : null,
         finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : null,
         day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
+        workout_plan: v.workout_plan,
       };
     }),
   });
+}
+
+export function fetchFinishedWorkoutDayList(body: { finished_at_start: string; finished_at_end: string }) {
+  return request.post<{
+    list: {
+      id: number;
+      status: WorkoutDayStatus;
+      started_at: string;
+      finished_at: string;
+    }[];
+  }>("/api/workout_day/finished_list", {
+    finished_at_start: dayjs(body.finished_at_start).startOf("date").toDate(),
+    finished_at_end: dayjs(body.finished_at_end).endOf("date").toDate(),
+  });
+}
+
+export function fetchFinishedWorkoutDayListProcess(r: TmpRequestResp<typeof fetchFinishedWorkoutDayList>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const data = r.data;
+  return Result.Ok({
+    list: data.list.map((v) => {
+      return {
+        id: v.id,
+        status: v.status,
+        started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : null,
+        finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : null,
+        day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
+      };
+    }),
+  });
+}
+
+/** 已完成、已放弃 的训练日状态变回进行中 */
+export function continueWorkoutDay(body: { id: number }) {
+  return request.post("/api/workout_day/continue", { id: body.id });
 }

@@ -1,5 +1,5 @@
 /**
- * @file 组间歇 倒计时
+ * @file 倒计时
  */
 import { createSignal, Show } from "solid-js";
 import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
@@ -8,12 +8,7 @@ import { useViewModelStore } from "@/hooks";
 
 import { SetCountdownViewModel } from "@/biz/set_countdown";
 
-export function SetCountdownView(props: {
-  store: SetCountdownViewModel;
-  highlight?: boolean;
-  onStart?: () => void;
-  onCompleted?: () => void;
-}) {
+export function MaxRMCountdownView(props: { store: SetCountdownViewModel; highlight?: boolean }) {
   let $minutes1: undefined | HTMLDivElement;
   let $minutes2: undefined | HTMLDivElement;
   let $seconds1: undefined | HTMLDivElement;
@@ -72,38 +67,10 @@ export function SetCountdownView(props: {
 
   return (
     <div class="set-countdown flex items-center justify-between gap-2">
-      <Show when={countdown1().pending}>
-        <div
-          classList={{
-            "p-2 rounded-full": true,
-            "bg-w-fg-5 text-w-fg-0": props.highlight,
-            "text-w-fg-2": !props.highlight,
-          }}
-          onClick={() => {
-            props.store.start();
-          }}
-        >
-          <Play class="w-6 h-6" />
-        </div>
-      </Show>
-      <Show when={state().running}>
-        <div
-          classList={{
-            "p-2 rounded-full bg-w-fg-5": true,
-            "text-w-fg-0": props.highlight,
-            "text-w-fg-2": !props.highlight,
-          }}
-          onClick={() => {
-            props.store.pause();
-          }}
-        >
-          <Pause class="w-6 h-6" />
-        </div>
-      </Show>
       <div
         classList={{
           "flex items-center transition-all duration-200": true,
-          "text-4xl text-w-fg-0": state().running,
+          "text-2xl text-w-fg-0": state().running,
           "text-w-fg-2 ": !state().running,
         }}
       >
@@ -111,7 +78,7 @@ export function SetCountdownView(props: {
           classList={{
             "text-center": true,
             "w-[12px]": countdown1().pending,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$minutes1}
         >
@@ -120,7 +87,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$minutes2}
         >
@@ -129,7 +96,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[12px]": state().running,
           }}
         >
           :
@@ -137,7 +104,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$seconds1}
         >
@@ -146,7 +113,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$seconds2}
         >
@@ -155,7 +122,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[8px]": state().running,
           }}
         >
           .
@@ -163,7 +130,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$ms1}
         >
@@ -172,14 +139,14 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[16px]": state().running,
           }}
           ref={$ms2}
         >
           {countdown1().ms2}
         </div>
       </div>
-      <div class="flex items-center gap-2 px-4">
+      <div class="flex items-center gap-2 px-2">
         <Show when={countdown1().completed && countdown2().time !== 0}>
           <div
             classList={{
@@ -235,6 +202,34 @@ export function SetCountdownView(props: {
           </div>
         </Show>
       </div>
+      {/* <Show when={countdown1().pending}>
+        <div
+          classList={{
+            "p-2 rounded-full": true,
+            "bg-w-fg-5 text-w-fg-0": props.highlight,
+            "text-w-fg-2": !props.highlight,
+          }}
+          onClick={() => {
+            props.store.start();
+          }}
+        >
+          <Play class="w-6 h-6" />
+        </div>
+      </Show> */}
+      <Show when={state().running}>
+        <div
+          classList={{
+            "p-2 rounded-full bg-w-fg-5": true,
+            "text-w-fg-0": props.highlight,
+            "text-w-fg-2": !props.highlight,
+          }}
+          onClick={() => {
+            props.store.pause();
+          }}
+        >
+          <Pause class="w-6 h-6" />
+        </div>
+      </Show>
     </div>
   );
 }

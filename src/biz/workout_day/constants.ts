@@ -13,5 +13,5 @@ export const WorkoutDayStatusTextMap = {
   [WorkoutDayStatus.Finished]: "已完成",
   [WorkoutDayStatus.Expired]: "已过期",
   [WorkoutDayStatus.Cancelled]: "手动作废",
-  [WorkoutDayStatus.GiveUp]: "放弃",
+  [WorkoutDayStatus.GiveUp]: "已放弃",
 };

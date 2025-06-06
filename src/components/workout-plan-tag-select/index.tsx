@@ -1,6 +1,7 @@
 import { For, JSX } from "solid-js";
 import { ChevronDown, Plus, X } from "lucide-solid";
 
+import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui";
 import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
 
 export function WorkoutPlanTagSelectView(
-  props: { store: WorkoutPlanTagSelectViewModel } & JSX.HTMLAttributes<HTMLDivElement>
+  props: { store: WorkoutPlanTagSelectViewModel; app: ViewComponentProps["app"] } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   const [state, vm] = useViewModelStore(props.store);
 
@@ -48,20 +49,9 @@ export function WorkoutPlanTagSelectView(
           </div>
         </div>
       </div>
-      <Sheet store={vm.ui.$dialog} position="bottom" size="lg">
-        <div class="w-screen bg-w-bg-0">
-          <div class="flex justify-between p-2">
-            <div></div>
-            <div
-              class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.ui.$dialog.hide();
-              }}
-            >
-              <X class="w-4 h-4 text-w-fg-1" />
-            </div>
-          </div>
-          <div class="p-2 space-y-4">
+      <Sheet store={vm.ui.$dialog} app={props.app} position="bottom" size="lg">
+        <div class="">
+          <div class="p-2 space-y-4 bg-w-bg-0">
             <For each={state().tagGroups}>
               {(group) => {
                 return (
@@ -91,16 +81,20 @@ export function WorkoutPlanTagSelectView(
                 );
               }}
             </For>
+            <div class="h-[32px]"></div>
           </div>
-          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-fg-3">
-            <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
-              <ChevronDown class="w-6 h-6 text-w-fg-0" />
+          <div>
+            <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t border-w-fg-3">
+              <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
+                <ChevronDown class="w-6 h-6 text-w-fg-0" />
+              </div>
+              <div class="flex-1 flex items-center gap-2">
+                <Button store={vm.ui.$btn_submit} class="w-full">
+                  确定
+                </Button>
+              </div>
             </div>
-            <div class="flex-1 flex items-center gap-2">
-              <Button store={vm.ui.$btn_submit} class="w-full">
-                确定
-              </Button>
-            </div>
+            <div class="safe-height"></div>
           </div>
         </div>
       </Sheet>

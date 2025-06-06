@@ -108,6 +108,12 @@ function ToolsViewModel(props: ViewComponentProps) {
             props.history.push("root.tools_stopwatch");
           },
         },
+        {
+          title: "1RM测试",
+          onClick() {
+            props.history.push("root.tools_max_rm_test");
+          },
+        },
         // {
         //   title: "分组",
         //   onClick() {

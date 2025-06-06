@@ -12,7 +12,7 @@ import { cn } from "@/utils";
 const Input = (props: { store: InputCore<any> } & JSX.HTMLAttributes<HTMLInputElement>) => {
   const { store } = props;
 
-  let ref: HTMLInputElement | undefined = undefined;
+  let ref: HTMLInputElement | undefined;
   const [state, setState] = createSignal(store.state);
   // const [v, setV] = createSignal();
 

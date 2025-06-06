@@ -15,6 +15,7 @@ import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
 import { Presence } from "@/components/ui/presence";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
+import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
@@ -205,7 +206,6 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     $workout_action_select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: $workout_action_list,
-      client: props.client,
       async onOk(actions) {
         for (let i = 0; i < actions.length; i += 1) {
           const act = actions[i];
@@ -678,205 +678,197 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
 
   return (
     <>
-      <div class="flex flex-col h-screen">
-        <div class="flex-1 overflow-auto">
-          <ScrollView store={vm.ui.$view} class="">
-            <div class="p-2">
-              <div class="space-y-4">
-                <div class="field relative">
-                  <div class="flex">
-                    <div class=" text-w-fg-0">标题</div>
-                    <div class="text-red-500">*</div>
-                  </div>
-                  <Input store={vm.ui.$input_title} class="mt-1" />
-                </div>
-                <div class="field">
-                  <div class="flex">
-                    <div class=" text-w-fg-0">概要</div>
-                  </div>
-                  <Textarea store={vm.ui.$input_overview} class="mt-1" />
-                </div>
-                <div class="field">
-                  <div class="flex">
-                    <div class="text-w-fg-0">训练内容</div>
-                    <div class="text-red-500">*</div>
-                  </div>
-                  <div class="w-full space-y-3 my-2">
-                    <div class="">
-                      <Show
-                        when={state().fields.length}
-                        fallback={
-                          <div
-                            class="flex justify-center p-4 border-2 border-w-fg-3 rounded-lg"
-                            onClick={() => {
-                              vm.ui.$ref_action_in_menu.clear();
-                              vm.ui.$workout_action_select.ui.$dialog.show();
-                            }}
-                          >
-                            <div class="flex flex-col items-center text-w-fg-1">
-                              <div>
-                                <Plus class="w-8 h-8" />
-                              </div>
-                              <div class="">点击添加动作</div>
-                            </div>
-                          </div>
-                        }
-                      >
-                        <div class="mt-4 space-y-12">
-                          <For each={state().fields}>
-                            {(field, index) => {
-                              const $inner = vm.ui.$input_actions.mapFieldWithIndex(index());
-                              if (!$inner) {
-                                return null;
-                              }
-                              return (
-                                <>
-                                  <div class="relative border-2 border-w-fg-3 rounded-lg shadow-sm">
-                                    <Switch>
-                                      <Match when={$inner.field.symbol === "SingleFieldCore"}>
-                                        <ActionInput
-                                          store={$inner.field.input}
-                                          onShowActionSelect={() => {
-                                            vm.ui.$ref_menu_type.select("add_action");
-                                            vm.ui.$ref_action_in_menu.select({
-                                              id: field.id,
-                                              idx: index(),
-                                            });
-                                            const $field = vm.ui.$input_actions.getFieldWithId(field.id);
-                                            if (!$field) {
-                                              return;
-                                            }
-                                            vm.ui.$workout_action_select.methods.setDisabled(
-                                              $field.field.input.actions.map((act) => act.action.id)
-                                            );
-                                            vm.ui.$workout_action_select.ui.$dialog.show();
-                                          }}
-                                        />
-                                      </Match>
-                                    </Switch>
-                                    <div class="z-0 absolute right-4 top-2">
-                                      <div class="flex items-center gap-2">
-                                        <div
-                                          class="bg-w-bg-5 rounded-full p-2"
-                                          onClick={(event) => {
-                                            vm.ui.$ref_action_in_menu.select({
-                                              id: field.id,
-                                              idx: index(),
-                                            });
-                                            const $field = vm.ui.$input_actions.getFieldWithId(field.id);
-                                            if (!$field) {
-                                              return;
-                                            }
-                                            vm.ui.$input_act_remark.setValue(
-                                              $field.field.input.ui.$input_set_remark.value
-                                            );
-                                            vm.ui.$dialog_act_remark.show();
-                                          }}
-                                        >
-                                          <Pen class="w-4 h-4 text-w-fg-1" />
-                                        </div>
-                                        <div
-                                          class="bg-w-bg-5 rounded-full p-2"
-                                          onClick={(event) => {
-                                            const client = event.currentTarget.getBoundingClientRect();
-                                            vm.ui.$ref_action_in_menu.select({
-                                              id: field.id,
-                                              idx: index(),
-                                            });
-                                            vm.ui.$menu.toggle({
-                                              x: client.x,
-                                              y: client.y,
-                                              width: client.width,
-                                              height: client.height,
-                                            });
-                                          }}
-                                        >
-                                          <MoreHorizontal class="w-4 h-4 text-w-fg-1" />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <Show when={state().fields.length - 1 === index()}>
-                                    <div class=""></div>
-                                  </Show>
-                                </>
-                              );
-                            }}
-                          </For>
+      <PageView
+        store={vm}
+        operations={
+          <div class="flex items-center gap-2 w-full">
+            <Button class="w-full" icon={<Plus class="w-4 h-4 text-w-fg-1" />} store={vm.ui.$btn_add_act}>
+              添加动作
+            </Button>
+            <Button class="w-full" store={vm.ui.$btn_submit}>
+              创建
+            </Button>
+          </div>
+        }
+      >
+        <div class="space-y-4">
+          <div class="field relative">
+            <div class="flex">
+              <div class=" text-w-fg-0">标题</div>
+              <div class="text-red-500">*</div>
+            </div>
+            <Input store={vm.ui.$input_title} class="mt-1" />
+          </div>
+          <div class="field">
+            <div class="flex">
+              <div class=" text-w-fg-0">概要</div>
+            </div>
+            <Textarea store={vm.ui.$input_overview} class="mt-1" />
+          </div>
+          <div class="field">
+            <div class="flex">
+              <div class="text-w-fg-0">训练内容</div>
+              <div class="text-red-500">*</div>
+            </div>
+            <div class="w-full space-y-3 my-2">
+              <div class="">
+                <Show
+                  when={state().fields.length}
+                  fallback={
+                    <div
+                      class="flex justify-center p-4 border-2 border-w-fg-3 rounded-lg"
+                      onClick={() => {
+                        vm.ui.$ref_action_in_menu.clear();
+                        vm.ui.$workout_action_select.ui.$dialog.show();
+                      }}
+                    >
+                      <div class="flex flex-col items-center text-w-fg-1">
+                        <div>
+                          <Plus class="w-8 h-8" />
                         </div>
-                      </Show>
+                        <div class="">点击添加动作</div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div class="field">
-                  <div class="flex">
-                    <div class="text-w-fg-1">标签</div>
-                  </div>
-                  <WorkoutPlanTagSelectView store={vm.ui.$input_tag} class="mt-1" />
-                </div>
-                <div class="field border-2 border-w-fg-3 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-fg-3">
-                    <div class="text-w-fg-0">预计时长</div>
-                  </div>
-                  <div class="p-4">
-                    <InputTextView store={vm.ui.$input_duration} class="mt-1" />
-                  </div>
-                </div>
-                <div class="field border-2 border-w-fg-3 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-fg-3">
-                    <div class="text-w-fg-0">锻炼部位</div>
-                  </div>
-                  <div class="p-4">
-                    <div class="flex flex-wrap gap-2">
-                      <BodyMusclePreview store={vm.ui.$muscle} />
-                    </div>
-                  </div>
-                </div>
-                <div class="field border-2 border-w-fg-3 rounded-lg">
-                  <div class="p-4 border-b-2 border-w-fg-3">
-                    <div class="text-w-fg-0">所需器械</div>
-                  </div>
-                  <div class="p-4 space-y-2">
-                    <For each={state().equipments}>
-                      {(v) => {
+                  }
+                >
+                  <div class="mt-4 space-y-12">
+                    <For each={state().fields}>
+                      {(field, index) => {
+                        const $inner = vm.ui.$input_actions.mapFieldWithIndex(index());
+                        if (!$inner) {
+                          return null;
+                        }
                         return (
-                          <div>
-                            <div class="text-w-fg-0">{v.zh_name}</div>
-                          </div>
+                          <>
+                            <div class="relative border-2 border-w-fg-3 rounded-lg shadow-sm">
+                              <Switch>
+                                <Match when={$inner.field.symbol === "SingleFieldCore"}>
+                                  <ActionInput
+                                    store={$inner.field.input}
+                                    onShowActionSelect={() => {
+                                      vm.ui.$ref_menu_type.select("add_action");
+                                      vm.ui.$ref_action_in_menu.select({
+                                        id: field.id,
+                                        idx: index(),
+                                      });
+                                      const $field = vm.ui.$input_actions.getFieldWithId(field.id);
+                                      if (!$field) {
+                                        return;
+                                      }
+                                      vm.ui.$workout_action_select.methods.setDisabled(
+                                        $field.field.input.actions.map((act) => act.action.id)
+                                      );
+                                      vm.ui.$workout_action_select.ui.$dialog.show();
+                                    }}
+                                  />
+                                </Match>
+                              </Switch>
+                              <div class="z-0 absolute right-4 top-2">
+                                <div class="flex items-center gap-2">
+                                  <div
+                                    class="bg-w-bg-5 rounded-full p-2"
+                                    onClick={(event) => {
+                                      vm.ui.$ref_action_in_menu.select({
+                                        id: field.id,
+                                        idx: index(),
+                                      });
+                                      const $field = vm.ui.$input_actions.getFieldWithId(field.id);
+                                      if (!$field) {
+                                        return;
+                                      }
+                                      vm.ui.$input_act_remark.setValue($field.field.input.ui.$input_set_remark.value);
+                                      vm.ui.$dialog_act_remark.show();
+                                    }}
+                                  >
+                                    <Pen class="w-4 h-4 text-w-fg-1" />
+                                  </div>
+                                  <div
+                                    class="bg-w-bg-5 rounded-full p-2"
+                                    onClick={(event) => {
+                                      const client = event.currentTarget.getBoundingClientRect();
+                                      vm.ui.$ref_action_in_menu.select({
+                                        id: field.id,
+                                        idx: index(),
+                                      });
+                                      vm.ui.$menu.toggle({
+                                        x: client.x,
+                                        y: client.y,
+                                        width: client.width,
+                                        height: client.height,
+                                      });
+                                    }}
+                                  >
+                                    <MoreHorizontal class="w-4 h-4 text-w-fg-1" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <Show when={state().fields.length - 1 === index()}>
+                              <div class=""></div>
+                            </Show>
+                          </>
                         );
                       }}
                     </For>
                   </div>
-                </div>
+                </Show>
               </div>
             </div>
-            <div class="h-[68px]"></div>
-          </ScrollView>
-        </div>
-        <div class="z-10 p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
-          <div class="flex items-center gap-4">
-            <div class="p-2 rounded-full bg-w-bg-5" onClick={vm.methods.back}>
-              <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+          </div>
+          <div class="field">
+            <div class="flex">
+              <div class="text-w-fg-1">标签</div>
             </div>
-            <div class="flex items-center gap-2 w-full">
-              <Button class="w-full" icon={<Plus class="w-4 h-4 text-w-fg-1" />} store={vm.ui.$btn_add_act}>
-                添加动作
-              </Button>
-              <Button class="w-full" store={vm.ui.$btn_submit}>
-                创建
-              </Button>
+            <WorkoutPlanTagSelectView class="mt-1" store={vm.ui.$input_tag} app={props.app} />
+          </div>
+          <div class="field border-2 border-w-fg-3 rounded-lg">
+            <div class="p-4 border-b-2 border-w-fg-3">
+              <div class="text-w-fg-0">预计时长</div>
+            </div>
+            <div class="p-4">
+              <InputTextView store={vm.ui.$input_duration} class="mt-1" />
             </div>
           </div>
-          <div class="safe-height"></div>
+          <div class="field border-2 border-w-fg-3 rounded-lg">
+            <div class="p-4 border-b-2 border-w-fg-3">
+              <div class="text-w-fg-0">锻炼部位</div>
+            </div>
+            <div class="p-4">
+              <div class="flex flex-wrap gap-2">
+                <BodyMusclePreview store={vm.ui.$muscle} />
+              </div>
+            </div>
+          </div>
+          <div class="field border-2 border-w-fg-3 rounded-lg">
+            <div class="p-4 border-b-2 border-w-fg-3">
+              <div class="text-w-fg-0">所需器械</div>
+            </div>
+            <div class="p-4 space-y-2">
+              <For each={state().equipments}>
+                {(v) => {
+                  return (
+                    <div>
+                      <div class="text-w-fg-0">{v.zh_name}</div>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </div>
         </div>
-      </div>
-      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} position="bottom" size="sm">
-        <div class="w-screen bg-w-bg-1">
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} />
+      </PageView>
+      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
+        <div
+          class=""
+          classList={{
+            "w-[375px] mx-auto": props.app.env.pc,
+          }}
+        >
+          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_act_remark} position="bottom" size="sm">
-        <div class="w-screen p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_act_remark} app={props.app}>
+        <div class="p-2">
           <div>
             <div class="text-xl">备注</div>
             <div class="mt-8">

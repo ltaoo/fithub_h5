@@ -40,6 +40,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
       if (day.is_self) {
         props.history.replace("root.workout_day_self", {
           id: String(day.id),
+          multiple: "0",
         });
         return;
       }
@@ -50,7 +51,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
           pathname: "",
           query: {
             id: String(v.workout_day_id),
-            student_id: String(v.id),
+            multiple: "1",
           },
           title: "",
         });
@@ -165,7 +166,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
               return (
                 <div
                   classList={{
-                    "absolute inset-0 w-screen h-screen": true,
+                    "absolute inset-0 h-screen": true,
                     "hidden ": idx() !== state().cur_view_idx,
                   }}
                 >

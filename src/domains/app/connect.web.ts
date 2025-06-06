@@ -20,10 +20,8 @@ export function connect<T extends { storage: StorageCore<any> }>(app: Applicatio
     document.execCommand("copy");
     document.body.removeChild(textArea);
   };
-  app.openWindow = (url: string) => {
-    window.open(url);
-  };
-  window.addEventListener("DOMContentLoaded", (e) => {
+  window.addEventListener("DOMContentLoaded", () => {
+    // 1
     const { innerWidth, innerHeight } = window;
     app.setSize({ width: innerWidth, height: innerHeight });
   });
@@ -67,14 +65,15 @@ export function connect<T extends { storage: StorageCore<any> }>(app: Applicatio
    */
   const userAgent = navigator.userAgent;
   const ua = userAgent.toLowerCase();
-  // const ios = /iPad|iPhone|iPod/.test(userAgent);
-  const ios = true;
+  const ios = /iPad|iPhone|iPod/.test(userAgent);
   const android = /Android/.test(userAgent);
   app.setEnv({
     wechat: ua.indexOf("micromessenger") !== -1,
     ios,
     android,
+    pc: !ios && !android,
   });
+  console.log("[DOMAIN]app/connect - after app.setEnv", app.env);
   /**
    * 主题 ——-------------
    */

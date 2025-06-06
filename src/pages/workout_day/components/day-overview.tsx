@@ -108,7 +108,7 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel
             <div
               class="w-[40px] p-2 bg-w-bg-5 rounded-full"
               onClick={() => {
-                vm.ui.$dialog_confirm_complete.hide();
+                vm.ui.$dialog_overview.hide();
               }}
             >
               <ChevronDown class="w-6 h-6 text-w-fg-1" />

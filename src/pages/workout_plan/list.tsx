@@ -108,7 +108,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
     }),
     $input_keyword: new InputCore({ defaultValue: "", placeholder: "请输入关键词" }),
     $input_view_select: new SelectCore({
-      defaultValue: WorkoutPlanOrScheduleType.WorkoutSchedule,
+      defaultValue: WorkoutPlanOrScheduleType.WorkoutPlan,
       options: [
         {
           value: WorkoutPlanOrScheduleType.WorkoutPlan,
@@ -163,7 +163,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       return request.workout_schedule.list.response;
     },
     get tab_id() {
-      return ui.$input_view_select.value ?? WorkoutPlanOrScheduleType.WorkoutSchedule;
+      return ui.$input_view_select.value ?? WorkoutPlanOrScheduleType.WorkoutPlan;
     },
   };
   enum Events {
@@ -184,8 +184,12 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      // request.workout_plan.list.init();
-      request.workout_schedule.list.init();
+      if (ui.$input_view_select.value === WorkoutPlanOrScheduleType.WorkoutPlan) {
+        request.workout_plan.list.init();
+      }
+      if (ui.$input_view_select.value === WorkoutPlanOrScheduleType.WorkoutSchedule) {
+        request.workout_schedule.list.init();
+      }
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -230,7 +234,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[24px]" />
+                <Skeleton class="w-[68px] h-[28px]" />
               </div>
             }
           >
@@ -243,7 +247,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                       vm.methods.handleClickWorkoutPlan(plan);
                     }}
                   >
-                    <div class=" text-w-fg-0">{plan.title}</div>
+                    <div class=" text-w-fg-0 text-xl">{plan.title}</div>
                     <div class="mt-2 text-sm  text-w-fg-1">{plan.overview}</div>
                     <div class="mt-2">
                       <div class="flex items-center gap-1 text-w-fg-1">
@@ -262,6 +266,10 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                         }}
                       </For>
                     </div>
+                    <div class="flex items-center justify-between">
+                      <div></div>
+                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0">详情</div>
+                    </div>
                   </div>
                 );
               }}
@@ -274,7 +282,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[24px]" />
+                <Skeleton class="w-[68px] h-[28px]" />
               </div>
             }
           >
@@ -287,8 +295,12 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                       vm.methods.handleClickWorkoutSchedule(schedule);
                     }}
                   >
-                    <div class="text-w-fg-0">{schedule.title}</div>
+                    <div class="text-w-fg-0 text-xl">{schedule.title}</div>
                     <div class="mt-2 text-sm text-w-fg-1">{schedule.overview}</div>
+                    <div class="flex items-center justify-between">
+                      <div></div>
+                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0">详情</div>
+                    </div>
                   </div>
                 );
               }}

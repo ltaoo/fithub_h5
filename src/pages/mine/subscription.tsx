@@ -131,8 +131,8 @@ export function MineSubscriptionView(props: ViewComponentProps) {
           </For>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_choices}>
-        <div class="w-screen bg-w-bg-1 p-2">
+      <Sheet store={vm.ui.$dialog_choices} app={props.app}>
+        <div class="p-2">
           <div class="text-xl">{state().selected_plan.name}</div>
           <Show when={state().selected_plan}>
             <div class="flex items-center gap-2 mt-4">

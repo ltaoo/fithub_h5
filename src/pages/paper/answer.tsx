@@ -389,8 +389,8 @@ export function ExamAnswerView(props: ViewComponentProps) {
           </div>
         </Show>
       </PageView>
-      <Sheet store={vm.ui.$dialog_overview}>
-        <div class="w-screen h-[480px] bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_overview} app={props.app}>
+        <div class="h-[480px]">
           <div class="flex flex-col h-full">
             <div class="flex-1 p-2">
               <div class="flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg">

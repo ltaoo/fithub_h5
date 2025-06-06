@@ -153,8 +153,8 @@ export function WorkoutScheduleUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$workout_plan_select.ui.$dialog} position="bottom" size="lg">
-        <div class="w-screen bg-w-bg-1">
+      <Sheet store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>
+        <div class="">
           <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
           <div class="flex items-center gap-2 p-2">
             <div

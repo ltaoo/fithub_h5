@@ -80,16 +80,16 @@ const muscle_name_map: Record<string, string> = {
   // 阔筋膜张肌
   tensor_fasciae_latae: "glutes",
 };
-const reverse_muscle_name_map = Object.keys(muscle_name_map)
-  .map((n) => {
-    const v = muscle_name_map[n];
-    return {
-      [v]: n,
-    };
-  })
-  .reduce((a, b) => {
-    return { ...a, ...b };
-  }, {});
+// const reverse_muscle_name_map = Object.keys(muscle_name_map)
+//   .map((n) => {
+//     const v = muscle_name_map[n];
+//     return {
+//       [v]: n,
+//     };
+//   })
+//   .reduce((a, b) => {
+//     return { ...a, ...b };
+//   }, {});
 const disabled_parts = [
   "path164",
   "path190",
@@ -131,10 +131,12 @@ export default function _BodyMusclePreview(props: {
     if (!matched_muscle_name) {
       return;
     }
-    const name = reverse_muscle_name_map[matched_muscle_name];
-    if (!name) {
-      return;
-    }
+    // console.log("[COMPONENT]body-muscle-preview/preview - handleClick before reverse_muscle_name_map[matched_muscle_name", matched_muscle_name);
+    const name = matched_muscle_name;
+    // const name = reverse_muscle_name_map[matched_muscle_name];
+    // if (!name) {
+    //   return;
+    // }
     unhighlight(_cur_highlighted_muscles);
     _cur_highlighted_muscles = [name];
     highlight(_cur_highlighted_muscles);

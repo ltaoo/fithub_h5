@@ -82,7 +82,6 @@ function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
     $input_student_select: StudentSelectViewModel({
       defaultValue: [],
       list: request.student.list,
-      client: props.client,
     }),
     $btn_confirm_student: new ButtonCore({
       onClick() {
@@ -102,7 +101,6 @@ function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
       defaultValue: [],
       multiple: false,
       list: request.workout_plan.list,
-      client: props.client,
     }),
     $btn_confirm_workout_plan: new ButtonCore({
       onClick() {
@@ -278,8 +276,8 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
           </div>
         </div>
       </PageView>
-      <Sheet class="" store={vm.ui.$dialog_student_select}>
-        <div class="w-screen p-2 bg-w-bg-1">
+      <Sheet class="" store={vm.ui.$dialog_student_select} app={props.app}>
+        <div class="p-2">
           <ListView store={vm.request.student.list}>
             <For each={state().student_response}>
               {(student) => {
@@ -308,8 +306,8 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet class="" store={vm.ui.$dialog_workout_plan_select}>
-        <div class="w-screen bg-w-bg-1 max-h-screen">
+      <Sheet class="" store={vm.ui.$dialog_workout_plan_select} app={props.app}>
+        <div class="max-h-screen">
           <div class="p-2 ">
             <ListView store={vm.request.workout_plan.list} class="space-y-2">
               <For each={state().workout_plan_response}>

@@ -55,6 +55,7 @@ import { ReportProfileView } from "@/pages/report/profile";
 import { PaperResultListView } from "@/pages/paper/result_list";
 import { WorkoutScheduleProfileView } from "@/pages/workout_schedule/profile";
 import { WorkoutDayMultiplePersonView } from "@/pages/workout_day/multiple";
+import { MaxRMTestToolView } from "@/pages/tools/max_rm_test";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -64,6 +65,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.home_layout.index": HomeIndexPage,
   "root.home_layout.tools": ToolsView,
   "root.tools_rm_calc": RMCalcToolView,
+  "root.tools_max_rm_test": MaxRMTestToolView,
   "root.tools_bmr_calc": BMRCalcToolView,
   "root.tools_bmi_calc": BMICalcToolView,
   "root.tools_stopwatch": StopwatchToolView,

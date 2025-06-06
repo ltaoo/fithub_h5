@@ -14,30 +14,12 @@ import { RequestCore } from "@/domains/request";
 import { PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 
 export function WorkoutActionMultipleSelectViewModel(props: {
-  defaultValue: { id: number | string; name: string }[];
+  defaultValue: { id: number; name: string }[];
   client: HttpClientCore;
+  multiple?: boolean;
   list?: typeof $workout_action_list;
-  onChange?: (action: { id: number | string; name: string }[]) => void;
+  onChange?: (action: { id: number; name: string }[]) => void;
 }) {
-  let _selected: WorkoutActionProfile[] = [];
-  let _actions: WorkoutActionProfile[] = props.list?.response.dataSource ?? [];
-  let _state = {
-    get value() {
-      return _selected;
-    },
-    get selected() {
-      return _selected.flatMap((item) => {
-        const existing = _actions.find((a) => a.id === item.id);
-        if (!existing) {
-          return [];
-        }
-        return [existing];
-      });
-    },
-    get actions() {
-      return _actions;
-    },
-  };
   const request = {
     action: {
       list:
@@ -83,6 +65,7 @@ export function WorkoutActionMultipleSelectViewModel(props: {
       });
     },
     setActions(actions: WorkoutActionProfile[]) {
+      // @ts-ignore
       request.action.list.modifyResponse((v) => {
         return {
           ...v,
@@ -110,6 +93,27 @@ export function WorkoutActionMultipleSelectViewModel(props: {
         ui.$scroll.finishLoadingMore();
       },
     }),
+  };
+
+  let _multiple = props.multiple ?? true;
+  let _selected: WorkoutActionProfile[] = [];
+  let _actions: WorkoutActionProfile[] = props.list?.response.dataSource ?? [];
+  let _state = {
+    get value() {
+      return _selected;
+    },
+    get selected() {
+      return _selected.flatMap((item) => {
+        const existing = _actions.find((a) => a.id === item.id);
+        if (!existing) {
+          return [];
+        }
+        return [existing];
+      });
+    },
+    get actions() {
+      return _actions;
+    },
   };
   enum Events {
     Change,

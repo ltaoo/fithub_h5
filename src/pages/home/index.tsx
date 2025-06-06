@@ -341,6 +341,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
 
   request.workout_day.list.onStateChange(() => methods.refresh());
   request.workout_day.has_started.onStateChange(() => methods.refresh());
+  props.history.onRouteChange(() => {
+    ui.$dialog_calendar.hide();
+  });
 
   return {
     methods,
@@ -361,7 +364,12 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
 
   return (
     <>
-      <div class="z-0 fixed top-0 left-0 w-full">
+      <div
+        class="z-0 fixed top-0 left-1/2 w-full -translate-x-1/2"
+        classList={{
+          "w-[375px] mx-auto": props.app.env.pc,
+        }}
+      >
         <div class="">
           <div class="grid grid-cols-7 gap-2 p-2">
             <For each={state().weekdays}>
@@ -506,8 +514,8 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
           </div>
         </div>
       </Show>
-      <CalendarSheet store={vm.ui.$dialog_calendar}>
-        <div class="w-screen bg-w-bg-0 p-4">
+      <CalendarSheet store={vm.ui.$dialog_calendar} app={props.app}>
+        <div class="bg-w-bg-0 p-4">
           <Show when={state().day}>
             <div class="flex items-center text-w-fg-0">
               <div class="text-2xl">
@@ -536,7 +544,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                           <div></div>
                           <div>
                             <div
-                              class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full"
+                              class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
                               onClick={() => {
                                 vm.ui.$dialog_calendar.hide();
                                 props.history.push("root.workout_plan_profile", {
@@ -544,7 +552,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                                 });
                               }}
                             >
-                              <div class="text-sm text-w-fg-0">fight!</div>
+                              <div class="text-sm">fight!</div>
                             </div>
                           </div>
                         </div>

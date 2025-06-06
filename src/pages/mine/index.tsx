@@ -10,9 +10,17 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
-import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
+import {
+  fetchWorkoutActionHistoryListOfWorkoutDay,
+  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
+} from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
-import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
+import {
+  fetchFinishedWorkoutDayList,
+  fetchFinishedWorkoutDayListProcess,
+  fetchWorkoutDayList,
+  fetchWorkoutDayListProcess,
+} from "@/biz/workout_day/services";
 import { fetch_user_profile, update_user_profile } from "@/biz/user/services";
 
 function HomeMineViewModel(props: ViewComponentProps) {
@@ -30,9 +38,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
       ),
     },
     workout_day: {
-      list: new ListCore(
-        new RequestCore(fetchWorkoutDayList, {
-          process: fetchWorkoutDayListProcess,
+      finished_list: new ListCore(
+        new RequestCore(fetchFinishedWorkoutDayList, {
+          process: fetchFinishedWorkoutDayListProcess,
           client: props.client,
         })
       ),
@@ -53,15 +61,20 @@ function HomeMineViewModel(props: ViewComponentProps) {
       ui.$dialog_nickname_update.show();
     },
     async refreshWorkoutCalendar() {
-      const r = await request.workout_day.list.init();
+      const first_day = ui.$calendar.state.weeks[0].days[0];
+      const last_week = ui.$calendar.state.weeks[ui.$calendar.state.weeks.length - 1];
+      const last_day = last_week.days[last_week.days.length - 1];
+      const r = await request.workout_day.finished_list.init({
+        finished_at_start: first_day.day,
+        finished_at_end: last_day.day,
+      });
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
         });
         return;
       }
-      const { dataSource } = r.data;
-      const vv = dataSource.filter((v) => {
+      const vv = r.data.dataSource.filter((v) => {
         return v.day !== null;
       }) as { day: string }[];
       ui.$calendar.methods.setData(
@@ -99,7 +112,12 @@ function HomeMineViewModel(props: ViewComponentProps) {
       min: 2,
     }),
     $dialog_nickname_update: new DialogCore(),
-    $input_nickname: new InputCore({ defaultValue: "" }),
+    $input_nickname: new InputCore({
+      defaultValue: "",
+      onMounted() {
+        ui.$input_nickname.focus();
+      },
+    }),
     $btn_nickname_submit: new ButtonCore({
       async onClick() {
         const v = ui.$input_nickname.value;
@@ -291,8 +309,8 @@ export function HomeMineView(props: ViewComponentProps) {
           </div>
         </div>
       </ScrollView>
-      <Sheet store={vm.ui.$dialog_nickname_update}>
-        <div class="w-screen bg-w-bg-1 p-2">
+      <Sheet store={vm.ui.$dialog_nickname_update} app={props.app}>
+        <div class="p-2">
           <div class="space-y-4">
             <div class="text-xl text-center text-w-fg-0">修改昵称</div>
             <div>

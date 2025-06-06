@@ -17,7 +17,10 @@ import { ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
 import { fetchWorkoutDayProfile, fetchWorkoutDayProfileProcess } from "@/biz/workout_day/services";
-import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
+import {
+  fetchWorkoutActionHistoryListOfWorkoutDay,
+  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
+} from "@/biz/workout_action/services";
 import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 
 function WorkoutDayProfileViewModel(props: ViewComponentProps) {
@@ -105,55 +108,59 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   };
 }
 
-export function WorkoutDayProfileView(props: ViewComponentProps & Partial<{ hide_bottom: boolean }>) {
+export function WorkoutDayProfileView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(WorkoutDayProfileViewModel, [props]);
 
   return (
     <>
-      <PageView store={vm} hide_bottom_bar={props.hide_bottom}>
+      <PageView store={vm} hide_bottom_bar={props.view.query.hide_bottom === "1"}>
         <Show when={state().loading}>
           <div class="p-4 flex items-center justify-center">
             <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>
-          <div class="py-2 px-4 text-w-fg-0">
-            <div class="text-xl">{state().profile?.title}</div>
-            <Show
-              when={state().profile!.status === WorkoutDayStatus.Finished}
-              fallback={<div class="">开始于 {state().profile!.started_at_text}</div>}
-            >
-              <div class="flex items-center">
-                <div class="">{state().profile!.started_at_text}</div>
-                <div class="mx-2">-</div>
-                <div class="">{state().profile!.finished_at_text}</div>
-              </div>
-            </Show>
-            <div class="text-w-fg-1">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
-            <Show when={state().profile!.status === WorkoutDayStatus.Finished}>
-              <div class="flex items-center gap-2 mt-4">
-                <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                  <div class="text-w-fg-0">耗时</div>
-                  <div class="flex items-end truncate">
-                    <div class="text-3xl">{state().profile!.minutes}</div>
-                    <div>分钟</div>
+          <div class="text-w-fg-0">
+            <div class="py-2 px-4 ">
+              <div class="text-2xl">{state().profile?.title}</div>
+              <Show
+                when={state().profile!.status === WorkoutDayStatus.Finished}
+                fallback={<div class="">开始于 {state().profile!.started_at_text}</div>}
+              >
+                <div class="flex items-center">
+                  <div class="">{state().profile!.started_at_text}</div>
+                  <div class="mx-2">-</div>
+                  <div class="">{state().profile!.finished_at_text}</div>
+                </div>
+              </Show>
+              <div class="text-w-fg-1">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
+            </div>
+            <div>
+              <Show when={state().profile!.status === WorkoutDayStatus.Finished}>
+                <div class="flex items-center gap-2 mt-4">
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                    <div class="text-w-fg-0">耗时</div>
+                    <div class="flex items-end truncate">
+                      <div class="text-3xl">{state().profile!.minutes}</div>
+                      <div>分钟</div>
+                    </div>
+                  </div>
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                    <div class="text-w-fg-0">总容量</div>
+                    <div class="flex items-end truncate">
+                      <div class="text-3xl">{state().profile!.total_weight}</div>
+                      <div>公斤</div>
+                    </div>
+                  </div>
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                    <div class="text-w-fg-0 truncate">总组数</div>
+                    <div class="flex items-end truncate">
+                      <div class="text-xl">{state().profile!.total_set_count}</div>
+                    </div>
                   </div>
                 </div>
-                <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                  <div class="text-w-fg-0">总容量</div>
-                  <div class="flex items-end truncate">
-                    <div class="text-3xl">{state().profile!.total_weight}</div>
-                    <div>公斤</div>
-                  </div>
-                </div>
-                <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                  <div class="text-w-fg-0 truncate">总组数</div>
-                  <div class="flex items-end truncate">
-                    <div class="text-xl">{state().profile!.total_set_count}</div>
-                  </div>
-                </div>
-              </div>
-            </Show>
+              </Show>
+            </div>
           </div>
           <Divider />
           <div class="py-2 space-y-2">

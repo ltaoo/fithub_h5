@@ -32,9 +32,6 @@ export function RMCalcViewModel(props: ViewComponentProps) {
     showDialogWithRMRule() {
       methods.showDialogWithText("");
     },
-    showDialogOfRMStep() {
-      ui.$dialog_rm_step.show();
-    },
   };
   const ui = {
     $view: new ScrollViewCore({}),
@@ -92,7 +89,6 @@ export function RMCalcViewModel(props: ViewComponentProps) {
       },
     }),
     $dialog_rm_calc_rule: new DialogCore({}),
-    $dialog_rm_step: new DialogCore({}),
   };
   let _values: {
     v: number;
@@ -133,22 +129,8 @@ export function RMCalcToolView(props: ViewComponentProps) {
 
   return (
     <>
-      <PageView
-        store={vm}
-        operations={
-          <div class="flex items-center justify-between">
-            <div></div>
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.showDialogOfRMStep();
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
-            </div>
-          </div>
-        }
-      >
+      <PageView store={vm}>
+        <div class="p-2 rounded-lg text-w-fg-0 text-sm text-center">输入动作常用重量和次数</div>
         <div class="">
           <div class="space-y-2">
             <div>
@@ -189,27 +171,9 @@ export function RMCalcToolView(props: ViewComponentProps) {
           </div>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_rm_calc_rule}>
-        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_rm_calc_rule} app={props.app}>
+        <div class="min-h-[80px] p-2">
           <div>{state().text}</div>
-        </div>
-      </Sheet>
-      <Sheet store={vm.ui.$dialog_rm_step}>
-        <div class="w-screen min-h-[80px] p-2 bg-w-bg-1 text-w-fg-0">
-          <div class="">最大重量（1RM）测试方案</div>
-          <div class="mt-2 text-sm">
-            <div>以预期 1RM 重量的 50% 的重量做 10 次</div>
-            <div>休息 30s</div>
-            <div>以预期 1RM 重量的 75% 的重量做 5 次</div>
-            <div>休息 3-5min</div>
-            <div>以预期 1RM 重量的 90%-95% 的重量做 1 次</div>
-            <div>休息 3-5min</div>
-            <div>尝试 1RM 重量</div>
-            <div>休息 3-5min</div>
-            <div>如果尝试成功，增加重量并尝试新的 1RM 重量</div>
-            <div>重复「尝试成功-增加重量」，直到失败为止</div>
-            <div>成功的最大重量，即为 1RM 重量</div>
-          </div>
         </div>
       </Sheet>
     </>

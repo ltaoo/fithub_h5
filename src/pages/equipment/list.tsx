@@ -139,8 +139,8 @@ export function EquipmentListView(props: ViewComponentProps) {
           </For>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_profile}>
-        <div class="w-screen min-h-[240px] p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_profile} app={props.app}>
+        <div class="min-h-[240px] p-2">
           <Show when={state().cur_equipment}>
             <div class="text-w-fg-0">{state().cur_equipment?.overview}</div>
           </Show>

@@ -117,7 +117,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
               skeleton={
                 <>
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <Skeleton class="w-[32px] h-[24px]" />
+                    <Skeleton class="w-[32px] h-[28px]" />
                   </div>
                 </>
               }
@@ -131,7 +131,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                         vm.methods.gotoStudentProfileView(student);
                       }}
                     >
-                      <div class="text-w-fg-0">{student.nickname}</div>
+                      <div class="text-w-fg-0 text-xl">{student.nickname}</div>
                       <div class="flex items-center justify-between">
                         <div></div>
                         <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full">

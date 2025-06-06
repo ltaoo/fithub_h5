@@ -5,6 +5,7 @@ import { For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import { ChevronDown, ChevronLeft, MoreHorizontal, X } from "lucide-solid";
 
+import { ViewComponentProps } from "@/store/types";
 import * as PopoverPrimitive from "@/packages/ui/popover";
 import { Button, Dialog, Input, ListView, ScrollView } from "@/components/ui";
 import { Select } from "@/components/ui/select";
@@ -12,12 +13,21 @@ import { useViewModelStore } from "@/hooks";
 import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 import { cn } from "@/utils/index";
 
-export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDialogViewModel }) {
+export function WorkoutActionSelect3View(props: {
+  store: WorkoutActionSelectDialogViewModel;
+  app: ViewComponentProps["app"];
+}) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
     <div class="w-full">
-      <div class="z-10 fixed inset-0 bg-black opacity-40"></div>
+      {/* <div
+        class="z-10 bg-black opacity-40"
+        classList={{
+          "fixed inset-0 ": !props.app.env.pc,
+          "left-1/2 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
+        }}
+      ></div> */}
       <div class="z-50 relative w-full">
         <div class="flex flex-col bg-w-bg-0 border-w-fg-3" style={{ height: "100vh" }}>
           <div class="flex gap-2 p-2">
@@ -85,15 +95,18 @@ export function WorkoutActionSelect3View(props: { store: WorkoutActionSelectDial
               </ListView>
             </ScrollView>
           </div>
-          <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t-2 border-w-fg-3">
-            <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
-              <ChevronDown class="w-6 h-6 text-w-fg-0" />
+          <div>
+            <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t border-w-fg-3">
+              <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
+                <ChevronDown class="w-6 h-6 text-w-fg-0" />
+              </div>
+              <div class="flex-1 flex items-center gap-2">
+                <Button store={vm.ui.$btn_submit} class="w-full">
+                  确定
+                </Button>
+              </div>
             </div>
-            <div class="flex-1 flex items-center gap-2">
-              <Button store={vm.ui.$btn_submit} class="w-full">
-                确定
-              </Button>
-            </div>
+            <div class="safe-height"></div>
           </div>
         </div>
       </div>

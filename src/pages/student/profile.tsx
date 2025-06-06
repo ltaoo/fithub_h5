@@ -7,12 +7,12 @@ import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, DropdownMenu, ListView, ScrollView, Skeleton } from "@/components/ui";
+import { Button, DropdownMenu, Input, ListView, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
 
 import { base, Handler } from "@/domains/base";
-import { ButtonCore, DialogCore, DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { ListCore } from "@/domains/list";
@@ -23,6 +23,7 @@ import {
   fetchStudentProfileProcess,
   fetchStudentWorkoutDayList,
   fetchStudentWorkoutDayListProcess,
+  updateStudentProfile,
 } from "@/biz/student/services";
 import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
@@ -40,6 +41,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
           client: props.client,
         })
       ),
+      update: new RequestCore(updateStudentProfile, { client: props.client }),
     },
     workout_plan: {
       list: new ListCore(
@@ -153,16 +155,68 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     }),
     $menu: new DropdownMenuCore({
       items: [
-        new MenuItemCore({
-          label: "新增测量记录",
-        }),
+        // new MenuItemCore({
+        //   label: "新增测量记录",
+        // }),
         new MenuItemCore({
           label: "修改名称",
+          onClick() {
+            ui.$menu.hide();
+            ui.$input_nickname.setValue(request.student.profile.response?.nickname ?? "");
+            ui.$dialog_nickname.show();
+          },
         }),
-        new MenuItemCore({
-          label: "选择周期计划",
-        }),
+        // new MenuItemCore({
+        //   label: "选择周期计划",
+        // }),
       ],
+    }),
+    $dialog_nickname: new DialogCore({}),
+    $input_nickname: new InputCore({
+      defaultValue: "",
+      onMounted() {
+        ui.$input_nickname.focus();
+      },
+    }),
+    $btn_nickname_submit: new ButtonCore({
+      async onClick() {
+        const v = ui.$input_nickname.value;
+        if (!v) {
+          props.app.tip({
+            text: ["请输入名称"],
+          });
+          return;
+        }
+        const id = Number(props.view.query.id);
+        if (Number.isNaN(id)) {
+          props.app.tip({
+            text: ["异常数据"],
+          });
+          return;
+        }
+        ui.$btn_nickname_submit.setLoading(true);
+        const r = await request.student.update.run({
+          id,
+          nickname: v,
+        });
+        ui.$btn_nickname_submit.setLoading(false);
+        if (r.error) {
+          props.app.tip({
+            text: [r.error.message],
+          });
+          return;
+        }
+        props.app.tip({
+          text: ["更新成功"],
+        });
+        ui.$dialog_nickname.hide();
+        request.student.profile.modifyResponse((prev) => {
+          return {
+            ...prev,
+            nickname: v,
+          };
+        });
+      },
     }),
     $dialog_workout_plan: new DialogCore({}),
     $dialog_day_profile: new DialogCore({}),
@@ -345,8 +399,8 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </div>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_workout_plan}>
-        <div class="w-screen bg-w-bg-1 p-2">
+      <Sheet store={vm.ui.$dialog_workout_plan} app={props.app}>
+        <div class="p-2">
           <ListView store={vm.request.workout_plan.list} class="space-y-2">
             <For each={state().workout_plan.dataSource}>
               {(v) => {
@@ -365,8 +419,8 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </ListView>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_day_profile}>
-        <div class="w-screen min-h-[320px] p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_day_profile} app={props.app}>
+        <div class="min-h-[320px] p-2">
           <Show when={state().cur_date_profile}>
             <div class="text-2xl text-w-fg-0">{state().cur_date_profile?.date_text}</div>
             <div class="text-w-fg-1">{state().cur_date_profile?.weekday_text}</div>
@@ -393,6 +447,19 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               </For>
             </div>
           </Show>
+        </div>
+      </Sheet>
+      <Sheet store={vm.ui.$dialog_nickname} app={props.app}>
+        <div class="p-2">
+          <div class="text-xl text-center text-w-fg-0">修改名称</div>
+          <div class="mt-4">
+            <Input store={vm.ui.$input_nickname} />
+          </div>
+          <div class="mt-2">
+            <Button class="w-full" store={vm.ui.$btn_nickname_submit}>
+              提交
+            </Button>
+          </div>
         </div>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu} />

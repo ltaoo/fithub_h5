@@ -3,6 +3,7 @@ import { For, Show } from "solid-js";
 import { ViewComponentProps } from "@/store/types";
 import { ListView, ScrollView } from "@/components/ui";
 import { NavigationBar1 } from "@/components/navigation-bar1";
+import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -10,9 +11,8 @@ import { ScrollViewCore } from "@/domains/ui";
 import { useViewModel } from "@/hooks";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
-import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
-import { WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
-import { PageView } from "@/components/page-view";
+import { continueWorkoutDay, fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
+import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 
 function WorkoutDayListViewModel(props: ViewComponentProps) {
   const request = {
@@ -23,6 +23,7 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
           client: props.client,
         })
       ),
+      continue: new RequestCore(continueWorkoutDay, { client: props.client }),
     },
   };
   const methods = {
@@ -35,6 +36,23 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
     gotoWorkoutDayProfileView(v: { id: number }) {
       props.history.push("root.workout_day_profile", {
         id: String(v.id),
+      });
+    },
+    async handleContinueWorkout(v: { id: number }) {
+      props.app.tip({
+        icon: "loading",
+        text: ["操作中..."],
+      });
+      const r = await request.workout_day.continue.run({ id: v.id });
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      props.history.push("root.workout_day_self", {
+        id: String(v.id),
+        multiple: "0",
       });
     },
   };
@@ -90,22 +108,33 @@ export function WorkoutDayListView(props: ViewComponentProps) {
           <For each={state().response.dataSource}>
             {(value) => {
               return (
-                <div
-                  class="border-2 border-w-fg-3 p-4 rounded-lg"
-                  onClick={() => {
-                    vm.methods.gotoWorkoutDayProfileView(value);
-                  }}
-                >
-                  <div class="text-w-fg-0 text-xl">{value.started_at_text}</div>
-                  {/* <Show when={value.finished_at}>
-                    <div class="">{value.finished_at}</div>
-                  </Show> */}
-                  <div class="flex flex-wrap">
-                    <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
-                  </div>
+                <div class="border-2 border-w-fg-3 p-4 rounded-lg">
+                  <div class="text-w-fg-0 text-xl">{value.workout_plan.title}</div>
+                  <div class="text-w-fg-1">{value.started_at_text}</div>
                   <div class="flex items-center justify-between">
-                    <div></div>
-                    <div class="px-4 py-1 border-2 border-w-fg-3 text-w-fg-0 bg-w-bg-5 rounded-full text-sm">详情</div>
+                    <div>
+                      <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Show when={[WorkoutDayStatus.Finished, WorkoutDayStatus.GiveUp].includes(value.status)}>
+                        <div
+                          class="px-4 py-1 border-2 border-w-fg-3 text-w-fg-0 bg-w-bg-5 rounded-full text-sm"
+                          onClick={() => {
+                            vm.methods.handleContinueWorkout(value);
+                          }}
+                        >
+                          继续
+                        </div>
+                      </Show>
+                      <div
+                        class="px-4 py-1 border-2 border-w-fg-3 text-w-fg-0 bg-w-bg-5 rounded-full text-sm"
+                        onClick={() => {
+                          vm.methods.gotoWorkoutDayProfileView(value);
+                        }}
+                      >
+                        详情
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

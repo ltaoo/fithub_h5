@@ -2,7 +2,12 @@ import { For } from "solid-js";
 
 import { WorkoutActionProfile } from "@/biz/workout_action/services";
 
-export function WorkoutActionCard(props: WorkoutActionProfile) {
+export function WorkoutActionCard(props: {
+  zh_name: string;
+  name: string;
+  overview: string;
+  muscles: { name: string }[];
+}) {
   return (
     <div class="overflow-y-auto">
       <div class="rounded-xl">
@@ -10,7 +15,7 @@ export function WorkoutActionCard(props: WorkoutActionProfile) {
           {/* 动作标题 */}
           <div class="">
             <h2 class="text-xl text-w-fg-0 font-bold">{props.zh_name}</h2>
-            <h3 class="text-w-fg-0">{props.name}</h3>
+            <h3 class="text-w-fg-1">{props.name}</h3>
             {/* 目标肌肉标签 */}
             <div class="flex flex-wrap mt-4">
               <For each={props.muscles}>

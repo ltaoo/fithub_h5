@@ -8,6 +8,9 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { Select } from "@/components/ui/select";
+import { PageView } from "@/components/page-view";
+import { Sheet } from "@/components/ui/sheet";
+import { WorkoutActionCard } from "@/components/workout-action-card";
 
 import { base, Handler } from "@/domains/base";
 import {
@@ -31,13 +34,11 @@ import {
   fetchWorkoutActionProfileProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
-import { PageView } from "@/components/page-view";
 import { WorkoutActionMultipleSelectViewModel } from "@/biz/workout_action_multiple_select";
 import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
-import { Sheet } from "@/components/ui/sheet";
 import { createReport } from "@/biz/report/services";
-import { WorkoutActionCard } from "@/components/workout-action-card";
+import { Muscles } from "@/biz/muscle/data";
 
 function WorkoutActionListViewModel(props: ViewComponentProps) {
   const request = {
@@ -92,7 +93,16 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      _cur_workout_action = r.data;
+      _cur_workout_action = {
+        ...r.data,
+        muscles: r.data.muscles.map((m) => {
+          const matched = Muscles.find((vv) => vv.id === m.id);
+          return {
+            id: m.id,
+            name: matched ? matched.name : String(m.id),
+          };
+        }),
+      };
       methods.refresh();
     },
   };
@@ -101,7 +111,6 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     $select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: request.workout_action.list,
-      client: props.client,
     }),
     $dropdown_menu: new DropdownMenuCore({
       items: [
@@ -153,7 +162,7 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     $dialog_workout_action_profile: new DialogCore({}),
   };
 
-  let _cur_workout_action: WorkoutActionProfile | null = null;
+  let _cur_workout_action: (WorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
   let _state = {
     get response() {
       return ui.$select.request.action.list.response;
@@ -281,8 +290,8 @@ export function WorkoutActionListView(props: ViewComponentProps) {
           </div>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$dialog_report}>
-        <div class="w-screen bg-w-bg-1 p-2">
+      <Sheet store={vm.ui.$dialog_report} app={props.app}>
+        <div class="p-2">
           <div class="text-xl text-center text-w-fg-0">问题反馈</div>
           <div class="mt-4">
             <Textarea store={vm.ui.$input_report} />
@@ -294,8 +303,8 @@ export function WorkoutActionListView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_workout_action_profile} position="bottom" size="sm">
-        <div class="relative w-screen min-h-[320px] p-2 bg-w-bg-1">
+      <Sheet store={vm.ui.$dialog_workout_action_profile} app={props.app}>
+        <div class="relative min-h-[320px] p-2">
           <div class="h-[32px]"></div>
           <Show when={state().loading}>
             <div class="absolute inset-0">

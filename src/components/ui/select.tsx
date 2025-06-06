@@ -106,7 +106,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
                     return (
                       <div
                         classList={{
-                          "relative flex cursor-default select-none items-center rounded-xl py-1.5 px-2 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50":
+                          "relative flex cursor-default select-none items-center rounded-xl py-1.5 px-2 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50":
                             true,
                           "bg-w-bg-5": opt.selected,
                         }}

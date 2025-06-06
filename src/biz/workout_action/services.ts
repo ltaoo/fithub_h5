@@ -81,8 +81,9 @@ export type WorkoutActionProfile = {
   overview: string;
   muscles: {
     id: number;
-    name: string;
-    en_name: string;
+  }[];
+  equipments: {
+    id: number;
   }[];
 };
 
@@ -292,10 +293,18 @@ export type WorkoutAction = {
   };
 };
 
+export function createWorkoutActionHistory(body: {
+  workout_action_id: number;
+  reps: number;
+  reps_unit: string;
+  weight: number;
+  weight_unit: string;
+}) {
+  return request.post("/api/workout_action_history/create", body);
+}
+
 /**
- * 获取动作历史记录
- * 可以获取指定「训练日」内的所有动作历史记录
- * 也可以获取指定「动作」的历史记录
+ * 获取指定「训练日」内的所有动作历史记录
  */
 export function fetchWorkoutActionHistoryListOfWorkoutDay(body: Partial<FetchParams> & { workout_day_id: number }) {
   return request.post<ListResponseWithCursor<WorkoutAction>>("/api/workout_action_history/list_of_workout_day", {
@@ -333,9 +342,7 @@ export function fetchWorkoutActionHistoryListOfWorkoutDayProcess(
 }
 
 /**
- * 获取动作历史记录
- * 可以获取指定「训练日」内的所有动作历史记录
- * 也可以获取指定「动作」的历史记录
+ * 获取「指定动作」的所有历史记录
  */
 export function fetchWorkoutActionHistoryListOfWorkoutAction(
   body: Partial<FetchParams> & { workout_action_id: number; student_id: number }

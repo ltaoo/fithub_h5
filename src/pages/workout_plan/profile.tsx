@@ -441,8 +441,8 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </div>
         </Show>
       </PageView>
-      <Sheet store={vm.ui.$select_student.ui.$dialog}>
-        <div class="w-screen bg-w-bg-1 p-2">
+      <Sheet store={vm.ui.$select_student.ui.$dialog} app={props.app}>
+        <div class="p-2">
           <ListView store={vm.ui.$select_student.request.data.list} class="space-y-2">
             <For each={state().students}>
               {(s) => {

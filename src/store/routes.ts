@@ -151,6 +151,11 @@ const configure = {
         pathname: "/tools_rm_calc",
         options: {},
       },
+      tools_max_rm_test: {
+        title: "1RM测试",
+        pathname: "/tools_max_rm_test",
+        options: {},
+      },
       tools_bmr_calc: {
         title: "基础代谢计算",
         pathname: "/tools_bmr_calc",

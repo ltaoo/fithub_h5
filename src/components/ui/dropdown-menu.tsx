@@ -133,7 +133,7 @@ const ItemWithSubMenu = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTM
     <DropdownMenuPrimitive.Sub store={props.store.menu}>
       <DropdownMenuPrimitive.SubTrigger
         class={cn(
-          "flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm font-medium outline-none focus:bg-slate-100 data-[state=open]:bg-slate-100 dark:focus:bg-slate-700 dark:data-[state=open]:bg-slate-700",
+          "flex cursor-default select-none items-center rounded-sm py-1.5 px-2 font-medium outline-none focus:bg-slate-100 data-[state=open]:bg-slate-100 dark:focus:bg-slate-700 dark:data-[state=open]:bg-slate-700",
           {
             "pl-8": !!icon(),
             "bg-slate-100": state().focused,
@@ -167,7 +167,7 @@ const ItemWithSubMenu = (props: { store: MenuItemCore } & JSX.HTMLAttributes<HTM
               return (
                 <DropdownMenuPrimitive.Item
                   class={cn(
-                    "relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm font-medium outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700"
+                    "relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 font-medium outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-slate-700"
                   )}
                   store={item}
                 >
