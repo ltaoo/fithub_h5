@@ -132,6 +132,12 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                       }}
                     >
                       <div class="text-w-fg-0">{student.nickname}</div>
+                      <div class="flex items-center justify-between">
+                        <div></div>
+                        <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full">
+                          <div class="text-sm text-w-fg-0">详情</div>
+                        </div>
+                      </div>
                     </div>
                   );
                 }}

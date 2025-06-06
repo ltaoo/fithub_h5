@@ -46,8 +46,10 @@ import {
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import {
-  fetchWorkoutActionHistoryList,
-  fetchWorkoutActionHistoryListProcess,
+  fetchWorkoutActionHistoryListOfWorkoutAction,
+  fetchWorkoutActionHistoryListOfWorkoutActionProcess,
+  fetchWorkoutActionHistoryListOfWorkoutDay,
+  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
 import { CountdownViewModel } from "@/biz/countdown";
@@ -69,9 +71,13 @@ import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
+import { WorkoutDayProfileView } from "./profile";
+import { RouteViewCore } from "@/domains/route_view";
+import { Muscles } from "@/biz/muscle/data";
+import { SetValueView } from "@/components/set-value-view";
 
-export type HomeWorkoutDayUpdateViewModel = ReturnType<typeof HomeWorkoutDayUpdateViewModel>;
-export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
+export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
+export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const request = {
     workout_plan: {
       profile: new RequestCore(fetchWorkoutPlanProfile, {
@@ -91,8 +97,8 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryList, {
-          process: fetchWorkoutActionHistoryListProcess,
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
+          process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
           client: props.client,
         }),
         { pageSize: 3 }
@@ -598,11 +604,14 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
               if ($input_completed.value && $field_reps.input.value && $field_weight.input.value) {
                 const v_reps = Number($field_reps.input.value);
                 const v_weight = Number($field_weight.input.value);
-                let volume = v_weight;
-                if ($field_weight.input.unit === "磅") {
-                  volume = Number((volume * 0.45).toFixed(1));
+                let real_weight = v_weight;
+                if ($field_weight.input.unit === getSetValueUnit("磅")) {
+                  real_weight = Number((real_weight * 0.45).toFixed(1));
                 }
-                total_volume += volume;
+                if ($field_reps.input.unit === getSetValueUnit("次")) {
+                  real_weight = real_weight * v_reps;
+                }
+                total_volume += real_weight;
                 actions.push({
                   id: set.actions[c].id,
                   zh_name: set.actions[c].zh_name,
@@ -629,6 +638,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         }
       }
       _stats.total_volume = total_volume;
+      _stats.total_set_count = _stats.sets.length;
       _stats.uncompleted_actions = uncompleted_actions;
       ui.$dialog_confirm_complete.show();
       methods.refresh();
@@ -765,9 +775,16 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     async showWorkoutActionProfile(action: { id: number | string }) {
       ui.$workout_action_profile_dialog.show();
-      request.workout_action_history.list.init({
-        workout_action_id: Number(action.id),
-      });
+      (() => {
+        const student_id = Number(props.view.query.student_id);
+        if (Number.isNaN(student_id)) {
+          return;
+        }
+        request.workout_action_history.list.init({
+          workout_action_id: Number(action.id),
+          student_id,
+        });
+      })();
       if (request.workout_action.profile.response && request.workout_action.profile.response.id === action.id) {
         return;
       }
@@ -778,11 +795,26 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      _cur_workout_action = r.data;
+      _cur_workout_action = {
+        ...r.data,
+        muscles: r.data.muscles.map((m) => {
+          const matched = Muscles.find((v) => v.id === m.id);
+          return {
+            ...m,
+            en_name: "",
+            name: matched ? matched.name : String(m.id),
+          };
+        }),
+      };
       methods.refresh();
     },
+    /** 完成该次训练 */
     async submit() {
       // const { data } = methods.toBody();
+      props.app.tip({
+        icon: "loading",
+        text: [],
+      });
       ui.$btn_workout_day_submit.setLoading(true);
       const r = await request.workout_day.complete.run({
         id: props.view.query.id,
@@ -794,8 +826,28 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         });
         return;
       }
+      props.app.tip({
+        text: ["完成！"],
+      });
       ui.$dialog_confirm_complete.hide();
-      props.history.push("root.home_layout.index");
+      const is_multiple = !!props.view.query.student_id;
+      if (!is_multiple) {
+        props.history.push("root.home_layout.index");
+        return;
+      }
+      _profile_view = new RouteViewCore({
+        title: "",
+        name: "",
+        pathname: "",
+        query: props.view.query,
+      });
+      request.workout_day.profile.modifyResponse((v) => {
+        return {
+          ...v,
+          status: WorkoutDayStatus.Finished,
+        };
+      });
+      methods.refresh();
     },
     async giveUp() {
       props.app.tip({
@@ -812,7 +864,27 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       ui.$dialog_confirm_complete.hide();
-      props.history.push("root.home_layout.index");
+      props.app.tip({
+        text: ["操作成功"],
+      });
+      const is_multiple = !!props.view.query.student_id;
+      if (!is_multiple) {
+        props.history.push("root.home_layout.index");
+        return;
+      }
+      _profile_view = new RouteViewCore({
+        title: "",
+        name: "",
+        pathname: "",
+        query: props.view.query,
+      });
+      request.workout_day.profile.modifyResponse((v) => {
+        return {
+          ...v,
+          status: WorkoutDayStatus.GiveUp,
+        };
+      });
+      methods.refresh();
     },
     setHeight(height: number) {
       _height = height;
@@ -1178,6 +1250,7 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     finished_at: string;
     duration: string;
     total_volume: number;
+    total_set_count: number;
     uncompleted_actions: { step_idx: number; set_idx: number; act_idx: number }[];
     sets: {
       actions: { id: number; zh_name: string; reps: number; reps_unit: string; weight: number; weight_unit: string }[];
@@ -1186,10 +1259,12 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     started_at: "",
     finished_at: "",
     total_volume: 0,
+    total_set_count: 0,
     duration: "",
     uncompleted_actions: [],
     sets: [],
   };
+  let _profile_view: RouteViewCore | null = null;
   let _state = {
     get profile() {
       return request.workout_day.profile.response;
@@ -1223,6 +1298,9 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     get stats() {
       return _stats;
+    },
+    get profile_view() {
+      return _profile_view;
     },
   };
   enum Events {
@@ -1422,252 +1500,283 @@ export function HomeWorkoutDayUpdateViewModel(props: ViewComponentProps) {
   };
 }
 
-export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(HomeWorkoutDayUpdateViewModel, [props]);
+export function WorkoutDayUpdateView(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(WorkoutDayUpdateViewModel, [props]);
 
   return (
     <>
-      <div class="z-0 fixed bottom-0 left-0 w-full border-b-2 border-w-fg-3 bg-w-bg-1">
-        <div class="p-2">
-          <Show
-            when={state().profile?.status === WorkoutDayStatus.Started}
-            fallback={
+      <div
+        class="working"
+        classList={{
+          hidden: state().profile?.status !== WorkoutDayStatus.Started,
+        }}
+      >
+        <div class="z-0 fixed bottom-0 left-0 w-full border-b-2 border-w-fg-3 bg-w-bg-1">
+          <div class="p-2">
+            <Show
+              when={state().profile?.status === WorkoutDayStatus.Started}
+              fallback={
+                <div class="flex items-center justify-between">
+                  <Skeleton class="w-[88px] h-[40px]" />
+                  <div class="flex items-center gap-2">
+                    <Skeleton class="w-[60px] h-[36px]" />
+                    <Skeleton class="w-[40px] h-[40px] rounded-full" />
+                  </div>
+                </div>
+              }
+            >
               <div class="flex items-center justify-between">
-                <Skeleton class="w-[88px] h-[40px]" />
+                <DayDurationTextView store={vm.ui.$day_duration} />
                 <div class="flex items-center gap-2">
-                  <Skeleton class="w-[60px] h-[36px]" />
-                  <Skeleton class="w-[40px] h-[40px] rounded-full" />
+                  <div
+                    class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-0 text-sm"
+                    onClick={() => {
+                      vm.methods.showWorkoutDayCompleteConfirmDialog();
+                    }}
+                  >
+                    完成
+                  </div>
+                  <div
+                    class="p-2 rounded-full bg-w-bg-5"
+                    onClick={(event) => {
+                      const client = event.currentTarget.getBoundingClientRect();
+                      vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
+                    }}
+                  >
+                    <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+                  </div>
                 </div>
               </div>
-            }
-          >
-            <div class="flex items-center justify-between">
-              <DayDurationTextView store={vm.ui.$day_duration} />
-              <div class="flex items-center gap-2">
-                <div
-                  class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-1 text-sm"
-                  onClick={() => {
-                    vm.methods.showWorkoutDayCompleteConfirmDialog();
-                  }}
-                >
-                  完成
-                </div>
-                <div
-                  class="p-2 rounded-full bg-w-bg-5"
-                  onClick={(event) => {
-                    const client = event.currentTarget.getBoundingClientRect();
-                    vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
-                  }}
-                >
-                  <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
-                </div>
-              </div>
-            </div>
-          </Show>
+            </Show>
+          </div>
         </div>
-      </div>
-      <div class="absolute top-0 bottom-[56px] left-0 w-full">
-        <ScrollView store={vm.ui.$view} class="">
-          <div
-            class="p-2 rounded-lg transition-all duration-300"
-            style={{ transform: `translateY(${-state().height}px)` }}
-          >
-            <div class="space-y-8">
-              <For each={state().steps}>
-                {(step, a) => {
-                  return (
-                    <div class="">
-                      <Show when={step.note}>
-                        <div class="flex gap-2">
-                          <div class="w-[40px] h-[40px] rounded-full bg-w-bg-5"></div>
-                          <div class="relative">
-                            <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] bg-w-bg-5">
-                              {step.note}
+        <div class="absolute top-0 bottom-[56px] left-0 w-full">
+          <ScrollView store={vm.ui.$view} class="">
+            <div
+              class="p-2 rounded-lg transition-all duration-300"
+              style={{ transform: `translateY(${-state().height}px)` }}
+            >
+              <div class="space-y-8">
+                <For each={state().steps}>
+                  {(step, a) => {
+                    return (
+                      <div class="">
+                        <Show when={step.note}>
+                          <div class="flex gap-2">
+                            <div class="w-[40px] h-[40px] rounded-full bg-w-bg-5"></div>
+                            <div class="relative">
+                              <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] bg-w-bg-5">
+                                {step.note}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Show>
-                      <div class="space-y-2 w-full">
-                        <For each={step.sets}>
-                          {(set, b) => {
-                            const is_cur_set = () => state().cur_step_idx === a() && state().next_set_idx === b();
-                            const is_last_set = () => a() === state().steps.length - 1 && b() === step.sets.length - 1;
-                            return (
-                              <>
-                                <div class="overflow-hidden relative w-full">
-                                  <Show when={!is_cur_set()}>
+                        </Show>
+                        <div class="space-y-2 w-full">
+                          <For each={step.sets}>
+                            {(set, b) => {
+                              const is_cur_set = () => state().cur_step_idx === a() && state().next_set_idx === b();
+                              const is_last_set = () =>
+                                a() === state().steps.length - 1 && b() === step.sets.length - 1;
+                              return (
+                                <>
+                                  <div class="overflow-hidden relative w-full">
+                                    {/* <Show when={!is_cur_set()}>
                                     <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                  </Show>
-                                  <div
-                                    classList={{
-                                      "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
-                                      "border-w-fg-2": is_cur_set(),
-                                    }}
-                                  >
-                                    <div
-                                      class="z-10 absolute right-4 top-4"
-                                      onClick={(event) => {
-                                        const client = event.currentTarget.getBoundingClientRect();
-                                        vm.ui.$ref_cur_set_key.select({ step_idx: a(), idx: b() });
-                                        vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
-                                      }}
-                                    >
-                                      <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
-                                    </div>
-                                    <div class="space-y-2 w-full">
-                                      <Show
-                                        when={
-                                          [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
-                                            set.type
-                                          ) && vm.ui.$set_actions.get(`${a()}-${b()}-0`)
-                                        }
-                                      >
-                                        <SetActionView
-                                          store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
-                                          idx={b() + 1}
-                                          onClick={() => {
-                                            vm.methods.showWorkoutActionProfile(set.actions[0]);
-                                          }}
-                                        />
-                                      </Show>
-                                      <Show
-                                        when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)}
-                                      >
-                                        <div class="inline-flex items-center justify-center px-2 rounded-full bg-blue-500">
-                                          <div class="text-sm">{b() + 1}</div>
-                                        </div>
-                                      </Show>
-                                      <div class="space-y-2 w-full">
-                                        <For each={set.actions}>
-                                          {(action, c) => {
-                                            const act_k = `${a()}-${b()}-${c()}`;
-                                            const is_countdown_reps = () =>
-                                              [getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps_unit);
-                                            return (
-                                              <div class="gap-2">
-                                                <Show
-                                                  when={
-                                                    ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                                    vm.ui.$set_actions.get(act_k)
-                                                  }
-                                                >
-                                                  <SetActionView
-                                                    store={vm.ui.$set_actions.get(act_k)!}
-                                                    idx={[WorkoutPlanSetType.Normal].includes(set.type) ? b() + 1 : 0}
-                                                    onClick={() => {
-                                                      vm.methods.showWorkoutActionProfile(action);
-                                                    }}
-                                                  />
-                                                </Show>
-                                                <div class="flex items-center gap-2 mt-2">
-                                                  <Show when={vm.ui.$fields_weight.get(act_k)}>
-                                                    <SetValueInput
-                                                      store={vm.ui.$fields_weight.get(act_k)!}
-                                                      class="w-[68px] border-2 border-w-fg-3 rounded-lg p-2"
-                                                      onClick={(event) => {
-                                                        const client = event.currentTarget.getBoundingClientRect();
-                                                        console.log("[]beforeShowNumInput1", a(), b(), c(), client.y);
-                                                        vm.methods.handleShowNumKeyboard({
-                                                          for: "weight",
-                                                          step_idx: a(),
-                                                          set_idx: b(),
-                                                          act_idx: c(),
-                                                          rect: {
-                                                            x: client.x,
-                                                            y: client.y,
-                                                            width: client.width,
-                                                            height: client.height,
-                                                          },
-                                                        });
-                                                      }}
-                                                    />
-                                                  </Show>
-                                                  <Show when={vm.ui.$fields_reps.get(act_k)}>
-                                                    <SetValueInput
-                                                      store={vm.ui.$fields_reps.get(act_k)!}
-                                                      class="w-[68px] border border-w-fg-3 rounded-md p-2"
-                                                      onClick={(event) => {
-                                                        const client = event.currentTarget.getBoundingClientRect();
-                                                        console.log("[]beforeShowNumInput2", a(), b(), c());
-                                                        vm.methods.handleShowNumKeyboard({
-                                                          for: "reps",
-                                                          step_idx: a(),
-                                                          set_idx: b(),
-                                                          act_idx: c(),
-                                                          rect: {
-                                                            x: client.x,
-                                                            y: client.y,
-                                                            width: client.width,
-                                                            height: client.height,
-                                                          },
-                                                        });
-                                                      }}
-                                                    />
-                                                  </Show>
-                                                  <Show when={vm.ui.$inputs_completed.get(act_k)}>
-                                                    <SetCompleteBtn
-                                                      store={vm.ui.$inputs_completed.get(act_k)!}
-                                                      onClick={(event) => {
-                                                        vm.methods.handleCompleteSetAction({
-                                                          step_idx: a(),
-                                                          set_idx: b(),
-                                                          act_idx: c(),
-                                                        });
-                                                      }}
-                                                    />
-                                                  </Show>
-                                                </div>
-                                                <Show
-                                                  when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_k)}
-                                                >
-                                                  <div class="rounded-md p-2 mt-1 bg-w-bg-5">
-                                                    <SetActionCountdownView
-                                                      store={vm.ui.$set_act_countdowns.get(act_k)!}
-                                                    />
-                                                  </div>
-                                                </Show>
-                                              </div>
-                                            );
-                                          }}
-                                        </For>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                <Show when={!is_last_set()}>
-                                  <div class="relative w-full overflow-hidden">
-                                    <Show when={!is_cur_set()}>
-                                      <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                    </Show>
+                                  </Show> */}
                                     <div
                                       classList={{
                                         "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
-                                        "border-w-fg-2": is_cur_set(),
+                                        // "border-w-fg-2": is_cur_set(),
+                                        "border-w-fg-2 bg-w-bg-5": is_cur_set(),
                                       }}
                                     >
-                                      <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
-                                        <SetCountdownView store={vm.ui.$set_countdowns.get(`${a()}-${b()}`)!} />
-                                      </Show>
+                                      <div
+                                        class="z-10 absolute right-4 top-4"
+                                        onClick={(event) => {
+                                          const client = event.currentTarget.getBoundingClientRect();
+                                          vm.ui.$ref_cur_set_key.select({ step_idx: a(), idx: b() });
+                                          vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
+                                        }}
+                                      >
+                                        <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+                                      </div>
+                                      <div class="space-y-2 w-full">
+                                        <Show
+                                          when={
+                                            [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
+                                              set.type
+                                            ) && vm.ui.$set_actions.get(`${a()}-${b()}-0`)
+                                          }
+                                        >
+                                          <SetActionView
+                                            store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
+                                            idx={b() + 1}
+                                            highlight={is_cur_set()}
+                                            onClick={() => {
+                                              vm.methods.showWorkoutActionProfile(set.actions[0]);
+                                            }}
+                                          />
+                                        </Show>
+                                        <Show
+                                          when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)}
+                                        >
+                                          <div class="inline-flex items-center justify-center px-2 rounded-full bg-blue-500">
+                                            <div class="text-sm">{b() + 1}</div>
+                                          </div>
+                                        </Show>
+                                        <div class="space-y-2 w-full">
+                                          <For each={set.actions}>
+                                            {(action, c) => {
+                                              const act_k = `${a()}-${b()}-${c()}`;
+                                              const is_countdown_reps = () =>
+                                                [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
+                                                  action.reps_unit
+                                                );
+                                              return (
+                                                <div class="gap-2">
+                                                  <Show
+                                                    when={
+                                                      ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
+                                                      vm.ui.$set_actions.get(act_k)
+                                                    }
+                                                  >
+                                                    <SetActionView
+                                                      store={vm.ui.$set_actions.get(act_k)!}
+                                                      idx={[WorkoutPlanSetType.Normal].includes(set.type) ? b() + 1 : 0}
+                                                      highlight={is_cur_set()}
+                                                      onClick={() => {
+                                                        vm.methods.showWorkoutActionProfile(action);
+                                                      }}
+                                                    />
+                                                  </Show>
+                                                  <div class="flex items-center gap-2 mt-2">
+                                                    <Show when={vm.ui.$fields_weight.get(act_k)}>
+                                                      <SetValueInput
+                                                        store={vm.ui.$fields_weight.get(act_k)!}
+                                                        class="w-[68px] border-2 border-w-fg-3 rounded-lg p-2"
+                                                        onClick={(event) => {
+                                                          const client = event.currentTarget.getBoundingClientRect();
+                                                          console.log("[]beforeShowNumInput1", a(), b(), c(), client.y);
+                                                          vm.methods.handleShowNumKeyboard({
+                                                            for: "weight",
+                                                            step_idx: a(),
+                                                            set_idx: b(),
+                                                            act_idx: c(),
+                                                            rect: {
+                                                              x: client.x,
+                                                              y: client.y,
+                                                              width: client.width,
+                                                              height: client.height,
+                                                            },
+                                                          });
+                                                        }}
+                                                      />
+                                                    </Show>
+                                                    <Show when={vm.ui.$fields_reps.get(act_k)}>
+                                                      <SetValueInput
+                                                        store={vm.ui.$fields_reps.get(act_k)!}
+                                                        class="w-[68px] border border-w-fg-3 rounded-md p-2"
+                                                        onClick={(event) => {
+                                                          const client = event.currentTarget.getBoundingClientRect();
+                                                          console.log("[]beforeShowNumInput2", a(), b(), c());
+                                                          vm.methods.handleShowNumKeyboard({
+                                                            for: "reps",
+                                                            step_idx: a(),
+                                                            set_idx: b(),
+                                                            act_idx: c(),
+                                                            rect: {
+                                                              x: client.x,
+                                                              y: client.y,
+                                                              width: client.width,
+                                                              height: client.height,
+                                                            },
+                                                          });
+                                                        }}
+                                                      />
+                                                    </Show>
+                                                    <Show when={vm.ui.$inputs_completed.get(act_k)}>
+                                                      <SetCompleteBtn
+                                                        store={vm.ui.$inputs_completed.get(act_k)!}
+                                                        highlight={is_cur_set()}
+                                                        onClick={(event) => {
+                                                          vm.methods.handleCompleteSetAction({
+                                                            step_idx: a(),
+                                                            set_idx: b(),
+                                                            act_idx: c(),
+                                                          });
+                                                        }}
+                                                      />
+                                                    </Show>
+                                                  </div>
+                                                  <Show
+                                                    when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_k)}
+                                                  >
+                                                    <div class="rounded-md p-2 mt-1 bg-w-bg-5">
+                                                      <SetActionCountdownView
+                                                        store={vm.ui.$set_act_countdowns.get(act_k)!}
+                                                      />
+                                                    </div>
+                                                  </Show>
+                                                </div>
+                                              );
+                                            }}
+                                          </For>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
-                                </Show>
-                              </>
-                            );
-                          }}
-                        </For>
+                                  <Show when={!is_last_set()}>
+                                    <div class="relative w-full overflow-hidden">
+                                      {/* <Show when={!is_cur_set()}>
+                                      <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
+                                    </Show> */}
+                                      <div
+                                        classList={{
+                                          "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
+                                          // "border-w-fg-2": is_cur_set(),
+                                          "border-w-fg-2 bg-w-bg-5": is_cur_set(),
+                                        }}
+                                      >
+                                        <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
+                                          <SetCountdownView
+                                            store={vm.ui.$set_countdowns.get(`${a()}-${b()}`)!}
+                                            highlight={is_cur_set()}
+                                          />
+                                        </Show>
+                                      </div>
+                                    </div>
+                                  </Show>
+                                </>
+                              );
+                            }}
+                          </For>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }}
-              </For>
+                    );
+                  }}
+                </For>
+              </div>
             </div>
-          </div>
-          <div class="py-4">
-            <div class="text-sm text-w-fg-3 text-center">胜利就在眼前 加油!</div>
-          </div>
-          <div class="h-[32px]"></div>
-        </ScrollView>
+            <div class="py-4">
+              <div class="text-sm text-w-fg-3 text-center">胜利就在眼前 加油!</div>
+            </div>
+            <div class="h-[32px]"></div>
+          </ScrollView>
+        </div>
       </div>
+      <Show when={state().profile_view}>
+        <div class="" classList={{}}>
+          <WorkoutDayProfileView
+            app={props.app}
+            storage={props.storage}
+            pages={props.pages}
+            history={props.history}
+            client={props.client}
+            view={state().profile_view!}
+            hide_bottom
+          />
+        </div>
+      </Show>
       <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} position="bottom" size="sm">
         <div class="w-screen bg-w-bg-1">
           <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} />
@@ -1678,9 +1787,8 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action_profile_dialog} position="bottom" size="sm">
-        <div class="relative w-screen min-h-[320px] p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
-          <div class="h-[32px]"></div>
+      <Sheet store={vm.ui.$workout_action_profile_dialog} size="sm">
+        <div class="relative w-screen min-h-[320px] p-2 border-w-fg-3 bg-w-bg-1">
           <Show when={state().loading}>
             <div class="absolute inset-0">
               {/* <div class="absolute inset-0 bg-white opacity-40"></div> */}
@@ -1692,7 +1800,7 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
             </div>
           </Show>
           <Show when={state().cur_workout_action}>
-            <div class="mt-2 border-2 rounded-lg border-w-fg-3">
+            <div class="mt-2 rounded-lg">
               <WorkoutActionCard {...state().cur_workout_action!} />
             </div>
           </Show>
@@ -1701,30 +1809,17 @@ export function HomeWorkoutDayUpdatePage(props: ViewComponentProps) {
               {(history) => {
                 return (
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <div class="flex items-center">
-                      <div class="flex items-center text-w-fg-0">
-                        <div class="text-lg">{history.weight}</div>
-                        <div class="text-sm">{history.weight_unit}</div>
-                      </div>
-                      <div class="mx-2 text-w-fg-1 text-sm">x</div>
-                      <div class="flex items-center text-w-fg-0">
-                        <div class="text-lg">{history.reps}</div>
-                        <div class="text-sm">{history.reps_unit}</div>
-                      </div>
-                    </div>
+                    <SetValueView
+                      weight={history.weight}
+                      weight_unit={history.weight_unit}
+                      reps={history.reps}
+                      reps_unit={history.reps_unit}
+                    />
                     <div class="text-sm text-w-fg-1">{history.created_at}</div>
                   </div>
                 );
               }}
             </For>
-          </div>
-          <div
-            class="absolute right-2 top-2 p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.ui.$workout_action_profile_dialog.hide();
-            }}
-          >
-            <X class="w-4 h-4 text-w-fg-1" />
           </div>
         </div>
       </Sheet>

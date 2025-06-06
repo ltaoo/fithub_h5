@@ -66,3 +66,7 @@ export function fetch_user_profile() {
 export function validate(token: string) {
   return request.post<{ token: string }>("/api/auth/validate", { token });
 }
+
+export function update_user_profile(body: Partial<{ nickname: string; avatar_url: string }>) {
+  return request.post("/api/auth/update_profile", body);
+}

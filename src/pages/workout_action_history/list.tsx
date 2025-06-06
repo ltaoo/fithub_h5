@@ -7,7 +7,7 @@ import { ViewComponentProps } from "@/store/types";
 import { ScrollView } from "@/components/ui";
 import { useViewModel } from "@/hooks";
 
-import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
+import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
 import { base, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
@@ -18,8 +18,8 @@ function WorkoutActionHistoryViewModel(props: ViewComponentProps) {
   const request = {
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryList, {
-          process: fetchWorkoutActionHistoryListProcess,
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
+          process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
           client: props.client,
         })
       ),

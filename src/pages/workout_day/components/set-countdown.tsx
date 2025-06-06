@@ -111,6 +111,7 @@ export type SetCountdownViewModel = ReturnType<typeof SetCountdownViewModel>;
 
 export function SetCountdownView(props: {
   store: SetCountdownViewModel;
+  highlight?: boolean;
   onStart?: () => void;
   onCompleted?: () => void;
 }) {
@@ -174,22 +175,30 @@ export function SetCountdownView(props: {
     <div class="set-countdown flex items-center justify-between gap-2">
       <Show when={countdown1().pending}>
         <div
-          class="p-2 rounded-full bg-w-bg-5"
+          classList={{
+            "p-2 rounded-full": true,
+            "bg-w-fg-5 text-w-fg-0": props.highlight,
+            "text-w-fg-2": !props.highlight,
+          }}
           onClick={() => {
             props.store.start();
           }}
         >
-          <Play class="w-4 h-4 text-w-fg-1 " />
+          <Play class="w-6 h-6" />
         </div>
       </Show>
       <Show when={state().running}>
         <div
-          class="p-2 rounded-full bg-w-bg-5"
+          classList={{
+            "p-2 rounded-full bg-w-fg-5": true,
+            "text-w-fg-0": props.highlight,
+            "text-w-fg-2": !props.highlight,
+          }}
           onClick={() => {
             props.store.pause();
           }}
         >
-          <Pause class="w-4 h-4 text-w-fg-1" />
+          <Pause class="w-6 h-6" />
         </div>
       </Show>
       <div

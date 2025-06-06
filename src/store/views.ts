@@ -23,7 +23,7 @@ import { HomeStudentCreatePage } from "@/pages/student/create";
 import { HomeStudentUpdatePage } from "@/pages/student/update";
 import { HomeStudentProfilePage } from "@/pages/student/profile";
 import { EquipmentListView } from "@/pages/equipment/list";
-import { HomeWorkoutDayUpdatePage } from "@/pages/workout_day/update";
+import { WorkoutDayUpdateView } from "@/pages/workout_day/update";
 import { WorkoutDayPreparingPage } from "@/pages/workout_day/prepare";
 import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
 import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
@@ -54,6 +54,7 @@ import { ReportCreateView } from "@/pages/report/create";
 import { ReportProfileView } from "@/pages/report/profile";
 import { PaperResultListView } from "@/pages/paper/result_list";
 import { WorkoutScheduleProfileView } from "@/pages/workout_schedule/profile";
+import { WorkoutDayMultiplePersonView } from "@/pages/workout_day/multiple";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -91,7 +92,8 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.student_profile": HomeStudentProfilePage,
   "root.home_layout.mine": HomeMineView,
   // 训练记录
-  "root.workout_day": HomeWorkoutDayUpdatePage,
+  "root.workout_day": WorkoutDayMultiplePersonView,
+  "root.workout_day_self": WorkoutDayUpdateView,
   "root.workout_day_prepare": WorkoutDayPreparingPage,
   "root.workout_day_list": WorkoutDayListView,
   "root.workout_day_profile": WorkoutDayProfileView,

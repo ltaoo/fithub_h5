@@ -1,16 +1,22 @@
-import { request } from "@/biz/requests";
-import { ListResponseWithCursor } from "@/biz/requests/types";
+import dayjs from "dayjs";
+
 import { FetchParams } from "@/domains/list/typing";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
+import { request } from "@/biz/requests";
+import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
+import { WorkoutDayStatus } from "@/biz/workout_day/constants";
+
+import { HumanGenderType } from "./constants";
 
 export function fetchStudentList(params: Partial<FetchParams>) {
   return request.post<
     ListResponseWithCursor<{
-      id: number | string;
-      student: {
-        nickname: string;
-      };
+      id: number;
+      nickname: string;
+      avatar_url: string;
+      gender: number;
+      age: number;
     }>
   >("/api/student/list", {
     page: params.page,
@@ -21,14 +27,16 @@ export function fetchStudentListProcess(r: TmpRequestResp<typeof fetchStudentLis
   if (r.error) {
     return Result.Err(r.error);
   }
-  const data = r.data;
+  const resp = r.data;
   return Result.Ok({
-    page_size: data.page_size,
-    no_more: !data.has_more,
-    list: data.list.map((student) => {
+    ...resp,
+    list: resp.list.map((v) => {
       return {
-        id: student.id,
-        nickname: student.student.nickname,
+        id: v.id,
+        nickname: v.nickname,
+        avatar_url: v.avatar_url,
+        age: v.age,
+        gender: v.gender,
       };
     }),
   });
@@ -44,17 +52,13 @@ export function updateStudent(data: { id: string; name: string; phone: string; e
 
 export function fetchStudentProfile(body: { id: number }) {
   return request.post<{
+    id: number;
     nickname: string;
-    profile1: {
-      nickname: string;
-      avatar_url: string;
-      /** 年龄 */
-      age: number;
-      /** 性别 1男 2女 */
-      gender: number;
-      /** 身高 */
-      height: number;
-    };
+    avatar_url: string;
+    /** 年龄 */
+    age: number;
+    /** 性别 1男 2女 */
+    gender: HumanGenderType;
   }>("/api/student/profile", { id: body.id });
 }
 export function fetchStudentProfileProcess(r: TmpRequestResp<typeof fetchStudentProfile>) {
@@ -63,9 +67,61 @@ export function fetchStudentProfileProcess(r: TmpRequestResp<typeof fetchStudent
   }
   const data = r.data;
   return Result.Ok({
-    nickname: data.profile1.nickname,
-    avatar_url: data.profile1.avatar_url,
-    age: data.profile1.age,
-    gender: data.profile1.gender,
+    id: data.id,
+    nickname: data.nickname,
+    avatar_url: data.avatar_url,
+    age: data.age,
+    gender: data.gender,
+  });
+}
+
+export function fetchStudentWorkoutDayList(
+  body: Partial<FetchParams> & {
+    id: number;
+    status: WorkoutDayStatus;
+    started_at_start: string;
+    started_at_end: string;
+  }
+) {
+  return request.post<
+    ListResponse<{
+      id: number;
+      status: WorkoutDayStatus;
+      started_at: string;
+      finished_at: string;
+      workout_plan: {
+        id: number;
+        title: string;
+        overview: string;
+        tags: string;
+      };
+    }>
+  >("/api/student/workout_day_list", {
+    page_size: body.pageSize,
+    page: body.page,
+    id: body.id,
+    status: body.status,
+    started_at_start: body.started_at_start,
+    started_at_end: body.started_at_end,
+  });
+}
+
+export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetchStudentWorkoutDayList>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const resp = r.data;
+  return Result.Ok({
+    ...resp,
+    list: resp.list.map((v) => {
+      return {
+        ...v,
+        finished_at_text: dayjs(v.finished_at).format("YYYY-MM-DD"),
+        workout_plan: {
+          ...v.workout_plan,
+          tags: v.workout_plan.tags.split(","),
+        },
+      };
+    }),
   });
 }

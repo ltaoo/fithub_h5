@@ -2,26 +2,52 @@
  * @file 学员详情
  */
 import { For, Show } from "solid-js";
-import { Edit } from "lucide-solid";
+import { Check, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
+import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { ScrollView, Skeleton } from "@/components/ui";
-import { NavigationBar1 } from "@/components/navigation-bar1";
+import { Button, DropdownMenu, ListView, ScrollView, Skeleton } from "@/components/ui";
+import { PageView } from "@/components/page-view";
+import { Sheet } from "@/components/ui/sheet";
 
 import { base, Handler } from "@/domains/base";
-import { ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
-import { fetchStudentList, fetchStudentProfile, fetchStudentProfileProcess } from "@/biz/student/services";
 import { CalendarCore } from "@/domains/ui/calendar";
-import { PageView } from "@/components/page-view";
+import { ListCore } from "@/domains/list";
+import { HumanGenderType } from "@/biz/student/constants";
+import {
+  fetchStudentList,
+  fetchStudentProfile,
+  fetchStudentProfileProcess,
+  fetchStudentWorkoutDayList,
+  fetchStudentWorkoutDayListProcess,
+} from "@/biz/student/services";
+import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
+import { WorkoutDayStatus } from "@/biz/workout_day/constants";
+import { Result } from "@/domains/result";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
+import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
 
 function MemberProfileViewModel(props: ViewComponentProps) {
   const request = {
     student: {
       profile: new RequestCore(fetchStudentProfile, { process: fetchStudentProfileProcess, client: props.client }),
+      workout_day_list: new ListCore(
+        new RequestCore(fetchStudentWorkoutDayList, {
+          process: fetchStudentWorkoutDayListProcess,
+          client: props.client,
+        })
+      ),
+    },
+    workout_plan: {
+      list: new ListCore(
+        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client })
+      ),
     },
   };
+  type TheWorkoutDay = TheItemTypeFromListCore<typeof request.student.workout_day_list>;
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -29,18 +55,120 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
+    handleClickWorkoutPlan(workout_plan: { id: number }) {
+      const v = request.student.profile.response;
+      if (!v) {
+        props.app.tip({
+          text: ["异常操作"],
+        });
+        return;
+      }
+      ui.$dialog_workout_plan.hide();
+      props.history.push("root.workout_plan_profile", {
+        id: String(workout_plan.id),
+        student_id: String(v.id),
+        student_nickname: v.nickname,
+      });
+    },
+    handleClickDate(date: { yyyy: string; value: Date }) {
+      const matched = request.student.workout_day_list.response.dataSource.filter(
+        (v) => v.finished_at_text === date.yyyy
+      );
+      _cur_day_profile = {
+        workout_days: matched,
+        date_text: date.yyyy,
+        weekday_text: map_weekday_text(dayjs(date.value).day()),
+      };
+      methods.refresh();
+      ui.$dialog_day_profile.show();
+    },
+    handleClickWorkoutDay(day: { id: number }) {
+      ui.$dialog_day_profile.hide();
+      props.history.push("root.workout_day_profile", {
+        id: String(day.id),
+      });
+    },
+    async ready() {
+      const id = Number(props.view.query.id);
+      if (Number.isNaN(id)) {
+        return Result.Err("参数错误");
+      }
+      (async () => {
+        const first_week = ui.$calendar.state.weeks[0];
+        const first_day = first_week.dates[0];
+        const last_week = ui.$calendar.state.weeks[ui.$calendar.state.weeks.length - 1];
+        const last_day = last_week.dates[last_week.dates.length - 1];
+        const r = await request.student.workout_day_list.init({
+          id,
+          started_at_start: first_day.value,
+          started_at_end: last_day.value,
+          status: WorkoutDayStatus.Finished,
+        });
+        if (r.error) {
+          return;
+        }
+        for (let i = 0; i < r.data.dataSource.length; i += 1) {
+          const v = r.data.dataSource[i];
+          _workout_day_list.push({
+            date_text: dayjs(v.finished_at).format("YYYY-MM-DD"),
+          });
+        }
+        methods.refresh();
+      })();
+      await request.student.profile.run({ id });
+      return Result.Ok(null);
+    },
   };
+
+  let _cur_day_profile: {
+    date_text: string;
+    weekday_text: string;
+    workout_days: {
+      id: number;
+      status: number;
+      finished_at: string;
+      finished_at_text: string;
+      workout_plan: {
+        title: string;
+        overview: string;
+        tags: string[];
+      };
+    }[];
+  } | null = null;
   const ui = {
     $view: new ScrollViewCore({
       async onPullToRefresh() {
-        await request.student.profile.reload();
+        await methods.ready();
         ui.$view.finishPullToRefresh();
       },
     }),
     $calendar: CalendarCore({
       today: new Date(),
     }),
+    $btn_start_workout: new ButtonCore({
+      onClick() {
+        request.workout_plan.list.init();
+        ui.$dialog_workout_plan.show();
+      },
+    }),
+    $menu: new DropdownMenuCore({
+      items: [
+        new MenuItemCore({
+          label: "新增测量记录",
+        }),
+        new MenuItemCore({
+          label: "修改名称",
+        }),
+        new MenuItemCore({
+          label: "选择周期计划",
+        }),
+      ],
+    }),
+    $dialog_workout_plan: new DialogCore({}),
+    $dialog_day_profile: new DialogCore({}),
   };
+
+  let _workout_day_list: { date_text: string }[] = [];
   let _state = {
     get loading() {
       return request.student.profile.loading;
@@ -49,7 +177,24 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       return request.student.profile.response;
     },
     get calendar() {
-      return ui.$calendar.state;
+      return {
+        weeks: ui.$calendar.state.weeks.map((w) => {
+          return {
+            dates: w.dates.map((d) => {
+              return {
+                ...d,
+                has_workout_day: _workout_day_list.find((v) => v.date_text === d.yyyy),
+              };
+            }),
+          };
+        }),
+      };
+    },
+    get workout_plan() {
+      return request.workout_plan.list.response;
+    },
+    get cur_date_profile() {
+      return _cur_day_profile;
     },
   };
   enum Events {
@@ -61,17 +206,15 @@ function MemberProfileViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   request.student.profile.onStateChange(() => methods.refresh());
+  request.workout_plan.list.onStateChange(() => methods.refresh());
 
   return {
+    request,
     methods,
     ui,
     state: _state,
     ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
-        return;
-      }
-      request.student.profile.run({ id });
+      methods.ready();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -83,7 +226,25 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(MemberProfileViewModel, [props]);
   return (
     <>
-      <PageView store={vm}>
+      <PageView
+        store={vm}
+        operations={
+          <div class="flex items-center gap-2">
+            <Button class="w-full" store={vm.ui.$btn_start_workout}>
+              开始训练
+            </Button>
+            <div
+              class="w-[40px] rounded-full p-2 bg-w-bg-5"
+              onClick={(event) => {
+                const { x, y } = event.currentTarget.getBoundingClientRect();
+                vm.ui.$menu.toggle({ x, y });
+              }}
+            >
+              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+            </div>
+          </div>
+        }
+      >
         <div class="">
           <Show
             when={state().profile}
@@ -102,7 +263,18 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               <div>
                 <div class="w-[64px] h-[64px] bg-w-bg-5 rounded-full"></div>
               </div>
-              <div class="text-xl">{state().profile?.nickname}</div>
+              <div>
+                <div class="text-xl text-w-fg-0">{state().profile?.nickname}</div>
+                <div class="flex items-center gap-2 mt-2">
+                  <Show
+                    when={state().profile?.gender === HumanGenderType.Female}
+                    fallback={<Mars class="w-4 h-4 text-w-fg-1" />}
+                  >
+                    <Venus class="w-4 h-4 text-w-fg-1" />
+                  </Show>
+                  <div class="text-w-fg-1">{state().profile?.age}岁</div>
+                </div>
+              </div>
             </div>
           </Show>
         </div>
@@ -114,7 +286,7 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               </div>
             </div>
             <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-1">身体信息</div>
+              <div class="text-w-fg-0">身体数据</div>
             </div>
             <div class="body p-4">
               <div></div>
@@ -122,17 +294,15 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </div>
           <div class="relative border-2 border-w-fg-3 rounded-lg">
             <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-1">训练日历</div>
+              <div class="text-w-fg-0">训练日历</div>
             </div>
             <div class="body p-4">
               <div class="grid grid-cols-7 gap-2">
-                <div class="text-center text-sm text-w-fg-2">周一</div>
-                <div class="text-center text-sm text-w-fg-2">周二</div>
-                <div class="text-center text-sm text-w-fg-2">周三</div>
-                <div class="text-center text-sm text-w-fg-2">周四</div>
-                <div class="text-center text-sm text-w-fg-2">周五</div>
-                <div class="text-center text-sm text-w-fg-2">周六</div>
-                <div class="text-center text-sm text-w-fg-2">周日</div>
+                <For each={["周一", "周二", "周三", "周四", "周五", "周六", "周日"]}>
+                  {(t) => {
+                    return <div class="text-center text-sm text-w-fg-1">{t}</div>;
+                  }}
+                </For>
               </div>
               <For each={state().calendar.weeks}>
                 {(week) => {
@@ -143,12 +313,20 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
                           return (
                             <div
                               classList={{
-                                "p-2": true,
+                                "relative p-2 rounded-md": true,
                                 "opacity-40": date.is_next_month || date.is_prev_month,
                                 "bg-w-bg-5": date.is_today,
                               }}
+                              onClick={() => {
+                                vm.methods.handleClickDate(date);
+                              }}
                             >
-                              <div class="text-center text-sm text-w-fg-1">{date.text}</div>
+                              <div class="text-center text-sm text-w-fg-0">{date.text}</div>
+                              <Show when={date.has_workout_day}>
+                                <div class="absolute left-1/2 -translate-x-1/2 flex justify-center">
+                                  <div class="w-[6px] h-[6px] rounded-full bg-green-500" />
+                                </div>
+                              </Show>
                             </div>
                           );
                         }}
@@ -161,12 +339,63 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </div>
           <div class="relative border-2 border-w-fg-3 rounded-lg">
             <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-1">问卷调查</div>
+              <div class="text-w-fg-0">问卷调查</div>
             </div>
             <div class="body p-4"></div>
           </div>
         </div>
       </PageView>
+      <Sheet store={vm.ui.$dialog_workout_plan}>
+        <div class="w-screen bg-w-bg-1 p-2">
+          <ListView store={vm.request.workout_plan.list} class="space-y-2">
+            <For each={state().workout_plan.dataSource}>
+              {(v) => {
+                return (
+                  <div
+                    class="p-2 rounded-lg border-2 border-w-fg-3"
+                    onClick={() => {
+                      vm.methods.handleClickWorkoutPlan(v);
+                    }}
+                  >
+                    <div class="text-w-fg-0">{v.title}</div>
+                  </div>
+                );
+              }}
+            </For>
+          </ListView>
+        </div>
+      </Sheet>
+      <Sheet store={vm.ui.$dialog_day_profile}>
+        <div class="w-screen min-h-[320px] p-2 bg-w-bg-1">
+          <Show when={state().cur_date_profile}>
+            <div class="text-2xl text-w-fg-0">{state().cur_date_profile?.date_text}</div>
+            <div class="text-w-fg-1">{state().cur_date_profile?.weekday_text}</div>
+            <div class="mt-4 space-y-2">
+              <For each={state().cur_date_profile?.workout_days}>
+                {(day) => {
+                  return (
+                    <div
+                      class="p-2 rounded-lg border-2 border-w-fg-3"
+                      onClick={() => {
+                        vm.methods.handleClickWorkoutDay(day);
+                      }}
+                    >
+                      <div class="text-w-fg-0">{day.workout_plan.title}</div>
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <div class="text-sm text-w-fg-1">已完成</div>
+                        </div>
+                        <div class="px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm">详情</div>
+                      </div>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </Show>
+        </div>
+      </Sheet>
+      <DropdownMenu store={vm.ui.$menu} />
     </>
   );
 }

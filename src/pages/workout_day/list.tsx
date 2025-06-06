@@ -96,14 +96,16 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                     vm.methods.gotoWorkoutDayProfileView(value);
                   }}
                 >
-                  <div class="text-w-fg-1">{value.started_at_text}</div>
+                  <div class="text-w-fg-0 text-xl">{value.started_at_text}</div>
                   {/* <Show when={value.finished_at}>
                     <div class="">{value.finished_at}</div>
                   </Show> */}
-                  <div class="flex flex-wrap mt-2">
-                    <div class="px-2 py-1 rounded-xl border-2 border-w-fg-3 text-sm text-w-fg-1">
-                      {WorkoutDayStatusTextMap[value.status]}
-                    </div>
+                  <div class="flex flex-wrap">
+                    <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div></div>
+                    <div class="px-4 py-1 border-2 border-w-fg-3 text-w-fg-0 bg-w-bg-5 rounded-full text-sm">详情</div>
                   </div>
                 </div>
               );

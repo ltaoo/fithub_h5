@@ -144,7 +144,8 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       return props.defaultValue;
     },
     get value() {
-      return _options[_idx];
+      // console.log("[BIZ]drag_select - in get value()", _options, _idx, _options[_idx], props.defaultValue);
+      return _options[_idx].value ?? props.defaultValue;
     },
     setValue: methods.setValue,
     ready() {

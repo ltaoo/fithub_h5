@@ -56,9 +56,16 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
         // height: basic_r.data.height,
         // weight: basic_r.data.weight,
       };
+      console.log("before !values.name", values);
       if (!values.name) {
         props.app.tip({
           text: ["请输入姓名"],
+        });
+        return;
+      }
+      if (!values.age) {
+        props.app.tip({
+          text: ["请输入年龄"],
         });
         return;
       }

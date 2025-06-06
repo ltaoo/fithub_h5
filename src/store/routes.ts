@@ -85,6 +85,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_day_self: {
+        title: "训练日",
+        pathname: "/workout_day/update",
+        options: {
+          require: ["login"],
+        },
+      },
       workout_day_prepare: {
         title: "训练日",
         pathname: "/workout_day/prepare",

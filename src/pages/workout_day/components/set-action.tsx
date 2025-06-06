@@ -38,7 +38,12 @@ export function SetActionViewModel(props: { id: number | string; zh_name: string
 }
 export type SetActionViewModel = ReturnType<typeof SetActionViewModel>;
 
-export function SetActionView(props: { store: SetActionViewModel; idx?: number; onClick?: () => void }) {
+export function SetActionView(props: {
+  store: SetActionViewModel;
+  highlight?: boolean;
+  idx?: number;
+  onClick?: () => void;
+}) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
@@ -52,7 +57,13 @@ export function SetActionView(props: { store: SetActionViewModel; idx?: number; 
     >
       {/* <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div> */}
       <Show when={props.idx}>
-        <div class="flex items-center justify-center px-2 rounded-full bg-blue-500">
+        <div
+          classList={{
+            "flex items-center justify-center px-2 rounded-full": true,
+            "bg-blue-500": !props.highlight,
+            "bg-green-500": props.highlight
+          }}
+        >
           <div class="text-sm">{props.idx}</div>
         </div>
       </Show>

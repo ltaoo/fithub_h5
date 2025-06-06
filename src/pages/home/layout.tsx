@@ -18,39 +18,10 @@ import { RequestCore } from "@/domains/request";
 import { cn } from "@/utils/index";
 
 function HomeLayoutViewModel(props: ViewComponentProps) {
-  const request = {
-    workout_day: {
-      fetch_started: new RequestCore(fetchStartedWorkoutDayList, {
-        process: fetchStartedWorkoutDayListProcess,
-        client: props.client,
-        onFailed(error) {
-          // ...
-        },
-      }),
-    },
-  };
+  const request = {};
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
-    },
-    gotoWorkoutDayView() {
-      const list = request.workout_day.fetch_started.response?.list;
-      if (!list) {
-        props.app.tip({
-          text: ["异常操作"],
-        });
-        return;
-      }
-      const first = list[0];
-      if (!first) {
-        props.app.tip({
-          text: ["异常操作"],
-        });
-        return;
-      }
-      props.history.push("root.workout_day", {
-        id: String(first.id),
-      });
     },
     gotoWorkoutPrepareView() {
       props.history.push("root.workout_day_prepare");
@@ -101,9 +72,6 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
     get cur_route_name() {
       return _route_name;
     },
-    get has_workout_day() {
-      return !!request.workout_day.fetch_started.response?.list.length;
-    },
   };
   enum Events {
     StateChange,
@@ -124,10 +92,6 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
   props.history.onRouteChange(({ name }) => {
     methods.setCurMenu();
   });
-  props.view.onShow(() => {
-    request.workout_day.fetch_started.run();
-  });
-  request.workout_day.fetch_started.onStateChange(() => methods.refresh());
 
   return {
     methods,
@@ -137,7 +101,6 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
     },
     ready() {
       methods.setCurMenu();
-      request.workout_day.fetch_started.run();
       bus.emit(Events.StateChange, { ..._state });
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
@@ -204,20 +167,6 @@ export const HomeLayout: ViewComponent = (props) => {
           </For>
         </div>
         <div class="safe-height"></div>
-      </div>
-      <div class="fixed right-2 bottom-16">
-        <div>
-          <Show when={state().has_workout_day}>
-            <div
-              class="p-4 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.gotoWorkoutDayView();
-              }}
-            >
-              <div class="text-white text-sm text-w-fg-1">进行中的训练</div>
-            </div>
-          </Show>
-        </div>
       </div>
     </div>
   );

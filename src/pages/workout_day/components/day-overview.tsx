@@ -5,17 +5,18 @@ import { For, Show } from "solid-js";
 import { ChevronDown, CircleCheck, Info } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
-
-import { HomeWorkoutDayUpdateViewModel } from "../update";
 import { PageView } from "@/components/page-view";
 import { Button } from "@/components/ui";
+import { SetValueView } from "@/components/set-value-view";
 
-export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewModel }) {
+import { WorkoutDayUpdateViewModel } from "../update";
+
+export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel }) {
   const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (
     <>
-      <div class="flex flex-col h-[100vh] bg-w-bg-0">
+      <div class="relative flex flex-col h-[100vh] bg-w-bg-0" style={{ "z-index": 10 }}>
         <div class="flex-1 overflow-y-auto">
           <div class="p-2">
             <div class="text-3xl text-w-fg-0">{state().stats.finished_at}</div>
@@ -24,9 +25,26 @@ export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewM
                 <div>开始时间</div>
                 <div>{state().stats.started_at}</div>
               </div>
-              <div class="flex">
-                <div>总耗时</div>
-                <div>{state().stats.duration}</div>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                <div class="text-w-fg-0">耗时</div>
+                <div class="flex items-end">
+                  <div class="text-3xl">{state().stats.duration}</div>
+                </div>
+              </div>
+              <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                <div class="text-w-fg-0">总容量</div>
+                <div class="flex items-end">
+                  <div class="text-3xl">{state().stats.total_volume}</div>
+                  <div class="">kg</div>
+                </div>
+              </div>
+              <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                <div class="text-w-fg-0">总组数</div>
+                <div class="flex items-end">
+                  <div class="text-3xl">{state().stats.total_set_count}</div>
+                </div>
               </div>
             </div>
             <Show
@@ -49,27 +67,24 @@ export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewM
             </Show>
             <div class="mt-4">
               <div class="rounded-md">
-                <div class="space-y-1">
+                <div class="space-y-4">
                   <For each={state().stats.sets}>
                     {(set, b) => {
                       return (
                         <div class="flex">
-                          <div class="w-[36px]">{b() + 1}</div>
-                          <div class="space-y-1">
+                          <div class="w-[14px]">{b() + 1}.</div>
+                          <div class="space-y-2">
                             <For each={set.actions}>
                               {(act, c) => {
                                 return (
-                                  <div class="flex items-center  text-w-fg-1">
-                                    <div class="w-[120px] text-sm">{act.zh_name}</div>
-                                    <div class="w-[68px]">
-                                      {act.weight}
-                                      <span class="ml-1 text-sm">{act.weight_unit}</span>
-                                    </div>
-                                    <span class="text-sm">x</span>
-                                    <div>
-                                      {act.reps}
-                                      <span class="ml-1 text-sm">{act.reps_unit}</span>
-                                    </div>
+                                  <div class="text-w-fg-0">
+                                    <div class="">{act.zh_name}</div>
+                                    <SetValueView
+                                      weight={act.weight}
+                                      weight_unit={act.weight_unit}
+                                      reps={act.reps}
+                                      reps_unit={act.reps_unit}
+                                    />
                                   </div>
                                 );
                               }}
@@ -82,20 +97,14 @@ export function WorkoutDayOverviewView(props: { store: HomeWorkoutDayUpdateViewM
                 </div>
               </div>
             </div>
-            <div class="mt-4">
-              <div>总容量</div>
-              <div class="relative inline-block">
-                <div class="text-3xl">{state().stats.total_volume}</div>
-                <div class="absolute -right-6 bottom-1 text-sm">KG</div>
-              </div>
-            </div>
+
             <div class="mt-4">
               <div></div>
             </div>
           </div>
         </div>
         <div>
-          <div class="flex items-center justify-between gap-2 p-2 border-t-2 border-w-fg-3 bg-w-bg-1">
+          <div class="flex items-center justify-between gap-2 p-2 border-t border-w-fg-3 bg-w-bg-1">
             <div
               class="w-[40px] p-2 bg-w-bg-5 rounded-full"
               onClick={() => {

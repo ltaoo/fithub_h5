@@ -23,8 +23,8 @@ import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
 import { WorkoutActionType, WorkoutActionTypeOptions } from "@/biz/workout_action/constants";
 import {
-  fetchWorkoutActionHistoryList,
-  fetchWorkoutActionHistoryListProcess,
+  fetchWorkoutActionHistoryListOfWorkoutDay,
+  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
   fetchWorkoutActionList,
   fetchWorkoutActionListProcess,
   fetchWorkoutActionProfile,
@@ -55,8 +55,8 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     },
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryList, {
-          process: fetchWorkoutActionHistoryListProcess,
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
+          process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
           client: props.client,
         }),
         { pageSize: 3 }

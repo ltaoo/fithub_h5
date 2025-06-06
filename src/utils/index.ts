@@ -186,6 +186,17 @@ export const seconds_to_hour_template1 = {
     return "";
   },
 };
+
+export function seconds_to_hour_minute_seconds(value: number) {
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value - hours * 3600) / 60);
+  const seconds = Math.floor(value - hours * 3600 - minutes * 60);
+  return {
+    hours,
+    minutes,
+    seconds,
+  };
+}
 /**
  * 秒数转时分秒
  * @param value
@@ -199,10 +210,7 @@ export function seconds_to_hour_with_template(
     seconds: (v: { value: number; text: string }) => string;
   }
 ) {
-  const hours = Math.floor(value / 3600);
-  const minutes = Math.floor((value - hours * 3600) / 60);
-  const seconds = Math.floor(value - hours * 3600 - minutes * 60);
-
+  const { hours, minutes, seconds } = seconds_to_hour_minute_seconds(value);
   let str = "";
   let hours_text = "";
   if (hours > 0 && templates.hours) {
@@ -241,6 +249,12 @@ export function seconds_to_hour(value: number) {
     return hours + ":" + padding_zero(minutes) + ":" + padding_zero(seconds);
   }
   return padding_zero(minutes) + ":" + padding_zero(seconds);
+}
+export function seconds_to_minutes(value: number) {
+  // const hours = Math.floor(value / 3600);
+  const minutes = Math.floor(value / 60);
+  // const seconds = Math.floor(value - hours * 3600 - minutes * 60);
+  return padding_zero(minutes);
 }
 
 export function relative_time_from_now(time: string) {

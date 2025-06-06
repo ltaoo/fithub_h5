@@ -4,7 +4,11 @@ import { Check, Circle, Pause, Play } from "lucide-solid";
 import { useViewModelStore } from "@/hooks";
 import { InputCore } from "@/domains/ui";
 
-export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event: { x: number; y: number }) => void }) {
+export function SetCompleteBtn(props: {
+  store: InputCore<any>;
+  highlight?: boolean;
+  onClick?: (event: { x: number; y: number }) => void;
+}) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
@@ -20,21 +24,24 @@ export function SetCompleteBtn(props: { store: InputCore<any>; onClick?: (event:
         class=""
         classList={{
           "flex items-center justify-center p-2 rounded-full": true,
-          "bg-w-bg-5": !state().value,
-          "": state().value,
+          // "bg-w-bg-5": !state().value,
+          "bg-w-fg-5": !!props.highlight,
         }}
       >
         <Show
           when={state().value}
           fallback={
-            <div class="text-w-fg-1">
-              <Check class="w-4 h-4" />
+            <div
+              classList={{
+                "text-w-fg-0": !!props.highlight,
+                "text-w-fg-1": !props.highlight,
+              }}
+            >
+              <Check class="w-6 h-6" />
             </div>
           }
         >
-          <div class="text-green-500">
-            <Check class="w-4 h-4" />
-          </div>
+          <Check class="w-6 h-6 text-green-500" />
         </Show>
       </div>
     </div>

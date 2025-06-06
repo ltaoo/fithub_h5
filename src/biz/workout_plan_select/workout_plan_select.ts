@@ -4,9 +4,7 @@
 import { base, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
 import { ListCore } from "@/domains/list";
-import { RequestCore, TheResponseOfFetchFunction } from "@/domains/request";
 import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
-import { fetchWorkoutPlanList, fetchWorkoutPlanListProcess } from "@/biz/workout_plan/services";
 
 type WorkoutPlanId = number | string;
 type WorkoutPlan = {
@@ -16,7 +14,6 @@ type WorkoutPlan = {
 
 export function WorkoutPlanSelectViewModel(props: {
   defaultValue: WorkoutPlan[];
-  client: HttpClientCore;
   multiple?: boolean;
   // list: ListCore<RequestCore<typeof fetchWorkoutPlanList, TheResponseOfFetchFunction<typeof fetchWorkoutPlanList>>>;
   list: ListCore<any>;

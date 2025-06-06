@@ -9,10 +9,16 @@ import {
   WorkoutPlanDetailsJSON250424,
   WorkoutPlanStepJSON250424,
 } from "@/biz/workout_plan/services";
-import { SetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
-import { parseJSONStr, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
+import {
+  parseJSONStr,
+  seconds_to_hour_minute_seconds,
+  seconds_to_hour_template1,
+  seconds_to_hour_with_template,
+  seconds_to_minutes,
+} from "@/utils";
 
 import { WorkoutDayStatus } from "./constants";
 
@@ -21,29 +27,86 @@ import { WorkoutDayStatus } from "./constants";
  * @param body
  * @returns
  */
-export function createWorkoutDay(body: { workout_plan_id?: number; start_when_create: boolean }) {
-  return request.post<{ id: number }>("/api/workout_day/create", body);
+export function createWorkoutDay(body: {
+  workout_plan_id?: number;
+  student_ids: number[];
+  start_when_create: boolean;
+}) {
+  return request.post<{ ids: number[] }>("/api/workout_day/create", body);
+}
+
+export function checkHasStartedWorkoutDay() {
+  return request.post<{
+    list: {
+      id: number;
+      status: WorkoutDayStatus;
+      started_at: string;
+      student_id: number;
+      coach_id: number;
+    }[];
+  }>("/api/workout_day/has_started", {});
 }
 
 export function fetchStartedWorkoutDayList() {
   return request.post<{
     list: {
       id: number;
+      status: WorkoutDayStatus;
       started_at: string;
+      coach_id: number;
+      student: {
+        id: number;
+        nickname: string;
+        avatar_url: string;
+      };
+      workout_plan: {
+        id: number;
+        title: string;
+        overview: string;
+      };
     }[];
-  }>("/api/workout_day/fetch_started", {});
+  }>("/api/workout_day/started_list", {});
 }
 export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetchStartedWorkoutDayList>) {
   if (r.error) {
     return Result.Err(r.error);
   }
+  const groups: Record<
+    number,
+    {
+      id: number;
+      status: WorkoutDayStatus;
+      idx: number;
+      is_self: boolean;
+      started_at_text: string;
+      students: { id: number; nickname: string; avatar_url: string; workout_day_id: number }[];
+      workout_plan: { id: number; title: string };
+    }
+  > = {};
+  for (let i = 0; i < r.data.list.length; i += 1) {
+    const v = r.data.list[i];
+    const started_at = dayjs(v.started_at);
+    const uid = started_at.unix();
+    groups[uid] = groups[uid] || {
+      id: v.id,
+      idx: started_at.unix(),
+      is_self: v.student.id === v.coach_id,
+      status: v.status,
+      started_at_text: started_at.format("HH:mm"),
+      students: [],
+      workout_plan: v.workout_plan,
+    };
+    if (v.student.id !== v.coach_id) {
+      groups[uid].students.push({
+        id: v.student.id,
+        nickname: v.student.nickname,
+        avatar_url: v.student.avatar_url,
+        workout_day_id: v.id,
+      });
+    }
+  }
   return Result.Ok({
-    list: r.data.list.map((v) => {
-      return {
-        id: v.id,
-        started_at: dayjs(v.started_at).format("HH:mm"),
-      };
-    }),
+    list: Object.values(groups).sort((a, b) => b.idx - a.idx),
   });
 }
 
@@ -230,8 +293,9 @@ export function fetchWorkoutDayProfile(body: { id: number }) {
     finished_at: number;
     pending_steps: string;
     updated_details: string;
+    day_number: number;
     // steps: WorkoutPlanStepResp[];
-    workout_plan: { details: string };
+    workout_plan: { title: string; overview: string; tags: string; details: string };
   }>("/api/workout_day/profile", body);
 }
 function parseWorkoutDayDetailsString(details: string) {
@@ -276,55 +340,87 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     return Result.Err(r.error);
   }
   const workout_day = r.data;
-  return Result.Ok({
-    id: workout_day.id,
-    status: workout_day.status,
-    started_at: dayjs(workout_day.started_at),
-    started_at_text: dayjs(workout_day.started_at).format("MM-DD HH:mm"),
-    duration_text: (() => {
-      if (workout_day.status !== WorkoutDayStatus.Finished) {
-        return null;
-      }
-      const seconds = dayjs(workout_day.started_at).valueOf() / 1000 - dayjs(workout_day.finished_at).valueOf() / 1000;
-      return seconds_to_hour_with_template(seconds, seconds_to_hour_template1);
-    })(),
-    pending_steps: ((): Omit<WorkoutDayStepProgressJSON250531, "v"> => {
-      const r = parseJSONStr<WorkoutDayStepProgressJSON250424 | WorkoutDayStepProgressJSON250531>(
-        workout_day.pending_steps
-      );
-      if (r.error) {
-        return {
-          step_idx: 0,
-          set_idx: 0,
-          act_idx: 0,
-          touched_set_idx: [],
-          sets: [],
-        };
-      }
-      if (r.data.v === "250424") {
-        const d = r.data as WorkoutDayStepProgressJSON250424;
-        return {
-          step_idx: r.data.step_idx,
-          set_idx: r.data.set_idx,
-          act_idx: r.data.act_idx,
-          touched_set_idx: r.data.touched_set_idx,
-          sets:
-            r.data.sets.map((set) => {
-              return {
-                ...set,
-                completed: false,
-              };
-            }) || [],
-        };
-      }
+  const pending_steps = ((): Omit<WorkoutDayStepProgressJSON250531, "v"> => {
+    const r = parseJSONStr<WorkoutDayStepProgressJSON250424 | WorkoutDayStepProgressJSON250531>(
+      workout_day.pending_steps
+    );
+    if (r.error) {
+      return {
+        step_idx: 0,
+        set_idx: 0,
+        act_idx: 0,
+        touched_set_idx: [],
+        sets: [],
+      };
+    }
+    if (r.data.v === "250424") {
+      const d = r.data as WorkoutDayStepProgressJSON250424;
       return {
         step_idx: r.data.step_idx,
         set_idx: r.data.set_idx,
         act_idx: r.data.act_idx,
         touched_set_idx: r.data.touched_set_idx,
-        sets: r.data.sets || [],
+        sets:
+          r.data.sets.map((set) => {
+            return {
+              ...set,
+              completed: false,
+            };
+          }) || [],
       };
-    })(),
+    }
+    return {
+      step_idx: r.data.step_idx,
+      set_idx: r.data.set_idx,
+      act_idx: r.data.act_idx,
+      touched_set_idx: r.data.touched_set_idx,
+      sets: r.data.sets || [],
+    };
+  })();
+  let total_weight = 0;
+  let total_set_count = pending_steps.sets.length;
+  for (let i = 0; i < pending_steps.sets.length; i += 1) {
+    const { actions } = pending_steps.sets[i];
+    for (let j = 0; j < actions.length; j += 1) {
+      const { weight, weight_unit, reps, reps_unit } = actions[j];
+      let real_weight = weight;
+      if (weight_unit === getSetValueUnit("磅")) {
+        real_weight = Number((real_weight * 0.45).toFixed(1));
+      }
+      if (reps_unit === getSetValueUnit("次")) {
+        real_weight = real_weight * reps;
+      }
+      total_weight += real_weight;
+    }
+  }
+  // const seconds = dayjs(workout_day.started_at).valueOf() / 1000 - dayjs(workout_day.finished_at).valueOf() / 1000;
+  const seconds =
+    workout_day.status === WorkoutDayStatus.Finished
+      ? dayjs(workout_day.finished_at).diff(dayjs(workout_day.started_at), "seconds")
+      : 0;
+  console.log(seconds, dayjs(workout_day.finished_at).format("HH:mm"), dayjs(workout_day.started_at).format("HH:mm"));
+  return Result.Ok({
+    id: workout_day.id,
+    title: workout_day.workout_plan.title,
+    overview: workout_day.workout_plan.overview,
+    tags: workout_day.workout_plan.tags.split(","),
+    status: workout_day.status,
+    started_at: dayjs(workout_day.started_at),
+    started_at_text: dayjs(workout_day.started_at).format("MM-DD HH:mm"),
+    finished: workout_day.status === WorkoutDayStatus.Finished ? dayjs(workout_day.finished_at) : dayjs(),
+    finished_at_text:
+      workout_day.status === WorkoutDayStatus.Finished ? dayjs(workout_day.finished_at).format("MM-DD HH:mm") : "",
+    total_weight,
+    total_set_count,
+    duration_text: seconds_to_hour_with_template(seconds, seconds_to_hour_template1),
+    // ...(() => {
+    //   if (workout_day.status !== WorkoutDayStatus.Finished) {
+    //     return { hours: 0, minutes: 0, seconds: 0 };
+    //   }
+    //   return seconds_to_hour_minute_seconds(seconds);
+    // })(),
+    minutes: seconds_to_minutes(seconds),
+    pending_steps,
     steps: (() => {
       if (workout_day.updated_details) {
         return parseWorkoutDayDetailsString(workout_day.updated_details);

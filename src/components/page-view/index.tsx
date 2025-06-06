@@ -13,6 +13,7 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
     operations?: JSX.Element;
     no_padding?: boolean;
     no_extra_bottom?: boolean;
+    hide_bottom_bar?: boolean;
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   return (
@@ -32,7 +33,9 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
           </div>
         </ScrollView>
       </div>
-      <BottomNavigationBar1 back={props.store.methods.back} home={props.home} extra={props.operations} />
+      <Show when={!props.hide_bottom_bar}>
+        <BottomNavigationBar1 back={props.store.methods.back} home={props.home} extra={props.operations} />
+      </Show>
     </div>
   );
 }

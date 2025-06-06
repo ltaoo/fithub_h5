@@ -1,19 +1,24 @@
+/**
+ * @file 某次训练的详情
+ */
 import { For, Show } from "solid-js";
-import { ChevronLeft } from "lucide-solid";
+import { ChevronLeft, Loader2, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { ScrollView } from "@/components/ui";
+import { PageView } from "@/components/page-view";
+import { Divider } from "@/components/divider";
+import { SetValueView } from "@/components/set-value-view";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
-import { fetchWorkoutDayProfile, fetchWorkoutDayProfileProcess } from "@/biz/workout_day/services";
-import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
-import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 import { ListCore } from "@/domains/list";
-import { PageView } from "@/components/page-view";
+import { fetchWorkoutDayProfile, fetchWorkoutDayProfileProcess } from "@/biz/workout_day/services";
+import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
+import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 
 function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -25,8 +30,8 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
     },
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryList, {
-          process: fetchWorkoutActionHistoryListProcess,
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
+          process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
           client: props.client,
         }),
         {
@@ -47,6 +52,9 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
     $view: new ScrollViewCore(),
   };
   let _state = {
+    get loading() {
+      return request.workout_day.profile.loading;
+    },
     get profile() {
       return request.workout_day.profile.response;
     },
@@ -97,37 +105,78 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   };
 }
 
-export function WorkoutDayProfileView(props: ViewComponentProps) {
+export function WorkoutDayProfileView(props: ViewComponentProps & Partial<{ hide_bottom: boolean }>) {
   const [state, vm] = useViewModel(WorkoutDayProfileViewModel, [props]);
 
   return (
     <>
-      <PageView store={vm}>
-        <Show when={state().profile}>
-          <div class="p-2 border rounded-md">
-            <div class="text-xl">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
-            <div class="mt-2">{state().profile!.duration_text}</div>
-            <div class="mt-2">{state().profile!.started_at_text}</div>
+      <PageView store={vm} hide_bottom_bar={props.hide_bottom}>
+        <Show when={state().loading}>
+          <div class="p-4 flex items-center justify-center">
+            <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />
           </div>
         </Show>
-        <div class="mt-4 space-y-2">
-          <For each={state().action_histories.dataSource}>
-            {(value) => {
-              return (
-                <div>
-                  <div>{value.created_at}</div>
-                  <div>{value.action.zh_name}</div>
-                  <div class="flex text-sm">
-                    <div>{value.weight}</div>
-                    <div>{value.weight_unit}</div>
-                    <div>x{value.reps}</div>
-                    <div>{value.reps_unit}</div>
+        <Show when={state().profile}>
+          <div class="py-2 px-4 text-w-fg-0">
+            <div class="text-xl">{state().profile?.title}</div>
+            <Show
+              when={state().profile!.status === WorkoutDayStatus.Finished}
+              fallback={<div class="">开始于 {state().profile!.started_at_text}</div>}
+            >
+              <div class="flex items-center">
+                <div class="">{state().profile!.started_at_text}</div>
+                <div class="mx-2">-</div>
+                <div class="">{state().profile!.finished_at_text}</div>
+              </div>
+            </Show>
+            <div class="text-w-fg-1">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
+            <Show when={state().profile!.status === WorkoutDayStatus.Finished}>
+              <div class="flex items-center gap-2 mt-4">
+                <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                  <div class="text-w-fg-0">耗时</div>
+                  <div class="flex items-end truncate">
+                    <div class="text-3xl">{state().profile!.minutes}</div>
+                    <div>分钟</div>
                   </div>
                 </div>
-              );
-            }}
-          </For>
-        </div>
+                <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                  <div class="text-w-fg-0">总容量</div>
+                  <div class="flex items-end truncate">
+                    <div class="text-3xl">{state().profile!.total_weight}</div>
+                    <div>公斤</div>
+                  </div>
+                </div>
+                <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                  <div class="text-w-fg-0 truncate">总组数</div>
+                  <div class="flex items-end truncate">
+                    <div class="text-xl">{state().profile!.total_set_count}</div>
+                  </div>
+                </div>
+              </div>
+            </Show>
+          </div>
+          <Divider />
+          <div class="py-2 space-y-2">
+            <For each={state().action_histories.dataSource}>
+              {(value) => {
+                return (
+                  <div class="p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0">
+                    <div class="">{value.action.zh_name}</div>
+                    <div class="mt-2">
+                      <SetValueView
+                        weight={value.weight}
+                        weight_unit={value.weight_unit}
+                        reps={value.reps}
+                        reps_unit={value.reps_unit}
+                      />
+                    </div>
+                    <div class="mt-2 text-w-fg-1 text-sm">{value.created_at}</div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
       </PageView>
     </>
   );

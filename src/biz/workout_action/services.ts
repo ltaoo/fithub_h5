@@ -74,7 +74,17 @@ export function fetchWorkoutActionListProcess(r: TmpRequestResp<typeof fetchWork
     }),
   });
 }
-export type WorkoutActionProfile = UnpackedResult<ReturnType<typeof fetchWorkoutActionListProcess>>["list"][number];
+export type WorkoutActionProfile = {
+  id: number;
+  name: string;
+  zh_name: string;
+  overview: string;
+  muscles: {
+    id: number;
+    name: string;
+    en_name: string;
+  }[];
+};
 
 export function fetchWorkoutActionListByIds(body: { ids: number[] }) {
   return request.post<{
@@ -245,60 +255,102 @@ export function updateWorkoutAction(body: {
   return request.post<void>("/api/workout_action/update", body);
 }
 
+export type WorkoutAction = {
+  id: number;
+  reps: number;
+  reps_unit: string;
+  weight: number;
+  weight_unit: string;
+  remark: string;
+  extra_medias: string;
+  created_at: string;
+  workout_day_id: number;
+  student_id: number;
+  action_id: number;
+  action: {
+    id: number;
+    status: number;
+    name: string;
+    zh_name: string;
+    alias: string;
+    overview: string;
+    type: string;
+    level: number;
+    tags1: string;
+    tags2: string;
+    details: string;
+    points: string;
+    problems: string;
+    created_at: string;
+    updated_at: string;
+    muscle_ids: string;
+    equipment_ids: string;
+    alternative_action_ids: string;
+    advanced_action_ids: string;
+    regressed_action_ids: string;
+    owner_id: number;
+  };
+};
+
 /**
  * 获取动作历史记录
  * 可以获取指定「训练日」内的所有动作历史记录
  * 也可以获取指定「动作」的历史记录
  */
-export function fetchWorkoutActionHistoryList(
-  body: Partial<FetchParams> & { workout_day_id?: number; workout_action_id?: number }
-) {
-  return request.post<
-    ListResponseWithCursor<{
-      id: number;
-      reps: number;
-      reps_unit: string;
-      weight: number;
-      weight_unit: string;
-      remark: string;
-      extra_medias: string;
-      created_at: string;
-      workout_day_id: number;
-      student_id: number;
-      action_id: number;
-      action: {
-        id: number;
-        status: number;
-        name: string;
-        zh_name: string;
-        alias: string;
-        overview: string;
-        type: string;
-        level: number;
-        tags1: string;
-        tags2: string;
-        details: string;
-        points: string;
-        problems: string;
-        created_at: string;
-        updated_at: string;
-        muscle_ids: string;
-        equipment_ids: string;
-        alternative_action_ids: string;
-        advanced_action_ids: string;
-        regressed_action_ids: string;
-        owner_id: number;
-      };
-    }>
-  >("/api/workout_action_history/list", {
+export function fetchWorkoutActionHistoryListOfWorkoutDay(body: Partial<FetchParams> & { workout_day_id: number }) {
+  return request.post<ListResponseWithCursor<WorkoutAction>>("/api/workout_action_history/list_of_workout_day", {
     page: body.page,
     page_size: body.pageSize,
     workout_day_id: body.workout_day_id,
-    workout_action_id: body.workout_action_id,
   });
 }
 
-export function fetchWorkoutActionHistoryListProcess(r: TmpRequestResp<typeof fetchWorkoutActionHistoryList>) {
+export function fetchWorkoutActionHistoryListOfWorkoutDayProcess(
+  r: TmpRequestResp<typeof fetchWorkoutActionHistoryListOfWorkoutDay>
+) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const { page_size, list, total } = r.data;
+  return Result.Ok({
+    page_size,
+    list: list.map((v) => {
+      return {
+        id: v.id,
+        reps: v.reps,
+        reps_unit: v.reps_unit,
+        weight: v.weight,
+        weight_unit: v.weight_unit,
+        created_at: dayjs(new Date(v.created_at)).format("YYYY-MM-DD HH:mm"),
+        action: {
+          id: v.action.id,
+          zh_name: v.action.zh_name,
+        },
+      };
+    }),
+    total,
+  });
+}
+
+/**
+ * 获取动作历史记录
+ * 可以获取指定「训练日」内的所有动作历史记录
+ * 也可以获取指定「动作」的历史记录
+ */
+export function fetchWorkoutActionHistoryListOfWorkoutAction(
+  body: Partial<FetchParams> & { workout_action_id: number; student_id: number }
+) {
+  return request.post<ListResponseWithCursor<WorkoutAction>>("/api/workout_action_history/list_of_workout_action", {
+    page: body.page,
+    page_size: body.pageSize,
+    workout_action_id: body.workout_action_id,
+    student_id: body.student_id,
+  });
+}
+
+export function fetchWorkoutActionHistoryListOfWorkoutActionProcess(
+  r: TmpRequestResp<typeof fetchWorkoutActionHistoryListOfWorkoutDay>
+) {
   if (r.error) {
     return Result.Err(r.error);
   }

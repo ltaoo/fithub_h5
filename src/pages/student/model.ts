@@ -1,4 +1,5 @@
 import { DragSelectViewModel } from "@/biz/drag_select";
+import { HumanGenderType } from "@/biz/student/constants";
 import { MultipleSelectionCore } from "@/domains/multiple";
 import { InputCore, SelectCore } from "@/domains/ui";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
@@ -19,19 +20,19 @@ export function MemberValuesViewModel() {
         label: "性别",
         name: "gender",
         input: new SelectCore({
-          defaultValue: 1,
+          defaultValue: HumanGenderType.Male,
           options: [
             {
               label: "男",
-              value: 1,
+              value: HumanGenderType.Male,
             },
             {
               label: "女",
-              value: 2,
+              value: HumanGenderType.Female,
             },
             {
               label: "其他",
-              value: 3,
+              value: HumanGenderType.Unknown,
             },
           ],
         }),

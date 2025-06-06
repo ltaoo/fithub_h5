@@ -22,7 +22,13 @@ import {
   fetchWorkoutPlanSetList,
   fetchWorkoutPlanSetListProcess,
 } from "@/biz/workout_plan/services";
-import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
+import {
+  checkHasStartedWorkoutDay,
+  fetchStartedWorkoutDayList,
+  fetchStartedWorkoutDayListProcess,
+  fetchWorkoutDayList,
+  fetchWorkoutDayListProcess,
+} from "@/biz/workout_day/services";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 import { buildWorkoutScheduleWithSpecialDay } from "@/biz/workout_plan/workout_schedule";
 import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
@@ -45,6 +51,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           client: props.client,
         })
       ),
+      has_started: new RequestCore(checkHasStartedWorkoutDay, {
+        client: props.client,
+        onFailed(error) {
+          // ...
+        },
+      }),
     },
     workout_schedule: {
       enabled: new RequestCore(fetchMyWorkoutScheduleList, { client: props.client }),
@@ -76,6 +88,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     },
     gotoWorkoutDayPrepareView() {
       props.history.push("root.workout_day_prepare");
+    },
+    gotoWorkoutDayView() {
+      props.history.push("root.workout_day");
     },
     handleClickDay(day: TheDay) {
       if (_cur_day?.id === day.id) {
@@ -126,6 +141,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     },
     async init() {
       request.workout_day.list.init();
+      request.workout_day.has_started.run();
       (async () => {
         const r = await request.workout_schedule.enabled.run();
         if (r.error) {
@@ -179,6 +195,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     $view: new ScrollViewCore({
       async onPullToRefresh() {
         await methods.init();
+        props.app.tip({
+          text: ["刷新成功"],
+        });
         ui.$view.finishPullToRefresh();
       },
     }),
@@ -249,7 +268,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             return _cur_day.id === day.id;
           })(),
           has_workout_day: request.workout_day.list.response.dataSource.find((v) => {
-            console.log("workout_day day", v.day);
+            // console.log("workout_day day", v.day);
             return dayjs(day.value).isSame(v.day, "date");
           }),
           schedule: (() => {
@@ -284,6 +303,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     get initial() {
       return request.workout_plan_set.list.initial;
     },
+    get loading() {
+      return request.workout_plan_set.list.loading;
+    },
     get dataSource() {
       const resp = request.workout_plan_set.list.response;
       if (!resp) {
@@ -305,6 +327,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     get day() {
       return _cur_day_profile;
     },
+    get has_workout_day() {
+      return !!request.workout_day.has_started.response?.list.length;
+    },
   };
   enum Events {
     StateChange,
@@ -315,6 +340,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   request.workout_day.list.onStateChange(() => methods.refresh());
+  request.workout_day.has_started.onStateChange(() => methods.refresh());
 
   return {
     methods,
@@ -422,9 +448,11 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               <Show
                 when={state().dataSource.length}
                 fallback={
-                  <div class="flex justify-center p-4">
-                    <div class="text-sm text-w-fg-1">没有数据了</div>
-                  </div>
+                  <Show when={!state().loading}>
+                    <div class="flex justify-center p-4">
+                      <div class="text-sm text-w-fg-1">没有数据了</div>
+                    </div>
+                  </Show>
                 }
               >
                 <div class="space-y-2">
@@ -466,6 +494,18 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
           </div>
         </ScrollView>
       </div>
+      <Show when={state().has_workout_day}>
+        <div class="absolute right-2 bottom-16">
+          <div
+            class="p-4 rounded-full bg-w-bg-5"
+            onClick={() => {
+              vm.methods.gotoWorkoutDayView();
+            }}
+          >
+            <div class="text-white text-sm text-w-fg-1">进行中的训练</div>
+          </div>
+        </div>
+      </Show>
       <CalendarSheet store={vm.ui.$dialog_calendar}>
         <div class="w-screen bg-w-bg-0 p-4">
           <Show when={state().day}>

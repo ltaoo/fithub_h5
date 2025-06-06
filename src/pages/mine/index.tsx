@@ -10,20 +10,21 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
-import { fetchWorkoutActionHistoryList, fetchWorkoutActionHistoryListProcess } from "@/biz/workout_action/services";
+import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
 import { ActivityCalendar } from "@/biz/activity_calendar";
 import { fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
-import { fetch_user_profile } from "@/biz/user/services";
+import { fetch_user_profile, update_user_profile } from "@/biz/user/services";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
     mine: {
       profile: new RequestCore(fetch_user_profile, { client: props.client }),
+      update_profile: new RequestCore(update_user_profile, { client: props.client }),
     },
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryList, {
-          process: fetchWorkoutActionHistoryListProcess,
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
+          process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
           client: props.client,
         })
       ),
@@ -100,7 +101,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
     $dialog_nickname_update: new DialogCore(),
     $input_nickname: new InputCore({ defaultValue: "" }),
     $btn_nickname_submit: new ButtonCore({
-      onClick() {
+      async onClick() {
         const v = ui.$input_nickname.value;
         if (!v) {
           props.app.tip({
@@ -108,6 +109,20 @@ function HomeMineViewModel(props: ViewComponentProps) {
           });
           return;
         }
+        ui.$btn_nickname_submit.setLoading(true);
+        const r = await request.mine.update_profile.run({ nickname: v });
+        ui.$btn_nickname_submit.setLoading(false);
+        if (r.error) {
+          props.app.tip({
+            text: [r.error.message],
+          });
+          return;
+        }
+        _nickname = v;
+        props.app.tip({
+          text: ["修改成功"],
+        });
+        methods.refresh();
         ui.$dialog_nickname_update.hide();
       },
     }),

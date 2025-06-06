@@ -2,7 +2,7 @@ import { For } from "solid-js";
 
 import { WorkoutActionProfile } from "@/biz/workout_action/services";
 
-export function WorkoutActionCard(props: {} & WorkoutActionProfile) {
+export function WorkoutActionCard(props: WorkoutActionProfile) {
   return (
     <div class="overflow-y-auto">
       <div class="rounded-xl">
@@ -16,9 +16,7 @@ export function WorkoutActionCard(props: {} & WorkoutActionProfile) {
               <For each={props.muscles}>
                 {(muscle) => {
                   return (
-                    <span class="text-sm bg-red-400 text-white rounded-full px-3 py-1 mr-2 mb-2 dark:bg-red-400">
-                      {muscle.id}
-                    </span>
+                    <span class="text-sm bg-blue-400 text-white rounded-full px-3 py-1 mr-2 mb-2">{muscle.name}</span>
                   );
                 }}
               </For>
