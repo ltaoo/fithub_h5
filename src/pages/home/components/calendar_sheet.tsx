@@ -21,9 +21,10 @@ export function CalendarSheet(
   return (
     <DialogPrimitive.Portal store={props.store}>
       <div
-        class="fixed left-1/2 -translate-x-1/2 w-full top-[92px]"
+        class="fixed left-1/2 -translate-x-1/2 top-[92px]"
         classList={{
           "w-[375px] mx-auto": props.app.env.pc,
+          "w-full ": !props.app.env.pc,
         }}
         style={{ "z-index": 99 }}
       >

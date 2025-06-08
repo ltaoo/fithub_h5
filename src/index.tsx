@@ -60,24 +60,16 @@ function Application() {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
-              <div
-                classList={{
-                  "h-full bg-w-bg-0": true,
-                  "absolute inset-0 w-full": !app.env.pc,
-                  "absolute left-1/2 -translate-x-1/2 w-[375px] mx-auto border-x-2 border-w-fg-3": app.env.pc,
-                }}
-              >
-                <KeepAliveRouteView class="w-full h-full" store={subView} index={i()} classList={{}}>
-                  <PageContent
-                    app={app}
-                    history={history}
-                    storage={storage}
-                    pages={pages}
-                    client={client}
-                    view={subView}
-                  />
-                </KeepAliveRouteView>
-              </div>
+              <KeepAliveRouteView class="h-full" app={app} store={subView} index={i()} classList={{}}>
+                <PageContent
+                  app={app}
+                  history={history}
+                  storage={storage}
+                  pages={pages}
+                  client={client}
+                  view={subView}
+                />
+              </KeepAliveRouteView>
             );
           }}
         </For>

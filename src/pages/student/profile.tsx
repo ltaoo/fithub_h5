@@ -18,6 +18,7 @@ import { CalendarCore } from "@/domains/ui/calendar";
 import { ListCore } from "@/domains/list";
 import { HumanGenderType } from "@/biz/student/constants";
 import {
+  deleteStudent,
   fetchStudentList,
   fetchStudentProfile,
   fetchStudentProfileProcess,
@@ -42,6 +43,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         })
       ),
       update: new RequestCore(updateStudentProfile, { client: props.client }),
+      delete: new RequestCore(deleteStudent, { client: props.client }),
     },
     workout_plan: {
       list: new ListCore(
@@ -169,7 +171,37 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         // new MenuItemCore({
         //   label: "选择周期计划",
         // }),
+        new MenuItemCore({
+          label: "删除",
+          onClick() {
+            ui.$menu.hide();
+            ui.$dialog_delete_confirm.show();
+          },
+        }),
       ],
+    }),
+    $dialog_delete_confirm: new DialogCore({}),
+    $btn_delete_confirm_cancel: new ButtonCore({
+      onClick() {
+        ui.$dialog_delete_confirm.hide();
+      },
+    }),
+    $btn_delete_confirm_ok: new ButtonCore({
+      async onClick() {
+        const id = Number(props.view.query.id);
+        if (Number.isNaN(id)) {
+          return;
+        }
+        const r = await request.student.delete.run({ id });
+        if (r.error) {
+          return;
+        }
+        ui.$dialog_delete_confirm.hide();
+        props.app.tip({
+          text: ["删除成功"],
+        });
+        props.history.back();
+      },
     }),
     $dialog_nickname: new DialogCore({}),
     $input_nickname: new InputCore({
@@ -230,6 +262,9 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     get profile() {
       return request.student.profile.response;
     },
+    get error() {
+      return request.student.profile.error;
+    },
     get calendar() {
       return {
         weeks: ui.$calendar.state.weeks.map((w) => {
@@ -280,125 +315,145 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(MemberProfileViewModel, [props]);
   return (
     <>
-      <PageView
-        store={vm}
-        operations={
-          <div class="flex items-center gap-2">
-            <Button class="w-full" store={vm.ui.$btn_start_workout}>
-              开始训练
-            </Button>
-            <div
-              class="w-[40px] rounded-full p-2 bg-w-bg-5"
-              onClick={(event) => {
-                const { x, y } = event.currentTarget.getBoundingClientRect();
-                vm.ui.$menu.toggle({ x, y });
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-            </div>
+      <Show when={state().error}>
+        <PageView store={vm}>
+          <div class="flex justify-center p-4">
+            <div class="text-xl text-center text-w-fg-1">{state().error?.message}</div>
           </div>
-        }
-      >
-        <div class="">
-          <Show
-            when={state().profile}
-            fallback={
+        </PageView>
+      </Show>
+      <Show when={!state().error}>
+        <PageView
+          store={vm}
+          operations={
+            <div class="flex items-center gap-2">
+              <Button class="w-full" store={vm.ui.$btn_start_workout}>
+                开始训练
+              </Button>
+              <div
+                class="w-[40px] rounded-full p-2 bg-w-bg-5"
+                onClick={(event) => {
+                  const { x, y } = event.currentTarget.getBoundingClientRect();
+                  vm.ui.$menu.toggle({ x, y });
+                }}
+              >
+                <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+              </div>
+            </div>
+          }
+        >
+          <div class="">
+            <Show
+              when={state().profile}
+              fallback={
+                <div class="flex items-center gap-2">
+                  <div>
+                    <Skeleton class="w-[64px] h-[64px] rounded-full"></Skeleton>
+                  </div>
+                  <div>
+                    <Skeleton class="w-[42px] h-[28px]" />
+                  </div>
+                </div>
+              }
+            >
               <div class="flex items-center gap-2">
                 <div>
-                  <Skeleton class="w-[64px] h-[64px] rounded-full"></Skeleton>
+                  <div
+                    class="w-[64px] h-[64px] bg-w-bg-5 rounded-full"
+                    style={{
+                      "background-image": `url('${state().profile?.avatar_url}')`,
+                      "background-size": "cover",
+                      "background-position": "center",
+                    }}
+                  ></div>
                 </div>
                 <div>
-                  <Skeleton class="w-[42px] h-[28px]" />
+                  <div class="text-xl text-w-fg-0">{state().profile?.nickname}</div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <Show
+                      when={state().profile?.gender === HumanGenderType.Female}
+                      fallback={
+                        <Show when={state().profile?.gender === HumanGenderType.Male}>
+                          <Mars class="w-4 h-4 text-blue-500" />
+                        </Show>
+                      }
+                    >
+                      <Venus class="w-4 h-4 text-pink-500" />
+                    </Show>
+                    <div class="text-w-fg-1">{state().profile?.age}岁</div>
+                  </div>
                 </div>
               </div>
-            }
-          >
-            <div class="flex items-center gap-2">
-              <div>
-                <div class="w-[64px] h-[64px] bg-w-bg-5 rounded-full"></div>
-              </div>
-              <div>
-                <div class="text-xl text-w-fg-0">{state().profile?.nickname}</div>
-                <div class="flex items-center gap-2 mt-2">
-                  <Show
-                    when={state().profile?.gender === HumanGenderType.Female}
-                    fallback={<Mars class="w-4 h-4 text-w-fg-1" />}
-                  >
-                    <Venus class="w-4 h-4 text-w-fg-1" />
-                  </Show>
-                  <div class="text-w-fg-1">{state().profile?.age}岁</div>
-                </div>
-              </div>
-            </div>
-          </Show>
-        </div>
-        <div class="relative space-y-2 mt-4">
-          <div class="relative border-2 border-w-fg-3 rounded-lg">
-            <div class="extra absolute right-2 top-2">
-              <div class="p-2 rounded-full bg-w-bg-5">
-                <Edit class="w-4 h-4 text-w-fg-1" />
-              </div>
-            </div>
-            <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-0">身体数据</div>
-            </div>
-            <div class="body p-4">
-              <div></div>
-            </div>
+            </Show>
           </div>
-          <div class="relative border-2 border-w-fg-3 rounded-lg">
-            <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-0">训练日历</div>
+          <div class="relative space-y-2 mt-4">
+            <div class="relative border-2 border-w-fg-3 rounded-lg">
+              <div class="extra absolute right-2 top-2">
+                <div class="p-2 rounded-full bg-w-bg-5">
+                  <Edit class="w-4 h-4 text-w-fg-1" />
+                </div>
+              </div>
+              <div class="header p-4 border-b-2 border-w-fg-3">
+                <div class="text-w-fg-0">身体数据</div>
+              </div>
+              <div class="body p-4">
+                <div></div>
+              </div>
             </div>
-            <div class="body p-4">
-              <div class="grid grid-cols-7 gap-2">
-                <For each={["周一", "周二", "周三", "周四", "周五", "周六", "周日"]}>
-                  {(t) => {
-                    return <div class="text-center text-sm text-w-fg-1">{t}</div>;
+            <div class="relative border-2 border-w-fg-3 rounded-lg">
+              <div class="header p-4 border-b-2 border-w-fg-3">
+                <div class="text-w-fg-0">训练日历</div>
+              </div>
+              <div class="body p-4">
+                <div class="grid grid-cols-7 gap-2">
+                  <For each={["周一", "周二", "周三", "周四", "周五", "周六", "周日"]}>
+                    {(t) => {
+                      return <div class="text-center text-sm text-w-fg-1">{t}</div>;
+                    }}
+                  </For>
+                </div>
+                <For each={state().calendar.weeks}>
+                  {(week) => {
+                    return (
+                      <div class="grid grid-cols-7 gap-2">
+                        <For each={week.dates}>
+                          {(date) => {
+                            return (
+                              <div
+                                classList={{
+                                  "relative p-2 rounded-md": true,
+                                  "opacity-40": date.is_next_month || date.is_prev_month,
+                                  "bg-w-bg-5": date.is_today,
+                                }}
+                                onClick={() => {
+                                  vm.methods.handleClickDate(date);
+                                }}
+                              >
+                                <div class="text-center text-sm text-w-fg-0">{date.text}</div>
+                                <Show when={date.has_workout_day}>
+                                  <div class="absolute left-1/2 -translate-x-1/2 flex justify-center">
+                                    <div class="w-[6px] h-[6px] rounded-full bg-green-500" />
+                                  </div>
+                                </Show>
+                              </div>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    );
                   }}
                 </For>
               </div>
-              <For each={state().calendar.weeks}>
-                {(week) => {
-                  return (
-                    <div class="grid grid-cols-7 gap-2">
-                      <For each={week.dates}>
-                        {(date) => {
-                          return (
-                            <div
-                              classList={{
-                                "relative p-2 rounded-md": true,
-                                "opacity-40": date.is_next_month || date.is_prev_month,
-                                "bg-w-bg-5": date.is_today,
-                              }}
-                              onClick={() => {
-                                vm.methods.handleClickDate(date);
-                              }}
-                            >
-                              <div class="text-center text-sm text-w-fg-0">{date.text}</div>
-                              <Show when={date.has_workout_day}>
-                                <div class="absolute left-1/2 -translate-x-1/2 flex justify-center">
-                                  <div class="w-[6px] h-[6px] rounded-full bg-green-500" />
-                                </div>
-                              </Show>
-                            </div>
-                          );
-                        }}
-                      </For>
-                    </div>
-                  );
-                }}
-              </For>
+            </div>
+            <div class="relative border-2 border-w-fg-3 rounded-lg">
+              <div class="header p-4 border-b-2 border-w-fg-3">
+                <div class="text-w-fg-0">问卷调查</div>
+              </div>
+              <div class="body p-4"></div>
             </div>
           </div>
-          <div class="relative border-2 border-w-fg-3 rounded-lg">
-            <div class="header p-4 border-b-2 border-w-fg-3">
-              <div class="text-w-fg-0">问卷调查</div>
-            </div>
-            <div class="body p-4"></div>
-          </div>
-        </div>
-      </PageView>
+        </PageView>
+      </Show>
       <Sheet store={vm.ui.$dialog_workout_plan} app={props.app}>
         <div class="p-2">
           <ListView store={vm.request.workout_plan.list} class="space-y-2">
@@ -458,6 +513,19 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           <div class="mt-2">
             <Button class="w-full" store={vm.ui.$btn_nickname_submit}>
               提交
+            </Button>
+          </div>
+        </div>
+      </Sheet>
+      <Sheet store={vm.ui.$dialog_delete_confirm} app={props.app}>
+        <div class="p-2">
+          <div class="text-xl text-center text-w-fg-0">确认删除该学员？</div>
+          <div class="mt-4 flex items-center gap-2">
+            <Button class="w-full" store={vm.ui.$btn_delete_confirm_cancel}>
+              取消
+            </Button>
+            <Button class="w-full" store={vm.ui.$btn_delete_confirm_ok}>
+              确定
             </Button>
           </div>
         </div>

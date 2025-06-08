@@ -12,7 +12,7 @@ import { RequestCore } from "@/domains/request";
 import { parseJSONStr } from "@/utils";
 
 import { WorkoutActionValuesView } from "./action_form";
-import { WorkoutActionViewModel } from "./model";
+import { WorkoutActionEditorViewModel } from "./model";
 
 function HomeActionCreatePageViewModel(props: ViewComponentProps) {
   let _loading = false;
@@ -26,7 +26,7 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
       create: new RequestCore(createWorkoutAction, { client: props.client }),
     },
   };
-  const $model = WorkoutActionViewModel(props);
+  const $model = WorkoutActionEditorViewModel(props);
   const ui = {
     $view: new ScrollViewCore({}),
     $values: $model.$values,

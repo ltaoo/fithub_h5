@@ -25,3 +25,12 @@ export type WorkoutActionProblems = {
   reason: string;
   solutions: string[];
 };
+
+export type WorkoutActionStepsJSON250608 = {
+  v: string;
+  steps: {
+    text: string;
+    imgs: string[];
+    tips: string[];
+  }[];
+};

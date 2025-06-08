@@ -35,6 +35,9 @@ importers:
       path-to-regexp:
         specifier: ^6.2.1
         version: 6.2.1
+      qiniu-js:
+        specifier: 4.0.0-beta.6
+        version: 4.0.0-beta.6
       qs:
         specifier: ^6.11.1
         version: 6.11.1
@@ -1207,6 +1210,9 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  qiniu-js@4.0.0-beta.6:
+    resolution: {integrity: sha512-XNNlgwiEq7wERK+Xew9L+Q7ql0PHV8F4LbW99BWnRSP94IlAP0GQxKiIhgrG7qhDNyjKJop3mYdlWOqbtPxKew==}
 
   qs@6.11.1:
     resolution: {integrity: sha512-0wsrzgTz/kAVIeuxSjnpGC56rzYtr6JT/2BwEvMaPhFIoYa1aGO8LbzuU1R0uUYQkLpWBTOj0l/CLAJB64J6nQ==}
@@ -2609,6 +2615,8 @@ snapshots:
   proxy-from-env@1.1.0: {}
 
   punycode@2.3.1: {}
+
+  qiniu-js@4.0.0-beta.6: {}
 
   qs@6.11.1:
     dependencies:

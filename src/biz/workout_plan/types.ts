@@ -1,5 +1,6 @@
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "./constants";
 
+// 创建时的参数
 export type WorkoutPlanStepBody = {
   idx: number;
   type: WorkoutPlanStepType;
@@ -9,8 +10,7 @@ export type WorkoutPlanStepBody = {
   set_weight: string;
   set_note: string;
   actions: {
-    idx: number;
-    action_id: number | string;
+    action_id: number;
     action: {
       id: number;
       zh_name: string;
@@ -23,8 +23,7 @@ export type WorkoutPlanStepBody = {
   }[];
 };
 
-export type WorkoutPlanStepResp = {
-  id?: number | string;
+export type WorkoutPlanStepJSON250607 = {
   title: string;
   type: WorkoutPlanStepType;
   idx: number;
@@ -33,10 +32,9 @@ export type WorkoutPlanStepResp = {
   set_rest_duration: number;
   set_weight: string;
   actions: {
-    id?: number | string;
-    action_id: number | string;
+    action_id: number;
     action: {
-      id: number | string;
+      id: number;
       name: string;
       zh_name: string;
     };

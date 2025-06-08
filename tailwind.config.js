@@ -22,6 +22,7 @@ module.exports = {
         "w-fg-4": "var(--weui-FG-4)",
         "w-fg-5": "var(--weui-FG-5)",
         "w-red": "var(--weui-RED)",
+        "w-green": "var(--weui-GREEN)",
         "w-brand": "var(--weui-BRAND)",
       },
       keyframes: {

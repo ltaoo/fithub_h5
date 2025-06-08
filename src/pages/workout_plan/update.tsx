@@ -19,7 +19,6 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 
-import { WorkoutPlanValuesView } from "./workout_plan_values";
 import { WorkoutPlanEditorViewModel } from "./model";
 
 function HomeWorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
@@ -114,7 +113,7 @@ function HomeWorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
         return;
       }
       const r2 = await request.workout_action.list_by_ids.run({
-        ids: r.data.action_ids,
+        ids: [],
       });
       if (r2.error) {
         props.app.tip({
@@ -158,7 +157,7 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
       <ScrollView store={vm.ui.$view} class="p-4">
         <h1 class="text-2xl font-bold mb-4">编辑训练计划</h1>
         <div class="bg-white p-4 rounded-lg">
-          <WorkoutPlanValuesView store={vm.ui.$values} />
+          {/* <WorkoutPlanValuesView store={vm.ui.$values} /> */}
         </div>
         <div class="h-[68px]"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">

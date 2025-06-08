@@ -1,7 +1,7 @@
 {
   "name": "@fithub/h5",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "scripts": {
     "dev": "vite --port 3100 --host",
     "build": "tsc && vite build",
@@ -34,6 +34,7 @@
     "lucide-solid": "^0.487.0",
     "mitt": "^3.0.0",
     "path-to-regexp": "^6.2.1",
+    "qiniu-js": "4.0.0-beta.6",
     "qs": "^6.11.1",
     "solid-js": "^1.7.3",
     "tailwind-merge": "^1.12.0",

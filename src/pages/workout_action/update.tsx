@@ -14,7 +14,7 @@ import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 
 import { WorkoutActionValuesView } from "./action_form";
-import { WorkoutActionViewModel } from "./model";
+import { WorkoutActionEditorViewModel } from "./model";
 
 function HomeActionUpdatePageViewModel(props: ViewComponentProps) {
   let _loading = false;
@@ -32,7 +32,7 @@ function HomeActionUpdatePageViewModel(props: ViewComponentProps) {
       update: new RequestCore(updateWorkoutAction, { client: props.client }),
     },
   };
-  const { $values, toBody } = WorkoutActionViewModel(props);
+  const { $values, toBody } = WorkoutActionEditorViewModel(props);
   const ui = {
     $view: new ScrollViewCore({}),
     $values,

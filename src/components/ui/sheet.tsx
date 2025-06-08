@@ -113,6 +113,7 @@ const portalVariants = cva("fixed inset-0 z-50 flex", {
 type SheetProps = {
   position?: "bottom" | "top" | "left" | "right";
   size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
+  ignore_safe_height?: boolean;
   store: DialogCore;
   app: ViewComponentProps["app"];
 } & JSX.HTMLAttributes<HTMLDivElement>;
@@ -129,6 +130,7 @@ export function Sheet(props: SheetProps) {
             "fixed left-1/2 top-0 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
             "fixed inset-0": !props.app.env.pc,
           }}
+          style={{ "z-index": 98 }}
         >
           <DialogPrimitive.Overlay
             store={vm}
@@ -146,9 +148,10 @@ export function Sheet(props: SheetProps) {
         </div>
       </Show>
       <div
-        class="fixed w-full bottom-0"
+        class="fixed bottom-0"
         classList={{
           "left-1/2 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
+          "w-full": !props.app.env.pc,
         }}
         style={{ "z-index": 99 }}
       >
@@ -170,7 +173,9 @@ export function Sheet(props: SheetProps) {
           >
             {props.children}
           </div>
-          <div class="safe-height"></div>
+          <Show when={!props.ignore_safe_height}>
+            <div class="safe-height"></div>
+          </Show>
         </DialogPrimitive.Content>
       </div>
     </DialogPrimitive.Portal>

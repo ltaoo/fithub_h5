@@ -7,7 +7,7 @@ import { ChevronLeft, Dumbbell, MoreHorizontal, Pen, Plus, Send, Trash } from "l
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
-import { Button, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
+import { Button, Checkbox, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
 import { InputTextView } from "@/components/ui/input-text";
@@ -15,12 +15,21 @@ import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
 import { Presence } from "@/components/ui/presence";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
+import { Switcher } from "@/components/ui/switch";
 import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RefCore } from "@/domains/ui/cur";
-import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
+import {
+  ButtonCore,
+  CheckboxCore,
+  DialogCore,
+  DropdownMenuCore,
+  InputCore,
+  MenuItemCore,
+  ScrollViewCore,
+} from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
 import { createWorkoutPlan, WorkoutPlanDetailsJSON250424 } from "@/biz/workout_plan/services";
@@ -33,11 +42,10 @@ import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 
-import { WorkoutPlanValuesView } from "./workout_plan_values";
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
 
-function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
+function WorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const request = {
     workout_plan: {
       create: new RequestCore(createWorkoutPlan, { client: props.client }),
@@ -101,6 +109,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
       }
       const value_title = ui.$input_title.value;
       const value_overview = ui.$input_overview.value;
+      const status = ui.$input_status.value;
       const value_estimated_duration = methods.calc_estimated_duration(value_actions);
       if (!value_title) {
         props.app.tip({
@@ -124,6 +133,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
         title: value_title,
         overview: value_overview,
         tags: "",
+        status: status ? 1 : 2,
         level: 5,
         details: ((): WorkoutPlanDetailsJSON250424 => {
           const steps: WorkoutPlanDetailsJSON250424["steps"] = [];
@@ -190,6 +200,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
     $input_overview: new InputCore({
       defaultValue: "",
     }),
+    $input_status: new CheckboxCore({ checked: false }),
     $input_actions: new ArrayFieldCore({
       label: "actions",
       name: "",
@@ -674,7 +685,7 @@ function HomeWorkoutPlanCreateViewModel(props: ViewComponentProps) {
 }
 
 export function WorkoutPlanCreatePage(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(HomeWorkoutPlanCreateViewModel, [props]);
+  const [state, vm] = useViewModel(WorkoutPlanCreateViewModel, [props]);
 
   return (
     <>
@@ -817,7 +828,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
           </div>
           <div class="field">
             <div class="flex">
-              <div class="text-w-fg-1">标签</div>
+              <div class="text-w-fg-0">标签</div>
             </div>
             <WorkoutPlanTagSelectView class="mt-1" store={vm.ui.$input_tag} app={props.app} />
           </div>
@@ -855,17 +866,16 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
               </For>
             </div>
           </div>
+          <div class="field flex items-center gap-4">
+            <div class="flex">
+              <div class="text-w-fg-0">外部是否可见</div>
+            </div>
+            <Switcher store={vm.ui.$input_status} texts={["公开", "仅自己可见"]} />
+          </div>
         </div>
       </PageView>
-      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
-        <div
-          class=""
-          classList={{
-            "w-[375px] mx-auto": props.app.env.pc,
-          }}
-        >
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
+        <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_act_remark} app={props.app}>
         <div class="p-2">

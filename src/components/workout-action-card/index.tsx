@@ -11,25 +11,14 @@ export function WorkoutActionCard(props: {
   return (
     <div class="overflow-y-auto">
       <div class="rounded-xl">
-        <div class="p-2 overflow-y-auto">
+        <div class="overflow-y-auto">
           {/* 动作标题 */}
           <div class="">
-            <h2 class="text-xl text-w-fg-0 font-bold">{props.zh_name}</h2>
-            <h3 class="text-w-fg-1">{props.name}</h3>
-            {/* 目标肌肉标签 */}
-            <div class="flex flex-wrap mt-4">
-              <For each={props.muscles}>
-                {(muscle) => {
-                  return (
-                    <span class="text-sm bg-blue-400 text-white rounded-full px-3 py-1 mr-2 mb-2">{muscle.name}</span>
-                  );
-                }}
-              </For>
-            </div>
+            <div class="text-xl text-w-fg-0 font-bold">{props.zh_name}</div>
+            <div class="text-w-fg-1">{props.name}</div>
           </div>
-          {/* 益处简述 */}
-          <div class="mt-4">
-            <p class="text-w-fg-0">{props.overview}</p>
+          <div class="mt-2">
+            <div class="text-w-fg-0">{props.overview}</div>
           </div>
         </div>
       </div>

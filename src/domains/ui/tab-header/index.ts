@@ -195,6 +195,9 @@ export class TabHeaderCore<
     if (!matchedTab) {
       return;
     }
+    if (this.mounted) {
+      return;
+    }
     this.extra[matchedTab.id] = info;
     // console.log("[DOMAIN]ui/tab-headers", index, Object.keys(this.extra).length, this.tabs.length);
     if (Object.keys(this.extra).length !== this.tabs.filter((t) => !t.hidden).length) {
@@ -215,7 +218,10 @@ export class TabHeaderCore<
         this.changeLinePosition(left);
       }
     })();
-    this.mounted = true;
+    setTimeout(() => {
+      this.mounted = true;
+      // 这里必须要，不然 line position 就不准了
+    }, 100);
     this.emit(Events.Mounted);
   }
   changeLinePosition(left: number) {

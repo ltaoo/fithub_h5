@@ -34,7 +34,7 @@ export const TabHeader = (props: { store: TabHeaderCore<any> }) => {
         // scroll-left="{{scrollLeftInset}}"
         // scroll-x
       >
-        <div id="tabs-wrapper" class="flex">
+        <div id="tabs-wrapper" class="flex border-b border-w-fg-1">
           <For each={state().tabs}>
             {(tab, index) => {
               return (
@@ -71,7 +71,7 @@ export const TabHeader = (props: { store: TabHeaderCore<any> }) => {
           </For>
           {left() !== null ? (
             <div
-              class="absolute bottom-0 w-4 bg-slate-900 transition-all"
+              class="absolute bottom-0 w-4 bg-w-fg-0 transition-all"
               style={{
                 left: `${left()}px`,
                 height: "4px",

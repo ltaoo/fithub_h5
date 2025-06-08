@@ -272,10 +272,10 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       const is_last_act = c === _steps[a].sets[b].actions.length - 1;
       if ([getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps_unit)) {
         const $action_countdown = SetActionCountdownViewModel({
-          workout_duration: 10,
-          rest_duration: 5,
-          // workout_duration: action.reps,
-          // rest_duration: action.rest_duration,
+          // workout_duration: 10,
+          // rest_duration: 5,
+          countdown: action.reps,
+          rest_duration: action.rest_duration,
           time1: pending_action?.time1,
           time2: pending_action?.time2,
           time3: pending_action?.time3,
@@ -1189,13 +1189,13 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $dialog_using_guide: new DialogCore({}),
     $menu_workout_day: new DropdownMenuCore({
       items: [
-        new MenuItemCore({
-          label: "增加动作",
-          onClick() {
-            ui.$menu_workout_day.hide();
-            ui.$workout_action_select.ui.$dialog.show();
-          },
-        }),
+        // new MenuItemCore({
+        //   label: "增加动作",
+        //   onClick() {
+        //     ui.$menu_workout_day.hide();
+        //     ui.$workout_action_select.ui.$dialog.show();
+        //   },
+        // }),
         new MenuItemCore({
           label: "使用说明",
           onClick() {
@@ -1564,7 +1564,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
         <div class="absolute top-0 bottom-[56px] left-0 w-full">
-          <ScrollView store={vm.ui.$view} class="">
+          <ScrollView store={vm.ui.$view} class="scroll--hidden">
             <div
               class="p-2 rounded-lg transition-all duration-300"
               style={{ transform: `translateY(${-state().height}px)` }}
@@ -1633,7 +1633,13 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                         <Show
                                           when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)}
                                         >
-                                          <div class="inline-flex items-center justify-center px-2 rounded-full bg-blue-500">
+                                          <div
+                                            class="inline-flex items-center justify-center px-2 rounded-full"
+                                            classList={{
+                                              "bg-blue-500": !is_cur_set(),
+                                              "bg-w-green": is_cur_set(),
+                                            }}
+                                          >
                                             <div class="text-sm">{b() + 1}</div>
                                           </div>
                                         </Show>
@@ -1724,8 +1730,9 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                   <Show
                                                     when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_k)}
                                                   >
-                                                    <div class="rounded-md p-2 mt-1 bg-w-bg-5">
+                                                    <div class="rounded-md p-2 mt-1 border-2 border-w-fg-3">
                                                       <SetActionCountdownView
+                                                        highlight={is_cur_set()}
                                                         store={vm.ui.$set_act_countdowns.get(act_k)!}
                                                       />
                                                     </div>
@@ -1771,7 +1778,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
               </div>
             </div>
             <div class="py-4">
-              <div class="text-sm text-w-fg-3 text-center">胜利就在眼前 加油!</div>
+              <div class="text-sm text-w-fg-1 text-center">胜利就在眼前 加油!</div>
             </div>
             <div class="h-[32px]"></div>
           </ScrollView>
@@ -1787,10 +1794,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           view={state().profile_view!}
         />
       </Show>
-      <Sheet store={vm.ui.$workout_action_dialog.ui.$dialog} app={props.app}>
-        <div class="">
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} app={props.app} />
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action_dialog.ui.$dialog} app={props.app}>
+        <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} app={props.app} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_num_keyboard} app={props.app}>
         <div class="p-2">
@@ -1861,16 +1866,14 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
       </Sheet>
       <Sheet store={vm.ui.$dialog_give_up_confirm} app={props.app}>
         <div class="p-2">
-          <div>
-            <div class="text-xl text-center text-w-fg-0">确认放弃本次训练？</div>
-            <div class="mt-4 flex items-center gap-2">
-              <Button class="w-full" store={vm.ui.$btn_give_up_confirm_cancel}>
-                取消
-              </Button>
-              <Button class="w-full" store={vm.ui.$btn_give_up_confirm_ok}>
-                确定
-              </Button>
-            </div>
+          <div class="text-xl text-center text-w-fg-0">确认放弃本次训练？</div>
+          <div class="mt-4 flex items-center gap-2">
+            <Button class="w-full" store={vm.ui.$btn_give_up_confirm_cancel}>
+              取消
+            </Button>
+            <Button class="w-full" store={vm.ui.$btn_give_up_confirm_ok}>
+              确定
+            </Button>
           </div>
         </div>
       </Sheet>
@@ -1929,10 +1932,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
-        <div class="">
-          <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
+        <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>
       <DropdownMenu store={vm.ui.$menu_workout_day}></DropdownMenu>

@@ -1,5 +1,11 @@
 export const Muscles = [
   {
+    id: 5,
+    name: "斜方肌",
+    en_name: "trapezius",
+    part: "traps",
+  },
+  {
     id: 51,
     name: "斜方肌上部",
     en_name: "Upper trapezius",
@@ -34,6 +40,12 @@ export const Muscles = [
     name: "竖脊肌",
     en_name: "Erector spinae",
     part: "lats",
+  },
+  {
+    id: 4,
+    name: "三角肌",
+    en_name: "Deltoid",
+    part: "shoulder",
   },
   {
     id: 54,

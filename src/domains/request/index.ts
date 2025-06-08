@@ -40,6 +40,7 @@ type RequestState<T> = {
 type FetchFunction = (...args: any[]) => RequestPayload<any>;
 type ProcessFunction<V, P> = (value: V) => Result<P>;
 type RequestProps<F extends FetchFunction, P> = {
+  _name?: string;
   client?: HttpClientCore;
   loading?: boolean;
   delay?: null | number;
@@ -68,6 +69,7 @@ export type TheResponseOfFetchFunction<T extends FetchFunction> = UnpackedReques
 export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<ReturnType<F>>> extends BaseDomain<
   TheTypesOfEvents<any>
 > {
+  _name = "RequestCore";
   debug = false;
 
   defaultResponse: P | null = null;
@@ -110,9 +112,10 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
   }
 
   constructor(fn: F, props: RequestProps<F, P> = {}) {
-    super();
+    super({ unique_id: props._name });
 
     const {
+      _name,
       client,
       delay,
       defaultResponse,
@@ -140,13 +143,13 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
       this.defaultResponse = defaultResponse;
       this.response = defaultResponse;
     }
+    if (_name) {
+      this._name = _name;
+    }
     // const source = axios.CancelToken.source();
     // this.source = source;
     if (onSuccess) {
       this.onSuccess(onSuccess);
-    }
-    if (onFailed) {
-      this.onFailed(onFailed, { override: true });
     }
     if (onCompleted) {
       this.onCompleted(onCompleted);
@@ -162,6 +165,10 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     }
     if (handler) {
       handler(this);
+    }
+    // 有 override 属性的必须在 handler 后面
+    if (onFailed) {
+      this.onFailed(onFailed, { override: true });
     }
   }
   /** 执行 service 函数 */
@@ -221,7 +228,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
       return Result.Err(`未知的 method '${method}'`);
     })();
     if (r2.error) {
-      return Result.Err(r2.error.message);
+      return Result.Err(r2.error);
     }
     this.pending = r2.data;
     const [r] = await Promise.all([this.pending, this.delay === null ? null : sleep(this.delay)]);
@@ -245,7 +252,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
       this.error = resp.error;
       this.emit(Events.Failed, resp.error);
       this.emit(Events.StateChange, { ...this.state });
-      return Result.Err(resp.error.message);
+      return Result.Err(resp.error);
     }
     const data = resp.data as P;
     this.response = data;

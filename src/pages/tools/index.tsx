@@ -33,25 +33,28 @@ function ToolsViewModel(props: ViewComponentProps) {
   };
   let _tool_groups: {
     title: string;
-    menus: { title: string; onClick?: () => void }[];
+    menus: { icon: string; title: string; onClick?: () => void }[];
   }[] = [
     {
       title: "查询",
       menus: [
         {
           title: "动作库",
+          icon: "//static.fithub.top/icons/icon7.jpeg",
           onClick() {
             props.history.push("root.workout_action_list");
           },
         },
         {
           title: "肌肉",
+          icon: "//static.fithub.top/icons/icon1.jpeg",
           onClick() {
             props.history.push("root.muscle");
           },
         },
         {
           title: "器械",
+          icon: "//static.fithub.top/icons/icon2.jpeg",
           onClick() {
             props.history.push("root.equipment");
           },
@@ -61,6 +64,7 @@ function ToolsViewModel(props: ViewComponentProps) {
         // },
         // {
         //   title: "常见问题",
+        // icon: "//static.fithub.top/icons/icon11.jpeg",
         // },
       ],
     },
@@ -69,24 +73,28 @@ function ToolsViewModel(props: ViewComponentProps) {
       menus: [
         {
           title: "BMI计算",
+          icon: "//static.fithub.top/icons/icon13.jpeg",
           onClick() {
             props.history.push("root.tools_bmi_calc");
           },
         },
         {
           title: "基础代谢",
+          icon: "//static.fithub.top/icons/icon3.jpeg",
           onClick() {
             props.history.push("root.tools_bmr_calc");
           },
         },
         {
           title: "RM换算",
+          icon: "//static.fithub.top/icons/icon10.jpeg",
           onClick() {
             props.history.push("root.tools_rm_calc");
           },
         },
         {
           title: "心率换算",
+          icon: "//static.fithub.top/icons/icon12.jpeg",
           onClick() {
             props.history.push("root.tools_heart_rate");
           },
@@ -98,18 +106,21 @@ function ToolsViewModel(props: ViewComponentProps) {
       menus: [
         {
           title: "节拍器",
+          icon: "//static.fithub.top/icons/icon4.jpeg",
           onClick() {
             props.history.push("root.tools_metronome");
           },
         },
         {
           title: "秒表",
+          icon: "//static.fithub.top/icons/icon5.jpeg",
           onClick() {
             props.history.push("root.tools_stopwatch");
           },
         },
         {
           title: "1RM测试",
+          icon: "//static.fithub.top/icons/icon9.jpeg",
           onClick() {
             props.history.push("root.tools_max_rm_test");
           },
@@ -130,9 +141,11 @@ function ToolsViewModel(props: ViewComponentProps) {
       menus: [
         // {
         //   title: "学习资料",
+        // icon: "//static.fithub.top/icons/icon8.jpeg",
         // },
         {
           title: "答题挑战",
+          icon: "//static.fithub.top/icons/icon6.jpeg",
           onClick() {
             props.history.push("root.paper_list");
           },
@@ -170,7 +183,7 @@ export function ToolsView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(ToolsViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view}>
+    <ScrollView store={vm.ui.$view} class="scroll--hidden">
       <div class="p-2">
         {/* <div class="flex items-center justify-between gap-2">
           <div class="text-xl text-w-fg-0">常用工具</div>
@@ -184,14 +197,21 @@ export function ToolsView(props: ViewComponentProps) {
                   <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">{group.title}</div>
                   </div>
-                  <div class="grid grid-cols-5 gap-4 p-4 ">
+                  <div class="grid grid-cols-4 gap-4 p-4">
                     <For each={group.menus}>
                       {(menu) => {
                         return (
-                          <div class="relative pb-8">
-                            <div class="w-full h-full rounded-xl min-h-[48px] bg-w-bg-5" onClick={menu.onClick}></div>
+                          <div class="relative aspect-square rounded-full" onClick={menu.onClick}>
+                            <div
+                              class="w-full h-full rounded-xl"
+                              style={{
+                                "background-image": `url('${menu.icon}')`,
+                                "background-size": "cover",
+                                "background-position": "center",
+                              }}
+                            ></div>
                             <div class="relative mt-2">
-                              <div class="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-w-fg-0 text-sm text-center">
+                              <div class="whitespace-nowrap text-w-fg-0 text-sm text-center">
                                 {menu.title}
                               </div>
                             </div>

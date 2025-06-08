@@ -1,3 +1,6 @@
+/**
+ * @file 健身动作创建
+ */
 import { ViewComponentProps } from "@/store/types";
 import { WorkoutActionType, WorkoutActionTypeOptions } from "@/biz/workout_action/constants";
 import { MuscleProfile } from "@/biz/muscle/services";
@@ -9,7 +12,7 @@ import { TagInputCore } from "@/domains/ui/form/tag-input";
 import { SelectCore } from "@/domains/ui";
 import { Result } from "@/domains/result";
 
-export function WorkoutActionViewModel(props: Pick<ViewComponentProps, "client" | "app">) {
+export function WorkoutActionEditorViewModel(props: Pick<ViewComponentProps, "client" | "app">) {
   let _muscles: MuscleProfile[] = [];
 
   const $values = new ObjectFieldCore({

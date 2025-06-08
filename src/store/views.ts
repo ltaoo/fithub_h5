@@ -31,7 +31,6 @@ import { HomeMineView } from "@/pages/mine";
 import { WorkoutScheduleCreateView } from "@/pages/workout_schedule/create";
 import { WorkoutScheduleUpdateView } from "@/pages/workout_schedule/update";
 import { WorkoutScheduleCreateSuccessView } from "@/pages/workout_schedule/success";
-import { WorkoutActionProfileView } from "@/pages/workout_action/profile";
 import { WorkoutActionHistoryListView } from "@/pages/workout_action_history/list";
 import { WorkoutDayListView } from "@/pages/workout_day/list";
 import { WorkoutDayProfileView } from "@/pages/workout_day/profile";
@@ -56,11 +55,15 @@ import { PaperResultListView } from "@/pages/paper/result_list";
 import { WorkoutScheduleProfileView } from "@/pages/workout_schedule/profile";
 import { WorkoutDayMultiplePersonView } from "@/pages/workout_day/multiple";
 import { MaxRMTestToolView } from "@/pages/tools/max_rm_test";
+import { ApplicationSettingsView } from "@/pages/settings";
+import { SubscriptionOrderView } from "@/pages/subscription_plan/profile";
+import { FeaturePlaygroundView } from "@/pages/test/profile";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
   "root.register": RegisterPage,
   "root.notfound": NotFoundPage,
+  "root.settings": ApplicationSettingsView,
   "root.home_layout": HomeLayout,
   "root.home_layout.index": HomeIndexPage,
   "root.home_layout.tools": ToolsView,
@@ -73,6 +76,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.tools_heart_rate": HeartRateCalcToolView,
   "root.tools_metronome": MetronomeToolView,
   "root.subscription": MineSubscriptionView,
+  "root.subscription_plan_profile": SubscriptionOrderView,
   // 训练计划
   "root.workout_plan_list": WorkoutPlanListPage,
   "root.workout_plan_create": WorkoutPlanCreatePage,

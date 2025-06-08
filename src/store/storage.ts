@@ -32,3 +32,14 @@ export const storage = new StorageCore<typeof DEFAULT_CACHE_VALUES>({
   values: e ? JSON.parse(e) : DEFAULT_CACHE_VALUES,
   client: globalThis.localStorage,
 });
+
+const QINIU_DEFAULT_CACHE_VALUES = {
+  token: "",
+};
+const qiniu_value = globalThis.localStorage.getItem("qiniu");
+export const qiniu_storage = new StorageCore<typeof QINIU_DEFAULT_CACHE_VALUES>({
+  key,
+  defaultValues: QINIU_DEFAULT_CACHE_VALUES,
+  values: qiniu_value ? JSON.parse(qiniu_value) : QINIU_DEFAULT_CACHE_VALUES,
+  client: globalThis.localStorage,
+});

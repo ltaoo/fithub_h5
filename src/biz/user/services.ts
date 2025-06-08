@@ -1,4 +1,9 @@
+import dayjs from "dayjs";
+
 import { request } from "@/biz/requests";
+import { SubscriptionStatus, SubscriptionStatusTextMap } from "@/biz/subscription/constants";
+import { TmpRequestResp } from "@/domains/request/utils";
+import { Result } from "@/domains/result";
 
 /**
  * 用户登录
@@ -54,13 +59,28 @@ export function get_token() {
  */
 export function fetch_user_profile() {
   return request.post<{
+    id: number;
     nickname: string;
     avatar_url: string;
     subscription: {
-      visible: boolean;
-      text: string;
+      status: SubscriptionStatus;
+      name: string;
+      expired_at: string;
     };
   }>("/api/auth/profile");
+}
+export function fetch_user_profile_process(r: TmpRequestResp<typeof fetch_user_profile>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  return Result.Ok({
+    ...r.data,
+    subscription: {
+      ...r.data.subscription,
+      status_text: SubscriptionStatusTextMap[r.data.subscription.status],
+      expired_at_text: dayjs(r.data.subscription.expired_at).format("YYYY-MM-DD"),
+    },
+  });
 }
 
 export function validate(token: string) {

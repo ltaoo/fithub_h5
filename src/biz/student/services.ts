@@ -9,7 +9,7 @@ import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 
 import { HumanGenderType } from "./constants";
 
-export function fetchStudentList(params: Partial<FetchParams>) {
+export function fetchStudentList(params: Partial<FetchParams> & { keyword: string }) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -21,6 +21,7 @@ export function fetchStudentList(params: Partial<FetchParams>) {
   >("/api/student/list", {
     page: params.page,
     page_size: params.pageSize,
+    keyword: params.keyword,
   });
 }
 export function fetchStudentListProcess(r: TmpRequestResp<typeof fetchStudentList>) {
@@ -47,9 +48,13 @@ export function createStudent(data: { name: string; age: number; gender: number 
 }
 
 export function updateStudentProfile(
-  body: Partial<{ id: number; nickname: string; age: number; gender: HumanGenderType }>
+  body: { id: number } & Partial<{ nickname: string; age: number; gender: HumanGenderType }>
 ) {
   return request.post<{}>("/api/student/update", body);
+}
+
+export function deleteStudent(body: { id: number }) {
+  return request.post<{}>("/api/student/delete", body);
 }
 
 export function fetchStudentProfile(body: { id: number }) {
@@ -121,7 +126,7 @@ export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
         finished_at_text: dayjs(v.finished_at).format("YYYY-MM-DD"),
         workout_plan: {
           ...v.workout_plan,
-          tags: v.workout_plan.tags.split(","),
+          tags: v.workout_plan.tags.split(",").filter(Boolean),
         },
       };
     }),

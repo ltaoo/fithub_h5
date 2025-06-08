@@ -24,12 +24,13 @@ import { PageKeys, routes, routesWithPathname } from "./routes";
 import { client } from "./request";
 import { storage } from "./storage";
 
-if (window.location.hostname === "t.fithub.top") {
-  request.setEnv("dev");
-}
+// if (window.location.hostname === "t.fithub.top") {
+//   request.setEnv("dev");
+// }
 onRequestCreated((ins) => {
+  // console.log("[STORE]store/index - before ins.onFailed", ins._name);
   ins.onFailed((e) => {
-    console.log("[STORE]store/index - onRequestCreated ins.onFailed", e.code);
+    // console.log("[STORE]store/index - onRequestCreated ins.onFailed", e.code);
     app.tip({
       text: [e.message ?? "未知错误"],
     });
@@ -103,7 +104,7 @@ export const app = new Application({
         text: ["请先登录"],
       });
       history.push("root.login", { redirect: route.pathname });
-      return Result.Err("need login");
+      return Result.Ok(null);
     }
     console.log("before client.appendHeaders", app.$user.token);
     if (!history.isLayout(route.name)) {

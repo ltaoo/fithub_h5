@@ -1,8 +1,8 @@
 /**
  * @file 学员列表 页面
  */
-import { For } from "solid-js";
-import { Plus, Search } from "lucide-solid";
+import { For, Show } from "solid-js";
+import { Mars, Plus, Search, Venus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -13,6 +13,7 @@ import { base, Handler } from "@/domains/base";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/services";
+import { HumanGenderType } from "@/biz/student/constants";
 
 function HomeStudentListPageViewModel(props: ViewComponentProps) {
   const request = {
@@ -24,7 +25,10 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    search() {},
+    search() {
+      const v = ui.$input_search.value;
+      request.student.list.search({ keyword: v });
+    },
     gotoStudentProfileView(v: { id: number | string }) {
       props.history.push("root.student_profile", {
         id: String(v.id),
@@ -109,7 +113,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
         </div>
       </div>
       <div class="absolute top-[56px] bottom-0 w-full">
-        <ScrollView store={vm.ui.$view}>
+        <ScrollView store={vm.ui.$view} class="scroll--hidden">
           <div class="p-2">
             <ListView
               store={vm.request.student.list}
@@ -117,7 +121,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
               skeleton={
                 <>
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <Skeleton class="w-[32px] h-[28px]" />
+                    <Skeleton class="w-[32px] h-[24px]" />
                   </div>
                 </>
               }
@@ -131,7 +135,25 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                         vm.methods.gotoStudentProfileView(student);
                       }}
                     >
-                      <div class="text-w-fg-0 text-xl">{student.nickname}</div>
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="rounded-full w-[48px] h-[48px] bg-w-bg-5"
+                          style={{
+                            "background-image": `url('${student.avatar_url}')`,
+                            "background-size": "cover",
+                            "background-position": "center",
+                          }}
+                        ></div>
+                        <div class="space-y-1">
+                          <div class="text-w-fg-0">{student.nickname}</div>
+                          <Show when={student.gender === HumanGenderType.Female}>
+                            <Venus class="w-3 h-3 text-pink-500" />
+                          </Show>
+                          <Show when={student.gender === HumanGenderType.Male}>
+                            <Mars class="w-4 h-4 text-blue-500" />
+                          </Show>
+                        </div>
+                      </div>
                       <div class="flex items-center justify-between">
                         <div></div>
                         <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full">

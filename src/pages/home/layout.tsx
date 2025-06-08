@@ -126,6 +126,7 @@ export const HomeLayout: ViewComponent = (props) => {
                   "data-[state=open]:animate-in data-[state=open]:fade-in",
                   "data-[state=closed]:animate-out data-[state=closed]:fade-out"
                 )}
+                app={props.app}
                 store={subView}
                 index={i()}
               >
@@ -191,7 +192,14 @@ function Menu(
         {/* <div class="w-6 h-6">{props.icon}</div> */}
         <div class="flex-1 mt-1">
           <div class="relative inline-block">
-            <div class="text-sm">{props.children}</div>
+            <div
+              classList={{
+                "text-w-fg-0": props.highlight,
+                "text-w-fg-1": !props.highlight,
+              }}
+            >
+              {props.children}
+            </div>
             <Show when={props.badge}>
               <div class="absolute right-[-8px] top-0 w-2 h-2 rounded-full bg-red-500" />
             </Show>
@@ -200,7 +208,7 @@ function Menu(
         <div
           classList={{
             "z-0 translate-y-[-4px] w-[32px] h-[4px]": true,
-            "bg-w-fg-2": props.highlight,
+            "bg-w-fg-0": props.highlight,
           }}
         ></div>
       </div>

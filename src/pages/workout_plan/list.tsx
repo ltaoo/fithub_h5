@@ -234,41 +234,62 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[28px]" />
+                <Skeleton class="w-[68px] h-[24px]" />
               </div>
             }
           >
             <For each={state().response_plan.dataSource}>
-              {(plan) => {
+              {(v) => {
                 return (
                   <div
                     class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
                     onClick={() => {
-                      vm.methods.handleClickWorkoutPlan(plan);
+                      vm.methods.handleClickWorkoutPlan(v);
                     }}
                   >
-                    <div class=" text-w-fg-0 text-xl">{plan.title}</div>
-                    <div class="mt-2 text-sm  text-w-fg-1">{plan.overview}</div>
+                    <div class=" text-w-fg-0">{v.title}</div>
+                    <div class="mt-2 text-sm  text-w-fg-1">{v.overview}</div>
                     <div class="mt-2">
                       <div class="flex items-center gap-1 text-w-fg-1">
                         <Clock class="w-4 h-4" />
-                        <div class="text-sm  text-w-fg-1">{plan.estimated_duration_text}</div>
+                        <div class="text-sm  text-w-fg-1">{v.estimated_duration_text}</div>
                       </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 mt-4">
-                      <For each={plan.tags}>
-                        {(text) => {
-                          return (
-                            <div class="px-2 py-1 rounded-lg border border-2 border-w-fg-3 text-sm text-w-fg-1">
-                              {text}
-                            </div>
-                          );
-                        }}
-                      </For>
-                    </div>
-                    <div class="flex items-center justify-between">
-                      <div></div>
-                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0">详情</div>
+                    <Show when={v.tags.length}>
+                      <div class="flex flex-wrap gap-2 mt-4">
+                        <For each={v.tags}>
+                          {(text) => {
+                            return (
+                              <div class="px-2 py-1 rounded-lg border border-2 border-w-fg-3 text-sm text-w-fg-1">
+                                {text}
+                              </div>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    </Show>
+                    <div class="flex items-center justify-between mt-4">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <Show
+                            when={v.creator.avatar_url}
+                            fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                          >
+                            <div
+                              class="w-[24px] h-[24px] rounded-full"
+                              style={{
+                                "background-image": `url('${v.creator.avatar_url}')`,
+                                "background-size": "cover",
+                                "background-position": "center",
+                              }}
+                            ></div>
+                          </Show>
+                          <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+                        </div>
+                      </div>
+                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
+                        详情
+                      </div>
                     </div>
                   </div>
                 );
@@ -282,24 +303,46 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[28px]" />
+                <Skeleton class="w-[68px] h-[24px]" />
               </div>
             }
           >
             <For each={state().response_schedule.dataSource}>
-              {(schedule) => {
+              {(v) => {
                 return (
                   <div
                     class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
                     onClick={() => {
-                      vm.methods.handleClickWorkoutSchedule(schedule);
+                      vm.methods.handleClickWorkoutSchedule(v);
                     }}
                   >
-                    <div class="text-w-fg-0 text-xl">{schedule.title}</div>
-                    <div class="mt-2 text-sm text-w-fg-1">{schedule.overview}</div>
-                    <div class="flex items-center justify-between">
-                      <div></div>
-                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0">详情</div>
+                    <div class="absolute right-4 top-4">
+                      <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
+                    </div>
+                    <div class="text-w-fg-0">{v.title}</div>
+                    <div class="text-sm text-w-fg-1">{v.overview}</div>
+                    <div class="flex items-center justify-between mt-4">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <Show
+                            when={v.creator.avatar_url}
+                            fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                          >
+                            <div
+                              class="w-[24px] h-[24px] rounded-full"
+                              style={{
+                                "background-image": `url('${v.creator.avatar_url}')`,
+                                "background-size": "cover",
+                                "background-position": "center",
+                              }}
+                            ></div>
+                          </Show>
+                          <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+                        </div>
+                      </div>
+                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
+                        详情
+                      </div>
                     </div>
                   </div>
                 );

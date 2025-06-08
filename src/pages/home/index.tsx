@@ -66,14 +66,14 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    handleClickSet(v: { id: number; type: string }) {
-      if (v.type === "workout_plan") {
+    handleClickSet(v: { id: number; type: number }) {
+      if (v.type === 1) {
         props.history.push("root.workout_plan_profile", {
           id: String(v.id),
         });
         return;
       }
-      if (v.type === "workout_schedule") {
+      if (v.type === 2) {
         props.history.push("root.workout_schedule_profile", {
           id: String(v.id),
         });
@@ -122,7 +122,19 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
               workout_plans: [],
             };
           }
-          return m;
+          return {
+            ...m,
+            workout_plans: m.workout_plans.map((v) => {
+              return {
+                ...v,
+                completed: request.workout_day.list.response.dataSource
+                  .map((v) => {
+                    return v.workout_plan.id;
+                  })
+                  .includes(v.id),
+              };
+            }),
+          };
         })(),
       };
       const matched = request.workout_day.list.response.dataSource.find((v) => {
@@ -139,7 +151,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       }
       ui.$dialog_calendar.show();
     },
-    async init() {
+    async ready() {
       request.workout_day.list.init();
       request.workout_day.has_started.run();
       (async () => {
@@ -194,7 +206,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   const ui = {
     $view: new ScrollViewCore({
       async onPullToRefresh() {
-        await methods.init();
+        await methods.ready();
         props.app.tip({
           text: ["刷新成功"],
         });
@@ -246,7 +258,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     } | null;
     schedule: {
       type: WorkoutScheduleDayType;
-      workout_plans: { id: number; title: string; tags: string }[];
+      workout_plans: { id: number; completed: boolean; title: string; tags: string }[];
     };
   } | null = null;
   let _schedules: Record<
@@ -287,7 +299,13 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
               };
             }
             if (m) {
-              r.push(...m.workout_plans);
+              r.push(
+                ...m.workout_plans.map((plan) => {
+                  return {
+                    ...plan,
+                  };
+                })
+              );
             }
             return {
               status: m.type,
@@ -350,7 +368,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      methods.init();
+      methods.ready();
     },
     destroy() {},
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
@@ -365,9 +383,10 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
   return (
     <>
       <div
-        class="z-0 fixed top-0 left-1/2 w-full -translate-x-1/2"
+        class="z-0 fixed top-0 left-1/2 -translate-x-1/2"
         classList={{
           "w-[375px] mx-auto": props.app.env.pc,
+          "w-full": !props.app.env.pc,
         }}
       >
         <div class="">
@@ -406,9 +425,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                                     fallback={
                                       <Show when={day.is_today}>
                                         <div class="flex items-center justify-center w-[24px] h-[24px] border-w-fg-2 rounded-full">
-                                          <div class="text-w-fg-1" style={{ "font-size": "10px" }}>
-                                            今
-                                          </div>
+                                          <div class="text-w-fg-1 text-[12px]">今</div>
                                         </div>
                                       </Show>
                                     }
@@ -443,7 +460,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
         </div>
       </div>
       <div class="absolute top-[134px] bottom-0 left-0 w-full">
-        <ScrollView store={vm.ui.$view} class="">
+        <ScrollView store={vm.ui.$view} class="scroll--hidden">
           <div class="p-2 pb-8 relative whitespace-nowrap">
             <Show
               when={!state().initial}
@@ -468,26 +485,59 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                     {(vv) => {
                       return (
                         <div
-                          class="p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0"
+                          class="relative p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0"
                           onClick={() => {
                             vm.methods.handleClickSet(vv);
                           }}
                         >
-                          <div class="text-xl">{vv.title}</div>
-                          <div class="text-w-fg-1">{vv.overview}</div>
-                          <div>
-                            <For each={vv.tags}>
-                              {(tag) => {
-                                return (
-                                  <div class="px-2 rounded-full border-2 border-w-fg-3">
-                                    <div class="text-sm">{tag}</div>
-                                  </div>
-                                );
-                              }}
-                            </For>
-                          </div>
-                          <div class="flex items-center justify-between">
+                          {/* <div class="absolute right-4 top-4">
                             <div class="px-2 rounded-full bg-blue-500 text-white text-sm">{vv.type_text}</div>
+                          </div> */}
+                          <div class="text-xl">{vv.title}</div>
+                          <div class="flex mt-1">
+                            <div
+                              class="px-2 rounded-full text-white text-sm"
+                              classList={{
+                                "bg-blue-500 ": vv.type === 1,
+                                "bg-green-500 ": vv.type === 2,
+                              }}
+                            >
+                              {vv.type_text}
+                            </div>
+                          </div>
+                          <Show when={vv.overview}>
+                            <div class="text-w-fg-1 mt-4">{vv.overview}</div>
+                          </Show>
+                          <Show when={vv.tags.length}>
+                            <div class="flex items-center gap-2">
+                              <For each={vv.tags}>
+                                {(tag) => {
+                                  return (
+                                    <div class="px-2 rounded-full border-2 border-w-fg-3">
+                                      <div class="text-sm text-w-fg-0">{tag}</div>
+                                    </div>
+                                  );
+                                }}
+                              </For>
+                            </div>
+                          </Show>
+                          <div class="flex items-center justify-between mt-4">
+                            <div class="flex items-center gap-2">
+                              <Show
+                                when={vv.creator.avatar_url}
+                                fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                              >
+                                <div
+                                  class="w-[24px] h-[24px] rounded-full"
+                                  style={{
+                                    "background-image": `url('${vv.creator.avatar_url}')`,
+                                    "background-size": "cover",
+                                    "background-position": "center",
+                                  }}
+                                ></div>
+                              </Show>
+                              <div class="text-sm text-w-fg-0">{vv.creator.nickname}</div>
+                            </div>
                             <div class="px-4 py-2 border-2 border-w-fg-3 bg-w-bg-5 rounded-full">
                               <div class="text-w-fg-0 text-sm">详情</div>
                             </div>
@@ -515,7 +565,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
         </div>
       </Show>
       <CalendarSheet store={vm.ui.$dialog_calendar} app={props.app}>
-        <div class="bg-w-bg-0 p-4">
+        <div class="bg-w-bg-0 p-4 border-b border-w-fg-3">
           <Show when={state().day}>
             <div class="flex items-center text-w-fg-0">
               <div class="text-2xl">
@@ -535,25 +585,34 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
             <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Workout}>
               <div class="py-4 space-y-2">
                 <For each={state().day?.schedule.workout_plans}>
-                  {(plan) => {
+                  {(v) => {
                     return (
                       <div class="p-2 border-2 border-w-fg-3 rounded-lg">
-                        <div class="text-w-fg-0">{plan.title}</div>
-                        <div class="text-sm text-w-fg-1">{plan.tags}</div>
+                        <div class="text-w-fg-0">{v.title}</div>
+                        <div class="text-sm text-w-fg-1">{v.tags}</div>
                         <div class="flex items-center justify-between">
                           <div></div>
                           <div>
-                            <div
-                              class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
-                              onClick={() => {
-                                vm.ui.$dialog_calendar.hide();
-                                props.history.push("root.workout_plan_profile", {
-                                  id: String(plan.id),
-                                });
-                              }}
+                            <Show
+                              when={!v.completed}
+                              fallback={
+                                <div>
+                                  <Check class="w-6 h-6 text-green-500" />
+                                </div>
+                              }
                             >
-                              <div class="text-sm">fight!</div>
-                            </div>
+                              <div
+                                class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
+                                onClick={() => {
+                                  vm.ui.$dialog_calendar.hide();
+                                  props.history.push("root.workout_plan_profile", {
+                                    id: String(v.id),
+                                  });
+                                }}
+                              >
+                                <div class="text-sm">fight!</div>
+                              </div>
+                            </Show>
                           </div>
                         </div>
                       </div>

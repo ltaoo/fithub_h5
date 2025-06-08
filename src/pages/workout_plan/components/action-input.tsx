@@ -475,7 +475,12 @@ export function ActionInput(props: {
           <WorkoutActionNameView name={state().action?.action.zh_name} />
         </Show>
       </Show>
-      <div class="space-y-4">
+      <div
+        class="actions "
+        classList={{
+          "space-y-4": ![WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(state().type),
+        }}
+      >
         <For each={state().fields}>
           {(field, index) => {
             const $inner = vm.ui.$sets.mapFieldWithIndex(index());
@@ -491,25 +496,9 @@ export function ActionInput(props: {
             );
           }}
         </For>
-        <div class="flex items-center gap-2">
-          <div class="">
-            <div class="text-sm text-w-fg-2">组数</div>
-            <Input store={vm.ui.$input_set_count} />
-          </div>
-          <div class="">
-            <div class="text-sm text-w-fg-2">组间歇</div>
-            <Input store={vm.ui.$input_set_rest} />
-          </div>
-          <Show when={[WorkoutPlanSetType.HIIT].includes(state().type)}>
-            <div class="">
-              <div class="text-sm text-w-fg-2">强度</div>
-              <Input store={vm.ui.$input_set_weight} />
-            </div>
-          </Show>
-        </div>
       </div>
       <Show when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(state().type)}>
-        <div class="flex justify-center mt-4">
+        <div class="flex justify-center my-4">
           <div
             class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
@@ -523,7 +512,7 @@ export function ActionInput(props: {
         </div>
       </Show>
       <Show when={[WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(state().type)}>
-        <div class="flex justify-center mt-4">
+        <div class="flex justify-center my-4">
           <div
             class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
             onClick={() => {
@@ -534,7 +523,22 @@ export function ActionInput(props: {
           </div>
         </div>
       </Show>
-      <div class="absolute right-4 -bottom-8"></div>
+      <div class="flex items-center gap-2">
+        <div class="">
+          <div class="text-sm text-w-fg-2">组数</div>
+          <Input store={vm.ui.$input_set_count} />
+        </div>
+        <div class="">
+          <div class="text-sm text-w-fg-2">组间歇</div>
+          <Input store={vm.ui.$input_set_rest} />
+        </div>
+        <Show when={[WorkoutPlanSetType.HIIT].includes(state().type)}>
+          <div class="">
+            <div class="text-sm text-w-fg-2">强度</div>
+            <Input store={vm.ui.$input_set_weight} />
+          </div>
+        </Show>
+      </div>
     </div>
   );
 }

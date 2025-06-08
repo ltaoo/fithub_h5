@@ -643,7 +643,7 @@ export function MaxRMTestToolView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$select_workout_action.ui.$dialog} app={props.app}>
+      <Sheet ignore_safe_height store={vm.ui.$select_workout_action.ui.$dialog} app={props.app}>
         <WorkoutActionSelect3View store={vm.ui.$select_workout_action} app={props.app} />
       </Sheet>
     </>

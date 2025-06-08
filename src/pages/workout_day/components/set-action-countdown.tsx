@@ -10,7 +10,7 @@ import { base, Handler } from "@/domains/base";
 import { StopwatchViewModel } from "@/biz/stopwatch";
 
 export function SetActionCountdownViewModel(props: {
-  workout_duration: number;
+  countdown: number;
   rest_duration: number;
   time1?: number;
   time2?: number;
@@ -26,7 +26,7 @@ export function SetActionCountdownViewModel(props: {
   const ui = {
     /** 动作执行倒计时 */
     $countdown1: CountdownViewModel({
-      countdown: props.workout_duration,
+      countdown: props.countdown,
       time: props.time1,
       // finished: props.time1 !== undefined && props.time1 < props.workout_duration,
       finished: props.time1 === 0,
@@ -183,6 +183,7 @@ export type SetActionCountdownViewModel = ReturnType<typeof SetActionCountdownVi
 
 export function SetActionCountdownView(props: {
   store: SetActionCountdownViewModel;
+  highlight?: boolean;
   onStart?: () => void;
   onCompleted?: () => void;
 }) {
@@ -265,9 +266,17 @@ export function SetActionCountdownView(props: {
 
   return (
     <div class="set-act-countdown flex items-center gap-4">
-      <div class="set-countdown-btn overflow-hidden relative flex items-center gap-2">
+      <div
+        class="set-countdown-btn overflow-hidden rounded-full relative flex items-center gap-2"
+        classList={{
+          "bg-w-fg-5": props.highlight,
+        }}
+      >
         <div
-          class="flex items-center justify-center p-2 rounded-full bg-w-bg-5"
+          class=""
+          classList={{
+            "flex items-center justify-center p-2 rounded-full": true,
+          }}
           onClick={(event) => {
             const { x, y } = event;
             // if (props.onClick) {
@@ -283,157 +292,203 @@ export function SetActionCountdownView(props: {
           <Show
             when={state().running}
             fallback={
-              <div class="text-w-fg-1">
+              <div
+                classList={{
+                  "text-w-fg-0": !!props.highlight,
+                  "text-w-fg-1": !props.highlight,
+                }}
+              >
                 <Play class="w-4 h-4" />
               </div>
             }
           >
-            <div class="text-w-fg-1">
+            <div
+              classList={{
+                "text-w-fg-0": !!props.highlight,
+                "text-w-fg-1": !props.highlight,
+              }}
+            >
               <Pause class="w-4 h-4" />
             </div>
           </Show>
         </div>
       </div>
-      <div
-        classList={{
-          "flex items-center text-w-fg-1 transition-all duration-200": true,
-        }}
-      >
+      <div>
         <div
           classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_minutes1}
-        >
-          {countdown1().minutes1}
-        </div>
-        <div
-          classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_minutes2}
-        >
-          {countdown1().minutes2}
-        </div>
-        <div
-          classList={{
-            "text-center w-[6px]": true,
-            "": state().running,
+            "flex items-center transition-all duration-200": true,
+            "text-4xl text-w-fg-0": state().running,
+            "text-w-fg-1": !state().running,
           }}
         >
-          :
-        </div>
-        <div
-          classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_seconds1}
-        >
-          {countdown1().seconds1}
-        </div>
-        <div
-          classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_seconds2}
-        >
-          {countdown1().seconds2}
-        </div>
-        <div
-          classList={{
-            "text-center w-[6px]": true,
-          }}
-        >
-          .
-        </div>
-        <div
-          classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_ms1}
-        >
-          {countdown1().ms1}
-        </div>
-        <div
-          classList={{
-            "text-center w-[10px]": true,
-          }}
-          ref={$a_ms2}
-        >
-          {countdown1().ms2}
-        </div>
-      </div>
-      <div class="flex items-center">
-        <Show when={countdown1().completed && state().show_countdown2}>
           <div
             classList={{
-              "flex items-center text-green-500": true,
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_minutes1}
+          >
+            {countdown1().minutes1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_minutes2}
+          >
+            {countdown1().minutes2}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[12px]": state().running,
+              "width-[6px]": !state().running,
             }}
           >
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_minutes1}
-            >
-              {countdown2().minutes1}
-            </div>
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_minutes2}
-            >
-              {countdown2().minutes2}
-            </div>
-            <div
-              classList={{
-                "text-center w-[4px]": true,
-              }}
-            >
-              :
-            </div>
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_seconds1}
-            >
-              {countdown2().seconds1}
-            </div>
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_seconds2}
-            >
-              {countdown2().seconds2}
-            </div>
-            <div
-              classList={{
-                "text-center w-[4px]": true,
-              }}
-            >
-              .
-            </div>
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_ms1}
-            >
-              {countdown2().ms1}
-            </div>
-            <div
-              classList={{
-                "text-center w-[10px]": true,
-              }}
-              ref={$b_ms2}
-            >
-              {countdown2().ms2}
-            </div>
+            :
           </div>
-        </Show>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_seconds1}
+          >
+            {countdown1().seconds1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_seconds2}
+          >
+            {countdown1().seconds2}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[12px]": state().running,
+              "width-[6px]": !state().running,
+            }}
+          >
+            .
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_ms1}
+          >
+            {countdown1().ms1}
+          </div>
+          <div
+            classList={{
+              "text-center": true,
+              "width-[18px]": state().running,
+              "width-[10px]": !state().running,
+            }}
+            ref={$a_ms2}
+          >
+            {countdown1().ms2}
+          </div>
+        </div>
+        <div class="flex items-center">
+          <Show when={countdown1().completed && state().show_countdown2}>
+            <div
+              classList={{
+                "flex items-center text-w-green": true,
+                "text-4xl": state().running,
+              }}
+            >
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_minutes1}
+              >
+                {countdown2().minutes1}
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_minutes2}
+              >
+                {countdown2().minutes2}
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[12px]": state().running,
+                  "width-[4px]": !state().running,
+                }}
+              >
+                :
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_seconds1}
+              >
+                {countdown2().seconds1}
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_seconds2}
+              >
+                {countdown2().seconds2}
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[12px]": state().running,
+                  "width-[4px]": !state().running,
+                }}
+              >
+                .
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_ms1}
+              >
+                {countdown2().ms1}
+              </div>
+              <div
+                classList={{
+                  "text-center": true,
+                  "width-[18px]": state().running,
+                  "width-[10px]": !state().running,
+                }}
+                ref={$b_ms2}
+              >
+                {countdown2().ms2}
+              </div>
+            </div>
+          </Show>
+        </div>
       </div>
       {/* <div class="flex items-center">
         <Show when={countdown2().finished}>

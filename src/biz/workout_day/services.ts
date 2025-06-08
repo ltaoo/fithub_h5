@@ -1,7 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
 
 import { request } from "@/biz/requests";
-import { WorkoutPlanActionPayload, WorkoutPlanStepResp } from "@/biz/workout_plan/types";
+import { WorkoutPlanActionPayload, WorkoutPlanStepJSON250607 } from "@/biz/workout_plan/types";
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import { ListResponseWithCursor } from "@/biz/requests/types";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/utils";
 
 import { WorkoutDayStatus } from "./constants";
+import { FetchParams } from "@/domains/list/typing";
 
 /**
  * 创建训练日
@@ -32,7 +33,11 @@ export function createWorkoutDay(body: {
   student_ids: number[];
   start_when_create: boolean;
 }) {
-  return request.post<{ ids: number[] }>("/api/workout_day/create", body);
+  return request.post<{ ids: number[] }>("/api/workout_day/create", {
+    workout_plan_id: body.workout_plan_id,
+    student_ids: body.student_ids.filter(Boolean),
+    start_when_create: body.start_when_create,
+  });
 }
 
 export function checkHasStartedWorkoutDay() {
@@ -404,7 +409,7 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     id: workout_day.id,
     title: workout_day.workout_plan.title,
     overview: workout_day.workout_plan.overview,
-    tags: workout_day.workout_plan.tags.split(","),
+    tags: workout_day.workout_plan.tags.split(",").filter(Boolean),
     status: workout_day.status,
     started_at: dayjs(workout_day.started_at),
     started_at_text: dayjs(workout_day.started_at).format("MM-DD HH:mm"),
@@ -485,7 +490,7 @@ export function fetchWorkoutDayCurStep(body: { id: number }) {
  * @param body
  * @returns
  */
-export function fetchWorkoutDayList(body: { page: number; page_size: number }) {
+export function fetchWorkoutDayList(body: FetchParams) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -493,10 +498,14 @@ export function fetchWorkoutDayList(body: { page: number; page_size: number }) {
       started_at: string;
       finished_at: string;
       workout_plan: {
+        id: number;
         title: string;
       };
     }>
-  >("/api/workout_day/list", body);
+  >("/api/workout_day/list", {
+    page_size: body.pageSize,
+    page: body.page,
+  });
 }
 
 export function fetchWorkoutDayListProcess(r: TmpRequestResp<typeof fetchWorkoutDayList>) {
@@ -548,6 +557,7 @@ export function fetchFinishedWorkoutDayListProcess(r: TmpRequestResp<typeof fetc
         started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : null,
         finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : null,
         day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
+        date_text: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
       };
     }),
   });

@@ -47,28 +47,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         bus.emit(Events.Error, r.error);
         return Result.Err(r.error);
       }
-      const { muscle_ids, equipment_ids, action_ids, steps } = r.data;
-      //       if (action_ids.length) {
-      //         const r2 = await request.workout_action.list.run({ ids: muscle_ids });
-      //         if (r2.error) {
-      //           return;
-      //         }
-      //         _actions = r2.data.list.map((v) => {
-      //           return {
-      //             id: v.id,
-      //             zh_name: v.zh_name,
-      //           };
-      //         });
-      //         for (let a = 0; a < steps.length; a += 1) {
-      //           const step = steps[a];
-      //           for (let c = 0; c < step.actions.length; c += 1) {
-      //             const act = step.actions[c];
-      //             const profile = _actions.find((v) => v.id === act.action.id);
-      //             if (profile && profile.zh_name !== act.action.zh_name) {
-      //             }
-      //           }
-      //         }
-      //       }
+      const { muscle_ids, equipment_ids, steps } = r.data;
       if (muscle_ids.length) {
         const r2 = await request.muscle.list.run({ ids: muscle_ids });
         if (r2.error) {
@@ -123,11 +102,11 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         level: data.level,
         tags: data.tags,
         suggestions: data.suggestions,
-        points: data.points,
         estimated_duration_text: data.estimated_duration_text,
         steps: data.steps,
         muscles: _muscles,
         equipments: _equipments,
+        creator: data.creator,
       };
     },
   };

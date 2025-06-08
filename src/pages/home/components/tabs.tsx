@@ -16,7 +16,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
     setState(v);
   });
   store.onLinePositionChange((v) => {
-    // console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
+    console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
     setLeft(v.left);
   });
 

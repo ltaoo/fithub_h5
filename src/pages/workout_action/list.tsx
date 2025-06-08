@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionCard } from "@/components/workout-action-card";
+import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 import { base, Handler } from "@/domains/base";
 import {
@@ -26,6 +27,8 @@ import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
 import { WorkoutActionType, WorkoutActionTypeOptions } from "@/biz/workout_action/constants";
 import {
+  fetchWorkoutActionHistoryListOfWorkoutAction,
+  fetchWorkoutActionHistoryListOfWorkoutActionProcess,
   fetchWorkoutActionHistoryListOfWorkoutDay,
   fetchWorkoutActionHistoryListOfWorkoutDayProcess,
   fetchWorkoutActionList,
@@ -39,6 +42,7 @@ import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { createReport } from "@/biz/report/services";
 import { Muscles } from "@/biz/muscle/data";
+import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 
 function WorkoutActionListViewModel(props: ViewComponentProps) {
   const request = {
@@ -48,19 +52,6 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
         {
           pageSize: 24,
         }
-      ),
-      profile: new RequestCore(fetchWorkoutActionProfile, {
-        process: fetchWorkoutActionProfileProcess,
-        client: props.client,
-      }),
-    },
-    workout_action_history: {
-      list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
-          process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
-          client: props.client,
-        }),
-        { pageSize: 3 }
       ),
     },
     report: {
@@ -75,39 +66,17 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
-    handleClickWorkoutAction(action: TheWorkoutAction) {
-      methods.showWorkoutActionProfile(action);
+    handleClickWorkoutAction(v: TheWorkoutAction) {
+      methods.showWorkoutActionProfile(v);
+      ui.$workout_action.methods.fetch({ id: v.id });
     },
-    async showWorkoutActionProfile(action: { id: number | string }) {
+    async showWorkoutActionProfile(action: { id: number }) {
       ui.$dialog_workout_action_profile.show();
-      request.workout_action_history.list.init({
-        workout_action_id: Number(action.id),
-      });
-      if (request.workout_action.profile.response && request.workout_action.profile.response.id === action.id) {
-        return;
-      }
-      const r = await request.workout_action.profile.run({ id: action.id });
-      if (r.error) {
-        props.app.tip({
-          text: ["获取动作详情失败", r.error.message],
-        });
-        return;
-      }
-      _cur_workout_action = {
-        ...r.data,
-        muscles: r.data.muscles.map((m) => {
-          const matched = Muscles.find((vv) => vv.id === m.id);
-          return {
-            id: m.id,
-            name: matched ? matched.name : String(m.id),
-          };
-        }),
-      };
-      methods.refresh();
     },
   };
   const ui = {
     $view: new ScrollViewCore({ disabled: true }),
+    // 动作列表接口相关逻辑在这里面
     $select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: request.workout_action.list,
@@ -159,10 +128,10 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
         ui.$dialog_report.hide();
       },
     }),
+    $workout_action: WorkoutActionProfileViewModel({ client: props.client }),
     $dialog_workout_action_profile: new DialogCore({}),
   };
 
-  let _cur_workout_action: (WorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
   let _state = {
     get response() {
       return ui.$select.request.action.list.response;
@@ -171,13 +140,13 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
       return ui.$select.state.tags;
     },
     get loading() {
-      return request.workout_action.profile.loading;
+      return ui.$workout_action.state.loading;
     },
     get cur_workout_action() {
-      return _cur_workout_action;
+      return ui.$workout_action.state.profile;
     },
     get cur_workout_action_histories() {
-      return request.workout_action_history.list.response.dataSource;
+      return ui.$workout_action.state.histories;
     },
   };
   enum Events {
@@ -188,8 +157,8 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  request.workout_action_history.list.onStateChange(() => methods.refresh());
   ui.$select.onStateChange(() => methods.refresh());
+  ui.$workout_action.onStateChange(() => methods.refresh());
 
   return {
     state: _state,
@@ -276,7 +245,7 @@ export function WorkoutActionListView(props: ViewComponentProps) {
                         >
                           <div class="absolute inset-0 p-2">
                             <div class="overflow-hidden  truncate line-clamp-2 break-all whitespace-pre-wrap">
-                              <div class="text-sm">{action.zh_name}</div>
+                              <div class="">{action.zh_name}</div>
                             </div>
                           </div>
                           <div class="w-full" style="padding-bottom: 100%"></div>
@@ -303,67 +272,16 @@ export function WorkoutActionListView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_workout_action_profile} app={props.app}>
-        <div class="relative min-h-[320px] p-2">
-          <div class="h-[32px]"></div>
-          <Show when={state().loading}>
-            <div class="absolute inset-0">
-              {/* <div class="absolute inset-0 bg-white opacity-40"></div> */}
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="flex items-center justify-center p-4 rounded-lg text-w-fg-0 bg-w-bg-5">
-                  <Loader2 class="w-8 h-8 animate-spin" />
-                </div>
-              </div>
-            </div>
-          </Show>
-          <Show when={state().cur_workout_action}>
-            <div class="mt-2">
-              <WorkoutActionCard {...state().cur_workout_action!} />
-            </div>
-          </Show>
-          <Show when={state().cur_workout_action_histories.length}>
-            <div class="space-y-2 mt-2">
-              <div class="border-2 border-w-fg-3 rounded-lg">
-                <div class="flex items-center justify-between p-2 border-b-2 border-w-fg-3">
-                  <div class="text-w-fg-0">最大重量</div>
-                  {/* <div class="p-2 rounded-full bg-w-bg-5">
-                  <ChevronRight class="w-4 h-4 text-w-fg-1" />
-                </div> */}
-                </div>
-                <div class="p-2 space-y-2">
-                  <For each={state().cur_workout_action_histories}>
-                    {(history) => {
-                      return (
-                        <div class="">
-                          <div class="flex items-center">
-                            <div class="flex items-center text-w-fg-0">
-                              <div class="text-lg">{history.weight}</div>
-                              <div class="text-sm">{history.weight_unit}</div>
-                            </div>
-                            <div class="mx-2 text-w-fg-1 text-sm">x</div>
-                            <div class="flex items-center text-w-fg-0">
-                              <div class="text-lg">{history.reps}</div>
-                              <div class="text-sm">{history.reps_unit}</div>
-                            </div>
-                          </div>
-                          <div class="text-sm text-w-fg-1">{history.created_at}</div>
-                        </div>
-                      );
-                    }}
-                  </For>
-                </div>
-              </div>
-            </div>
-          </Show>
-          <div
-            class="absolute right-2 top-2 p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.ui.$dialog_workout_action_profile.hide();
-            }}
-          >
-            <X class="w-4 h-4 text-w-fg-1" />
-          </div>
+      <Sheet ignore_safe_height store={vm.ui.$dialog_workout_action_profile} app={props.app}>
+        <div
+          class="z-10 absolute right-2 top-2 p-2 rounded-full bg-w-bg-5"
+          onClick={() => {
+            vm.ui.$dialog_workout_action_profile.hide();
+          }}
+        >
+          <X class="w-4 h-4 text-w-fg-0" />
         </div>
+        <WorkoutActionProfileView store={vm.ui.$workout_action} />
       </Sheet>
       <DropdownMenu store={vm.ui.$dropdown_menu} />
     </>

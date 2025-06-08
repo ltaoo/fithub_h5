@@ -316,12 +316,20 @@ const configure = {
           require: ["login"],
         },
       },
+      subscription_plan_profile: {
+        title: "订阅计划",
+        pathname: "/subscription_plan/profile",
+      },
+      settings: {
+        title: "设置",
+        pathname: "/settings",
+      },
       login: {
-        title: "教练登录",
+        title: "登录",
         pathname: "/login",
       },
       register: {
-        title: "教练注册",
+        title: "注册",
         pathname: "/register",
       },
       notfound: {

@@ -65,7 +65,7 @@ export function WorkoutPlanTagSelectView(
                               classList={{
                                 "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
                                 "border-w-fg-3": !opt.selected,
-                                "border-w-fg-2 bg-w-g-5": opt.selected,
+                                "border-w-green bg-w-g-5": opt.selected,
                               }}
                               onClick={() => {
                                 vm.methods.select(opt.value);

@@ -6,7 +6,7 @@ import { Result, UnpackedResult } from "@/domains/result";
 import { FetchParams } from "@/domains/list/typing";
 import { parseJSONStr } from "@/utils";
 
-import { WorkoutActionSteps, WorkoutActionProblems } from "./types";
+import { WorkoutActionSteps, WorkoutActionProblems, WorkoutActionStepsJSON250608 } from "./types";
 import { WorkoutActionType } from "./constants";
 import dayjs from "dayjs";
 
@@ -58,18 +58,15 @@ export function fetchWorkoutActionListProcess(r: TmpRequestResp<typeof fetchWork
   }
   return Result.Ok({
     no_more: !r.data.has_more,
-    list: r.data.list.map((action) => {
+    list: r.data.list.map((v) => {
       return {
-        id: action.id,
-        name: action.name,
-        zh_name: action.zh_name,
-        type: action.type,
-        overview: action.overview,
-        tags1: action.tags1.split(",").filter(Boolean),
-        tags2: action.tags2.split(",").filter(Boolean),
-        level: action.level,
-        equipments: idsMapValue(action.equipment_ids),
-        muscles: idsMapValue(action.muscle_ids),
+        id: v.id,
+        name: v.name,
+        zh_name: v.zh_name,
+        type: v.type,
+        overview: v.overview,
+        equipments: idsMapValue(v.equipment_ids),
+        muscles: idsMapValue(v.muscle_ids),
       };
     }),
   });
@@ -155,14 +152,21 @@ export function fetchWorkoutActionProfile(body: { id: number | string }) {
     alias: string;
     overview: string;
     type: string;
+    sort_idx: number;
     level: number;
+    score: number;
     tags1: string;
     tags2: string;
+    pattern: string;
     details: string;
+    steps: string;
     points: string;
     problems: string;
+    extra_config: string;
     equipment_ids: string;
     muscle_ids: string;
+    primary_muscle_ids: string;
+    secondary_muscle_ids: string;
     alternative_action_ids: string;
     advanced_action_ids: string;
     regressed_action_ids: string;
@@ -185,21 +189,38 @@ export function fetchWorkoutActionProfileProcess(r: TmpRequestResp<typeof fetchW
     level: data.level,
     tags1: data.tags1.split(",").filter(Boolean),
     tags2: data.tags2.split(",").filter(Boolean),
-    details: (() => {
-      const r = parseJSONStr<WorkoutActionSteps>(data.details);
-      console.log("[SERVICE]fetchWorkoutActionProfileProcess", r);
-      if (r.error) {
-        return {
-          startPosition: "",
-          start_position: "",
-          steps: [],
-        };
+    steps: (() => {
+      if (data.steps) {
+        const r = parseJSONStr<WorkoutActionStepsJSON250608>(data.steps);
+        if (r.error) {
+          return [];
+        }
+        return r.data.steps;
       }
-      return {
-        startPosition: r.data.startPosition,
-        start_position: r.data.startPosition,
-        steps: r.data.steps ?? [],
-      };
+      const r = parseJSONStr<WorkoutActionSteps & WorkoutActionStepsJSON250608>(data.details);
+      // console.log("[SERVICE]fetchWorkoutActionProfileProcess", r);
+      if (r.error) {
+        return [];
+      }
+      if (!r.data.v) {
+        const data = r.data as WorkoutActionSteps;
+        return [
+          {
+            text: data.start_position ?? data.startPosition,
+            imgs: [],
+            tips: ["起始姿势"],
+          },
+          ...data.steps.map((text) => {
+            return {
+              text,
+              imgs: [],
+              tips: [],
+            };
+          }),
+        ];
+      }
+      const d = r.data as WorkoutActionStepsJSON250608;
+      return d.steps;
     })(),
     points: (() => {
       const r = parseJSONStr<string[]>(data.points);

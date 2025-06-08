@@ -1,5 +1,13 @@
+/**
+ * @file 训练计划创建的核心实现
+ */
 import { $workout_action_list } from "@/store";
 import { ViewComponentProps } from "@/store/types";
+
+import { ObjectFieldCore, SingleFieldCore, ArrayFieldCore } from "@/domains/ui/formv2";
+import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
+import { TagInputCore } from "@/domains/ui/form/tag-input";
+import { Result } from "@/domains/result";
 import { MuscleSelectViewModel } from "@/biz/muscle_select";
 import { EquipmentSelectViewModel } from "@/biz/equipment_select";
 import {
@@ -14,10 +22,6 @@ import { WorkoutActionProfile } from "@/biz/workout_action/services";
 import { WorkoutPlanStepBody, WorkoutPlanPreviewPayload } from "@/biz/workout_plan/types";
 import { WorkoutActionMultipleSelectViewModel } from "@/biz/workout_action_multiple_select";
 import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
-import { ObjectFieldCore, SingleFieldCore, ArrayFieldCore } from "@/domains/ui/formv2";
-import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
-import { TagInputCore } from "@/domains/ui/form/tag-input";
-import { Result } from "@/domains/result";
 
 export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "client" | "app">) {
   function handleSelectAction(

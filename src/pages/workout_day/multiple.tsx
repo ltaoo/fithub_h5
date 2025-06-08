@@ -231,7 +231,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                 );
               }}
             </For>
-            <div
+            {/* <div
               classList={{
                 "rounded-full ": true,
               }}
@@ -241,7 +241,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                   <Plus class="w-6 h-6 text-w-fg-0" />
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </Show>

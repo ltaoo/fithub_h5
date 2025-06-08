@@ -115,7 +115,13 @@ export function WorkoutPlanRecommendLayout(props: ViewComponentProps) {
           {(view, idx) => {
             const Page = props.pages[view.name as Exclude<PageKeys, "root">];
             return (
-              <KeepAliveRouteView class="absolute inset-0" style={{ "z-index": idx() }} store={view} index={idx()}>
+              <KeepAliveRouteView
+                class="absolute inset-0"
+                style={{ "z-index": idx() }}
+                app={props.app}
+                store={view}
+                index={idx()}
+              >
                 <Page
                   app={props.app}
                   history={props.history}

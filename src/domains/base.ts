@@ -75,14 +75,11 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
   debug = false;
 
   _emitter = mitt<BaseDomainEvents<Events>>();
-  listeners: Record<string | number, (() => void)[]> = {};
+  // event 为键，callback 列表为值的对象
+  // @ts-ignore
+  listeners: Record<keyof BaseDomainEvents<Events>, (() => void)[]> = {};
 
-  constructor(
-    props: Partial<{
-      // unique_id: string;
-      // debug: boolean;
-    }> = {}
-  ) {
+  constructor(props: {} = {}) {
     // @ts-ignore
     const { unique_id, debug } = props;
     if (unique_id) {
@@ -123,7 +120,8 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     this._emitter.off(event, handler);
   }
   offEvent<Key extends keyof BaseDomainEvents<Events>>(k: Key) {
-    const listeners = this.listeners[k as string] || [];
+    const listeners = this.listeners[k] || [];
+    // console.log("[BASE]offEvent - ", this.unique_id, k, this.listeners[k], listeners);
     for (let i = 0; i < listeners.length; i += 1) {
       const off = listeners[i];
       off();
@@ -131,12 +129,14 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
   }
   on<Key extends keyof BaseDomainEvents<Events>>(event: Key, handler: Handler<BaseDomainEvents<Events>[Key]>) {
     const unlisten = () => {
-      const listeners = this.listeners[event as string] || [];
-      this.listeners[event as string] = listeners.filter((l) => l !== unlisten);
+      const listeners = this.listeners[event] || [];
+      this.listeners[event] = listeners.filter((l) => l !== unlisten);
       this.off(event, handler);
     };
-    const listeners = (this.listeners[event as string] || []) as (() => void)[];
+    const listeners = this.listeners[event] || [];
     listeners.push(unlisten);
+    this.listeners[event] = listeners;
+    // console.log("[BASE]on - ", this.unique_id, event, this.listeners[event], listeners);
     this._emitter.on(event, handler);
     return unlisten;
   }

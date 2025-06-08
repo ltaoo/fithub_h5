@@ -61,7 +61,7 @@ export function SetActionView(props: {
           classList={{
             "flex items-center justify-center px-2 rounded-full": true,
             "bg-blue-500": !props.highlight,
-            "bg-green-500": props.highlight
+            "bg-w-green": props.highlight
           }}
         >
           <div class="text-sm">{props.idx}</div>

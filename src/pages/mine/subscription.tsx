@@ -1,15 +1,23 @@
+import { For, Show } from "solid-js";
+
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
-import { Button, ScrollView } from "@/components/ui";
+import { Button, ListView, ScrollView } from "@/components/ui";
+import { Sheet } from "@/components/ui/sheet";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
-import { fetchSubscriptionPlanList, fetchSubscriptionPlanListProcess } from "@/biz/subscription/services";
-import { For, Show } from "solid-js";
-import { Sheet } from "@/components/ui/sheet";
+import {
+  fetchSubscriptionList,
+  fetchSubscriptionListProcess,
+  fetchSubscriptionPlanList,
+  fetchSubscriptionPlanListProcess,
+} from "@/biz/subscription/services";
+import { ListCore } from "@/domains/list";
+import { Result } from "@/domains/result";
 
 function MineSubscriptionViewModel(props: ViewComponentProps) {
   const request = {
@@ -19,6 +27,14 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
         client: props.client,
       }),
     },
+    subscription: {
+      list: new ListCore(
+        new RequestCore(fetchSubscriptionList, {
+          process: fetchSubscriptionListProcess,
+          client: props.client,
+        })
+      ),
+    },
   };
   const methods = {
     refresh() {
@@ -26,6 +42,10 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
     },
     back() {
       props.history.back();
+    },
+    async ready() {
+      await request.subscription.list.init();
+      return Result.Ok(null);
     },
     showDialogSubscriptionPlanChoices(plan: { id: number }) {
       const resp = request.subscription_plan.list.response;
@@ -48,7 +68,16 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
     },
   };
   const ui = {
-    $view: new ScrollViewCore({}),
+    $view: new ScrollViewCore({
+      async onPullToRefresh() {
+        await methods.ready();
+        ui.$view.finishPullToRefresh();
+      },
+      async onReachBottom() {
+        await request.subscription.list.loadMore();
+        ui.$view.finishLoadingMore();
+      },
+    }),
     $dialog_choices: new DialogCore({}),
     $btn_order_confirm: new ButtonCore({
       onClick() {
@@ -66,6 +95,9 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
   let _cur_plan: TheResponseOfRequestCore<typeof request.subscription_plan.list>["list"][number] | null = null;
   let _selected_choice_value = "month";
   let _state = {
+    get subscription() {
+      return request.subscription.list.response;
+    },
     get subscription_plans() {
       return request.subscription_plan.list.response ? request.subscription_plan.list.response.list : [];
     },
@@ -93,15 +125,16 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  request.subscription.list.onStateChange(() => methods.refresh());
   request.subscription_plan.list.onStateChange(() => methods.refresh());
 
   return {
+    request,
     methods,
     ui,
     state: _state,
     async ready() {
-      const r = await request.subscription_plan.list.run();
-      console.log(r);
+      methods.ready();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -114,26 +147,26 @@ export function MineSubscriptionView(props: ViewComponentProps) {
   return (
     <>
       <PageView store={vm}>
-        <div class="flex items-center gap-2">
-          <For each={state().subscription_plans}>
-            {(plan) => {
+        <ListView store={vm.request.subscription.list} class="space-y-2">
+          <For each={state().subscription.dataSource}>
+            {(v) => {
               return (
-                <div
-                  class="flex-1 p-4 border-2 border-w-fg-3 rounded-lg"
-                  onClick={() => {
-                    vm.methods.showDialogSubscriptionPlanChoices(plan);
-                  }}
-                >
-                  <div>{plan.name}</div>
+                <div class="relative p-4 border-2 border-w-fg-3 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div>{v.text}</div>
+                    <div class="text-w-fg-0 text-sm">{v.status_text}</div>
+                  </div>
+                  <div class="text-sm text-w-fg-1">{v.created_at}</div>
+                  <div class="text-w-fg-2">{v.reason}</div>
                 </div>
               );
             }}
           </For>
-        </div>
+        </ListView>
       </PageView>
       <Sheet store={vm.ui.$dialog_choices} app={props.app}>
         <div class="p-2">
-          <div class="text-xl">{state().selected_plan.name}</div>
+          <div class="text-xl text-center">{state().selected_plan.name}</div>
           <Show when={state().selected_plan}>
             <div class="flex items-center gap-2 mt-4">
               <For each={state().selected_plan.choices}>

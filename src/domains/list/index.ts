@@ -278,7 +278,6 @@ export class ListCore<
    */
   async fetch(params: Partial<FetchParams>, ...restArgs: any[]) {
     // const [params, ...restArgs] = args;
-    this.response.error = null;
     this.response.loading = true;
     this.emit(Events.LoadingChange, true);
     this.emit(Events.StateChange, { ...this.response });
@@ -292,6 +291,7 @@ export class ListCore<
     }
     const processedArgs = [processedParams, ...restArgs] as Parameters<S["service"]>;
     const res = await this.request.run(...processedArgs);
+    this.response.error = null;
     this.response.loading = false;
     this.response.search = omit({ ...mergedParams }, ["page", "pageSize"]);
     if (this.response.initial) {

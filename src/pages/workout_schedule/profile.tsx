@@ -63,6 +63,11 @@ function WorkoutScheduleProfileViewModel(props: ViewComponentProps) {
       _applied = false;
       methods.refresh();
     },
+    handleClickWorkoutPlan(plan: { id: number }) {
+      props.history.push("root.workout_plan_profile", {
+        id: String(plan.id),
+      });
+    },
   };
   const ui = {
     $view: new ScrollViewCore(),
@@ -139,7 +144,7 @@ export function WorkoutScheduleProfileView(props: ViewComponentProps) {
       operations={
         <div>
           <Button class="w-full" store={vm.ui.$btn_apply}>
-            {state().applied ? "取消" : "应用"}
+            {state().applied ? "取消应用" : "应用"}
           </Button>
         </div>
       }
@@ -160,7 +165,14 @@ export function WorkoutScheduleProfileView(props: ViewComponentProps) {
           <For each={state().profile?.schedules}>
             {(schedule) => {
               return (
-                <div class="relative p-4 border-2 border-w-fg-3 rounded-lg">
+                <div
+                  class="relative p-4 border-2 border-w-fg-3 rounded-lg"
+                  onClick={() => {
+                    if (schedule.type === WorkoutScheduleDayType.Workout) {
+                      vm.methods.handleClickWorkoutPlan(schedule.workout_plan);
+                    }
+                  }}
+                >
                   <Show
                     when={schedule.type === WorkoutScheduleDayType.Workout}
                     fallback={
