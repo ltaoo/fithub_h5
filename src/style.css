@@ -5,7 +5,11 @@
 .safe-height {
   height: env(safe-area-inset-bottom);
   height: constant(safe-area-inset-bottom);
+  /* height: 88px; */
   background-color: var(--weui-BG-1);
+}
+.safe-height--no-color {
+  background-color: unset;
 }
 .scroll {
   scroll-behavior: smooth;

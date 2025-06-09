@@ -3,9 +3,9 @@ import { For, Match, Switch } from "solid-js";
 import { SingleFieldCore } from "@/domains/ui/formv2";
 import { Input } from "@/components/ui";
 import { Select } from "@/components/ui/select";
+import { HeightDragSelectView } from "@/components/height-drag-select";
 
 import { MemberValuesViewModel } from "../model";
-import { HeightDragSelectView } from "@/components/height-drag-select";
 
 export function MemberBasicValues(props: { store: ReturnType<typeof MemberValuesViewModel>["ui"]["$basic_values"] }) {
   return (
@@ -21,8 +21,8 @@ export function MemberBasicValues(props: { store: ReturnType<typeof MemberValues
               return null;
             }
             return (
-              <div>
-                <div class="text-w-fg-1">{field.label}</div>
+              <div class="field">
+                <div class="label text-sm text-w-fg-0">{field.label}</div>
                 {(() => {
                   if ($inner.symbol === "SingleFieldCore") {
                     const field = $inner.state;

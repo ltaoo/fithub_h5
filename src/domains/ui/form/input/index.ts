@@ -1,8 +1,8 @@
 import { BaseDomain, Handler } from "@/domains/base";
-import { ValueInputInterface } from "../types";
+import { ValueInputInterface } from "@/domains/ui/form/types";
 
 enum Events {
-  Change,
+  Change = 10,
   StateChange,
   Mounted,
   Focus,
@@ -166,6 +166,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
     if (this.type === "number") {
       this.value = Number(value) as T;
     }
+    // console.log("[DOMAIN]ui/input - setValue before extra.silence", extra.silence);
     if (!extra.silence) {
       this.emit(Events.Change, value);
       this.emit(Events.StateChange, { ...this.state });

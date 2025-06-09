@@ -18,11 +18,13 @@ import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 import { BizError } from "@/domains/error";
+import { WorkoutActionProfileViewModel } from "../workout_action/workout_action";
 
 export function WorkoutActionSelectDialogViewModel(props: {
   defaultValue: { id: number | string; zh_name: string }[];
   list: typeof $workout_action_list;
   multiple?: boolean;
+  client: HttpClientCore;
   onChange?: (action: WorkoutActionProfile[]) => void;
   onOk?: (actions: { id: number | string; zh_name: string }[]) => void;
   onError?: (error: BizError) => void;
@@ -121,6 +123,10 @@ export function WorkoutActionSelectDialogViewModel(props: {
         props.onOk(_selected);
       }
     },
+    handleClickWorkoutAction(v: { id: number }) {
+      ui.$workout_action.ui.$dialog.show();
+      ui.$workout_action.methods.fetch({ id: v.id });
+    },
   };
   const ui = {
     $input_type_select: new SelectCore({
@@ -195,6 +201,7 @@ export function WorkoutActionSelectDialogViewModel(props: {
         ui.$dialog.hide();
       },
     }),
+    $workout_action: WorkoutActionProfileViewModel({ client: props.client }),
     $view: new ScrollViewCore({
       async onReachBottom() {
         await request.action.list.loadMore();

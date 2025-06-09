@@ -60,8 +60,8 @@ type WorkoutActionInput = ReturnType<typeof WorkoutActionInput>;
 
 export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () => void }) {
   const ui = {
-    $input_set_count: new InputCore({ defaultValue: "3" }),
-    $input_set_rest: new InputCore({ defaultValue: "90" }),
+    $input_set_count: new InputCore({ defaultValue: 3, type: "number" }),
+    $input_set_rest: new InputCore({ defaultValue: 90, type: "number" }),
     $input_set_weight: new InputCore({ defaultValue: "RPE 6" }),
     /** 备注 */
     $input_set_remark: new InputCore({ defaultValue: "" }),
@@ -92,7 +92,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
             reps: new SingleFieldCore({
               label: "计数",
               name: "reps",
-              input: new InputCore({ defaultValue: "12" }),
+              input: new InputCore({ unique_id: "reps_input", defaultValue: 12, type: "number" }),
             }),
             reps_unit: new SingleFieldCore({
               label: "计数单位",
@@ -198,6 +198,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
   const bus = base<TheTypesOfEvents>();
 
   ui.$sets.onChange(async (changed) => {
+    // console.log("[COMPONENT]workout_plan/component/action-input", changed);
     const field = ui.$sets.mapFieldWithIndex(changed.idx);
     if (field) {
       const r = await field.field.validate();
@@ -208,6 +209,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         _set_actions[changed.idx].weight = value.weight;
       }
     }
+    bus.emit(Events.Change, _state.value);
   });
 
   return {
@@ -247,8 +249,8 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         });
       } else {
         ui.$sets.hideField("rest_duration");
-        ui.$sets.setFieldValue("reps_unit", "次");
-        ui.$sets.setFieldValue("reps", "12");
+        ui.$sets.setFieldValue("reps_unit", getSetValueUnit("次"));
+        ui.$sets.setFieldValue("reps", 12);
         _set_actions = _set_actions.map((act) => {
           return {
             action: act.action,
@@ -261,7 +263,26 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       }
       bus.emit(Events.StateChange, { ..._state });
     },
-    setValue(value: { type?: WorkoutPlanSetType; actions: typeof _set_actions }) {
+    setValue(value: {
+      type?: WorkoutPlanSetType;
+      set_count?: number;
+      set_rest_duration?: number;
+      set_weight?: string;
+      set_note?: string;
+      actions: typeof _set_actions;
+    }) {
+      if (value.set_count) {
+        ui.$input_set_count.setValue(value.set_count);
+      }
+      if (value.set_rest_duration) {
+        ui.$input_set_rest.setValue(value.set_rest_duration);
+      }
+      if (value.set_weight) {
+        ui.$input_set_weight.setValue(value.set_weight);
+      }
+      if (value.set_note) {
+        ui.$input_set_remark.setValue(value.set_note);
+      }
       // console.log("[COMPONENT]action-input - setValue", value);
       if (value.type !== undefined) {
         _type = value.type;
@@ -304,7 +325,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
             const $input = ui.$sets.append();
             if ([WorkoutPlanSetType.HIIT].includes(_type)) {
               $input.fields.reps_unit.setValue("秒");
-              $input.fields.reps.setValue("30");
+              $input.fields.reps.setValue(30);
               $input.fields.rest_duration.show();
               // $input.fields.rest_duration.setValue("30");
             }
@@ -363,7 +384,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         note: ui.$input_set_remark.value,
       };
       _set_actions = [..._set_actions, created];
-      $created.fields.reps.setValue(String(next_reps));
+      $created.fields.reps.setValue(next_reps);
       $created.fields.weight.setValue(next_weight);
       bus.emit(Events.Change, _state.value);
       this.refresh();
@@ -404,7 +425,7 @@ function SetActionView(props: {
   type: WorkoutPlanSetType;
   store: ObjectFieldCore<{
     action: SingleFieldCore<WorkoutActionInput>;
-    reps: SingleFieldCore<InputCore<string>>;
+    reps: SingleFieldCore<InputCore<number>>;
     reps_unit: SingleFieldCore<SelectCore<SetValueUnit>>;
     weight: SingleFieldCore<InputCore<string>>;
     rest_duration: SingleFieldCore<InputCore<string>>;

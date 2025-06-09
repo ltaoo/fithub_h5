@@ -5,155 +5,105 @@ import { base, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
 import { ListCore } from "@/domains/list";
 import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
+import { SelectViewModel } from "@/biz/select_base";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
 
-type WorkoutPlanId = number | string;
-type WorkoutPlan = {
-  id: WorkoutPlanId;
-  title: string;
-};
-
-export function WorkoutPlanSelectViewModel(props: {
-  defaultValue: WorkoutPlan[];
+export function WorkoutPlanSelectViewModel<T extends ListCore<any>>(props: {
+  defaultValue: T[];
   multiple?: boolean;
-  // list: ListCore<RequestCore<typeof fetchWorkoutPlanList, TheResponseOfFetchFunction<typeof fetchWorkoutPlanList>>>;
-  list: ListCore<any>;
-  onChange?: (list: WorkoutPlan[]) => void;
+  list: T;
+  onOk?: (v: TheItemTypeFromListCore<T>[]) => void;
 }) {
+  type TheItemInterface = TheItemTypeFromListCore<typeof props.list>;
   const request = {
-    workout_plan: {
+    data: {
       list: props.list,
     },
   };
   const methods = {
-    select(vv: WorkoutPlan) {
-      const existing = _selected.find((v) => v.id === vv.id);
-      if (_multiple === false) {
-        if (existing) {
-          return;
-        }
-        _selected = [vv];
-        bus.emit(Events.Change, _selected);
-        bus.emit(Events.StateChange, { ..._state });
-        return;
-      }
-      if (existing) {
-        _selected = _selected.filter((v) => v.id !== vv.id);
-        bus.emit(Events.Change, _selected);
-        bus.emit(Events.StateChange, { ..._state });
-        return;
-      }
-      const v = _list.find((v) => v.id === vv.id);
-      if (!v) {
-        return;
-      }
-      _selected.push(v);
-      bus.emit(Events.Change, _selected);
+    refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    remove(vv: WorkoutPlan) {
-      _selected = _selected.filter((v) => v.id !== vv.id);
-      bus.emit(Events.Change, _selected);
-      bus.emit(Events.StateChange, { ..._state });
+    cancel() {
+      ui.$dialog.hide();
     },
-    map_list(list: { id: WorkoutPlanId }[]) {
-      return _list.flatMap((a) => {
-        return list.find((v) => v.id === a.id) ?? [];
-      });
+    mapListWithId(...args: Parameters<typeof ui.$select.methods.mapListWithIds>) {
+      return ui.$select.methods.mapListWithIds(...args);
     },
-    find(value: { id: WorkoutPlanId }) {
-      return _list.find((a) => a.id === value.id) ?? null;
+    findWithId(...args: Parameters<typeof ui.$select.methods.findWithId>) {
+      return ui.$select.methods.findWithId(...args);
     },
     search(value: string) {
-      request.workout_plan.list.search({
+      request.data.list.search({
         keyword: value,
       });
     },
-    set_list(list: WorkoutPlan[]) {
-      // @ts-ignore
-      request.workout_plan.list.modifyResponse((v) => {
-        return {
-          ...v,
-          initial: false,
-          dataSource: list,
-        };
-      });
-      bus.emit(Events.StateChange, { ..._state });
-    },
-    clear() {
-      _selected = [];
-      bus.emit(Events.Change, _selected);
-      bus.emit(Events.StateChange, { ..._state });
-    },
   };
   const ui = {
-    $dropdown: new SelectCore({
-      defaultValue: "",
-      options: [],
+    $select: SelectViewModel<TheItemInterface>({
+      defaultValue: props.defaultValue,
+      list: [],
+      multiple: props.multiple,
     }),
-    $popover: new PopoverCore(),
+    $dialog: new DialogCore(),
     $scroll: new ScrollViewCore({
       async onReachBottom() {
-        await request.workout_plan.list.loadMore();
+        await request.data.list.loadMore();
         ui.$scroll.finishLoadingMore();
       },
     }),
-    $dialog: new DialogCore(),
     $input_keyword: new InputCore({ defaultValue: "" }),
-    $btn_search: new ButtonCore({}),
+    $btn_search_submit: new ButtonCore({
+      onClick() {
+        const v = ui.$input_keyword.value;
+        request.data.list.search({ keyword: v });
+      },
+    }),
+    $btn_confirm: new ButtonCore({
+      onClick() {
+        if (props.onOk) {
+          props.onOk(ui.$select.value);
+        }
+      },
+    }),
   };
 
-  let _multiple = props.multiple ?? true;
-  let _selected: WorkoutPlan[] = [];
-  let _list: WorkoutPlan[] = props.list?.response.dataSource ?? [];
   let _state = {
     get value() {
-      return _selected;
+      return ui.$select.state.value;
     },
     get selected() {
-      return _selected.flatMap((item) => {
-        const existing = _list.find((a) => a.id === item.id);
-        if (!existing) {
-          return [];
-        }
-        return [existing];
-      });
-    },
-    get response() {
-      return request.workout_plan.list.response;
+      return ui.$select.state.selected;
     },
     get list() {
-      return _list.map((v) => {
-        return {
-          ...v,
-          selected: _state.selected
-            .map((v2) => {
-              return v2.id;
-            })
-            .includes(v.id),
-        };
-      });
+      return ui.$select.state.list;
+    },
+    get response() {
+      return request.data.list.response;
     },
   };
   enum Events {
+    Ok,
     Change,
-    ActionsLoaded,
+    RequestLoaded,
     StateChange,
   }
   type TheTypesOfEvents = {
-    [Events.ActionsLoaded]: typeof _list;
-    [Events.Change]: typeof _selected;
+    [Events.Ok]: TheItemInterface[];
+    [Events.RequestLoaded]: TheItemInterface[];
+    [Events.Change]: TheItemInterface;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
 
-  request.workout_plan.list.onStateChange((state) => {
-    _list = state.dataSource;
-    bus.emit(Events.ActionsLoaded, _list);
+  request.data.list.onStateChange((state) => {
+    ui.$select.methods.setOptions(state.dataSource);
     bus.emit(Events.StateChange, { ..._state });
   });
+  ui.$select.onStateChange(() => methods.refresh());
   bus.on(Events.Change, (actions) => {
-    if (props.onChange) {
-      props.onChange(actions);
+    if (props.onOk) {
+      props.onOk(actions);
     }
   });
 
@@ -165,21 +115,20 @@ export function WorkoutPlanSelectViewModel(props: {
     request,
     ui,
     get value() {
-      return _selected;
+      return ui.$select.value;
     },
     get defaultValue() {
       return props.defaultValue;
     },
-    setValue(value: WorkoutPlan[]) {
-      const v = _list.filter((a) => {
-        return value.find((v) => v.id === a.id);
-      });
-      _selected = v;
-      bus.emit(Events.StateChange, { ..._state });
-    },
     ready() {},
-    onListLoaded(handler: Handler<TheTypesOfEvents[Events.ActionsLoaded]>) {
-      return bus.on(Events.ActionsLoaded, handler);
+    setValue: ui.$select.setValue,
+    select: ui.$select.select,
+    clear: ui.$select.clear,
+    init() {
+      request.data.list.init();
+    },
+    onListLoaded(handler: Handler<TheTypesOfEvents[Events.RequestLoaded]>) {
+      return bus.on(Events.RequestLoaded, handler);
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);

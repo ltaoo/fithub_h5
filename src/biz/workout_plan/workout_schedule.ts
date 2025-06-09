@@ -83,7 +83,7 @@ export function buildWorkoutScheduleWithSpecialDay(
     days: {
       day: number;
       weekday: number;
-      workout_plan: { id: number; title: string; tags: string };
+      workout_plan: { id: number; title: string; overview: string; tags: string };
     }[];
   }[],
   day: Date
@@ -93,7 +93,7 @@ export function buildWorkoutScheduleWithSpecialDay(
     {
       type: WorkoutScheduleDayType;
       // day_text: string;
-      workout_plan: { id: number; title: string; tags: string };
+      workout_plan: { id: number; title: string; overview: string; tags: string };
     }[]
   > = {};
   for (let i = 0; i < schedules.length; i += 1) {
@@ -107,13 +107,18 @@ export function buildWorkoutScheduleWithSpecialDay(
           workout_plans_in_day[day_text].push({
             type: WorkoutScheduleDayType.Workout,
             // day_text,
-            workout_plan: { id: dd.workout_plan.id, title: dd.workout_plan.title, tags: dd.workout_plan.tags },
+            workout_plan: {
+              id: dd.workout_plan.id,
+              title: dd.workout_plan.title,
+              overview: dd.workout_plan.overview,
+              tags: dd.workout_plan.tags,
+            },
           });
         } else {
           workout_plans_in_day[day_text].push({
             type: WorkoutScheduleDayType.Resting,
             // day_text: dayjs(day).set("day", j).format("YYYY-MM-DD"),
-            workout_plan: { id: 0, title: "", tags: "" },
+            workout_plan: { id: 0, title: "", overview: "", tags: "" },
           });
         }
       }
@@ -127,13 +132,18 @@ export function buildWorkoutScheduleWithSpecialDay(
           workout_plans_in_day[day_text].push({
             type: WorkoutScheduleDayType.Workout,
             // day_text,
-            workout_plan: { id: dd.workout_plan.id, title: dd.workout_plan.title, tags: dd.workout_plan.tags },
+            workout_plan: {
+              id: dd.workout_plan.id,
+              title: dd.workout_plan.title,
+              overview: dd.workout_plan.overview,
+              tags: dd.workout_plan.tags,
+            },
           });
         } else {
           workout_plans_in_day[day_text].push({
             type: WorkoutScheduleDayType.Resting,
             // day_text: dayjs(day).set("date", j).format("YYYY-MM-DD"),
-            workout_plan: { id: 0, title: "", tags: "" },
+            workout_plan: { id: 0, title: "", overview: "", tags: "" },
           });
         }
       }

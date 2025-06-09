@@ -4,706 +4,816 @@
 import { $workout_action_list } from "@/store";
 import { ViewComponentProps } from "@/store/types";
 
-import { ObjectFieldCore, SingleFieldCore, ArrayFieldCore } from "@/domains/ui/formv2";
-import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
-import { TagInputCore } from "@/domains/ui/form/tag-input";
-import { Result } from "@/domains/result";
-import { MuscleSelectViewModel } from "@/biz/muscle_select";
-import { EquipmentSelectViewModel } from "@/biz/equipment_select";
+import { base, Handler } from "@/domains/base";
+import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { RefCore } from "@/domains/ui/cur";
 import {
-  WorkoutPlanStepType,
-  WorkoutPlanStepTypeTextMap,
-  WorkoutPlanSetType,
-  WorkoutSetTypeTextMap,
-  WorkoutPlanStepTypeOptions,
-  WorkoutSetTypeOptions,
-} from "@/biz/workout_plan/constants";
-import { WorkoutActionProfile } from "@/biz/workout_action/services";
-import { WorkoutPlanStepBody, WorkoutPlanPreviewPayload } from "@/biz/workout_plan/types";
-import { WorkoutActionMultipleSelectViewModel } from "@/biz/workout_action_multiple_select";
-import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
+  ButtonCore,
+  CheckboxCore,
+  DialogCore,
+  DropdownMenuCore,
+  InputCore,
+  MenuItemCore,
+  ScrollViewCore,
+} from "@/domains/ui";
+import { RequestCore } from "@/domains/request";
+import { Result } from "@/domains/result";
+import { WorkoutPlanTagSelectViewModel } from "@/biz/workout_plan_tag_select";
+import {
+  createWorkoutPlan,
+  fetchWorkoutPlanProfile,
+  fetchWorkoutPlanProfileProcess,
+  updateWorkoutPlan,
+  WorkoutPlanDetailsJSON250424,
+} from "@/biz/workout_plan/services";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import {
+  fetchWorkoutActionListByIds,
+  fetchWorkoutActionListByIdsProcess,
+  WorkoutActionProfile,
+} from "@/biz/workout_action/services";
+import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
+import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
+import { map_parts_with_ids } from "@/biz/muscle/data";
+import { HumanBodyViewModel } from "@/biz/muscle/human_body";
+import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
+import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
+import { debounce } from "@/utils/lodash/debounce";
 
-export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "client" | "app">) {
-  function handleSelectAction(
-    action: { id: number | string; name: string } | null,
-    extra: Partial<{ silence: boolean }> = {}
-  ) {
-    if (!action) {
-      return;
-    }
-    const profile = $action_select.methods.find(action);
-    console.log("[PAGE]home_workout_plan_create - handleSelectAction", action, $action_select.state.actions, profile);
-    if (!profile) {
-      return;
-    }
-    const { equipments, muscles } = profile;
-    const existing_equipments = $values.fields.equipments.value.map((e) => e.id);
-    const next_equipments = [...new Set([...existing_equipments, ...equipments.map((e) => e.id)])];
-    const existing_muscles = $values.fields.muscles.value.map((m) => m.id);
-    const next_muscles = [...new Set([...existing_muscles, ...muscles.map((m) => m.id)])];
+import { ActionInput, ActionInputViewModel } from "./components/action-input";
 
-    $values.fields.equipments.setValue(
-      next_equipments.flatMap((id) => {
-        const matched = $equipment_select.state.equipments.find((item) => item.id === id);
-        if (!matched) {
-          return [];
-        }
-        return [matched];
-      })
-    );
-    $values.fields.muscles.setValue(
-      next_muscles.flatMap((id) => {
-        const matched = $muscle_select.state.muscles.find((item) => item.id === id);
-        if (!matched) {
-          return [];
-        }
-        return [matched];
-      })
-    );
-    if (extra.silence) {
-      return;
-    }
-    $values.refresh();
-  }
-
-  async function toBody() {
-    const r = await $values.validate();
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    const values = r.data;
-    return values;
-  }
-  const action_select_vm_list: WorkoutActionSelectViewModel[] = [];
-  const $action_unit = () =>
-    new SingleFieldCore({
-      name: "unit",
-      label: "单位",
-      input: new SelectCore({
-        defaultValue: "次",
-        options: [
-          {
-            label: "次",
-            value: "次",
-          },
-          {
-            label: "秒",
-            value: "秒",
-          },
-        ],
-      }),
-    });
-  const $action_weight = () =>
-    new SingleFieldCore({
-      name: "weight",
-      label: "重量",
-      input: new InputCore({
-        defaultValue: "12RM",
-      }),
-    });
-  const $action_rest_duration = () =>
-    new SingleFieldCore({
-      name: "rest",
-      label: "休息时间",
-      input: new InputCore({
-        defaultValue: 0,
-        type: "number",
-      }),
-    });
-  const $action_reps = () =>
-    new SingleFieldCore({
-      name: "reps",
-      label: "计数",
-      input: new InputCore({
-        defaultValue: 12,
-        type: "number",
-      }),
-    });
-  const $action_note = () =>
-    new SingleFieldCore({
-      name: "note",
-      label: "动作备注",
-      input: new InputCore({
-        defaultValue: "",
-      }),
-    });
-  const $normal_set_value = (events: { onSelectAction?: (action: WorkoutActionProfile | null) => void }) => {
-    return new ObjectFieldCore({
-      name: "sets1",
-      label: "组设置",
-      fields: {
-        action: new SingleFieldCore({
-          name: "action",
-          label: "动作",
-          input: WorkoutActionSelectViewModel({
-            defaultValue: null,
-            client: props.client,
-            list: $workout_action_list,
-            // onCreate(vm) {
-            //   if ($action_select.state.actions.length !== 0) {
-            //     vm.methods.setActions($action_select.state.actions);
-            //   }
-            //   action_select_vm_list.push(vm);
-            // },
-            onChange: (action) => {
-              if (events.onSelectAction) {
-                events.onSelectAction(action);
-              }
-              handleSelectAction(action);
-            },
-          }),
-        }),
-        reps: $action_reps(),
-        unit: $action_unit(),
-        weight: $action_weight(),
-        rest: $action_rest_duration(),
-        note: $action_note(),
-      },
-    });
-  };
-
-  const $combo_set_values = (events: { onSelectAction?: (action: WorkoutActionProfile | null) => void }) => {
-    return new ObjectFieldCore({
-      name: "sets2",
-      label: "组",
-      hidden: true,
-      fields: {
-        actions: new ArrayFieldCore({
-          name: "actions",
-          label: "动作",
-          field: (index: number) => {
-            return new ObjectFieldCore({
-              name: `set_${index}`,
-              label: "",
-              fields: {
-                action: new SingleFieldCore({
-                  name: "action",
-                  label: "动作",
-                  input: WorkoutActionSelectViewModel({
-                    defaultValue: null,
-                    client: props.client,
-                    list: $workout_action_list,
-                    // onCreate(vm) {
-                    //   if ($action_select.state.actions.length !== 0) {
-                    //     vm.methods.setActions($action_select.state.actions);
-                    //   }
-                    //   action_select_vm_list.push(vm);
-                    // },
-                    onChange: (action) => {
-                      if (events.onSelectAction) {
-                        events.onSelectAction(action);
-                      }
-                      handleSelectAction(action);
-                    },
-                  }),
-                }),
-                reps: $action_reps(),
-                unit: $action_unit(),
-                weight: $action_weight(),
-                rest_duration: $action_rest_duration(),
-                note: $action_note(),
-              },
-            });
-          },
-        }),
-        note: new SingleFieldCore({
-          name: "note",
-          label: "组备注",
-          input: new InputCore({
-            defaultValue: "",
-          }),
-        }),
-      },
-    });
-  };
-  const $free_set_values = (events: { onSelectAction?: (action: WorkoutActionProfile | null) => void }) => {
-    return new ArrayFieldCore({
-      name: "sets3",
-      label: "组设置",
-      hidden: true,
-      field: (index: number) => {
-        return new ObjectFieldCore({
-          name: `set_${index}`,
-          label: "组",
-          fields: {
-            actions: new ArrayFieldCore({
-              name: "actions",
-              label: "动作",
-              field: (index: number) => {
-                return new ObjectFieldCore({
-                  name: `set_${index}`,
-                  label: "",
-                  fields: {
-                    id: new SingleFieldCore({
-                      name: "id",
-                      label: "动作Id",
-                      hidden: true,
-                      input: new InputCore({
-                        defaultValue: 0,
-                      }),
-                    }),
-                    action: new SingleFieldCore({
-                      name: "action",
-                      label: "动作",
-                      input: WorkoutActionSelectViewModel({
-                        defaultValue: null,
-                        client: props.client,
-                        list: $workout_action_list,
-                        // onCreate(vm) {
-                        //   if ($action_select.state.actions.length !== 0) {
-                        //     vm.methods.setActions($action_select.state.actions);
-                        //   }
-                        //   action_select_vm_list.push(vm);
-                        // },
-                        onChange: (action) => {
-                          if (events.onSelectAction) {
-                            events.onSelectAction(action);
-                          }
-                          handleSelectAction(action);
-                        },
-                      }),
-                    }),
-                    reps: $action_reps(),
-                    unit: $action_unit(),
-                    weight: $action_weight(),
-                    rest_duration: $action_rest_duration(),
-                    note: $action_note(),
-                  },
-                });
-              },
-            }),
-            rest_duration: new SingleFieldCore({
-              name: "rest_duration",
-              label: "休息时长",
-              input: new InputCore({
-                defaultValue: 90,
-              }),
-            }),
-            note: new SingleFieldCore({
-              name: "note",
-              label: "组备注",
-              input: new InputCore({
-                defaultValue: "",
-              }),
-            }),
-          },
-        });
-      },
-    });
-  };
-
-  const $action_select = WorkoutActionMultipleSelectViewModel({
-    defaultValue: [],
-    client: props.client,
-    list: $workout_action_list,
-  });
-  const $muscle_select = MuscleSelectViewModel({ defaultValue: [], client: props.client });
-  const $equipment_select = EquipmentSelectViewModel({ defaultValue: [], client: props.client });
-
-  const $values = new ObjectFieldCore({
-    name: "",
-    label: "",
-    fields: {
-      title: new SingleFieldCore({
-        name: "title",
-        label: "标题",
-        input: new InputCore({
-          defaultValue: "",
-        }),
-      }),
-      overview: new SingleFieldCore({
-        name: "overview",
-        label: "描述",
-        input: new InputCore({
-          defaultValue: "",
-          type: "textarea",
-        }),
-      }),
-      level: new SingleFieldCore({
-        name: "level",
-        label: "难度",
-        input: new InputCore({
-          defaultValue: 1,
-          type: "number",
-        }),
-      }),
-      tags: new SingleFieldCore({
-        name: "tags",
-        label: "标签",
-        input: new TagInputCore({
-          defaultValue: [],
-        }),
-      }),
-      steps: new ArrayFieldCore({
-        name: "steps",
-        label: "动作",
-        field: (index: number) => {
-          const field = new ObjectFieldCore({
-            name: `step_${index}`,
-            label: "动作",
-            fields: {
-              id: new SingleFieldCore({
-                name: "id",
-                label: "阶段Id",
-                hidden: true,
-                input: new InputCore({
-                  defaultValue: 0,
-                }),
-              }),
-
-              type: new SingleFieldCore({
-                name: "type",
-                label: "类型",
-                input: new SelectCore({
-                  defaultValue: WorkoutPlanStepType.Strength,
-                  options: WorkoutPlanStepTypeOptions,
-                }),
-              }),
-
-              set_type: new SingleFieldCore({
-                name: "set_type",
-                label: "内容类型",
-                input: new SelectCore({
-                  defaultValue: WorkoutPlanSetType.Normal,
-                  options: WorkoutSetTypeOptions,
-                  onChange(value) {
-                    if (!value) {
-                      return;
-                    }
-                    if (value === WorkoutPlanSetType.Normal) {
-                      field.showField("action");
-                      field.showField("reps");
-                      field.showField("unit");
-                      field.showField("weight");
-                      field.showField("note");
-                      field.showField("set_count");
-                      field.showField("set_rest_duration");
-
-                      field.hideField("title");
-                      field.hideField("actions");
-                      field.hideField("sets3");
-                    }
-                    if (value === WorkoutPlanSetType.Super) {
-                      field.showField("title");
-                      field.showField("actions");
-                      field.showField("set_count");
-                      field.showField("set_rest_duration");
-
-                      field.hideField("action");
-                      field.hideField("reps");
-                      field.hideField("unit");
-                      field.hideField("weight");
-                      field.hideField("note");
-                      field.hideField("sets3");
-                    }
-                    if (value === WorkoutPlanSetType.Super) {
-                      field.showField("title");
-                      field.showField("sets3");
-
-                      field.hideField("set_count");
-                      field.hideField("set_rest_duration");
-                      field.hideField("action");
-                      field.hideField("reps");
-                      field.hideField("unit");
-                      field.hideField("weight");
-                      field.hideField("note");
-                      field.hideField("actions");
-                    }
-                  },
-                }),
-              }),
-
-              action_id: new SingleFieldCore({
-                name: "action_id",
-                label: "动作Id",
-                hidden: true,
-                input: new InputCore({
-                  defaultValue: 0,
-                }),
-              }),
-              action: new SingleFieldCore({
-                name: "action",
-                label: "动作",
-                input: WorkoutActionSelectViewModel({
-                  defaultValue: null,
-                  client: props.client,
-                  list: $workout_action_list,
-                  // onCreate(vm) {
-                  //   console.log("[PAGE]home_workout_plan_create - onCreate", index, vm.value);
-                  //   if ($action_select.state.actions.length !== 0) {
-                  //     vm.methods.setActions($action_select.state.actions);
-                  //   }
-                  //   action_select_vm_list.push(vm);
-                  // },
-                  onChange: (action) => {
-                    handleSelectAction(action);
-                    if (field.fields.title.dirty) {
-                      return;
-                    }
-                    field.fields.title.setValue(action?.zh_name ?? action?.name ?? "");
-                  },
-                }),
-              }),
-
-              actions: new ArrayFieldCore({
-                name: "actions",
-                label: "动作",
-                hidden: true,
-                field: (index: number) => {
-                  return new ObjectFieldCore({
-                    name: `action_${index}`,
-                    label: "",
-                    fields: {
-                      id: new SingleFieldCore({
-                        name: "id",
-                        label: "动作Id",
-                        hidden: true,
-                        input: new InputCore({
-                          defaultValue: 0,
-                        }),
-                      }),
-                      action: new SingleFieldCore({
-                        name: "action",
-                        label: "动作",
-                        input: WorkoutActionSelectViewModel({
-                          defaultValue: null,
-                          client: props.client,
-                          list: $workout_action_list,
-                          // onCreate(vm) {
-                          //   if ($action_select.state.actions.length !== 0) {
-                          //     vm.methods.setActions($action_select.state.actions);
-                          //   }
-                          //   action_select_vm_list.push(vm);
-                          // },
-                          onChange(action) {
-                            handleSelectAction(action);
-                            if (field.fields.title.dirty) {
-                              return;
-                            }
-                            // @ts-ignore
-                            const value1 = field.fields.actions.value as { action: WorkoutActionProfile }[];
-                            const actions = value1.flatMap((a) => {
-                              const matched = $action_select.state.actions.find((action) => action.id === a.action?.id);
-                              if (!matched) {
-                                return [];
-                              }
-                              return [matched];
-                            });
-                            const name = (() => {
-                              return actions.map((a) => a.zh_name ?? a.name).join("+") + "超级组";
-                            })();
-                            field.fields.title.setValue(name);
-                          },
-                        }),
-                      }),
-                      reps: $action_reps(),
-                      unit: $action_unit(),
-                      weight: $action_weight(),
-                      rest_duration: $action_rest_duration(),
-                      note: $action_note(),
-                    },
-                  });
-                },
-              }),
-
-              reps: $action_reps(),
-              unit: $action_unit(),
-              weight: $action_weight(),
-              note: $action_note(),
-
-              set_count: new SingleFieldCore({
-                name: "set_count",
-                label: "组数",
-                input: new InputCore({
-                  defaultValue: 3,
-                  type: "number",
-                }),
-              }),
-              set_rest_duration: new SingleFieldCore({
-                name: "set_rest_duration",
-                label: "组间休息",
-                input: new InputCore({
-                  defaultValue: 90,
-                  type: "number",
-                }),
-              }),
-              title: new SingleFieldCore({
-                name: "title",
-                label: "阶段标题",
-                hidden: true,
-                input: new InputCore({
-                  defaultValue: "",
-                }),
-              }),
-              sets3: $free_set_values({}),
-              step_note: new SingleFieldCore({
-                name: "step_note",
-                label: "阶段备注",
-                input: new InputCore({
-                  defaultValue: "",
-                }),
-              }),
-            },
-          });
-          return field;
-        },
-      }),
-      muscles: new SingleFieldCore({
-        name: "muscles",
-        label: "主要锻炼肌肉",
-        input: $muscle_select,
-      }),
-      equipments: new SingleFieldCore({
-        name: "equipments",
-        label: "所需器械",
-        input: $equipment_select,
-      }),
-      estimated_duration: new SingleFieldCore({
-        name: "estimated_duration",
-        label: "预计时长",
-        input: new InputCore({
-          defaultValue: 60,
-          type: "number",
-        }),
-      }),
-      points: new ArrayFieldCore({
-        name: "points",
-        label: "注意事项",
-        field: (index: number) => {
-          return new SingleFieldCore({
-            name: `point_${index}`,
-            label: "",
-            input: new InputCore({
-              defaultValue: "",
-            }),
-          });
-        },
-      }),
-      suggestions: new ArrayFieldCore({
-        name: "suggestions",
-        label: "建议",
-        field: (index: number) => {
-          return new SingleFieldCore({
-            name: `suggestion_${index}`,
-            label: "",
-            input: new InputCore({
-              defaultValue: "",
-            }),
-          });
-        },
+export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "history" | "client" | "app">) {
+  const request = {
+    workout_plan: {
+      create: new RequestCore(createWorkoutPlan, { client: props.client }),
+      update: new RequestCore(updateWorkoutPlan, { client: props.client }),
+      profile: new RequestCore(fetchWorkoutPlanProfile, {
+        process: fetchWorkoutPlanProfileProcess,
+        client: props.client,
       }),
     },
-  });
-
-  const $action_select_dialog = new DialogCore({
-    title: "动作选择",
-  });
-  const $action_search_input = new InputCore({
-    defaultValue: "",
-  });
-  const $action_search_btn = new ButtonCore({
-    onClick() {
-      const value = $action_search_input.value;
-      if (!value) {
+    workout_action: {
+      list_by_ids: new RequestCore(fetchWorkoutActionListByIds, {
+        process: fetchWorkoutActionListByIdsProcess,
+        client: props.client,
+      }),
+    },
+    equipment: {
+      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+    },
+  };
+  function calc_estimated_duration(
+    v: { set_count: number; set_rest_duration: number; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
+  ) {
+    const actions = v;
+    let duration = 0;
+    for (let i = 0; i < actions.length; i += 1) {
+      const set = actions[i];
+      let set_duration = Number(set.set_rest_duration);
+      for (let j = 0; j < set.actions.length; j += 1) {
+        const act = set.actions[j];
+        const reps = act.reps;
+        const reps_unit = act.reps_unit;
+        if (reps_unit === getSetValueUnit("秒")) {
+          set_duration += Number(reps);
+        }
+        if (reps_unit === getSetValueUnit("分")) {
+          set_duration += Number(reps) * 60;
+        }
+        if (reps_unit === getSetValueUnit("次")) {
+          // 一次大概是 6s
+          set_duration += Number(reps) * 6;
+        }
+      }
+      duration += set_duration * Number(set.set_count);
+    }
+    console.log("[PAGE]workout_plan/create - estimated duration", duration);
+    const text = seconds_to_hour_with_template(duration, seconds_to_hour_template1);
+    ui.$input_duration.setValue(text);
+    return duration;
+  }
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
+    },
+    calc_estimated_duration,
+    debounce_calc_estimated_duration: debounce(800, () => {
+      ui.$input_actions.validate().then((r) => {
+        // console.log("before methods.calc_estimated_duration", r.data);
+        if (r.data) {
+          methods.calc_estimated_duration(r.data);
+        }
+      });
+    }),
+    async refreshMuscles() {
+      const muscle_ids = [
+        ...new Set(
+          Object.keys(_action_profiles)
+            .map((name) => {
+              const profile = _action_profiles[name];
+              return profile.muscles.map((m) => m.id);
+            })
+            .reduce((a, b) => {
+              return [...a, ...b];
+            }, [])
+        ),
+      ];
+      ui.$muscle.highlight_muscles(map_parts_with_ids(muscle_ids));
+    },
+    async refreshEquipments() {
+      const equipment_ids = [
+        ...new Set(
+          Object.keys(_action_profiles)
+            .map((id) => {
+              const profile = _action_profiles[id];
+              return profile.equipments.map((m) => m.id);
+            })
+            .reduce((a, b) => {
+              return [...a, ...b];
+            }, [])
+        ),
+      ];
+      const r3 = await request.equipment.list.run({ ids: equipment_ids });
+      if (r3.error) {
+        return;
+      }
+      _equipments = r3.data.list.map((v) => {
+        return {
+          id: v.id,
+          zh_name: v.zh_name,
+        };
+      });
+      methods.refresh();
+    },
+    async toBody() {
+      const r = await ui.$input_actions.validate();
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      const value_actions = r.data;
+      if (value_actions.length === 0) {
+        return Result.Err("请至少选择一个动作");
+      }
+      const value_title = ui.$input_title.value;
+      const value_overview = ui.$input_overview.value;
+      const value_suggestions = ui.$input_suggestions.value;
+      const status = ui.$input_status.value;
+      const value_tags = ui.$input_tags.value;
+      const value_estimated_duration = methods.calc_estimated_duration(value_actions);
+      if (!value_title) {
+        return Result.Err("请输入计划名称");
+      }
+      const muscle_ids: Record<number, boolean> = {};
+      const equipment_ids: Record<number, boolean> = {};
+      for (let i = 0; i < value_actions.length; i += 1) {
+        const vvv = value_actions[i];
+        if (!vvv.set_count) {
+          return Result.Err("存在未填写的表单");
+        }
+        if (!vvv.set_rest_duration) {
+          return Result.Err("存在未填写的表单");
+        }
+        if (!vvv.set_weight) {
+          return Result.Err("存在未填写的表单");
+        }
+        for (let j = 0; j < value_actions[i].actions.length; j += 1) {
+          const act = value_actions[i].actions[j];
+          if (!act.reps) {
+            return Result.Err("存在未填写的表单");
+          }
+          if (!act.reps_unit) {
+            return Result.Err("存在未填写的表单");
+          }
+          if (!act.weight) {
+            return Result.Err("存在未填写的表单");
+          }
+          if (!act.rest_duration) {
+            return Result.Err("存在未填写的表单");
+          }
+          const profile = _action_profiles[act.action.id];
+          if (profile) {
+            profile.muscles.forEach((m) => (muscle_ids[m.id] = true));
+            profile.equipments.forEach((m) => (equipment_ids[m.id] = true));
+          }
+        }
+      }
+      const body = {
+        title: value_title,
+        overview: value_overview,
+        tags: value_tags.join(","),
+        status: status ? 1 : 2,
+        level: 5,
+        details: ((): WorkoutPlanDetailsJSON250424 => {
+          const steps: WorkoutPlanDetailsJSON250424["steps"] = [];
+          for (let i = 0; i < value_actions.length; i += 1) {
+            const set_value = value_actions[i];
+            const actions: WorkoutPlanDetailsJSON250424["steps"][number]["actions"] = [];
+            for (let j = 0; j < set_value.actions.length; j += 1) {
+              const act = value_actions[i].actions[j];
+              actions.push({
+                action_id: act.action.id,
+                action: {
+                  id: act.action.id,
+                  zh_name: act.action.zh_name,
+                },
+                reps: act.reps,
+                reps_unit: act.reps_unit,
+                weight: act.weight,
+                rest_duration: act.rest_duration,
+              });
+            }
+            steps.push({
+              set_type: set_value.set_type,
+              set_count: Number(set_value.set_count),
+              set_rest_duration: Number(set_value.set_rest_duration),
+              set_weight: set_value.set_weight,
+              actions,
+              set_note: set_value.set_note,
+            });
+          }
+          return {
+            v: "250424",
+            steps,
+          };
+        })(),
+        points: "",
+        suggestions: value_suggestions ? JSON.stringify([value_suggestions]) : "",
+        muscle_ids: Object.keys(muscle_ids).join(","),
+        equipment_ids: Object.keys(equipment_ids).join(","),
+        estimated_duration: value_estimated_duration,
+      };
+      return Result.Ok(body);
+    },
+    async create() {
+      const r = await methods.toBody();
+      if (r.error) {
         props.app.tip({
-          text: ["请输入搜索关键字"],
+          text: [r.error.message],
         });
         return;
       }
-      $action_select.methods.search(value);
-    },
-  });
-  const $action_select_view = new ScrollViewCore({});
-
-  $action_select_dialog.onOk(() => {
-    const selected_actions = $action_select.state.selected;
-    if (selected_actions.length === 0) {
+      const body = r.data;
+      ui.$btn_create_submit.setLoading(true);
+      // console.log("[PAGE]workout_plan/create", body);
+      const r2 = await request.workout_plan.create.run(body);
+      ui.$btn_create_submit.setLoading(false);
+      if (r2.error) {
+        props.app.tip({
+          text: [r2.error.message],
+        });
+        return;
+      }
       props.app.tip({
-        text: ["请选择动作"],
+        text: ["创建成功"],
       });
-      return;
-    }
-    if (selected_actions.length === 1) {
-      const field = $values.fields.steps.append();
-      console.log("[PAGE]home_workout_plan_create", field);
-      const action = selected_actions[0];
-      field.setValue({
-        set_type: WorkoutPlanSetType.Normal,
-        type: WorkoutPlanStepType.Strength,
-        action,
-        reps: 12,
-        unit: "次",
-        weight: "12RM",
-        rest_duration: 90,
-        note: "",
-        actions: [],
-        sets3: [],
+      props.history.replace("root.workout_plan_profile", {
+        id: String(r2.data.id),
       });
-      field.fields.title.hide();
-      $action_select_dialog.hide();
-      handleSelectAction(action, { silence: true });
-      $action_select.methods.clear();
-      $values.refresh();
-      return;
-    }
-    const field = $values.fields.steps.append();
-    field.setValue({
-      set_type: WorkoutPlanSetType.Super,
-      type: WorkoutPlanStepType.Strength,
-      title: selected_actions.map((act) => act.zh_name).join("+") + "超级组",
-      actions: selected_actions.map((action) => ({
-        action,
-        reps: 12,
-        unit: "次",
-        weight: "12RM",
-        rest_duration: 0,
-        note: "",
-      })),
-      sets3: [],
-      note: "",
-    });
-    $action_select_dialog.hide();
-    field.fields.title.show();
-    for (let i = 0; i < selected_actions.length; i += 1) {
-      handleSelectAction(selected_actions[i], { silence: true });
-    }
-    $action_select.methods.clear();
-    $values.refresh();
-  });
-  $action_search_input.onEnter(() => {
-    $action_search_btn.click();
-  });
-  $action_select_view.onReachBottom(async () => {
-    await $action_select.request.action.list.loadMore();
-    $action_select_view.finishLoadingMore();
-  });
+    },
+    async update() {
+      const r = await methods.toBody();
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      const id = request.workout_plan.profile.response?.id;
+      if (!id) {
+        props.app.tip({
+          text: ["缺少id参数"],
+        });
+        return;
+      }
+      const body = r.data;
+      ui.$btn_update_submit.setLoading(true);
+      // console.log("[PAGE]workout_plan/update", body);
+      const r2 = await request.workout_plan.update.run({
+        ...body,
+        id,
+      });
+      ui.$btn_update_submit.setLoading(false);
+      if (r2.error) {
+        props.app.tip({
+          text: [r2.error.message],
+        });
+        return;
+      }
+      props.app.tip({
+        text: ["更新成功"],
+      });
+      props.history.replace("root.workout_plan_profile", {
+        id: String(id),
+      });
+    },
+    async fetch(id: number) {
+      const r = await request.workout_plan.profile.run({ id });
+      if (r.error) {
+        return;
+      }
+      const data = r.data;
+      ui.$input_title.setValue(data.title);
+      ui.$input_overview.setValue(data.overview);
 
-  // $action_select.onActionsLoaded(() => {
-  //   console.log(
-  //     "[PAGEModel]home_workout_plan_create - $action_select.onActionsLoaded",
-  //     $action_select.state.actions,
-  //     action_select_vm_list
-  //   );
-  //   for (let i = 0; i < action_select_vm_list.length; i += 1) {
-  //     action_select_vm_list[i].methods.setActions($action_select.state.actions);
-  //   }
-  // });
+      for (let i = 0; i < data.steps.length; i += 1) {
+        const vv = data.steps[i];
+        const field = ui.$input_actions.append({ silence: true });
+        field.setValue({
+          set_type: vv.set_type,
+          set_count: vv.set_count,
+          set_rest_duration: vv.set_rest_duration,
+          set_weight: vv.set_weight,
+          set_note: vv.note,
+          actions: vv.actions.map((vvv) => {
+            return {
+              action: vvv.action,
+              reps: vvv.reps,
+              reps_unit: vvv.reps_unit,
+              weight: vvv.weight,
+              rest_duration: vvv.rest_duration,
+            };
+          }),
+        });
+      }
+      ui.$input_duration.setValue(data.estimated_duration_text);
+      ui.$input_suggestions.setValue(data.suggestions);
+      ui.$input_tags.setValue(data.tags);
+      ui.$input_actions.refresh();
+      (async () => {
+        const act_ids: number[] = [];
+        for (let i = 0; i < data.steps.length; i += 1) {
+          const vv = data.steps[i];
+          for (let j = 0; j < vv.actions.length; j += 1) {
+            const act = vv.actions[j];
+            if (!act_ids.includes(act.action_id)) {
+              act_ids.push(act.action_id);
+            }
+          }
+        }
+        const r = await request.workout_action.list_by_ids.run({ ids: act_ids });
+        if (r.error) {
+          return;
+        }
+        for (let i = 0; i < r.data.list.length; i += 1) {
+          const act = r.data.list[i];
+          _action_profiles[act.id] = act;
+        }
+        methods.refreshMuscles();
+        methods.refreshEquipments();
+      })();
+      methods.refresh();
+    },
+  };
+  const ui = {
+    $view: new ScrollViewCore(),
+    $input_title: new InputCore({
+      defaultValue: "",
+    }),
+    $input_overview: new InputCore({
+      defaultValue: "",
+    }),
+    $input_status: new CheckboxCore({ checked: false }),
+    $input_actions: new ArrayFieldCore({
+      label: "actions",
+      name: "",
+      field(count) {
+        return new SingleFieldCore({
+          label: "",
+          name: "",
+          input: ActionInputViewModel({}),
+        });
+      },
+    }),
+    $input_duration: new InputCore({ defaultValue: "0" }),
+    $input_suggestions: new InputCore({ defaultValue: "", placeholder: "例如围训练期饮食注意事项" }),
+    $input_tags: WorkoutPlanTagSelectViewModel(),
+    $workout_action_select: WorkoutActionSelectDialogViewModel({
+      defaultValue: [],
+      list: $workout_action_list,
+      client: props.client,
+      async onOk(actions) {
+        for (let i = 0; i < actions.length; i += 1) {
+          const act = actions[i];
+          if (!_action_profiles[act.id]) {
+            const profile = $workout_action_list.response.dataSource.find((v) => v.id === act.id);
+            if (profile) {
+              _action_profiles[act.id] = profile;
+            }
+          }
+        }
+        methods.refreshMuscles();
+        methods.refreshEquipments();
+        const field_value = ui.$ref_action_in_menu.value;
+        const menu_type = ui.$ref_menu_type.value;
+        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value, menu_type);
+        if (field_value) {
+          const $field = ui.$input_actions.getFieldWithId(field_value.id);
+          if (!$field) {
+            props.app.tip({
+              text: ["异常操作", "没有匹配的输入项"],
+            });
+            return;
+          }
+          if (menu_type === "change_action") {
+            $field.field.input.setValue({
+              actions: actions.map((act) => {
+                return {
+                  action: {
+                    id: Number(act.id),
+                    zh_name: act.zh_name,
+                  },
+                  reps: (() => {
+                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                      return 30;
+                    }
+                    return 12;
+                  })(),
+                  reps_unit: (() => {
+                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                      return getSetValueUnit("秒");
+                    }
+                    return getSetValueUnit("次");
+                  })(),
+                  weight: "12RM",
+                  rest_duration: 30,
+                };
+              }),
+            });
+          }
+          if (menu_type === "add_action") {
+            $field.field.input.setValue({
+              actions: [
+                ...$field.field.input.value.actions,
+                ...actions.map((act) => {
+                  return {
+                    action: {
+                      id: Number(act.id),
+                      zh_name: act.zh_name,
+                    },
+                    reps: (() => {
+                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                        return 30;
+                      }
+                      return 12;
+                    })(),
+                    reps_unit: (() => {
+                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                        return "秒" as const;
+                      }
+                      return "次" as const;
+                    })(),
+                    weight: "12RM",
+                    rest_duration: 30,
+                  };
+                }),
+              ],
+            });
+          }
+          ui.$workout_action_select.clear();
+          ui.$workout_action_select.ui.$dialog.hide();
+          return;
+        }
+
+        // 新增动作
+        for (let i = 0; i < actions.length; i += 1) {
+          const $input = ui.$input_actions.append();
+          $input.setValue({
+            set_type: WorkoutPlanSetType.Normal,
+            set_count: 3,
+            set_rest_duration: 90,
+            set_weight: "RPE 6",
+            set_note: "",
+            actions: [
+              {
+                action: {
+                  id: Number(actions[i].id),
+                  zh_name: actions[i].zh_name,
+                },
+                reps: 12,
+                reps_unit: getSetValueUnit("次"),
+                weight: "12RM",
+                rest_duration: 30,
+              },
+            ],
+          });
+        }
+        ui.$input_actions.validate().then((r) => {
+          console.log("before methods.calc_estimated_duration", r.data);
+          if (r.data) {
+            methods.calc_estimated_duration(r.data);
+          }
+        });
+        ui.$workout_action_select.clear();
+        ui.$workout_action_select.ui.$dialog.hide();
+        methods.refresh();
+      },
+      onError(error) {
+        props.app.tip({
+          text: [error.message],
+        });
+      },
+    }),
+    $ref_action_in_menu: new RefCore<{ id: number; idx: number }>(),
+    $ref_menu_type: new RefCore<"change_action" | "add_action">(),
+    $menu: new DropdownMenuCore({
+      align: "start",
+      items: [
+        new MenuItemCore({
+          label: "修改动作",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$workout_action_select.setValue(
+              $field.field.input.actions.map((act) => {
+                return {
+                  id: act.action.id,
+                  zh_name: act.action.zh_name,
+                };
+              })
+            );
+            if (
+              [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
+                $field.field.input.type
+              )
+            ) {
+              ui.$workout_action_select.methods.setMode("single");
+            }
+            if ([WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes($field.field.input.type)) {
+              ui.$workout_action_select.methods.setMode("multiple");
+            }
+            ui.$ref_menu_type.select("change_action");
+            ui.$menu.hide();
+            ui.$workout_action_select.ui.$dialog.show();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为常规组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Normal);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为超级组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Super);
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "设为递减组",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.Decreasing);
+            ui.$menu.hide();
+          },
+        }),
+        // new MenuItemCore({
+        //   label: "设为递增组",
+        //   onClick() {
+        //     const field_value = ui.$ref_action_in_menu.value;
+        //     if (!field_value) {
+        //       props.app.tip({
+        //         text: ["异常操作"],
+        //       });
+        //       return;
+        //     }
+        //     const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        //     if (!$field) {
+        //       return;
+        //     }
+        //     $field.field.input.setType(WorkoutPlanSetType.Increasing);
+        //     ui.$menu.hide();
+        //     ui.$menu.hide();
+        //   },
+        // }),
+        new MenuItemCore({
+          label: "设为HIIT",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            $field.field.input.setType(WorkoutPlanSetType.HIIT);
+            ui.$menu.hide();
+          },
+        }),
+        // new MenuItemCore({
+        //   label: "在前面插入",
+        //   onClick() {},
+        // }),
+        // new MenuItemCore({
+        //   label: "在后面插入",
+        // }),
+        new MenuItemCore({
+          label: "上移",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.upIdx($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "下移",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.downIdx($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
+          label: "删除",
+          onClick() {
+            const field_value = ui.$ref_action_in_menu.value;
+            if (!field_value) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const $field = ui.$input_actions.getFieldWithId(field_value.id);
+            if (!$field) {
+              return;
+            }
+            ui.$input_actions.removeByIndex($field.idx);
+            bus.emit(Events.StateChange, { ..._state });
+            ui.$menu.hide();
+          },
+        }),
+      ],
+    }),
+    $dialog_act_remark: new DialogCore({}),
+    $btn_act_remark_cancel: new ButtonCore({
+      onClick() {
+        ui.$dialog_act_remark.hide();
+      },
+    }),
+    $btn_act_remark_submit: new ButtonCore({
+      onClick() {
+        const field_value = ui.$ref_action_in_menu.value;
+        if (!field_value) {
+          props.app.tip({
+            text: ["异常操作"],
+          });
+          return;
+        }
+        const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        if (!$field) {
+          return;
+        }
+        const remark = ui.$input_act_remark.value;
+        if (!remark) {
+          props.app.tip({
+            text: ["请输入备注"],
+          });
+          return;
+        }
+        $field.field.input.setRemark(remark);
+        ui.$dialog_act_remark.hide();
+      },
+    }),
+    $input_act_remark: new InputCore({
+      defaultValue: "",
+    }),
+    $btn_back: new ButtonCore({
+      onClick() {
+        methods.back();
+      },
+    }),
+    $btn_add_act: new ButtonCore({
+      onClick() {
+        ui.$ref_action_in_menu.clear();
+        ui.$workout_action_select.ui.$dialog.show();
+      },
+    }),
+    $btn_create_submit: new ButtonCore({
+      async onClick() {
+        methods.create();
+      },
+    }),
+    $btn_update_submit: new ButtonCore({
+      async onClick() {
+        methods.update();
+      },
+    }),
+    $muscle: HumanBodyViewModel({ highlighted: [], disabled: true }),
+  };
+  let _action_profiles: Record<string, WorkoutActionProfile> = {};
+  let _equipments: { id: number; zh_name: string }[] = [];
+  let _state = {
+    get fields() {
+      return ui.$input_actions.state.fields;
+    },
+    get equipments() {
+      return _equipments;
+    },
+    get enter() {
+      return ui.$workout_action_select.ui.$dialog.state.enter;
+    },
+    get visible() {
+      return ui.$workout_action_select.ui.$dialog.state.visible;
+    },
+    get exit() {
+      return ui.$workout_action_select.ui.$dialog.state.exit;
+    },
+  };
+  enum Events {
+    StateChange,
+  }
+  type TheTypesOfEvents = {
+    [Events.StateChange]: typeof _state;
+  };
+  const bus = base<TheTypesOfEvents>();
+  ui.$input_actions.onChange(() => {
+    methods.debounce_calc_estimated_duration();
+  });
+  ui.$workout_action_select.ui.$dialog.onStateChange(() => methods.refresh());
 
   return {
-    $values,
-    $action_select,
-    $muscle_select,
-    $equipment_select,
-    $action_select_dialog,
-    $action_search_input,
-    $action_search_btn,
-    $action_select_view,
-    $normal_set_value,
-    $combo_set_values,
-    $free_set_values,
-    toBody,
+    methods,
+    ui,
+    state: _state,
     ready() {
-      $workout_action_list.init();
+      ui.$workout_action_select.request.action.list.init();
+    },
+    destroy() {
+      bus.destroy();
+    },
+    onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
+      return bus.on(Events.StateChange, handler);
     },
   };
 }

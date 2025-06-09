@@ -468,7 +468,7 @@ export function HomeMineView(props: ViewComponentProps) {
                               >
                                 <div class="text-center text-sm text-w-fg-0">{date.text}</div>
                                 <Show when={date.has_workout_day}>
-                                  <div class="absolute left-1/2 -translate-x-1/2 flex justify-center">
+                                  <div class="absolute right-1 top-1 flex justify-center">
                                     <div class="w-[6px] h-[6px] rounded-full bg-green-500" />
                                   </div>
                                 </Show>

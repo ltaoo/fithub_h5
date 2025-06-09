@@ -75,6 +75,9 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
       focused: this._focused || this._open,
     };
   }
+  get hidden() {
+    return this._hidden;
+  }
 
   constructor(options: Partial<{ _name: string }> & MenuItemCoreProps) {
     super(options);

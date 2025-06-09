@@ -28,7 +28,7 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
     <div class="relative">
       <div
         class={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border-2 border-w-fg-3 bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-10 w-full items-center justify-between rounded-xl border-2 border-w-fg-3 bg-transparent px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           props.class
         )}
         onClick={(event) => {

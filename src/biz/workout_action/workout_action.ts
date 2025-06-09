@@ -71,6 +71,9 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
       };
       methods.refresh();
     },
+    cancel() {
+      ui.$dialog.hide();
+    },
   };
   const ui = {
     $dialog: new DialogCore(),

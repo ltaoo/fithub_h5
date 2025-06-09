@@ -67,11 +67,8 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     handleClickWorkoutAction(v: TheWorkoutAction) {
-      methods.showWorkoutActionProfile(v);
+      ui.$workout_action.ui.$dialog.show();
       ui.$workout_action.methods.fetch({ id: v.id });
-    },
-    async showWorkoutActionProfile(action: { id: number }) {
-      ui.$dialog_workout_action_profile.show();
     },
   };
   const ui = {
@@ -80,6 +77,7 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     $select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: request.workout_action.list,
+      client: props.client,
     }),
     $dropdown_menu: new DropdownMenuCore({
       items: [
@@ -129,7 +127,7 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
       },
     }),
     $workout_action: WorkoutActionProfileViewModel({ client: props.client }),
-    $dialog_workout_action_profile: new DialogCore({}),
+    // $dialog_workout_action_profile: new DialogCore({}),
   };
 
   let _state = {
@@ -272,15 +270,7 @@ export function WorkoutActionListView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet ignore_safe_height store={vm.ui.$dialog_workout_action_profile} app={props.app}>
-        <div
-          class="z-10 absolute right-2 top-2 p-2 rounded-full bg-w-bg-5"
-          onClick={() => {
-            vm.ui.$dialog_workout_action_profile.hide();
-          }}
-        >
-          <X class="w-4 h-4 text-w-fg-0" />
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
         <WorkoutActionProfileView store={vm.ui.$workout_action} />
       </Sheet>
       <DropdownMenu store={vm.ui.$dropdown_menu} />

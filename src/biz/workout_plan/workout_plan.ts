@@ -41,7 +41,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    async fetch(params: { id: number | string }) {
+    async fetch(params: { id: number }) {
       const r = await request.workout_plan.profile.run({ id: params.id });
       if (r.error) {
         bus.emit(Events.Error, r.error);
@@ -75,7 +75,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         methods.refresh();
       }
       return Result.Ok({
-        id: r.data.id,
+        ...r.data,
         muscles: [..._muscles],
         equipments: [..._equipments],
       });
@@ -107,6 +107,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         muscles: _muscles,
         equipments: _equipments,
         creator: data.creator,
+        created_at: data.created_at,
       };
     },
   };

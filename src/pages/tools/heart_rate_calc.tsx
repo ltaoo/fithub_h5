@@ -177,16 +177,16 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
   return (
     <PageView store={vm}>
       <div class="space-y-2">
-        <div>
-          <div class="text-w-fg-0">年龄</div>
+        <div class="field">
+          <div class="text-sm text-w-fg-0">年龄</div>
           <Input store={vm.ui.$input_age} />
         </div>
-        <div>
-          <div class="text-w-fg-0">静息心率(次/分)</div>
+        <div class="field">
+          <div class="text-sm text-w-fg-0">静息心率(次/分)</div>
           <Input store={vm.ui.$input_heart_rate} />
         </div>
-        <div>
-          <div class="text-w-fg-0">运动强度</div>
+        <div class="field">
+          <div class="text-sm text-w-fg-0">运动强度</div>
           <div class="grid grid-cols-3 gap-2">
             <For each={intensity_levels}>
               {(level) => {

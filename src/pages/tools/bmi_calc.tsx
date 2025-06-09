@@ -168,12 +168,12 @@ export function BMICalcToolView(props: ViewComponentProps) {
         }
       >
         <div class="space-y-2">
-          <div>
-            <div class="text-w-fg-0">体重(单位kg)</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">体重(单位kg)</div>
             <Input store={vm.ui.$input_weight} />
           </div>
-          <div>
-            <div class="text-w-fg-0">身高(单位cm)</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">身高(单位cm)</div>
             <Input store={vm.ui.$input_height} />
           </div>
         </div>

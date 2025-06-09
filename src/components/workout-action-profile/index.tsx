@@ -1,4 +1,4 @@
-import { Bird, Loader2 } from "lucide-solid";
+import { Bird, ChevronDown, Loader2 } from "lucide-solid";
 import { For, Show } from "solid-js";
 
 import { useViewModelStore } from "@/hooks";
@@ -7,6 +7,7 @@ import { SetValueView } from "@/components/set-value-view";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
 import { Divider } from "@/components/divider";
 import { TabHeader } from "@/components/ui/tab-header";
+import { Button } from "@/components/ui";
 
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 
@@ -16,7 +17,7 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="relative flex flex-col h-screen">
+    <div class="relative flex flex-col h-screen bg-w-bg-0">
       <Show when={state().loading}>
         <div class="absolute inset-0">
           <div class="absolute inset-0 flex items-center justify-center">
@@ -90,13 +91,13 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
               when={state().histories.length}
               fallback={
                 <div class="flex items-center justify-center p-4">
-                  <div>
-                    <Bird class="w-12 h-12 text-w-fg-1" />
+                  <div class="pt-24">
+                    <Bird class="w-24 h-24 text-w-fg-1" />
                   </div>
                 </div>
               }
             >
-              <div class="space-y-2 mt-2">
+              <div class="space-y-2 mt-2 p-2">
                 <div class="border-2 border-w-fg-3 rounded-lg">
                   <div class="flex items-center justify-between p-2 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">最大重量</div>
@@ -123,8 +124,19 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
             </Show>
           </Show>
           <div class="h-[68px]"></div>
+          <div class="h-[40px]"></div>
+          <div class="safe-height safe-height--no-color"></div>
         </div>
       </Show>
+      <div class="absolute bottom-0 left-0 w-full">
+        <div class="flex items-center gap-2 p-2 bg-w-bg-1 border-t border-w-fg-3">
+          <div class="w-[40px] p-2 rounded-full bg-w-bg-5" onClick={() => vm.methods.cancel()}>
+            <ChevronDown class="w-6 h-6 text-w-fg-0" />
+          </div>
+          <div class="flex-1 flex items-center gap-2"></div>
+        </div>
+        <div class="safe-height"></div>
+      </div>
     </div>
   );
 }

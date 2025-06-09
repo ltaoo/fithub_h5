@@ -40,6 +40,9 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
       disabled: this.disabled,
     };
   }
+  get defaultValue() {
+    return this.defaultChecked;
+  }
 
   prevChecked = false;
 

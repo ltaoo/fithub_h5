@@ -62,9 +62,9 @@ export function SubscriptionOrderView(props: ViewComponentProps) {
 
   return (
     <>
-      <PageView store={vm}>
-        <div class="min-h-screen bg-w-bg-0 px-4 py-8">
-          <div class="max-w-md mx-auto">
+      <PageView store={vm} no_extra_bottom>
+        <div class="bg-w-bg-0">
+          <div class="w-[80vw] mx-auto">
             {/* 标题区域 */}
             <div class="text-center mb-8">
               <h2 class="text-2xl font-bold text-w-fg-0">订阅VIP</h2>
@@ -119,12 +119,6 @@ export function SubscriptionOrderView(props: ViewComponentProps) {
                 </button>
               </div>
             </div>
-
-            {/* 底部说明 */}
-            {/* <div class="mt-6 text-center text-sm text-gray-500">
-          <p>支持微信支付、支付宝</p>
-          <p class="mt-1">随时可取消订阅</p>
-        </div> */}
           </div>
         </div>
       </PageView>

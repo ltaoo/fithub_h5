@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { request } from "@/biz/requests";
 import { idsMapValue } from "@/biz/services/utils";
 import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
@@ -93,12 +95,12 @@ export function createWorkoutPlan(body: {
 }
 
 export function updateWorkoutPlan(body: {
-  id: number | string;
+  id: number;
   title: string;
   overview: string;
   tags: string;
   level: number;
-  steps: WorkoutPlanStepBody[];
+  details: WorkoutPlanDetailsJSON250424;
   estimated_duration: number;
   points: string;
   suggestions: string;
@@ -107,11 +109,11 @@ export function updateWorkoutPlan(body: {
 }) {
   return request.post<void>("/api/workout_plan/update", {
     ...body,
-    id: Number(body.id),
+    details: JSON.stringify(body.details),
   });
 }
 
-export function fetchWorkoutPlanProfile(body: { id: number | string }) {
+export function fetchWorkoutPlanProfile(body: { id: number }) {
   return request.post<{
     id: number;
     title: string;
@@ -126,8 +128,10 @@ export function fetchWorkoutPlanProfile(body: { id: number | string }) {
     creator: {
       nickname: string;
       avatar_url: string;
+      is_self: boolean;
     };
-  }>("/api/workout_plan/profile", { id: Number(body.id) });
+    created_at: string;
+  }>("/api/workout_plan/profile", { id: body.id });
 }
 export function parseWorkoutPlanStepsString(details: string) {
   const r = parseJSONStr<WorkoutPlanDetailsJSON250424>(details);
@@ -176,9 +180,12 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
     suggestions: (() => {
       const r = parseJSONStr<string[]>(v.suggestions);
       if (r.error) {
-        return [];
+        return "";
       }
-      return r.data;
+      if (r.data[0]) {
+        return r.data[0];
+      }
+      return "";
     })(),
     creator: v.creator,
     muscle_ids: v.muscle_ids
@@ -189,6 +196,7 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
       .split(",")
       .filter(Boolean)
       .map((v) => Number(v)),
+    created_at: dayjs(v.created_at).format("YYYY-MM-DD HH:mm"),
   });
 }
 
@@ -339,6 +347,12 @@ export function fetchWorkoutScheduleProfile(body: { id: number | string }) {
     /** 是否应用 */
     applied: number;
     applied_in_interval: number;
+    creator: {
+      nickname: string;
+      avatar_url: string;
+      is_self: boolean;
+    };
+    created_at: string;
   }>("/api/workout_schedule/profile", {
     id: Number(body.id),
   });
@@ -357,6 +371,8 @@ export function fetchWorkoutScheduleProfileProcess(r: TmpRequestResp<typeof fetc
     type: profile.type,
     applied: profile.applied === 1,
     applied_in_interval: profile.applied_in_interval === 1,
+    created_at: dayjs(profile.created_at).format("YYYY-MM-DD HH:mm"),
+    creator: profile.creator,
     schedules: (() => {
       if (profile.type === WorkoutScheduleType.Weekly) {
         return [1, 2, 3, 4, 5, 6, 7].map((v) => {
@@ -490,9 +506,10 @@ export function fetchMyWorkoutScheduleList() {
       overview: string;
       schedules: {
         day: number;
-        tags: string;
-        title: string;
         weekday: number;
+        title: string;
+        overview: string;
+        tags: string;
         workout_plan_id: number;
       }[];
       status: number;

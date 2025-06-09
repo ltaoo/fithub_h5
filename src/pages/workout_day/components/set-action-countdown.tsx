@@ -43,9 +43,13 @@ export function SetActionCountdownViewModel(props: {
   };
 
   let _running = false;
+  let _finished = false;
   let _state = {
     get running() {
       return _running;
+    },
+    get finished() {
+      return _finished;
     },
     get remaining() {
       return ui.$countdown1.time;
@@ -93,6 +97,7 @@ export function SetActionCountdownViewModel(props: {
     console.log("[BIZ]workout_day/set-action-countdown - countdown1.onFinished");
     if (props.no_rest_countdown) {
       _running = false;
+      _finished = true;
       bus.emit(Events.Finished);
       methods.refresh();
       return;
@@ -101,6 +106,7 @@ export function SetActionCountdownViewModel(props: {
   });
   ui.$countdown2.onFinished(() => {
     console.log("[BIZ]workout_day/set-action-countdown - countdown2.onFinished");
+    _finished = true;
     bus.emit(Events.Finished);
   });
 
@@ -292,14 +298,16 @@ export function SetActionCountdownView(props: {
           <Show
             when={state().running}
             fallback={
-              <div
-                classList={{
-                  "text-w-fg-0": !!props.highlight,
-                  "text-w-fg-1": !props.highlight,
-                }}
-              >
-                <Play class="w-4 h-4" />
-              </div>
+              <Show when={!state().finished}>
+                <div
+                  classList={{
+                    "text-w-fg-0": !!props.highlight,
+                    "text-w-fg-1": !props.highlight,
+                  }}
+                >
+                  <Play class="w-4 h-4" />
+                </div>
+              </Show>
             }
           >
             <div

@@ -74,6 +74,8 @@ import { WorkoutDayProfileView } from "./profile";
 import { RouteViewCore } from "@/domains/route_view";
 import { Muscles } from "@/biz/muscle/data";
 import { SetValueView } from "@/components/set-value-view";
+import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
+import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
 export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
@@ -775,40 +777,9 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         },
       });
     },
-    async handleClickWorkoutAction(action: { id: number | string }) {
-      ui.$workout_action_profile_dialog.show();
-      (() => {
-        const student_id = request.workout_day.profile.response?.student_id ?? 0;
-        if (!student_id) {
-          return;
-        }
-        request.workout_action_history.list.init({
-          workout_action_id: Number(action.id),
-          student_id,
-        });
-      })();
-      if (request.workout_action.profile.response && request.workout_action.profile.response.id === action.id) {
-        return;
-      }
-      const r = await request.workout_action.profile.run({ id: action.id });
-      if (r.error) {
-        props.app.tip({
-          text: ["获取动作详情失败", r.error.message],
-        });
-        return;
-      }
-      _cur_workout_action = {
-        ...r.data,
-        muscles: r.data.muscles.map((m) => {
-          const matched = Muscles.find((v) => v.id === m.id);
-          return {
-            ...m,
-            en_name: "",
-            name: matched ? matched.name : String(m.id),
-          };
-        }),
-      };
-      methods.refresh();
+    async handleClickWorkoutAction(action: { id: number }) {
+      ui.$workout_action_profile.ui.$dialog.show();
+      ui.$workout_action_profile.methods.fetch(action);
     },
     /** 完成该次训练 */
     async submit() {
@@ -984,8 +955,8 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 动作选择弹窗 */
     $workout_action_dialog: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
-      // client: props.client,
       list: $workout_action_list,
+      client: props.client,
       onOk(acts) {
         if (acts.length === 0) {
           props.app.tip({
@@ -1142,7 +1113,8 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 当次训练已经过了多久 */
     $day_duration: StopwatchViewModel({}),
     $countdown_presence: new PresenceCore(),
-    $workout_action_profile_dialog: new DialogCore({ footer: false }),
+    // $workout_action_profile_dialog: new DialogCore({ footer: false }),
+    $workout_action_profile: WorkoutActionProfileViewModel({ client: props.client }),
     $tools: new PresenceCore({}),
     $dialog_overview: new DialogCore({}),
     $dialog_workout_action_select: new DialogCore({}),
@@ -1227,7 +1199,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $workout_action_select: WorkoutActionSelectDialogViewModel({
       defaultValue: [],
       list: $workout_action_list,
-      // client: props.client,
+      client: props.client,
       async onOk(actions) {},
       onError(error) {
         props.app.tip({
@@ -1250,7 +1222,6 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   };
   let _height = 0;
   let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
-  let _cur_workout_action: (WorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
   let _cur_step_idx = 0;
   let _next_set_idx = 0;
   let _cur_act_idx = 0;
@@ -1289,9 +1260,6 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     get loading() {
       return request.workout_action.profile.loading;
-    },
-    get cur_workout_action() {
-      return _cur_workout_action;
     },
     get cur_workout_action_history() {
       return request.workout_action_history.list.response.dataSource;
@@ -1802,41 +1770,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           <SetValueInputKeyboard store={vm.ui.$set_value_input} />
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action_profile_dialog} app={props.app}>
-        <div class="relative min-h-[320px] p-2">
-          <Show when={state().loading}>
-            <div class="absolute inset-0">
-              {/* <div class="absolute inset-0 bg-white opacity-40"></div> */}
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="flex items-center justify-center p-4 rounded-lg text-w-fg-0 bg-w-bg-5">
-                  <Loader class="w-8 h-8 animate-spin" />
-                </div>
-              </div>
-            </div>
-          </Show>
-          <Show when={state().cur_workout_action}>
-            <div class="mt-2 rounded-lg">
-              <WorkoutActionCard {...state().cur_workout_action!} />
-            </div>
-          </Show>
-          <div class="space-y-2 mt-2">
-            <For each={state().cur_workout_action_history}>
-              {(history) => {
-                return (
-                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <SetValueView
-                      weight={history.weight}
-                      weight_unit={history.weight_unit}
-                      reps={history.reps}
-                      reps_unit={history.reps_unit}
-                    />
-                    <div class="text-sm text-w-fg-1">{history.created_at}</div>
-                  </div>
-                );
-              }}
-            </For>
-          </div>
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action_profile.ui.$dialog} app={props.app}>
+        <WorkoutActionProfileView store={vm.ui.$workout_action_profile} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_overview} app={props.app}>
         <div class="">

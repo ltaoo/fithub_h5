@@ -21,6 +21,7 @@ import { CalendarCore } from "@/domains/ui/calendar";
 import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
 
 import { WorkoutScheduleValuesModel } from "./model";
+import { Switcher } from "@/components/ui/switch";
 
 function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
   const $model = WorkoutScheduleValuesModel(props);
@@ -113,25 +114,25 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
         <div class="space-y-4">
           <div class="flied">
             <div class="flex">
-              <div class="label text-w-fg-0">标题</div>
+              <div class="label text-sm text-w-fg-0">标题</div>
               <div class="text-red-500">*</div>
             </div>
             <Input store={vm.ui.$values.fields.title.input} />
           </div>
           <div class="flied">
-            <div class="label text-w-fg-0">概要</div>
+            <div class="label text-sm text-w-fg-0">概要</div>
             <Textarea store={vm.ui.$values.fields.overview.input} />
           </div>
           <div class="flied">
-            <div class="label text-w-fg-0">建议等级</div>
+            <div class="label text-sm text-w-fg-0">建议等级</div>
             <Select store={vm.ui.$values.fields.level.input}></Select>
           </div>
           <div class="flied">
-            <div class="label text-w-fg-0">循环周期</div>
+            <div class="label text-sm text-w-fg-0">循环周期</div>
             <Select store={vm.ui.$values.fields.type.input}></Select>
           </div>
-          <div>
-            <div class="label text-w-fg-0">计划安排</div>
+          <div class="field">
+            <div class="label text-sm text-w-fg-0">计划安排</div>
             <div class="grid grid-cols-7 gap-2 mt-2">
               <For each={state().weekdays}>
                 {(day) => {
@@ -158,25 +159,19 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
               </For>
             </div>
           </div>
-        </div>
-      </PageView>
-      <Sheet store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>
-        <div class="">
-          <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
-          <div class="flex items-center gap-2 p-2">
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.hideWorkoutPlanSelectDialog();
-              }}
-            >
-              <ChevronDown class="w-6 h-6 text-w-fg-0" />
+          <div class="field">
+            <div class="flex">
+              <div class="text-sm text-w-fg-0">外部是否可见</div>
             </div>
-            <Button class="w-full" store={vm.ui.$btn_workout_plan_confirm}>
-              选择
-            </Button>
+            <div class="mt-2">
+              <Switcher store={vm.ui.$values.fields.status.input} texts={["公开", "仅自己可见"]} />
+              {/* <div class="text-sm text-w-fg-1">公开后无法删除，无法再次修改为仅自己可见</div> */}
+            </div>
           </div>
         </div>
+      </PageView>
+      <Sheet ignore_safe_height store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>
+        <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
       </Sheet>
     </>
   );

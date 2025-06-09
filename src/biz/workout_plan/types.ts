@@ -1,3 +1,5 @@
+import { SetValueUnit } from "@/biz/set_value_input";
+
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "./constants";
 
 // 创建时的参数
@@ -42,7 +44,7 @@ export type WorkoutPlanStepJSON250607 = {
     set_idx: number;
     weight: string;
     reps: number;
-    reps_unit: string;
+    reps_unit: SetValueUnit;
     rest_duration: number;
     note: string;
   }[];

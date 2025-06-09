@@ -135,6 +135,7 @@ export function SelectViewModel<T extends { id: number }>(props: {
       bus.emit(Events.StateChange, { ..._state });
     },
     select: methods.select,
+    clear: methods.clear,
     setOptions: methods.setOptions,
     ready() {},
     onListLoaded(handler: Handler<TheTypesOfEvents[Events.ActionsLoaded]>) {

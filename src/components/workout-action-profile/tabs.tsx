@@ -7,10 +7,12 @@ export const WorkoutActionProfileTabHeader = (props: { store: TabHeaderCore<any>
   const { store } = props;
 
   const [state, setState] = createSignal(store.state);
-  const [left, setLeft] = createSignal<null | number>(null);
+  const [left, setLeft] = createSignal<null | number>(store.state.left);
 
   store.onStateChange((v) => setState(v));
-  store.onLinePositionChange((v) => setLeft(v.left));
+  store.onLinePositionChange((v) => {
+    setLeft(v.left);
+  });
 
   return (
     <div
@@ -27,7 +29,7 @@ export const WorkoutActionProfileTabHeader = (props: { store: TabHeaderCore<any>
         // scroll-left="{{scrollLeftInset}}"
         // scroll-x
       >
-        <div id="tabs-wrapper" class="flex border-b border-w-fg-1">
+        <div id="tabs-wrapper" class="flex border-b border-w-fg-3">
           <For each={state().tabs}>
             {(tab, index) => {
               return (

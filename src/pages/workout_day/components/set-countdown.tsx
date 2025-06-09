@@ -183,7 +183,9 @@ export function SetCountdownView(props: {
         <Show when={countdown1().completed && countdown2().time !== 0}>
           <div
             classList={{
-              "flex items-center text-red-500": true,
+              "flex items-center": true,
+              "text-red-500": props.highlight,
+              "text-w-fg-1": !props.highlight,
             }}
           >
             <div

@@ -200,20 +200,20 @@ export function BMRCalcToolView(props: ViewComponentProps) {
     <>
       <PageView store={vm}>
         <div class="space-y-2">
-          <div>
-            <div class="text-w-fg-0">年龄</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">年龄</div>
             <Input store={vm.ui.$input_age} />
           </div>
-          <div>
-            <div class="text-w-fg-0">体重(单位kg)</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">体重(单位kg)</div>
             <Input store={vm.ui.$input_weight} />
           </div>
-          <div>
-            <div class="text-w-fg-0">身高(单位cm)</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">身高(单位cm)</div>
             <Input store={vm.ui.$input_height} />
           </div>
-          <div>
-            <div class="text-w-fg-0">性别</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">性别</div>
             <div class="flex gap-2">
               <div
                 classList={{
@@ -239,8 +239,8 @@ export function BMRCalcToolView(props: ViewComponentProps) {
               </div>
             </div>
           </div>
-          <div>
-            <div class="text-w-fg-0">活动系数</div>
+          <div class="field">
+            <div class="text-sm text-w-fg-0">活动系数</div>
             <Select store={vm.ui.$input_activity} />
           </div>
         </div>

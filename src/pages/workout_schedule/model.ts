@@ -5,7 +5,7 @@ import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { HttpClientCore } from "@/domains/http_client";
 import { Result } from "@/domains/result";
-import { InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
+import { CheckboxCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { RefCore } from "@/domains/ui/cur";
 import { TagInputCore } from "@/domains/ui/form/tag-input";
@@ -46,7 +46,8 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       }
       const matched = _selected_plans.find((v) => v.day_id === day.id);
       if (matched) {
-        ui.$workout_plan_select.setValue([{ id: matched.plan_id, title: "" }]);
+        const vv = ui.$workout_plan_select.methods.mapListWithId([matched.plan_id]);
+        ui.$workout_plan_select.setValue(vv);
       }
       ui.$ref_weekday.select(day);
       ui.$workout_plan_select.ui.$dialog.show();
@@ -85,7 +86,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
         _selected_plans.push(v);
       })();
       methods.refresh();
-      ui.$workout_plan_select.methods.clear();
+      ui.$workout_plan_select.clear();
       ui.$workout_plan_select.ui.$dialog.hide();
     },
     async toBody() {
@@ -93,7 +94,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      const { title, overview, level, tags, type } = r.data;
+      const { title, overview, level, tags, type, status } = r.data;
       if (!title) {
         return Result.Err("请输入标题");
       }
@@ -104,6 +105,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
         title,
         overview,
         level: level ?? 1,
+        status: status ? 1 : 2,
         tags: tags.join(","),
         type: type ?? 1,
         workout_plans: _selected_plans.map((v) => {
@@ -125,7 +127,6 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
         return;
       }
       const body = r.data;
-      console.log(body);
       const r2 = await request.workout_schedule.create.run(body);
       if (r2.error) {
         props.app.tip({
@@ -193,10 +194,10 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
                 label: "周循环",
                 value: 1,
               },
-              {
-                label: "月循环",
-                value: 2,
-              },
+              // {
+              //   label: "月循环",
+              //   value: 2,
+              // },
               // {
               //   label: "不循环",
               //   value: 3,
@@ -204,12 +205,20 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
             ],
           }),
         }),
+        status: new SingleFieldCore({
+          label: "外部是否可见",
+          name: "status",
+          input: new CheckboxCore({ checked: false }),
+        }),
       },
     }),
     $workout_plan_select: WorkoutPlanSelectViewModel({
       defaultValue: [],
       multiple: false,
       list: request.workout_plan.list,
+      onOk(v) {
+        methods.ensureSelectedWorkoutPlan();
+      },
     }),
     $ref_weekday: new RefCore<CalendarCore["state"]["weekdays"][number]>(),
   };
@@ -218,7 +227,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
     day_id: number;
     weekday: number;
     day: number;
-    plan_id: number | string;
+    plan_id: number;
   }[] = [];
   let _state = {
     get selected_plan_map() {
@@ -251,7 +260,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
     methods,
     state: _state,
     ready() {
-      ui.$workout_plan_select.request.workout_plan.list.init();
+      ui.$workout_plan_select.init();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

@@ -41,7 +41,7 @@ export function WorkoutPlanTagSelectView(
           <div
             classList={{
               "flex items-center gap-1": true,
-              "px-4 py-1 border-2 border-w-fg-3 rounded-full text-sm text-w-fg-1": true,
+              "px-4 py-1 border-2 border-w-fg-3 rounded-full text-w-fg-1": true,
             }}
           >
             <Plus class="w-4 h-4" />

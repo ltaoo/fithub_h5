@@ -130,6 +130,13 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
       ...this.state,
     });
   }
+  showMenuItem(label: string) {
+    const matched = this.items.find((v) => v.label === label);
+    if (!matched) {
+      return;
+    }
+    matched.show();
+  }
   toggle(position?: Partial<{ x: number; y: number; width: number; height: number }>) {
     if (position) {
       const { x, y, width = 8, height = 8 } = position;

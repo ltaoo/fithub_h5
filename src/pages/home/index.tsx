@@ -171,6 +171,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
                   workout_plan: {
                     id: vv.workout_plan_id,
                     title: vv.title,
+                    overview: vv.overview,
                     tags: vv.tags,
                   },
                 };
@@ -258,12 +259,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     } | null;
     schedule: {
       type: WorkoutScheduleDayType;
-      workout_plans: { id: number; completed: boolean; title: string; tags: string }[];
+      workout_plans: { id: number; completed: boolean; title: string; overview: string; tags: string }[];
     };
   } | null = null;
   let _schedules: Record<
     string,
-    { type: WorkoutScheduleDayType; workout_plans: { id: number; title: string; tags: string }[] }
+    { type: WorkoutScheduleDayType; workout_plans: { id: number; title: string; overview: string; tags: string }[] }
   > = {};
   const _state = {
     get weekdays() {
@@ -578,7 +579,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               <div class="py-4">
                 <div class="flex flex-col items-center gap-2">
                   <Coffee class="w-6 h-6 text-w-fg-0" />
-                  <div class="text-w-f-g0">休息日</div>
+                  <div class="text-w-fg-1">休息日</div>
                 </div>
               </div>
             </Show>
@@ -589,7 +590,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                     return (
                       <div class="p-2 border-2 border-w-fg-3 rounded-lg">
                         <div class="text-w-fg-0">{v.title}</div>
-                        <div class="text-sm text-w-fg-1">{v.tags}</div>
+                        <div class="text-w-fg-1 text-sm">{v.overview}</div>
                         <div class="flex items-center justify-between">
                           <div></div>
                           <div>

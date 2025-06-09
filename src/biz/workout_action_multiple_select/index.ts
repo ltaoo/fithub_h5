@@ -1,5 +1,6 @@
 /**
  * @file 健身动作多选择
+ * @deprecated
  */
 import { $workout_action_list } from "@/store";
 import {

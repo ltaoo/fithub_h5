@@ -156,9 +156,26 @@ export function WorkoutScheduleProfileView(props: ViewComponentProps) {
       </Show>
       <Show when={state().profile}>
         <div class="p-4 text-w-fg-0">
-          <div class="text-xl">{state().profile?.title}</div>
-          <div>
-            <div class="text-w-fg-1 text-sm">{state().profile?.overview}</div>
+          <div class="text-2xl font-bold text-w-fg-0">{state().profile!.title}</div>
+          <div class="text-w-fg-0">{state().profile!.overview}</div>
+          <div class="flex items-center justify-between mt-2">
+            <div class="text-w-fg-1 text-[12px]">{state().profile!.created_at}创建</div>
+          </div>
+          <div class="flex items-center gap-2 mt-4">
+            <Show
+              when={state().profile!.creator.avatar_url}
+              fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+            >
+              <div
+                class="w-[24px] h-[24px] rounded-full"
+                style={{
+                  "background-image": `url('${state().profile!.creator.avatar_url}')`,
+                  "background-size": "cover",
+                  "background-position": "center",
+                }}
+              ></div>
+            </Show>
+            <div class="text-sm text-w-fg-0">{state().profile!.creator.nickname}</div>
           </div>
         </div>
         <div class="mt-2 space-y-2">

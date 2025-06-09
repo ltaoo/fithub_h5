@@ -75,7 +75,7 @@ export type WorkoutActionProfile = {
   id: number;
   name: string;
   zh_name: string;
-  overview: string;
+  // overview: string;
   muscles: {
     id: number;
   }[];
@@ -101,11 +101,11 @@ export function fetchWorkoutActionListByIdsProcess(r: TmpRequestResp<typeof fetc
         id: action.id,
         name: action.name,
         zh_name: action.zh_name,
-        type: action.type,
-        overview: action.overview,
-        tags1: action.tags1.split(",").filter(Boolean),
-        tags2: action.tags2.split(",").filter(Boolean),
-        level: action.level,
+        // type: action.type,
+        // overview: action.overview,
+        // tags1: action.tags1.split(",").filter(Boolean),
+        // tags2: action.tags2.split(",").filter(Boolean),
+        // level: action.level,
         equipments: idsMapValue(action.equipment_ids),
         muscles: idsMapValue(action.muscle_ids),
       };

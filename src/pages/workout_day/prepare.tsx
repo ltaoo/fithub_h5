@@ -318,7 +318,7 @@ export function WorkoutDayPreparingPage(props: ViewComponentProps) {
                         "flex items-center justify-between p-4 rounded-md bg-w-bg-5": true,
                       }}
                       onClick={() => {
-                        vm.ui.$input_workout_plan_select.methods.select(vv);
+                        vm.ui.$input_workout_plan_select.select(vv);
                       }}
                     >
                       <div class="text-sm text-w-fg-1">{vv.title}</div>

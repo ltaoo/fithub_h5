@@ -71,6 +71,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_plan_update: {
+        title: "训练计划修改",
+        pathname: "/home/workout_plan_update",
+        options: {
+          require: ["login"],
+        },
+      },
       workout_plan_profile: {
         title: "训练计划详情",
         pathname: "/workout_plan_profile",
@@ -214,13 +221,6 @@ const configure = {
       workout_plan_list: {
         title: "训练计划列表",
         pathname: "/workout_plan/list",
-        options: {
-          require: ["login"],
-        },
-      },
-      workout_plan_update: {
-        title: "训练计划编辑",
-        pathname: "/workout_plan/update",
         options: {
           require: ["login"],
         },

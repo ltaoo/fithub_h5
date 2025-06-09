@@ -392,6 +392,7 @@ export function MaxRMTestViewModel(props: ViewComponentProps) {
       defaultValue: [],
       list: $workout_action_list,
       multiple: false,
+      client: props.client,
       async onOk(actions) {
         if (actions.length === 0) {
           return;
@@ -527,12 +528,12 @@ export function MaxRMTestToolView(props: ViewComponentProps) {
           <div class="">
             <div class="p-2 rounded-lg text-w-fg-0 text-sm text-center">输入要测试动作常用重量和次数</div>
             <div class="space-y-2 mt-4">
-              <div>
-                <div class="text-w-fg-0">重量(单位kg)</div>
+              <div class="field">
+                <div class="text-sm text-w-fg-0">重量(单位kg)</div>
                 <Input store={vm.ui.$input_weight} />
               </div>
-              <div>
-                <div class="text-w-fg-0">次数</div>
+              <div class="field">
+                <div class="text-sm text-w-fg-0">次数</div>
                 <Input store={vm.ui.$input_reps} />
               </div>
               <div>

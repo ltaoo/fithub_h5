@@ -113,10 +113,14 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     this._rules = rules;
     this._hidden = hidden;
 
-    this._input.onChange(() => {
-      // console.log("the input change in SingleFieldCore", this._input.value);
-      this._bus.emit(SingleFieldEvents.Change, this._input.value);
-    });
+    // console.log("[]before this._input.onChange", this._input);
+    setTimeout(() => {
+      this._input.onChange(() => {
+        // console.log("the input change in SingleFieldCore", this._input.value);
+        this._bus.emit(SingleFieldEvents.Change, this._input.value);
+      });
+      // 必需要800，为什么？少了也不行
+    }, 800);
   }
   get label() {
     return this._label;
@@ -360,17 +364,25 @@ export class ArrayFieldCore<
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   setValue(values: any[], extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
-    console.log("[DOMAIN]ArrayFieldCore - setValue", extra.key, values, this.fields);
+    // console.log("[DOMAIN]ArrayFieldCore - setValue", extra.key, values, this.fields);
     for (let i = 0; i < values.length; i += 1) {
       (() => {
         const v = values[i];
         let field = this.fields[i];
         if (!field) {
+          const vvv = this._field(i);
+          // vvv.onChange(() => {
+          //   console.log(111);
+          //   this._bus.emit(ArrayFieldEvents.Change, {
+          //     id: i,
+          //     idx: i,
+          //   });
+          // });
           field = {
             id: this.fields.length,
             idx: i,
             // @ts-ignore
-            field: this._field(i),
+            field: vvv,
           };
           this.fields[i] = field;
         }
@@ -449,23 +461,28 @@ export class ArrayFieldCore<
     // @ts-ignore
     return field;
   }
-  append(): ReturnType<T> {
+  append(opt: Partial<{ silence: boolean }> = {}): ReturnType<T> {
     let field = this._field(this.fields.length);
     const v_id = this.fields.length;
     const v_idx = this.fields.length;
-    field.onChange(() => {
-      this._bus.emit(ArrayFieldEvents.Change, {
-        id: v_id,
-        idx: v_idx,
+    setTimeout(() => {
+      field.onChange(() => {
+        // console.log('field onChange')
+        this._bus.emit(ArrayFieldEvents.Change, {
+          id: v_id,
+          idx: v_idx,
+        });
       });
-    });
+    }, 800);
     this.fields.push({
       id: v_id,
       idx: v_idx,
       // @ts-ignore
       field,
     });
-    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+    if (!opt.silence) {
+      this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
+    }
     // @ts-ignore
     return field;
   }
@@ -618,14 +635,16 @@ export class ObjectFieldCore<
     this._hidden = hidden;
     this.fields = fields;
 
-    const _fields = Object.values(fields);
-    for (let i = 0; i < _fields.length; i += 1) {
-      const f = _fields[i];
-      f.onChange(() => {
-        // console.log("the object value change in ObjectFieldCore", f.label);
-        this._bus.emit(ObjectFieldEvents.Change);
-      });
-    }
+    setTimeout(() => {
+      const _fields = Object.values(fields);
+      for (let i = 0; i < _fields.length; i += 1) {
+        const f = _fields[i];
+        f.onChange(() => {
+          console.log("the object value change in ObjectFieldCore", f.label);
+          this._bus.emit(ObjectFieldEvents.Change);
+        });
+      }
+    }, 800);
   }
   get label() {
     return this._label;

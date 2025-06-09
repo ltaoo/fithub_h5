@@ -2,7 +2,7 @@
  * @file 学员详情
  */
 import { For, Show } from "solid-js";
-import { Check, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
+import { Check, CircleX, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -31,6 +31,8 @@ import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 import { Result } from "@/domains/result";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
+import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
+import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
 
 function MemberProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -59,7 +61,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
-    handleClickWorkoutPlan(workout_plan: { id: number }) {
+    gotoWorkoutPlanProfileView(workout_plan: { id: number }) {
       const v = request.student.profile.response;
       if (!v) {
         props.app.tip({
@@ -151,8 +153,8 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     }),
     $btn_start_workout: new ButtonCore({
       onClick() {
-        request.workout_plan.list.init();
-        ui.$dialog_workout_plan.show();
+        ui.$workout_plan_select.init();
+        ui.$workout_plan_select.ui.$dialog.show();
       },
     }),
     $menu: new DropdownMenuCore({
@@ -251,6 +253,21 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       },
     }),
     $dialog_workout_plan: new DialogCore({}),
+    $workout_plan_select: WorkoutPlanSelectViewModel({
+      defaultValue: [],
+      list: request.workout_plan.list,
+      onOk(v) {
+        const vv = v[0];
+        if (!vv) {
+          props.app.tip({
+            text: ["请选择训练计划"],
+          });
+          return;
+        }
+        ui.$workout_plan_select.ui.$dialog.hide();
+        methods.gotoWorkoutPlanProfileView({ id: vv.id });
+      },
+    }),
     $dialog_day_profile: new DialogCore({}),
   };
 
@@ -317,8 +334,13 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
     <>
       <Show when={state().error}>
         <PageView store={vm}>
-          <div class="flex justify-center p-4">
-            <div class="text-xl text-center text-w-fg-1">{state().error?.message}</div>
+          <div class="error max-w-[screen] p-4">
+            <div class="flex flex-col items-center text-red-500">
+              <div>
+                <CircleX class="w-12 h-12" />
+              </div>
+              <div class="mt-2 text-w-fg-0 text-center break-all">{state().error?.message}</div>
+            </div>
           </div>
         </PageView>
       </Show>
@@ -454,25 +476,8 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           </div>
         </PageView>
       </Show>
-      <Sheet store={vm.ui.$dialog_workout_plan} app={props.app}>
-        <div class="p-2">
-          <ListView store={vm.request.workout_plan.list} class="space-y-2">
-            <For each={state().workout_plan.dataSource}>
-              {(v) => {
-                return (
-                  <div
-                    class="p-2 rounded-lg border-2 border-w-fg-3"
-                    onClick={() => {
-                      vm.methods.handleClickWorkoutPlan(v);
-                    }}
-                  >
-                    <div class="text-w-fg-0">{v.title}</div>
-                  </div>
-                );
-              }}
-            </For>
-          </ListView>
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>
+        <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_day_profile} app={props.app}>
         <div class="min-h-[320px] p-2">

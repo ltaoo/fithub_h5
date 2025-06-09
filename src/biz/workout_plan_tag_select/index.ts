@@ -192,7 +192,17 @@ export function WorkoutPlanTagSelectViewModel() {
     methods,
     ui,
     state: _state,
+    get value() {
+      return _state.value;
+    },
+    setValue(v: string[]) {
+      _selected_tags = v;
+      methods.refresh();
+    },
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

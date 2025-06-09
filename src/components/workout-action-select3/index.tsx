@@ -10,6 +10,8 @@ import { useViewModelStore } from "@/hooks";
 import * as PopoverPrimitive from "@/packages/ui/popover";
 import { Button, Dialog, Input, ListView, ScrollView } from "@/components/ui";
 import { Select } from "@/components/ui/select";
+import { Sheet } from "@/components/ui/sheet";
+import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
 import { cn } from "@/utils/index";
@@ -21,7 +23,7 @@ export function WorkoutActionSelect3View(props: {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="z-50 relative w-full">
+    <>
       <div class="flex flex-col bg-w-bg-0 border-w-fg-3" style={{ height: "100vh" }}>
         <div class="flex gap-2 p-2">
           <div class="w-[240px]">
@@ -74,7 +76,13 @@ export function WorkoutActionSelect3View(props: {
                             <div class="text-sm">{action.zh_name}</div>
                           </div>
                           <div class="absolute right-1 bottom-1">
-                            <div class="p-1 rounded-full">
+                            <div
+                              class="p-1 rounded-full"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                vm.methods.handleClickWorkoutAction(action);
+                              }}
+                            >
                               <MoreHorizontal class="w-4 h-4 text-w-fg-2" />
                             </div>
                           </div>
@@ -94,13 +102,18 @@ export function WorkoutActionSelect3View(props: {
               <ChevronDown class="w-6 h-6 text-w-fg-0" />
             </div>
             <div class="flex-1 flex items-center gap-2">
+              <div class="text-sm text-w-fg-1 whitespace-nowrap">已选择{state().selected.length}个动作</div>
               <Button store={vm.ui.$btn_submit} class="w-full">
                 确定
               </Button>
             </div>
           </div>
+          <div class="safe-height"></div>
         </div>
       </div>
-    </div>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
+        <WorkoutActionProfileView store={vm.ui.$workout_action} />
+      </Sheet>
+    </>
   );
 }

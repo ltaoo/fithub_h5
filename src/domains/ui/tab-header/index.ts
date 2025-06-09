@@ -195,9 +195,9 @@ export class TabHeaderCore<
     if (!matchedTab) {
       return;
     }
-    if (this.mounted) {
-      return;
-    }
+    // if (this.mounted) {
+    //   return;
+    // }
     this.extra[matchedTab.id] = info;
     // console.log("[DOMAIN]ui/tab-headers", index, Object.keys(this.extra).length, this.tabs.length);
     if (Object.keys(this.extra).length !== this.tabs.filter((t) => !t.hidden).length) {
