@@ -112,7 +112,7 @@ export function connect<T extends { storage: StorageCore<any> }>(app: Applicatio
     const fallback = colorSchemes.includes(defaultTheme) ? defaultTheme : null;
     const colorScheme = colorSchemes.includes(curTheme) ? curTheme : fallback;
     // @ts-ignore
-    d.style.colorScheme = colorScheme;
+    // d.style.colorScheme = colorScheme;
     return Result.Ok(null);
   };
   app.getSystemTheme = getSystemTheme;

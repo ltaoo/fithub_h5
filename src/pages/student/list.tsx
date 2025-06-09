@@ -90,29 +90,27 @@ export function HomeStudentListPage(props: ViewComponentProps) {
 
   return (
     <>
-      <div>
-        <div class="flex items-center justify-between gap-2 p-2">
-          {/* <div class="text-xl text-w-fg-0"></div> */}
-          <Input class="w-full" store={vm.ui.$input_search} />
-          <div
-            class="p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.methods.search();
-            }}
-          >
-            <Search class="w-6 h-6 text-w-fg-0" />
-          </div>
-          <div
-            class="p-2 rounded-full bg-w-bg-5"
-            onClick={() => {
-              vm.methods.gotoStudentCreateView();
-            }}
-          >
-            <Plus class="w-6 h-6 text-w-fg-0" />
-          </div>
+      <div class="flex items-center justify-between gap-2 p-2 bg-w-bg-0">
+        {/* <div class="text-xl text-w-fg-0"></div> */}
+        <Input class="w-full" store={vm.ui.$input_search} />
+        <div
+          class="p-2 rounded-full bg-w-bg-5"
+          onClick={() => {
+            vm.methods.search();
+          }}
+        >
+          <Search class="w-6 h-6 text-w-fg-0" />
+        </div>
+        <div
+          class="p-2 rounded-full bg-w-bg-5"
+          onClick={() => {
+            vm.methods.gotoStudentCreateView();
+          }}
+        >
+          <Plus class="w-6 h-6 text-w-fg-0" />
         </div>
       </div>
-      <div class="absolute top-[56px] bottom-0 w-full">
+      <div class="absolute top-[56px] bottom-0 w-full bg-w-bg-0">
         <ScrollView store={vm.ui.$view} class="scroll--hidden">
           <div class="p-2">
             <ListView
@@ -121,7 +119,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
               skeleton={
                 <>
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <Skeleton class="w-[32px] h-[24px]" />
+                    <Skeleton class="w-[32px] h-[28px]" />
                   </div>
                 </>
               }
@@ -145,7 +143,7 @@ export function HomeStudentListPage(props: ViewComponentProps) {
                           }}
                         ></div>
                         <div class="space-y-1">
-                          <div class="text-w-fg-0">{student.nickname}</div>
+                          <div class="text-lg text-w-fg-0">{student.nickname}</div>
                           <Show when={student.gender === HumanGenderType.Female}>
                             <Venus class="w-3 h-3 text-pink-500" />
                           </Show>

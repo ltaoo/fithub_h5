@@ -26,7 +26,7 @@ import {
   updateWorkoutPlan,
   WorkoutPlanDetailsJSON250424,
 } from "@/biz/workout_plan/services";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
 import {
   fetchWorkoutActionListByIds,
   fetchWorkoutActionListByIdsProcess,
@@ -149,23 +149,23 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       methods.refresh();
     },
     async toBody() {
+      const value_title = ui.$input_title.value;
+      const value_overview = ui.$input_overview.value;
+      const value_suggestions = ui.$input_suggestions.value;
+      const status = ui.$input_status.state.value;
+      const value_tags = ui.$input_tags.value;
+      if (!value_title) {
+        return Result.Err("请输入计划名称");
+      }
       const r = await ui.$input_actions.validate();
       if (r.error) {
         return Result.Err(r.error);
       }
       const value_actions = r.data;
       if (value_actions.length === 0) {
-        return Result.Err("请至少选择一个动作");
+        return Result.Err("请至少添加一个动作");
       }
-      const value_title = ui.$input_title.value;
-      const value_overview = ui.$input_overview.value;
-      const value_suggestions = ui.$input_suggestions.value;
-      const status = ui.$input_status.value;
-      const value_tags = ui.$input_tags.value;
       const value_estimated_duration = methods.calc_estimated_duration(value_actions);
-      if (!value_title) {
-        return Result.Err("请输入计划名称");
-      }
       const muscle_ids: Record<number, boolean> = {};
       const equipment_ids: Record<number, boolean> = {};
       for (let i = 0; i < value_actions.length; i += 1) {
@@ -305,9 +305,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       props.app.tip({
         text: ["更新成功"],
       });
-      props.history.replace("root.workout_plan_profile", {
-        id: String(id),
-      });
+      props.history.back();
     },
     async fetch(id: number) {
       const r = await request.workout_plan.profile.run({ id });

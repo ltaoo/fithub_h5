@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
 import { cn } from "@/utils/index";
 
 export function WorkoutActionSelect3View(props: {
@@ -41,9 +41,9 @@ export function WorkoutActionSelect3View(props: {
                 return (
                   <div
                     classList={{
-                      "py-2 rounded-md text-center border-2 border-w-bg-0 ": true,
+                      "py-2 rounded-md text-center border-2 border-w-bg-0": true,
                       "text-w-fg-0": tag.selected,
-                      "text-w-fg-2": !tag.selected,
+                      "text-w-fg-1": !tag.selected,
                     }}
                     onClick={() => {
                       vm.methods.handleClickTag(tag);

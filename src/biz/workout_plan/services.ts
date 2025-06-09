@@ -449,7 +449,7 @@ export function cancelWorkoutSchedule(body: { id: number }) {
   return request.post<void>("/api/workout_schedule/cancel", body);
 }
 
-export function fetchWorkoutScheduleList(body: FetchParams) {
+export function fetchWorkoutScheduleList(body: Partial<FetchParams> & { keyword: string }) {
   return request.post<
     ListResponse<{
       id: number;
@@ -465,6 +465,7 @@ export function fetchWorkoutScheduleList(body: FetchParams) {
   >("/api/workout_schedule/list", {
     page_size: body.pageSize,
     page: body.page,
+    keyword: body.keyword,
   });
 }
 export function fetchWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetchWorkoutScheduleList>) {

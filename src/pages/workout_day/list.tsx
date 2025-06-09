@@ -109,7 +109,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
             {(value) => {
               return (
                 <div class="border-2 border-w-fg-3 p-4 rounded-lg">
-                  <div class="text-w-fg-0">{value.workout_plan.title}</div>
+                  <div class="text-lg text-w-fg-0">{value.workout_plan.title}</div>
                   <div class="text-w-fg-1">{value.started_at_text}</div>
                   <div class="flex items-center justify-between">
                     <div>

@@ -36,6 +36,7 @@ import { sleep } from "@/utils";
 
 import { HomeViewTabHeader } from "./components/tabs";
 import { CalendarSheet } from "./components/calendar_sheet";
+import { Sheet } from "@/components/ui/sheet";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -99,6 +100,26 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       }
       _cur_day = day;
       const v = dayjs(day.value);
+      const today_date_text = v.format("YYYY-MM-DD");
+      const completed_plan_in_today = request.workout_day.list.response.dataSource;
+      const completed_plan_ids_in_today = completed_plan_in_today.map((v) => v.workout_plan.id);
+      const schedule_of_today = _schedules[today_date_text];
+
+      const extra_workout_days: { workout_plan_id: number; title: string; finished_at_text: string }[] = [];
+      if (schedule_of_today) {
+        const plan_ids_today_need_to_do = schedule_of_today.workout_plans.map((v) => v.id);
+
+        for (let i = 0; i < completed_plan_in_today.length; i += 1) {
+          const vv = completed_plan_in_today[i];
+          if (vv.day === today_date_text && vv.finished_at_text && !plan_ids_today_need_to_do.includes(vv.id)) {
+            extra_workout_days.push({
+              workout_plan_id: vv.workout_plan.id,
+              title: vv.workout_plan.title,
+              finished_at_text: vv.finished_at_text,
+            });
+          }
+        }
+      }
       _cur_day_profile = {
         month_text: `${v.month() + 1}月`,
         day_text: `${v.date()}日`,
@@ -115,25 +136,22 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         }`,
         workout_day: null,
         schedule: (() => {
-          const m = _schedules[v.format("YYYY-MM-DD")];
-          if (!m) {
+          if (!schedule_of_today) {
             return {
               type: WorkoutScheduleDayType.Empty,
               workout_plans: [],
+              extra_completed_workout_days: [],
             };
           }
           return {
-            ...m,
-            workout_plans: m.workout_plans.map((v) => {
+            ...schedule_of_today,
+            workout_plans: schedule_of_today.workout_plans.map((v) => {
               return {
                 ...v,
-                completed: request.workout_day.list.response.dataSource
-                  .map((v) => {
-                    return v.workout_plan.id;
-                  })
-                  .includes(v.id),
+                completed: completed_plan_ids_in_today.includes(v.id),
               };
             }),
+            extra_completed_workout_days: extra_workout_days,
           };
         })(),
       };
@@ -151,8 +169,39 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       }
       ui.$dialog_calendar.show();
     },
+    checkShouldShowWorkoutTipDialog() {
+      const today = dayjs().format("YYYY-MM-DD");
+      const today_schedule = _schedules[today];
+      if (!today_schedule) {
+        return false;
+      }
+      if (today_schedule.type !== WorkoutScheduleDayType.Workout) {
+        return false;
+      }
+      const today_workout_plans = today_schedule.workout_plans;
+      if (today_workout_plans.length === 0) {
+        return false;
+      }
+      const today_workout_days = request.workout_day.list.response.dataSource.filter((v) => {
+        return v.day === today;
+      });
+      if (today_workout_days.length === 0) {
+        return true;
+      }
+      // console.log('today_workout_days', today_workout_days);
+      const completed_plan_ids_in_today = today_workout_days.map((d) => {
+        return d.workout_plan.id;
+      });
+      for (let i = 0; i < today_workout_plans.length; i += 1) {
+        const target_plan = today_workout_plans[i];
+        if (!completed_plan_ids_in_today.includes(target_plan.id)) {
+          return true;
+        }
+      }
+      return false;
+    },
     async ready() {
-      request.workout_day.list.init();
+      await request.workout_day.list.init();
       request.workout_day.has_started.run();
       (async () => {
         const r = await request.workout_schedule.enabled.run();
@@ -181,8 +230,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           new Date()
         );
         _schedules = schedules;
+        const shouldTip = methods.checkShouldShowWorkoutTipDialog();
+        // if (shouldTip) {
+        //   alert(1);
+        // }
         methods.refresh();
-        // console.log(schedules);
+        console.log(schedules);
       })();
       const r = await request.workout_plan_set.list.run();
       if (r.error) {
@@ -246,6 +299,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         methods.refresh();
       },
     }),
+    $dialog_workout_tip: new DialogCore({}),
   };
 
   type TheDay = { id: number; value: Date };
@@ -260,6 +314,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     schedule: {
       type: WorkoutScheduleDayType;
       workout_plans: { id: number; completed: boolean; title: string; overview: string; tags: string }[];
+      extra_completed_workout_days: { workout_plan_id: number; title: string; finished_at_text: string }[];
     };
   } | null = null;
   let _schedules: Record<
@@ -349,6 +404,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     get has_workout_day() {
       return !!request.workout_day.has_started.response?.list.length;
     },
+    get workout_plans_need_to_do() {
+      return [];
+    },
   };
   enum Events {
     StateChange,
@@ -369,6 +427,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
+      // ui.$dialog_workout_tip.show();
       methods.ready();
     },
     destroy() {},
@@ -384,7 +443,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
   return (
     <>
       <div
-        class="z-0 fixed top-0 left-1/2 -translate-x-1/2"
+        class="z-0 fixed top-0 left-1/2 -translate-x-1/2 bg-w-bg-0"
         classList={{
           "w-[375px] mx-auto": props.app.env.pc,
           "w-full": !props.app.env.pc,
@@ -460,7 +519,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
           </div>
         </div>
       </div>
-      <div class="absolute top-[134px] bottom-0 left-0 w-full">
+      <div class="absolute top-[134px] bottom-0 left-0 w-full bg-w-bg-0">
         <ScrollView store={vm.ui.$view} class="scroll--hidden">
           <div class="p-2 pb-8 relative whitespace-nowrap">
             <Show
@@ -486,7 +545,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                     {(vv) => {
                       return (
                         <div
-                          class="relative p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0"
+                          class="relative p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0 bg-w-bg-0"
                           onClick={() => {
                             vm.methods.handleClickSet(vv);
                           }}
@@ -620,11 +679,35 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                     );
                   }}
                 </For>
+                <For each={state().day?.schedule.extra_completed_workout_days}>
+                  {(v) => {
+                    return (
+                      <div class="p-2 border-2 border-w-fg-3 rounded-lg">
+                        <div class="text-w-fg-0">{v.title}</div>
+                        {/* <div class="text-w-fg-1 text-sm">{v.overview}</div> */}
+                        <div class="flex items-center justify-between">
+                          <div class="text-sm text-w-fg-1">完成于{v.finished_at_text}</div>
+                          <div>
+                            <div>
+                              <Check class="w-6 h-6 text-green-500" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }}
+                </For>
               </div>
             </Show>
           </Show>
         </div>
       </CalendarSheet>
+      <Sheet store={vm.ui.$dialog_workout_tip} app={props.app}>
+        <div class="p-2">
+          <div class="text-xl text-w-fg-0 text-center">提示</div>
+          <div class="text-sm text-w-fg-1 text-center">存在健身计划待执行</div>
+        </div>
+      </Sheet>
     </>
   );
 };

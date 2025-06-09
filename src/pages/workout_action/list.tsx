@@ -37,8 +37,7 @@ import {
   fetchWorkoutActionProfileProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
-import { WorkoutActionMultipleSelectViewModel } from "@/biz/workout_action_multiple_select";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { createReport } from "@/biz/report/services";
 import { Muscles } from "@/biz/muscle/data";
@@ -215,13 +214,13 @@ export function WorkoutActionListView(props: ViewComponentProps) {
                       classList={{
                         "py-2 rounded-md text-center border-2 border-w-bg-0 ": true,
                         "text-w-fg-0": tag.selected,
-                        "text-w-fg-2": !tag.selected,
+                        "text-w-fg-1": !tag.selected,
                       }}
                       onClick={() => {
                         vm.ui.$select.methods.handleClickTag(tag);
                       }}
                     >
-                      <div class="text-center text-sm">{tag.text}</div>
+                      <div class="text-center">{tag.text}</div>
                     </div>
                   );
                 }}

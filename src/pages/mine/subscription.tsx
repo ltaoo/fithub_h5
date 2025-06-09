@@ -153,7 +153,7 @@ export function MineSubscriptionView(props: ViewComponentProps) {
               return (
                 <div class="relative p-4 border-2 border-w-fg-3 rounded-lg">
                   <div class="flex items-center justify-between">
-                    <div>{v.text}</div>
+                    <div class="text-lg text-w-fg-0">{v.text}</div>
                     <div class="text-w-fg-0 text-sm">{v.status_text}</div>
                   </div>
                   <div class="text-sm text-w-fg-1">{v.created_at}</div>

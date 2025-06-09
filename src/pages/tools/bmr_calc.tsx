@@ -262,16 +262,23 @@ export function BMRCalcToolView(props: ViewComponentProps) {
                   >
                     <div>
                       <div class="text-sm text-w-fg-1">基础代谢</div>
-                      <div class="text-2xl">{v.v}</div>
+                      <div class="flex flex-end">
+                        <div class="text-2xl">{v.v}</div>
+                      </div>
                     </div>
                     <div class="mt-2">
                       <div class="text-sm text-w-fg-1">总消耗</div>
-                      <div class="text-2xl">{v.tdee}</div>
+                      <div class="flex flex-end">
+                        <div class="text-2xl">{v.tdee}</div>
+                      </div>
                     </div>
                   </div>
                 );
               }}
             </For>
+            <Show when={state().values.length}>
+              <div class="mt-4 text-sm text-w-fg-1 text-center">单位：kcal 大卡</div>
+            </Show>
           </div>
         </div>
         {/* <div class="mt-8">

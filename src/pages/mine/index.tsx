@@ -370,7 +370,7 @@ export function HomeMineView(props: ViewComponentProps) {
 
   return (
     <>
-      <ScrollView store={vm.ui.$view} class="scroll--hidden">
+      <ScrollView store={vm.ui.$view} class="scroll--hidden bg-w-bg-0">
         <div class="">
           <div class="fixed top-2 right-2">
             <div

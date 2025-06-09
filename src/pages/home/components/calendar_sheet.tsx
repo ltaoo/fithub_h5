@@ -21,28 +21,26 @@ export function CalendarSheet(
   return (
     <DialogPrimitive.Portal store={props.store}>
       <div
-        class="fixed left-1/2 -translate-x-1/2 top-[92px]"
+        class="fixed left-1/2 -translate-x-1/2 top-[92px] bottom-0"
         classList={{
           "w-[375px] mx-auto": props.app.env.pc,
           "w-full ": !props.app.env.pc,
         }}
         style={{ "z-index": 99 }}
       >
-        <Show when={state().mask}>
-          <DialogPrimitive.Overlay
-            store={vm}
-            classList={{
-              "fixed inset-0 top-[92px] z-0 bg-black/50 transition-all duration-200": true,
-              block: state().visible,
-              hidden: !state().visible,
-              "animate-in fade-in": state().enter,
-              "animate-out fade-out": state().exit,
-            }}
-            onClick={() => {
-              vm.hide();
-            }}
-          />
-        </Show>
+        <DialogPrimitive.Overlay
+          store={vm}
+          classList={{
+            "fixed inset-0 top-[92px] z-0 bg-black/50 transition-all duration-200": true,
+            block: state().visible,
+            hidden: !state().visible,
+            "animate-in fade-in": state().enter,
+            "animate-out fade-out": state().exit,
+          }}
+          onClick={() => {
+            vm.hide();
+          }}
+        />
         <DialogPrimitive.Content
           store={props.store}
           classList={{

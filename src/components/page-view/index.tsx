@@ -17,7 +17,7 @@ export function PageView<T extends { methods: { back: () => void }; ui: { $view:
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   return (
-    <div class="flex flex-col h-screen">
+    <div class="flex flex-col h-screen bg-w-bg-0">
       <div class="flex-1 overflow-auto">
         <ScrollView store={props.store.ui.$view} class="scroll--hidden">
           <div

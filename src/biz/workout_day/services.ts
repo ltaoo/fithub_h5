@@ -521,9 +521,9 @@ export function fetchWorkoutDayListProcess(r: TmpRequestResp<typeof fetchWorkout
       return {
         id: v.id,
         status: v.status,
-        started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : null,
-        finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : null,
-        day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : null,
+        started_at_text: v.started_at ? dayjs(v.started_at).format("MM-DD HH:mm") : "",
+        finished_at_text: v.finished_at ? dayjs(v.finished_at).format("MM-DD HH:mm") : "",
+        day: v.finished_at ? dayjs(v.finished_at).format("YYYY-MM-DD") : "",
         workout_plan: v.workout_plan,
       };
     }),

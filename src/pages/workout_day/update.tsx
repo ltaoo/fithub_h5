@@ -51,7 +51,7 @@ import {
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
 import { CountdownViewModel } from "@/biz/countdown";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
 import { getSetValueUnit, SetValueInputViewModel, SetValueUnit } from "@/biz/set_value_input";
 import {
   fetchWorkoutActionListByIds,
@@ -1117,7 +1117,6 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $workout_action_profile: WorkoutActionProfileViewModel({ client: props.client }),
     $tools: new PresenceCore({}),
     $dialog_overview: new DialogCore({}),
-    $dialog_workout_action_select: new DialogCore({}),
     $dialog_remark: new DialogCore({}),
     /** 备注输入框 */
     $input_remark: new InputCore({ defaultValue: "", placeholder: "请输入备注" }),
@@ -1866,9 +1865,6 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
             </div>
           </div>
         </div>
-      </Sheet>
-      <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
-        <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>
       <DropdownMenu store={vm.ui.$menu_workout_day}></DropdownMenu>

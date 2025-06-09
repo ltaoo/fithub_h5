@@ -183,7 +183,7 @@ export function ToolsView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(ToolsViewModel, [props]);
 
   return (
-    <ScrollView store={vm.ui.$view} class="scroll--hidden">
+    <ScrollView store={vm.ui.$view} class="scroll--hidden bg-w-bg-0">
       <div class="p-2">
         {/* <div class="flex items-center justify-between gap-2">
           <div class="text-xl text-w-fg-0">常用工具</div>

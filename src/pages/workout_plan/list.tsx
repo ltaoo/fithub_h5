@@ -51,15 +51,16 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
     },
     search() {
       const v = ui.$input_keyword.value;
-      if (!v) {
-        props.app.tip({
-          text: ["请输入查询关键词"],
+      if (_state.tab_id === WorkoutPlanOrScheduleType.WorkoutPlan) {
+        request.workout_plan.list.search({
+          keyword: v,
         });
-        return;
       }
-      request.workout_plan.list.search({
-        keyword: v,
-      });
+      if (_state.tab_id === WorkoutPlanOrScheduleType.WorkoutSchedule) {
+        request.workout_schedule.list.search({
+          keyword: v,
+        });
+      }
     },
     async handlePullToRefresh() {
       if (_state.tab_id === WorkoutPlanOrScheduleType.WorkoutPlan) {
@@ -120,6 +121,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
         },
       ],
       onChange(v) {
+        ui.$input_keyword.clear();
         if (v === WorkoutPlanOrScheduleType.WorkoutSchedule) {
           request.workout_schedule.list.refresh();
         }
@@ -234,7 +236,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[24px]" />
+                <Skeleton class="w-[68px] h-[28px]" />
               </div>
             }
           >
@@ -247,7 +249,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                       vm.methods.handleClickWorkoutPlan(v);
                     }}
                   >
-                    <div class=" text-w-fg-0">{v.title}</div>
+                    <div class="text-lg text-w-fg-0">{v.title}</div>
                     <div class="mt-2 text-sm  text-w-fg-1">{v.overview}</div>
                     <div class="mt-2">
                       <div class="flex items-center gap-1 text-w-fg-1">
@@ -303,7 +305,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
             class="space-y-2"
             skeleton={
               <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[24px]" />
+                <Skeleton class="w-[68px] h-[28px]" />
               </div>
             }
           >
@@ -319,7 +321,7 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                     <div class="absolute right-4 top-4">
                       <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
                     </div>
-                    <div class="text-w-fg-0">{v.title}</div>
+                    <div class="text-lg text-w-fg-0">{v.title}</div>
                     <div class="text-sm text-w-fg-1">{v.overview}</div>
                     <div class="flex items-center justify-between mt-4">
                       <div>

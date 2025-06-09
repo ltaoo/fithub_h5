@@ -44,7 +44,7 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
     return this.defaultChecked;
   }
 
-  prevChecked = false;
+  prev_checked = false;
 
   constructor(props: { _name?: string } & CheckboxProps = {}) {
     super(props);
@@ -64,20 +64,20 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
 
   /** 切换选中状态 */
   toggle() {
-    const prevChecked = this.checked;
+    const prev_checked = this.checked;
     // console.log("[DOMAIN]checkbox - check", prevChecked);
     (() => {
-      if (prevChecked) {
+      if (prev_checked) {
         this.presence.hide();
         return;
       }
       this.presence.show();
     })();
     this.checked = true;
-    if (prevChecked) {
+    if (prev_checked) {
       this.checked = false;
     }
-    this.prevChecked = prevChecked;
+    this.prev_checked = prev_checked;
     this.emit(Events.Change, this.checked);
     this.emit(Events.StateChange, { ...this.state });
   }
@@ -86,7 +86,7 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     this.presence.show();
-    this.prevChecked = this.checked;
+    this.prev_checked = this.checked;
     this.checked = true;
     this.emit(Events.StateChange, { ...this.state });
   }
@@ -95,7 +95,7 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     this.presence.hide();
-    this.prevChecked = this.checked;
+    this.prev_checked = this.checked;
     this.checked = false;
     this.emit(Events.StateChange, { ...this.state });
   }

@@ -563,7 +563,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
           </Button>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
+      <Sheet ignore_safe_height store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
         <WorkoutActionProfileView store={vm.ui.$workout_action} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_buy_guide} app={props.app}>

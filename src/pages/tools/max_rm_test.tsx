@@ -18,7 +18,7 @@ import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, CheckboxCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { SetCountdownViewModel } from "@/biz/set_countdown";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select_dialog";
+import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
 import { toFixed } from "@/utils";
 
 import { MaxRMCountdownView } from "./components/max-rm-countdown";

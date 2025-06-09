@@ -87,6 +87,7 @@ export class TabHeaderCore<
     this.key = key;
     this.targetLeftWhenSelected = targetLeftWhenSelected;
     this.tabs = options;
+    this.current = 0;
     if (onChange) {
       this.onChange(onChange);
     }
@@ -122,12 +123,12 @@ export class TabHeaderCore<
       return;
     }
     this.current = index;
-    const left = this.calcLineLeft(this.current);
-    // console.log("[DOMAIN]tab-header - after this.calcLineLeft(this.current)", left);
-    if (left !== null) {
-      this.left = left;
-      this.changeLinePosition(left);
-    }
+    // const left = this.calcLineLeft(this.current);
+    // // console.log("[DOMAIN]tab-header - after this.calcLineLeft(this.current)", left);
+    // if (left !== null) {
+    //   this.left = left;
+    //   this.changeLinePosition(left);
+    // }
     this.emit(Events.Change, { ...matchedTab, index });
     this.emit(Events.StateChange, { ...this.state });
   }
@@ -156,6 +157,7 @@ export class TabHeaderCore<
     const left = this.calcLineLeft(this.current);
     // console.log("[DOMAIN]tab-header/index selectById", this.current, this.selectedTab, left);
     if (left !== null) {
+      this.left = left;
       this.changeLinePosition(left);
     }
     this.emit(Events.StateChange, { ...this.state });
@@ -177,6 +179,7 @@ export class TabHeaderCore<
     const left = this.calcLineLeft(this.current);
     // console.log("[DOMAIN]tab-header/index handleChangeById", this.current, this.selectedTab, left);
     if (left !== null) {
+      this.left = left;
       this.changeLinePosition(left);
     }
   }
@@ -191,13 +194,14 @@ export class TabHeaderCore<
     return client.left + client.width / 2;
   }
   updateTabClient(index: number, info: { rect: () => { width: number; height: number; left: number } }) {
+    console.log("[]updateTabClient", index);
     const matchedTab = this.tabs[index];
     if (!matchedTab) {
       return;
     }
-    // if (this.mounted) {
-    //   return;
-    // }
+    if (this.mounted) {
+      return;
+    }
     this.extra[matchedTab.id] = info;
     // console.log("[DOMAIN]ui/tab-headers", index, Object.keys(this.extra).length, this.tabs.length);
     if (Object.keys(this.extra).length !== this.tabs.filter((t) => !t.hidden).length) {
@@ -215,6 +219,7 @@ export class TabHeaderCore<
       }
       const left = this.calcLineLeft(0);
       if (left !== null) {
+        this.left = left;
         this.changeLinePosition(left);
       }
     })();

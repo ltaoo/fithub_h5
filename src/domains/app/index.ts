@@ -201,6 +201,10 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
       }
       resolved = r.data;
     }
+    this.theme = theme as ThemeTypes;
+    this.applyTheme(resolved as ThemeTypes);
+    this.emit(this.Events.StateChange, { ...this.state });
+    this.$storage.set("theme", theme);
   }
   /** 应用指定主题 */
   applyTheme(theme: ThemeTypes) {

@@ -195,7 +195,7 @@ export function PaperListView(props: ViewComponentProps) {
             {(v) => {
               return (
                 <div class="p-4 border-2 border-w-fg-3 rounded-lg">
-                  <div class="text-w-fg-0">{v.name}</div>
+                  <div class="text-lg text-w-fg-0">{v.name}</div>
                   <div class="text-sm text-w-fg-1">共{v.quiz_count}题</div>
                   <div class="flex items-center justify-between">
                     <div></div>

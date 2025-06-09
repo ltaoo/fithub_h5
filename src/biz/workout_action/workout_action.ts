@@ -78,7 +78,7 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
   const ui = {
     $dialog: new DialogCore(),
     $tab: new TabHeaderCore({
-      key: 1,
+      key: "id",
       options: [
         {
           id: 1,
@@ -113,6 +113,7 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
       return request.workout_action_history.list.response.dataSource;
     },
     get curTabId() {
+      console.log("[]131312312313", ui.$tab.state.curId);
       return Number(ui.$tab.state.curId);
     },
   };
