@@ -306,9 +306,9 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
             if (field) {
               field.field.setValue(
                 {
-                  actions: value.actions,
+                  action: node,
                 },
-                { key: "actions" }
+                { key: "action" }
               );
               //     field.field.$input.setValue(value.actions[i]);
             }

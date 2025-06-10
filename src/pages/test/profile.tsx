@@ -2,20 +2,23 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
+import { Button, Input } from "@/components/ui";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { createWorkoutDay } from "@/biz/workout_day/services";
-import { Button } from "@/components/ui";
+import { ArrayFieldCore, ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { FieldObjV2 } from "@/components/fieldv2/obj";
+import { FieldV2 } from "@/components/fieldv2/field";
+import { FieldArrV2 } from "@/components/fieldv2/arr";
+import { Select } from "@/components/ui/select";
 
 function FeaturePlaygroundViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
-      create: new RequestCore(createWorkoutDay, { _name: "create_workout_day", client: props.client, 
-        onFailed() {} 
-      }),
+      create: new RequestCore(createWorkoutDay, { _name: "create_workout_day", client: props.client, onFailed() {} }),
     },
   };
   const methods = {
@@ -25,40 +28,64 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
-    handleClickSubscription() {
-      ui.$wechat.show();
-    },
-    handleClickWechat() {
-      props.app.copy("hnust_lt");
-      props.app.tip({
-        text: ["微信号复制成功"],
-      });
-    },
   };
   const ui = {
     $view: new ScrollViewCore(),
-    $wechat: new DialogCore({}),
     $btn: new ButtonCore({
       async onClick() {
-        const r = await request.workout_day.create.run({
-          workout_plan_id: 0,
-          student_ids: [],
-          start_when_create: false,
+        ui.$values.fields.persons.fields[0].field.setValue({
+          name: "update_value",
         });
-        if (r.error) {
-          return;
-        }
-        console.log("success");
+      },
+    }),
+    $values: new ObjectFieldCore({
+      name: "",
+      label: "表单",
+      fields: {
+        persons: new ArrayFieldCore({
+          name: "",
+          label: "参与成员",
+          field() {
+            return new ObjectFieldCore({
+              name: "",
+              label: "",
+              fields: {
+                name: new SingleFieldCore({
+                  name: "",
+                  label: "名称",
+                  input: new InputCore({ defaultValue: "" }),
+                }),
+                age: new SingleFieldCore({
+                  name: "",
+                  label: "年龄",
+                  input: new InputCore({ defaultValue: 18, type: "number" }),
+                }),
+                gender: new SingleFieldCore({
+                  name: "",
+                  label: "性别",
+                  input: new SelectCore({
+                    defaultValue: 1,
+                    options: [
+                      {
+                        value: 1,
+                        label: "男",
+                      },
+                      {
+                        value: 2,
+                        label: "女",
+                      },
+                    ],
+                  }),
+                }),
+              },
+            });
+          },
+        }),
       },
     }),
   };
 
-  let _features = ["无限次训练记录", "创建自己的训练计划", "创建自己的周期计划", "优先客服支持", "数据分析报告"];
-  let _state = {
-    get features() {
-      return _features;
-    },
-  };
+  let _state = {};
   enum Events {
     StateChange,
     Error,
@@ -69,11 +96,22 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  ui.$values.onChange((values) => {
+    console.log("the object value changed", values);
+  });
+
   return {
     methods,
     ui,
     state: _state,
-    ready() {},
+    ready() {
+      const field = ui.$values.fields.persons.append();
+      field.setValue({
+        name: "李涛",
+        age: 30,
+        gender: 1,
+      });
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -86,9 +124,32 @@ export function FeaturePlaygroundView(props: ViewComponentProps) {
   return (
     <>
       <PageView store={vm}>
-        <Button store={vm.ui.$btn}>test</Button>
+        <Button store={vm.ui.$btn}>测试</Button>
+        <FieldObjV2 store={vm.ui.$values}>
+          <FieldArrV2
+            store={vm.ui.$values.fields.persons}
+            render={(field) => {
+              return (
+                <div>
+                  <FieldObjV2 store={field}>
+                    <div>
+                      <FieldV2 store={field.fields.name}>
+                        <Input store={field.fields.name.input} />
+                      </FieldV2>
+                      <FieldV2 store={field.fields.age}>
+                        <Input store={field.fields.age.input} />
+                      </FieldV2>
+                      <FieldV2 store={field.fields.gender}>
+                        <Select store={field.fields.gender.input}></Select>
+                      </FieldV2>
+                    </div>
+                  </FieldObjV2>
+                </div>
+              );
+            }}
+          ></FieldArrV2>
+        </FieldObjV2>
       </PageView>
-      <Sheet store={vm.ui.$wechat} app={props.app}></Sheet>
     </>
   );
 }

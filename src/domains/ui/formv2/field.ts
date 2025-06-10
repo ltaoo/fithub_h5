@@ -709,7 +709,10 @@ export class ObjectFieldCore<
     this._hidden = false;
     this._bus.emit(ObjectFieldEvents.StateChange, { ...this.state });
   }
-  setValue(values: Record<string, any>, extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
+  setValue(
+    values: Partial<Record<keyof T, any>>,
+    extra: Partial<{ key: keyof T; idx: number; silence: boolean }> = {}
+  ) {
     console.log("[DOMAIN]formv2 - setValue", values, extra, this.fields);
     if (extra.key) {
       const field = this.fields[extra.key];
@@ -718,11 +721,12 @@ export class ObjectFieldCore<
       }
       return;
     }
-    const keys = Object.keys(this.fields);
+    const keys = Object.keys(this.fields) as Array<keyof T>;
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       const field = this.fields[key];
       // console.log("[DOMAIN]ObjectFieldCore - before field.setValue", key, field);
+      // @ts-ignore
       field.setValue(values[key], { key });
     }
   }

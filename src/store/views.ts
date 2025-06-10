@@ -115,12 +115,13 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.report_list": ReportListView,
   "root.report_create": ReportCreateView,
   "root.report_profile": ReportProfileView,
-  // 假聊
-  "root.fake_chat": MemberListInFakeChatPage,
-  "root.fake_chat_profile": ChatProfileInFakeChatPage,
   // 答题
   "root.paper_list": PaperListView,
   "root.exam": ExamAnswerView,
   "root.exam_result": PaperResultView,
   "root.exam_result_list": PaperResultListView,
+  // 假聊
+  "root.fake_chat": MemberListInFakeChatPage,
+  "root.fake_chat_profile": ChatProfileInFakeChatPage,
+  "root.test": FeaturePlaygroundView,
 };

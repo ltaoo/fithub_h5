@@ -336,6 +336,10 @@ const configure = {
         title: "404",
         pathname: "/notfound",
       },
+      test: {
+        title: "测试",
+        pathname: "/test",
+      },
     },
   },
 };

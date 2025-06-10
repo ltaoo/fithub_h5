@@ -323,9 +323,6 @@ function HomeMineViewModel(props: ViewComponentProps) {
     get subscription() {
       return _subscription;
     },
-    get response() {
-      return request.workout_action_history.list.response;
-    },
     get calendar() {
       return {
         weeks: ui.$calendar.state.weeks.map((w) => {
@@ -359,7 +356,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
-  request.workout_action_history.list.onStateChange(() => methods.refresh());
+  request.workout_day.finished_list.onStateChange(() => methods.refresh());
   request.gift_card.profile.onStateChange(() => methods.refresh());
   // ui.$calendar.onStateChange(() => methods.refresh());
   ui.$dialog_nickname_update.onShow(() => {
