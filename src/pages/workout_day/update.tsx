@@ -188,9 +188,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       ui.$set_value_input.setUnit($field.input.unit);
       if (opt.for === "reps") {
         ui.$set_value_input.setRepsOptions();
+        ui.$set_value_input.hideSubKey();
       }
       if (opt.for === "weight") {
         ui.$set_value_input.setWeightOptions();
+        ui.$set_value_input.showSubKey();
       }
       if (!ui.$dialog_num_keyboard.state.open) {
         ui.$dialog_num_keyboard.show();
@@ -715,6 +717,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             }
           }
           const $countdown = ui.$set_countdowns.get(`${a}-${b}`);
+          const $remark = ui.$inputs_set_remark.get(`${a}-${b}`);
           // console.log("[PAGE]workout_day/update - $countdown", $countdown?.state.remaining);
           data.push({
             step_idx: a,
@@ -723,7 +726,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             remaining_time: $countdown?.state.remaining ?? 0,
             exceed_time: $countdown?.state.exceed ?? 0,
             completed: set_completed,
-            remark: "",
+            remark: $remark?.value ?? "",
           });
           if (set_completed === false) {
             total.tips.push(`${a + 1}/${b + 1}组未完成`);
@@ -874,6 +877,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const $set_act_countdowns = new Map<string, SetActionCountdownViewModel>();
   const $set_countdowns = new Map<string, SetCountdownViewModel>();
   const $running_set_countdowns = new Map<string, SetCountdownViewModel>();
+  const $inputs_set_remark = new Map<string, InputCore<string>>();
   const $btns_more = new Map<string, ButtonCore>();
   const ui = {
     $set_actions,
@@ -883,6 +887,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $set_act_countdowns,
     $set_countdowns,
     $running_set_countdowns,
+    $inputs_set_remark,
     $btns_more,
     $menu_set: new DropdownMenuCore({
       // side: "left",
@@ -891,6 +896,20 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         new MenuItemCore({
           label: "备注",
           onClick() {
+            const cur_set_key = ui.$ref_cur_set_key.value;
+            if (!cur_set_key) {
+              return;
+            }
+            const a = cur_set_key.step_idx;
+            const b = cur_set_key.idx;
+            const $remark = ui.$inputs_set_remark.get(`${a}-${b}`);
+            if (!$remark) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            ui.$input_remark.setValue($remark.value);
             ui.$dialog_remark.show();
             ui.$menu_set.hide();
           },
@@ -1119,7 +1138,15 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $dialog_overview: new DialogCore({}),
     $dialog_remark: new DialogCore({}),
     /** 备注输入框 */
-    $input_remark: new InputCore({ defaultValue: "", placeholder: "请输入备注" }),
+    $input_remark: new InputCore({
+      defaultValue: "",
+      placeholder: "请输入备注",
+      onMounted() {
+        setTimeout(() => {
+          ui.$input_remark.focus();
+        });
+      },
+    }),
     /** 备注提交 */
     $btn_remark_submit: new ButtonCore({
       onClick() {
@@ -1130,6 +1157,20 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           });
           return;
         }
+        const cur_set_key = ui.$ref_cur_set_key.value;
+        if (!cur_set_key) {
+          return;
+        }
+        // ui.$input_remark.setValue(set.note);
+        const $input = ui.$inputs_set_remark.get(`${cur_set_key.step_idx}-${cur_set_key.idx}`);
+        if (!$input) {
+          return;
+        }
+        $input.setValue(v);
+        methods.updateSteps({
+          step_idx: _cur_step_idx,
+          set_idx: _next_set_idx,
+        });
         ui.$input_remark.clear();
         ui.$dialog_remark.hide();
       },
@@ -1321,7 +1362,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       return;
     }
     // console.log("[PAGE]workout_day/create", v);
-    $field.input.setValue(v === 0 ? "" : v.toString());
+    $field.input.setValue(v.toString());
   });
   ui.$set_value_input.onUnitChange((v) => {
     const key = ui.$ref_input_key.value;
@@ -1391,6 +1432,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             return set.step_idx === a && set.idx === b;
           });
           const kk = `${a}-${b}`;
+          ui.$inputs_set_remark.set(kk, new InputCore({ defaultValue: pending_set?.remark ?? "" }));
           ui.$btns_more.set(
             kk,
             new ButtonCore({
@@ -1782,23 +1824,11 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
       </Sheet>
       <Sheet store={vm.ui.$dialog_remark} app={props.app}>
         <div class="relative p-2">
-          <div class="flex items-center justify-between h-12">
-            <div class="text-lg text-center">备注</div>
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.ui.$dialog_remark.hide();
-              }}
-            >
-              <X class="w-4 h-4 text-w-fg-0" />
-            </div>
-          </div>
-          <div class="mt-4">
-            <Textarea store={vm.ui.$input_remark} />
-            <Button class="w-full mt-2" store={vm.ui.$btn_remark_submit}>
-              提交
-            </Button>
-          </div>
+          <div class="text-xl text-center">备注</div>
+          <Textarea class="mt-4" store={vm.ui.$input_remark} />
+          <Button class="w-full mt-2" store={vm.ui.$btn_remark_submit}>
+            提交
+          </Button>
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_give_up_confirm} app={props.app}>

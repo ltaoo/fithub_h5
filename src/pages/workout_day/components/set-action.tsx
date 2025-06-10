@@ -50,14 +50,7 @@ export function SetActionView(props: {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div
-      class="relative flex items-center gap-2"
-      onClick={(event) => {
-        if (props.onClick) {
-          props.onClick();
-        }
-      }}
-    >
+    <div class="relative flex items-center gap-2">
       {/* <div class="absolute top-1/2 -left-2 -bottom-0 -translate-y-1/2 w-[4px] h-[18px] bg-blue-500"></div> */}
       <Show when={props.idx}>
         <div
@@ -70,7 +63,16 @@ export function SetActionView(props: {
           <div class="text-sm">{props.idx}</div>
         </div>
       </Show>
-      <div class="relative left-[4px] text-w-fg-0">{state().zh_name}</div>
+      <div
+        class="relative left-[4px] text-w-fg-0"
+        onClick={(event) => {
+          if (props.onClick) {
+            props.onClick();
+          }
+        }}
+      >
+        {state().zh_name}
+      </div>
     </div>
   );
 }

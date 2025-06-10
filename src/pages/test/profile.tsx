@@ -14,6 +14,7 @@ import { FieldObjV2 } from "@/components/fieldv2/obj";
 import { FieldV2 } from "@/components/fieldv2/field";
 import { FieldArrV2 } from "@/components/fieldv2/arr";
 import { Select } from "@/components/ui/select";
+import { InputWithKeyboardView, InputWithKeyboardViewModel } from "@/components/input-with-keyboard";
 
 function FeaturePlaygroundViewModel(props: ViewComponentProps) {
   const request = {
@@ -38,6 +39,7 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
         });
       },
     }),
+    $input: InputWithKeyboardViewModel({ app: props.app }),
     $values: new ObjectFieldCore({
       name: "",
       label: "表单",
@@ -125,7 +127,7 @@ export function FeaturePlaygroundView(props: ViewComponentProps) {
     <>
       <PageView store={vm}>
         <Button store={vm.ui.$btn}>测试</Button>
-        <FieldObjV2 store={vm.ui.$values}>
+        {/* <FieldObjV2 store={vm.ui.$values}>
           <FieldArrV2
             store={vm.ui.$values.fields.persons}
             render={(field) => {
@@ -148,7 +150,8 @@ export function FeaturePlaygroundView(props: ViewComponentProps) {
               );
             }}
           ></FieldArrV2>
-        </FieldObjV2>
+        </FieldObjV2> */}
+        <InputWithKeyboardView store={vm.ui.$input} />
       </PageView>
     </>
   );

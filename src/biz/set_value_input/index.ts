@@ -1,19 +1,16 @@
 import { base, Handler } from "@/domains/base";
 import { InputCore, PopoverCore } from "@/domains/ui";
 
-interface WeightInputViewModelProps {
-  defaultValue?: string;
-  placeholder?: string;
-  unit?: SetValueUnit;
-}
-
 export type SetValueUnit = "公斤" | "磅" | "秒" | "分" | "次" | "千米" | "米" | "千卡";
 export function getSetValueUnit(v: SetValueUnit): SetValueUnit {
   return v;
 }
 
-export function SetValueInputViewModel(props: WeightInputViewModelProps) {
+export function SetValueInputViewModel(props: { defaultValue?: string; placeholder?: string; unit?: SetValueUnit }) {
   const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
     checkIsValid() {
       const v = Number(_text);
       if (isNaN(v)) {
@@ -70,7 +67,10 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
       bus.emit(Events.StateChange, { ..._state });
     },
     handleClickSub() {
-      if (_text !== "0") {
+      if (!_show_sub_key) {
+        return;
+      }
+      if (_text !== "" && _text !== "0") {
         return;
       }
       _text = "-";
@@ -81,6 +81,9 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
       if (_text.length === 0) {
         _text = "0";
       }
+      // if (_text[_text.length - 1] === ".") {
+      //   _text = _text.slice(0, -1);
+      // }
       const r = methods.checkIsValid();
       if (r.valid) {
         bus.emit(Events.Change, r.v);
@@ -99,12 +102,13 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     }),
     $popover: new PopoverCore(),
   };
-  let _text = props.defaultValue !== undefined ? props.defaultValue.toString() : "0";
+  let _text = props.defaultValue !== undefined ? props.defaultValue.toString() : "";
   let _unit: SetValueUnit = props.unit ?? getSetValueUnit("公斤");
   let _unit_options: { value: SetValueUnit; label: SetValueUnit }[] = [
     { value: getSetValueUnit("公斤"), label: "公斤" },
     { value: getSetValueUnit("磅"), label: "磅" },
   ];
+  let _show_sub_key = true;
   let _state = {
     get value() {
       return ui.$input.value;
@@ -120,6 +124,9 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     },
     get unitOptions() {
       return _unit_options;
+    },
+    get showSubKey() {
+      return _show_sub_key;
     },
   };
   enum Events {
@@ -160,7 +167,7 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
       return ui.$input.placeholder;
     },
     setValue(value: string) {
-      _text = value === "" ? "0" : String(value);
+      _text = value === "" ? "" : String(value);
       ui.$input.setValue(value);
       // _unit = value.unit;
       // bus.emit(Events.StateChange, { ..._state });
@@ -178,15 +185,15 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     setRepsOptions() {
       this.setUnitOptions([
         {
-          value: "次",
+          value: getSetValueUnit("次"),
           label: "次",
         },
         {
-          value: "秒",
+          value: getSetValueUnit("秒"),
           label: "秒",
         },
         {
-          value: "分",
+          value: getSetValueUnit("分"),
           label: "分",
         },
       ]);
@@ -194,11 +201,11 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     setWeightOptions() {
       this.setUnitOptions([
         {
-          value: "公斤",
+          value: getSetValueUnit("公斤"),
           label: "公斤",
         },
         {
-          value: "磅",
+          value: getSetValueUnit("磅"),
           label: "磅",
         },
       ]);
@@ -209,6 +216,20 @@ export function SetValueInputViewModel(props: WeightInputViewModelProps) {
     },
     setPlaceholder(v: string) {
       ui.$input.setPlaceholder(v);
+    },
+    showSubKey() {
+      if (_show_sub_key) {
+        return;
+      }
+      _show_sub_key = true;
+      methods.refresh();
+    },
+    hideSubKey() {
+      if (_show_sub_key === false) {
+        return;
+      }
+      _show_sub_key = false;
+      methods.refresh();
     },
     ready() {},
     onCancel(handler: Handler<TheTypesOfEvents[Events.Cancel]>) {

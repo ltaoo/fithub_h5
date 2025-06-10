@@ -8,7 +8,7 @@ import { useViewModel, useViewModelStore } from "@/hooks";
 
 import { DragSelectViewModel, DragSelectOpt } from "@/biz/drag_select";
 
-export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSelectViewModel<T> }) {
+export function KeyboardUnitView<T extends DragSelectOpt>(props: { store: DragSelectViewModel<T> }) {
   const [state, vm] = useViewModelStore(props.store);
 
   let $container: HTMLDivElement | undefined;
@@ -49,7 +49,7 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
                 }}
               >
                 <div
-                  class="text-xl text-center"
+                  class="text-lg text-center text-w-fg-0"
                   style={{
                     "line-height": `${vm.cell_height}px`,
                   }}
@@ -67,18 +67,19 @@ export function DragSelectView<T extends DragSelectOpt>(props: { store: DragSele
         ></div>
         <div class="pointer-events-none absolute inset-0 w-full border-t border-w-fg-3">
           <div
-            class="border-b border-w-fg-2 bg-gradient-to-b from-w-bg-0 to-w-bg-0/60"
+            class=""
             style={{
               height: `${vm.cell_height * state().top_padding_count - 2}px`,
             }}
           ></div>
           <div
+            class="rounded-lg border-2 border-w-fg-3"
             style={{
               height: `${vm.cell_height}px`,
             }}
           ></div>
           <div
-            class="border-t border-w-fg-2 bg-gradient-to-t from-w-bg-0 to-w-bg-0/60"
+            class=""
             style={{
               height: `${vm.cell_height * state().top_padding_count - 2}px`,
             }}

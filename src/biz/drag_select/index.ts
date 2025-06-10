@@ -7,7 +7,7 @@ interface DragInputViewProps<T extends { label: string; value: string | number }
   defaultValue: string | number;
   visible_count?: number;
   item_height?: number;
-  direction?: "horizontal" | "vertical";
+  direction: "horizontal" | "vertical";
   onChange?: (value: string) => void;
 }
 export type DragSelectOpt = { label: string; value: number | string };
@@ -71,7 +71,8 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
       // 设置新的动画帧
       _scroll_animation_frame = setTimeout(() => {
         // 这里可以处理滚动停止后的逻辑
-        methods.handleTouchEnd(event);
+        // console.log("[BIZ]drag_select - handleScroll before methods.handleTouchEnd", _mounted, event);
+        methods.handleTouchEnd({ ...event });
       }, 100);
     }),
     handleTouchEnd(event: { top: number; left: number }) {
@@ -84,7 +85,7 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
         return idx;
       })();
       _idx = idx;
-      // console.log("[BIZ]drag_select/handleTouchEnd - _idx", _idx);
+      // console.log("[BIZ]drag_select/handleTouchEnd - _idx", _idx, distance, distance % _cell_height);
       const v = _options[idx];
       bus.emit(Events.Change, v);
       if (distance % _cell_height !== 0) {
