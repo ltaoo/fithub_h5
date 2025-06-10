@@ -2,6 +2,7 @@
  * @file 基础代谢计算
  */
 import { For, Show } from "solid-js";
+import { CircleHelp } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -187,6 +188,9 @@ export function BMRCalcViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -202,19 +206,25 @@ export function BMRCalcToolView(props: ViewComponentProps) {
         <div class="space-y-2">
           <div class="field">
             <div class="text-sm text-w-fg-0">年龄</div>
-            <Input store={vm.ui.$input_age} />
+            <div class="mt-1">
+              <Input store={vm.ui.$input_age} />
+            </div>
           </div>
           <div class="field">
             <div class="text-sm text-w-fg-0">体重(单位kg)</div>
-            <Input store={vm.ui.$input_weight} />
+            <div class="mt-1">
+              <Input store={vm.ui.$input_weight} />
+            </div>
           </div>
           <div class="field">
             <div class="text-sm text-w-fg-0">身高(单位cm)</div>
-            <Input store={vm.ui.$input_height} />
+            <div class="mt-1">
+              <Input store={vm.ui.$input_height} />
+            </div>
           </div>
           <div class="field">
             <div class="text-sm text-w-fg-0">性别</div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 mt-1">
               <div
                 classList={{
                   "w-[60px] p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
@@ -241,7 +251,9 @@ export function BMRCalcToolView(props: ViewComponentProps) {
           </div>
           <div class="field">
             <div class="text-sm text-w-fg-0">活动系数</div>
-            <Select store={vm.ui.$input_activity} />
+            <div class="mt-1">
+              <Select store={vm.ui.$input_activity} />
+            </div>
           </div>
         </div>
         <div class="mt-8">
@@ -262,22 +274,24 @@ export function BMRCalcToolView(props: ViewComponentProps) {
                   >
                     <div>
                       <div class="text-sm text-w-fg-1">基础代谢</div>
-                      <div class="flex flex-end">
-                        <div class="text-2xl">{v.v}</div>
-                      </div>
+                      <div class="text-2xl">{v.v}</div>
                     </div>
                     <div class="mt-2">
                       <div class="text-sm text-w-fg-1">总消耗</div>
-                      <div class="flex flex-end">
-                        <div class="text-2xl">{v.tdee}</div>
-                      </div>
+                      <div class="text-2xl">{v.tdee}</div>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                      <CircleHelp class="w-6 h-6 text-w-fg-1" />
                     </div>
                   </div>
                 );
               }}
             </For>
+          </div>
+          <div>
             <Show when={state().values.length}>
-              <div class="mt-4 text-sm text-w-fg-1 text-center">单位：kcal 大卡</div>
+              <div class="mt-2 text-sm text-w-fg-1">单位：kcal 大卡</div>
+              <div class="mt-1 text-sm text-w-fg-1">总消耗是根据「活动系数」计算</div>
             </Show>
           </div>
         </div>

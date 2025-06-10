@@ -322,6 +322,9 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     ready() {
       methods.ready();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

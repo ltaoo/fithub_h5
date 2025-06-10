@@ -169,6 +169,7 @@ export function SetActionCountdownViewModel(props: {
       ui.$countdown1.destroy();
       ui.$countdown2.destroy();
       ui.$stopwatch.destroy();
+      bus.destroy();
     },
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);

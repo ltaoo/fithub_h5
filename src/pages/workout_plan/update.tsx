@@ -83,6 +83,7 @@ function WorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
     },
     destroy() {
       $model.destroy();
+      bus.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

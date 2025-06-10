@@ -40,7 +40,6 @@ function getCurrentDeviceSize(width: number) {
   }
   return "sm";
 }
-export const MEDIA = "(prefers-color-scheme: dark)";
 export type DeviceSizeTypes = keyof typeof mediaSizes;
 
 enum Events {
@@ -188,40 +187,22 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
     // console.log("[]Application - before start");
     return Result.Ok(null);
   }
-  setTheme(theme?: string) {
-    let resolved = theme;
-    if (!resolved) {
-      return;
-    }
-    // If theme is system, resolve it before setting theme
-    if (theme === "system") {
-      const r = this.getSystemTheme();
-      if (r.error) {
-        return;
-      }
-      resolved = r.data;
-    }
-    this.theme = theme as ThemeTypes;
-    this.applyTheme(resolved as ThemeTypes);
-    this.emit(this.Events.StateChange, { ...this.state });
-    this.$storage.set("theme", theme);
-  }
   /** 应用指定主题 */
-  applyTheme(theme: ThemeTypes) {
-    const tip = "请在 connect.web 中实现 applyTheme 方法";
+  setTheme(theme: ThemeTypes) {
+    const tip = "请在 connect.web 中实现 setTheme 方法";
     console.warn(tip);
     return Result.Err(tip);
   }
   getTheme() {
     const tip = "请在 connect.web 中实现 getTheme 方法";
     console.warn(tip);
-    return Result.Err(tip);
+    return "light";
   }
-  getSystemTheme(e?: any): Result<string> {
-    const tip = "请在 connect.web 中实现 getSystemTheme 方法";
-    console.warn(tip);
-    return Result.Err(tip);
-  }
+  // getSystemTheme(e?: any): Result<string> {
+  //   const tip = "请在 connect.web 中实现 getSystemTheme 方法";
+  //   console.warn(tip);
+  //   return Result.Err(tip);
+  // }
   // push(...args: Parameters<HistoryCore["push"]>) {
   //   return this.$history.push(...args);
   // }

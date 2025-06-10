@@ -1,3 +1,5 @@
+import { ChevronRight } from "lucide-solid";
+
 import { ViewComponentProps } from "@/store/types";
 // import { user } from '@/store/index';
 import { useViewModel } from "@/hooks";
@@ -10,7 +12,6 @@ import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { __VERSION__ } from "@/constants";
 import { Sheet } from "@/components/ui/sheet";
 import { ReportModel } from "@/biz/report/report";
-import { ChevronRight } from "lucide-solid";
 import { ThemeTypes } from "@/domains/app/types";
 
 function ApplicationSettingsViewModel(props: ViewComponentProps) {
@@ -33,7 +34,7 @@ function ApplicationSettingsViewModel(props: ViewComponentProps) {
     handleThemeChange(theme: ThemeTypes) {
       props.app.setTheme(theme);
       ui.$theme_dialog.hide();
-    }
+    },
   };
   const ui = {
     $view: new ScrollViewCore(),
@@ -62,6 +63,9 @@ function ApplicationSettingsViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -75,7 +79,7 @@ export function ApplicationSettingsView(props: ViewComponentProps) {
     <>
       <PageView no_padding store={vm}>
         <div>
-          <div class="pt-2">
+          {/* <div class="pt-2">
             <div
               class="p-4 bg-w-bg-3"
               onClick={() => {
@@ -83,13 +87,13 @@ export function ApplicationSettingsView(props: ViewComponentProps) {
               }}
             >
               <div class="flex items-center justify-between">
-                <div class="text-w-fg-0">主题色切换</div>
+                <div class="text-w-fg-0">{props.app.theme}主题色切换</div>
                 <div>
                   <ChevronRight class="w-6 h-6 text-w-fg-1" />
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
           <div class="pt-2">
             <div
               class="p-4 bg-w-bg-3"
@@ -164,31 +168,6 @@ export function ApplicationSettingsView(props: ViewComponentProps) {
             }}
           ></div>
           <div class="mt-2 text-sm text-w-fg-1">点击复制微信号</div>
-        </div>
-      </Sheet>
-      <Sheet store={vm.ui.$theme_dialog} app={props.app}>
-        <div class="p-4">
-          <div class="text-xl text-center text-w-fg-0">选择主题</div>
-          <div class="mt-4 space-y-2">
-            <div
-              class="p-3 bg-w-bg-3 rounded-lg cursor-pointer"
-              onClick={() => vm.methods.handleThemeChange("light")}
-            >
-              <div class="text-w-fg-0">浅色</div>
-            </div>
-            <div
-              class="p-3 bg-w-bg-3 rounded-lg cursor-pointer"
-              onClick={() => vm.methods.handleThemeChange("dark")}
-            >
-              <div class="text-w-fg-0">深色</div>
-            </div>
-            <div
-              class="p-3 bg-w-bg-3 rounded-lg cursor-pointer"
-              onClick={() => vm.methods.handleThemeChange("system")}
-            >
-              <div class="text-w-fg-0">跟随系统</div>
-            </div>
-          </div>
         </div>
       </Sheet>
     </>

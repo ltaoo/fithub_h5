@@ -59,6 +59,7 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
     },
     destroy() {
       ui.$stopwatch.destroy();
+      bus.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

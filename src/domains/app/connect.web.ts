@@ -1,7 +1,7 @@
 import { StorageCore } from "@/domains/storage/index";
 import { Result } from "@/domains/result/index";
 
-import { Application, MEDIA } from "./index";
+import { Application } from "./index";
 import { ThemeTypes } from "./types";
 
 export function connect<T extends { storage: StorageCore<any> }>(app: Application<T>) {
@@ -77,50 +77,65 @@ export function connect<T extends { storage: StorageCore<any> }>(app: Applicatio
   /**
    * 主题 ——-------------
    */
-  const media = window.matchMedia(MEDIA);
-  let curTheme = "light";
-  const getSystemTheme = (e?: MediaQueryList | MediaQueryListEvent) => {
-    console.log("[Domain]app/connect - handleMediaQuery");
-    if (!e) {
-      e = window.matchMedia(MEDIA);
-    }
-    const isDark = e.matches;
-    const systemTheme = isDark ? "dark" : "light";
-    curTheme = systemTheme;
-    app.theme = systemTheme;
-    return Result.Ok(systemTheme);
-  };
-  media.addListener(getSystemTheme);
-  let attribute = "data-theme";
-  const defaultTheme = "system";
-  const defaultThemes = ["light", "dark"];
-  const colorSchemes = ["light", "dark"];
-  const attrs = defaultThemes;
-  app.applyTheme = (theme: ThemeTypes) => {
-    const d = document.documentElement;
-    const name = curTheme;
-    if (attribute === "class") {
-      d.classList.remove(...attrs);
-      if (name) d.classList.add(name);
-    } else {
-      if (name) {
-        d.setAttribute(attribute, name);
-      } else {
-        d.removeAttribute(attribute);
+  const MediaColorSchemeDarkText = "(prefers-color-scheme: dark)";
+  // const media = window.matchMedia(MediaColorSchemeDarkText);
+  // let cur_theme = "light";
+
+  /**
+   * 获取系统的主题色
+   */
+  function get_system_theme() {
+    try {
+      console.log("[Domain]app/connect - handleMediaQuery");
+      const r = window.matchMedia(MediaColorSchemeDarkText);
+      // 看别人代码，还判断了 m.media != r，打印 m.media 就是 MediaColorSchemeDarkText 文本
+      // 如果不相同，应该是 light，但是别人代码是 dark，搞不懂
+      if (r.matches) {
+        return "dark";
       }
+      return "light";
+    } catch (err) {
+      const e = err as Error;
+      // return Result.Err(e.message);
+      return "light";
     }
-    const fallback = colorSchemes.includes(defaultTheme) ? defaultTheme : null;
-    const colorScheme = colorSchemes.includes(curTheme) ? curTheme : fallback;
-    // @ts-ignore
-    // d.style.colorScheme = colorScheme;
+  }
+  function get_theme(): ThemeTypes {
+    // const existing_theme = app.$storage.get("theme");
+    const existing_theme = localStorage.getItem("theme") as ThemeTypes;
+    if (!existing_theme || existing_theme === "system") {
+      return get_system_theme();
+    }
+    if (color_schemes.includes(existing_theme)) {
+      return existing_theme;
+    }
+    return "light";
+  }
+  const theme_attribute_key = "data-theme";
+  function set_theme(theme: ThemeTypes) {
+    if (theme === "system") {
+      const v = get_system_theme();
+      set_theme(v);
+      return;
+    }
+    const d = document.documentElement;
+    // 设置主题，核心就这两行代码
+    d.setAttribute(theme_attribute_key, theme);
+    d.style.colorScheme = theme;
     return Result.Ok(null);
-  };
-  app.getSystemTheme = getSystemTheme;
+  }
+  const color_schemes = ["light", "dark"];
+  app.theme = get_theme();
+
   app.setTheme = (theme: ThemeTypes) => {
+    set_theme(theme);
     app.theme = theme;
     app.emit(app.Events.StateChange, { ...app.state });
-    app.$storage.set("theme", theme);
+    localStorage.setItem("theme", theme);
+    // app.$storage.set("theme", theme);
+    return Result.Ok(null);
   };
+  app.getTheme = get_theme;
   const { availHeight, availWidth } = window.screen;
   if (window.navigator.userAgent.match(/iphone/i)) {
     const matched = [

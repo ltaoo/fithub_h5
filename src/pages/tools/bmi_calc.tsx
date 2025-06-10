@@ -140,6 +140,9 @@ export function BMICalcViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -170,11 +173,15 @@ export function BMICalcToolView(props: ViewComponentProps) {
         <div class="space-y-2">
           <div class="field">
             <div class="text-sm text-w-fg-0">体重(单位kg)</div>
-            <Input store={vm.ui.$input_weight} />
+            <div class="mt-1">
+              <Input store={vm.ui.$input_weight} />
+            </div>
           </div>
           <div class="field">
             <div class="text-sm text-w-fg-0">身高(单位cm)</div>
-            <Input store={vm.ui.$input_height} />
+            <div class="mt-1">
+              <Input store={vm.ui.$input_height} />
+            </div>
           </div>
         </div>
         <div class="mt-8">

@@ -193,6 +193,9 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
         request.workout_schedule.list.init();
       }
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

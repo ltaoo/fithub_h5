@@ -173,6 +173,9 @@ function ToolsViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -211,9 +214,7 @@ export function ToolsView(props: ViewComponentProps) {
                               }}
                             ></div>
                             <div class="relative mt-2">
-                              <div class="whitespace-nowrap text-w-fg-0 text-sm text-center">
-                                {menu.title}
-                              </div>
+                              <div class="whitespace-nowrap text-w-fg-0 text-sm text-center">{menu.title}</div>
                             </div>
                           </div>
                         );

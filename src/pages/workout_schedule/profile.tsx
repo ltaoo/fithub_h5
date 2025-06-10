@@ -129,6 +129,9 @@ function WorkoutScheduleProfileViewModel(props: ViewComponentProps) {
       _applied = r.data.applied;
       methods.refresh();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

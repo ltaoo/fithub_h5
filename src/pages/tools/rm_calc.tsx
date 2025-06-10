@@ -118,6 +118,9 @@ export function RMCalcViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -135,11 +138,15 @@ export function RMCalcToolView(props: ViewComponentProps) {
           <div class="space-y-2">
             <div class="field">
               <div class="text-sm text-w-fg-0">重量(单位kg)</div>
-              <Input store={vm.ui.$input_weight} />
+              <div class="mt-1">
+                <Input store={vm.ui.$input_weight} />
+              </div>
             </div>
             <div class="field">
               <div class="text-sm text-w-fg-0">次数</div>
-              <Input store={vm.ui.$input_reps} />
+              <div class="mt-1">
+                <Input store={vm.ui.$input_reps} />
+              </div>
             </div>
             <div>
               <Button class="w-full" store={vm.ui.$btn_submit}>

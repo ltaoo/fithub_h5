@@ -1,24 +1,13 @@
 import { For, Show, createSignal, onMount } from "solid-js";
+import { MoreHorizontal } from "lucide-solid";
+
+import { useViewModelStore } from "@/hooks";
 
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { cn } from "@/utils";
-import { MoreHorizontal } from "lucide-solid";
 
 export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClick?: () => void }) => {
-  const { store } = props;
-
-  const [state, setState] = createSignal(store.state);
-  // const [left, setLeft] = createSignal<null | number>(store.state.left);
-
-  // console.log("[COMPONENT]ui/tab-header - listen onChange");
-  store.onStateChange((v) => {
-    // console.log("[COMPONENT]ui/tab-header - onChange", v);
-    setState(v);
-  });
-  // store.onLinePositionChange((v) => {
-  //   console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
-  //   setLeft(v.left);
-  // });
+  const [state, vm] = useViewModelStore(props.store);
 
   return (
     <div class="relative bg-w-bg-0">
@@ -37,7 +26,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
         //       style="{{style}}"
         onAnimationStart={(event) => {
           const { width, height, left } = event.currentTarget.getBoundingClientRect();
-          store.updateContainerClient({ width, height, left });
+          vm.updateContainerClient({ width, height, left });
         }}
       >
         <div
@@ -57,7 +46,7 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
                       }}
                       // style="{{current === index ? activeItemStyle : itemStyle}}"
                       onClick={() => {
-                        store.select(index());
+                        vm.select(index());
                       }}
                       // onAnimationEnd={(event) => {
                       //   event.stopPropagation();
@@ -77,14 +66,14 @@ export const HomeViewTabHeader = (props: { store: TabHeaderCore<any>; onMoreClic
                     >
                       {tab.text}
                       <Show when={tab.id === state().curId}>
-                      <div
-                        class="absolute left-1/2 -translate-1/2 bottom-0 w-4 bg-w-fg-0 transition-all"
-                        style={{
-                          height: "4px",
-                          transform: "translateX(-50%)",
-                        }}
-                      />
-                    </Show>
+                        <div
+                          class="absolute left-1/2 -translate-1/2 bottom-0 w-4 bg-w-fg-0 transition-all"
+                          style={{
+                            height: "4px",
+                            transform: "translateX(-50%)",
+                          }}
+                        />
+                      </Show>
                     </div>
                   </Show>
                 );

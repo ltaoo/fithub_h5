@@ -134,6 +134,9 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
     methods,
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStepChange(handler: Handler<TheTypesOfEvents[Events.StepChange]>) {
       return bus.on(Events.StepChange, handler);
     },

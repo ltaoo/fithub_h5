@@ -262,6 +262,9 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
     ready() {
       ui.$workout_plan_select.init();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

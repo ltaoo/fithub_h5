@@ -118,6 +118,9 @@ export function ActivityCalendar<T extends { day: string }>(props: { x: number; 
   return {
     methods,
     state: _state,
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

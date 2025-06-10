@@ -155,6 +155,9 @@ function PaperListViewModel(props: ViewComponentProps) {
       request.paper.list.init();
       methods.fetchRunningExamList();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

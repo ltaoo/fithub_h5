@@ -103,6 +103,9 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
       methods.setCurMenu();
       bus.emit(Events.StateChange, { ..._state });
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

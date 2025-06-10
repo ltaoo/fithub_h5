@@ -118,6 +118,9 @@ function ReportProfileViewModel(props: ViewComponentProps) {
       }
       request.report.profile.run({ id });
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

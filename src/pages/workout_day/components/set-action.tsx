@@ -25,11 +25,14 @@ export function SetActionViewModel(props: { id: number | string; zh_name: string
 
   return {
     state: _state,
-    ready() {},
     change(act: { id: number | string; zh_name: string }) {
       _id = act.id;
       _zh_name = act.zh_name;
       bus.emit(Events.StateChange, { ..._state });
+    },
+    ready() {},
+    destroy() {
+      bus.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -61,7 +64,7 @@ export function SetActionView(props: {
           classList={{
             "flex items-center justify-center px-2 rounded-full": true,
             "bg-blue-500": !props.highlight,
-            "bg-w-green": props.highlight
+            "bg-w-green": props.highlight,
           }}
         >
           <div class="text-sm">{props.idx}</div>

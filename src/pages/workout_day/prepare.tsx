@@ -198,6 +198,9 @@ function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
       request.student.list.init();
       request.workout_plan.list.init();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

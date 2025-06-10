@@ -165,6 +165,9 @@ function HeartRateCalcViewModel(props: ViewComponentProps) {
     ready() {
       methods.calc();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -179,32 +182,38 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
       <div class="space-y-2">
         <div class="field">
           <div class="text-sm text-w-fg-0">年龄</div>
-          <Input store={vm.ui.$input_age} />
+          <div class="mt-1">
+            <Input store={vm.ui.$input_age} />
+          </div>
         </div>
         <div class="field">
           <div class="text-sm text-w-fg-0">静息心率(次/分)</div>
-          <Input store={vm.ui.$input_heart_rate} />
+          <div class="mt-1">
+            <Input store={vm.ui.$input_heart_rate} />
+          </div>
         </div>
         <div class="field">
           <div class="text-sm text-w-fg-0">运动强度</div>
-          <div class="grid grid-cols-3 gap-2">
-            <For each={intensity_levels}>
-              {(level) => {
-                return (
-                  <div
-                    classList={{
-                      "p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg": true,
-                      "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().intensity_level === level,
-                    }}
-                    onClick={() => {
-                      vm.ui.$input_intensity_level.setValue(level);
-                    }}
-                  >
-                    <div class="text-center">{level}</div>
-                  </div>
-                );
-              }}
-            </For>
+          <div class="mt-1">
+            <div class="grid grid-cols-3 gap-2">
+              <For each={intensity_levels}>
+                {(level) => {
+                  return (
+                    <div
+                      classList={{
+                        "p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg": true,
+                        "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().intensity_level === level,
+                      }}
+                      onClick={() => {
+                        vm.ui.$input_intensity_level.setValue(level);
+                      }}
+                    >
+                      <div class="text-center">{level}</div>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
           </div>
         </div>
       </div>
@@ -213,26 +222,24 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
           计算
         </Button>
       </div>
-      <div class="mt-8 space-y-6">
-        <div class="space-y-4">
-          <div class="text-w-fg-0">计算结果</div>
-          <div class="space-y-2">
-            <For each={state().results}>
-              {(result) => {
-                return (
-                  <div class="w-full p-4 border-2 border-w-fg-3 rounded-lg">
-                    <div class="space-y-1.5">
-                      <div class="text-sm text-w-fg-0">{result.title}</div>
-                      <div class="text-xl font-bold">{result.text}</div>
-                      <Show when={result.subtitle}>
-                        <div class="text-xs text-w-fg-1">{result.subtitle}</div>
-                      </Show>
-                    </div>
+      <div class="mt-8">
+        <div class="text-w-fg-0">计算结果</div>
+        <div class="mt-2 space-y-2">
+          <For each={state().results}>
+            {(result) => {
+              return (
+                <div class="w-full p-4 border-2 border-w-fg-3 rounded-lg">
+                  <div class="space-y-1.5">
+                    <div class="text-sm text-w-fg-0">{result.title}</div>
+                    <div class="text-xl font-bold">{result.text}</div>
+                    <Show when={result.subtitle}>
+                      <div class="text-xs text-w-fg-1">{result.subtitle}</div>
+                    </Show>
                   </div>
-                );
-              }}
-            </For>
-          </div>
+                </div>
+              );
+            }}
+          </For>
         </div>
       </div>
     </PageView>

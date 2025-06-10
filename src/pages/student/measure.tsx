@@ -173,6 +173,9 @@ function BodyMeasurementViewModel(props: ViewComponentProps) {
   return {
     state: _state,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

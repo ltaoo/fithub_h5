@@ -156,10 +156,7 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
 
   isPullToRefreshing = false;
   isLoadingMore = false;
-  startPoint: { x: number; y: number } = {
-    x: 0,
-    y: 0,
-  };
+  startPoint: { x: number; y: number } | null = null;
   lastPoint: { x: number; y: number } = {
     x: 0,
     y: 0,
@@ -288,7 +285,9 @@ export class ScrollViewCore extends BaseDomain<TheTypesOfEvents> {
       preventDefault(e);
     }
     const startPoint = getPoint(e);
+    // console.log("[DOMAIN]scroll-view - handlePointdown", startPoint);
     if (startPoint.x < 30) {
+      this.startPoint = null;
       preventDefault(e);
       return;
     }

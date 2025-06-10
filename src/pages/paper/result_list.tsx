@@ -70,6 +70,9 @@ function PaperResultListViewModel(props: ViewComponentProps) {
     ready() {
       request.exam.list.init();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

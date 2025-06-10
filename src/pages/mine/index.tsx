@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { ChevronDown, ChevronLeft, ChevronRight, Gem, MoreHorizontal, Pen } from "lucide-solid";
+import { ChevronDown, ChevronLeft, ChevronRight, Gem, Moon, MoreHorizontal, Pen, Sun } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -125,6 +125,17 @@ function HomeMineViewModel(props: ViewComponentProps) {
           expired_at: subscription.expired_at_text,
         };
       }
+      methods.refresh();
+    },
+    changeTheme() {
+      const t = (() => {
+        if (props.app.theme === "dark") {
+          return "light";
+        }
+        return "dark";
+      })();
+      props.app.setTheme(t);
+      _theme = props.app.theme;
       methods.refresh();
     },
   };
@@ -298,6 +309,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
       },
     }),
   };
+  let _theme = props.app.theme;
   let _nickname = "...";
   let _avatar_url = "";
   let _subscription: { name: string; expired_at: string } | null = null;
@@ -336,6 +348,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
     get avatars() {
       return ui.$select_avatar.state.list;
     },
+    get theme() {
+      return _theme;
+    },
   };
   enum Events {
     StateChange,
@@ -359,6 +374,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
     async ready() {
       methods.ready();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
@@ -372,7 +390,17 @@ export function HomeMineView(props: ViewComponentProps) {
     <>
       <ScrollView store={vm.ui.$view} class="scroll--hidden bg-w-bg-0">
         <div class="">
-          <div class="fixed top-2 right-2">
+          <div class="fixed top-2 right-2 flex items-center gap-2">
+            <div
+              class="p-2 rounded-full bg-w-bg-5"
+              onClick={() => {
+                vm.methods.changeTheme();
+              }}
+            >
+              <Show when={state().theme === "dark"} fallback={<Sun class="w-6 h-6 text-w-fg-0" />}>
+                <Moon class="w-6 h-6 text-w-fg-0" />
+              </Show>
+            </div>
             <div
               class="p-2 rounded-full bg-w-bg-5"
               onClick={(event) => {

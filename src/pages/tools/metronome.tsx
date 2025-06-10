@@ -122,6 +122,7 @@ function MetronomeToolViewModel(props: ViewComponentProps) {
       if (_audio_context) {
         _audio_context.close();
       }
+      bus.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

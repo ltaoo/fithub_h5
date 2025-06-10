@@ -151,6 +151,9 @@ export function DragSelectViewModel<T extends DragSelectOpt>(props: DragInputVie
     ready() {
       // methods.setValue(props.defaultValue);
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

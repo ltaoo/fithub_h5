@@ -233,6 +233,9 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     async ready() {
       methods.ready();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

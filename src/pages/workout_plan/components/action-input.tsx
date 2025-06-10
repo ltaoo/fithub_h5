@@ -393,6 +393,9 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       bus.emit(Events.StateChange, { ..._state });
     },
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);
     },

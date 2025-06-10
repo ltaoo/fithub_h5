@@ -93,6 +93,9 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
     ready() {
       request.workout_day.list.init();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

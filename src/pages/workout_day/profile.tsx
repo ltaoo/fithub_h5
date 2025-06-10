@@ -102,6 +102,9 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
       }
       request.workout_action_history.list.init({ workout_day_id: id });
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

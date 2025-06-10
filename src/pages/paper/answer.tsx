@@ -315,6 +315,9 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
       console.log("[PAGE]paper/answer - after profile.run", quiz, first, _existing_answers, _cur_choices_value);
       methods.refresh();
     },
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

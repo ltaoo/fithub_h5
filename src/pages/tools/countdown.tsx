@@ -70,6 +70,7 @@ function CountdownToolViewModel(props: ViewComponentProps) {
     destroy() {
       ui.$view.destroy();
       ui.$countdown.destroy();
+      bus.destroy();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

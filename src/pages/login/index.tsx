@@ -51,6 +51,9 @@ function LoginViewModel(props: ViewComponentProps) {
     state: _state,
     ui,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

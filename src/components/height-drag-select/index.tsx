@@ -21,7 +21,7 @@ export function HeightDragSelectView<T extends DragSelectOpt>(props: { store: Dr
   });
 
   return (
-    <div class="flex justify-center w-full border-2 border-w-fg-3 rounded-xl bg-w-bg-2">
+    <div class="mescroll flex justify-center w-full border-2 border-w-fg-3 rounded-xl bg-w-bg-2">
       <div
         class="relative "
         style={{

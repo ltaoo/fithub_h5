@@ -343,6 +343,7 @@ export function CountdownViewModel(props: {
     subSeconds: methods.subSeconds,
     destroy() {
       cancelAnimationFrame(_animation_frame_id);
+      bus.destroy();
     },
     /** 倒计时开始 */
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {

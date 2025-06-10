@@ -10,21 +10,7 @@ const DEFAULT_CACHE_VALUES = {
     token: "",
     avatar: "",
   },
-  pending_workout_day: {
-    started_at: 0,
-    step_idx: 0,
-    set_idx: 0,
-    data: [] as {
-      step_idx: number;
-      set_idx: number;
-      act_idx: number;
-      reps: number;
-      reps_unit: SetValueUnit;
-      weight: number;
-      weight_unit: SetValueUnit;
-      completed: boolean;
-    }[],
-  },
+  theme: "",
   dialog_flags: {} as Record<string, { show_at: number }>,
 };
 const key = "a_global";
