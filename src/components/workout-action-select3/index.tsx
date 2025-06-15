@@ -13,11 +13,11 @@ import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { cn } from "@/utils/index";
 
-export function WorkoutActionSelect3View(props: {
-  store: WorkoutActionSelectDialogViewModel;
+export function WorkoutActionSelectView(props: {
+  store: WorkoutActionSelectViewModel;
   app: ViewComponentProps["app"];
 }) {
   const [state, vm] = useViewModelStore(props.store);

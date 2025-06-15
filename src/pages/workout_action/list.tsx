@@ -37,7 +37,7 @@ import {
   fetchWorkoutActionProfileProcess,
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { createReport } from "@/biz/report/services";
 import { Muscles } from "@/biz/muscle/data";
@@ -67,15 +67,17 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
     },
     handleClickWorkoutAction(v: TheWorkoutAction) {
       ui.$workout_action.ui.$dialog.show();
+      ui.$workout_action.ui.$tab.select(0);
       ui.$workout_action.methods.fetch({ id: v.id });
     },
   };
   const ui = {
     $view: new ScrollViewCore({ disabled: true }),
     // 动作列表接口相关逻辑在这里面
-    $select: WorkoutActionSelectDialogViewModel({
+    $select: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: request.workout_action.list,
+      app: props.app,
       client: props.client,
     }),
     $dropdown_menu: new DropdownMenuCore({
@@ -125,7 +127,7 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
         ui.$dialog_report.hide();
       },
     }),
-    $workout_action: WorkoutActionProfileViewModel({ client: props.client }),
+    $workout_action: WorkoutActionProfileViewModel({ app: props.app, client: props.client }),
     // $dialog_workout_action_profile: new DialogCore({}),
   };
 

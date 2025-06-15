@@ -9,7 +9,7 @@ import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
 import { Button, Checkbox, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
-import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
+import { WorkoutActionSelectView } from "@/components/workout-action-select3";
 import { InputTextView } from "@/components/ui/input-text";
 import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
 import { Presence } from "@/components/ui/presence";
@@ -290,7 +290,7 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
         </div>
       </PageView>
       <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
-        <WorkoutActionSelect3View store={vm.ui.$workout_action_select} app={props.app} />
+        <WorkoutActionSelectView store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_act_remark} app={props.app}>
         <div class="p-2">

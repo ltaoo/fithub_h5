@@ -1,3 +1,5 @@
+import { ViewComponentProps } from "@/store/types";
+
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { Result } from "@/domains/result";
@@ -5,6 +7,8 @@ import { RequestCore } from "@/domains/request";
 import { HttpClientCore } from "@/domains/http_client";
 import { ListCore } from "@/domains/list";
 import {
+  fetchContentListOfWorkoutAction,
+  fetchContentListOfWorkoutActionProcess,
   fetchWorkoutActionHistoryListOfWorkoutAction,
   fetchWorkoutActionHistoryListOfWorkoutActionProcess,
   fetchWorkoutActionProfile,
@@ -12,11 +16,16 @@ import {
 } from "@/biz/workout_action/services";
 import { map_parts_with_ids, Muscles } from "@/biz/muscle/data";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
-import { DialogCore } from "@/domains/ui";
+import { DialogCore, ScrollViewCore } from "@/domains/ui";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
+import { PlayerCore } from "@/domains/player";
 
-export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean; client: HttpClientCore }) {
+export function WorkoutActionProfileViewModel(props: {
+  ignore_history?: boolean;
+  app: ViewComponentProps["app"];
+  client: HttpClientCore;
+}) {
   const request = {
     workout_action: {
       profile: new RequestCore(fetchWorkoutActionProfile, {
@@ -33,6 +42,15 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
         { pageSize: 3 }
       ),
     },
+    workout_action_content: {
+      list: new ListCore(
+        new RequestCore(fetchContentListOfWorkoutAction, {
+          process: fetchContentListOfWorkoutActionProcess,
+          client: props.client,
+        }),
+        { pageSize: 3 }
+      ),
+    },
   };
   type TheWorkoutActionProfile = NonNullable<typeof request.workout_action.profile.response>;
   const methods = {
@@ -43,11 +61,19 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
       if (request.workout_action.profile.response && request.workout_action.profile.response.id === v.id) {
         return;
       }
-      if (!props.ignore_history) {
-        request.workout_action_history.list.init({
-          workout_action_id: v.id,
-        });
-      }
+      ui.$tab.selectById(1);
+      request.workout_action_content.list.modifyResponse((v) => {
+        return {
+          ...v,
+          dataSource: [],
+        };
+      });
+      request.workout_action_history.list.modifyResponse((v) => {
+        return {
+          ...v,
+          dataSource: [],
+        };
+      });
       const r = await request.workout_action.profile.run({ id: v.id });
       if (r.error) {
         return Result.Err(r.error);
@@ -74,6 +100,24 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
     cancel() {
       ui.$dialog.hide();
     },
+    playVideo(v: { video_url: string }) {
+      ui.$video.onCanPlay(() => {
+        ui.$video.play();
+      });
+      ui.$video.onConnected(() => {
+        // console.log("[BIZ]workout_action/workout_action_profile - ui.$video.onMounted");
+        // ui.$video.loadSource({ url: v.video_url });
+        ui.$video.load(v.video_url);
+      });
+      console.log("[BIZ]workout_action/workout_action_profile - before ui.$video.url ===", ui.$video.url, v.video_url);
+      if (ui.$video.url === v.video_url && ui.$video.paused) {
+        ui.$video.play();
+      }
+      if (ui.$video.url !== v.video_url && ui.$video._mounted) {
+        ui.$video.load(v.video_url);
+      }
+      ui.$dialog_video.show();
+    },
   };
   const ui = {
     $dialog: new DialogCore(),
@@ -86,16 +130,34 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
         },
         {
           id: 2,
+          text: "视频",
+        },
+        {
+          id: 3,
           text: "动作历史",
         },
       ],
       onMounted() {
         ui.$tab.selectById(1);
       },
+      onChange(v) {
+        if (!_profile) {
+          return;
+        }
+        if (v.id === 2) {
+          request.workout_action_content.list.init({ workout_action_id: _profile.id });
+        }
+        if (v.id === 3 && !props.ignore_history) {
+          request.workout_action_history.list.init({ workout_action_id: _profile.id });
+        }
+      },
     }),
     $muscle: HumanBodyViewModel({
       highlighted: [],
     }),
+    $dialog_video: new DialogCore({}),
+    $view_action_content: new ScrollViewCore({}),
+    $video: new PlayerCore({ app: props.app }),
   };
 
   let _profile: (TheWorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
@@ -109,11 +171,13 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
     get error() {
       return request.workout_action.profile.error;
     },
+    get contents() {
+      return request.workout_action_content.list.response.dataSource;
+    },
     get histories() {
       return request.workout_action_history.list.response.dataSource;
     },
     get curTabId() {
-      console.log("[]131312312313", ui.$tab.state.curId);
       return Number(ui.$tab.state.curId);
     },
   };
@@ -132,13 +196,19 @@ export function WorkoutActionProfileViewModel(props: { ignore_history?: boolean;
     bus.emit(Events.Error, err);
   });
   request.workout_action_history.list.onStateChange(() => methods.refresh());
+  request.workout_action_content.list.onStateChange(() => methods.refresh());
   ui.$tab.onStateChange(() => methods.refresh());
 
   return {
+    request,
     methods,
     ui,
     state: _state,
+    app: props.app,
     ready() {},
+    destroy() {
+      bus.destroy();
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

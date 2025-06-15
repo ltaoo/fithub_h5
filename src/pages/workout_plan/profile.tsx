@@ -6,7 +6,7 @@ import { BicepsFlexed, ChevronLeft, CircleX, Clock, Hourglass, Loader, Loader2, 
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { Button, DropdownMenu, ListView, ScrollView } from "@/components/ui";
+import { Button, DropdownMenu, ListView, ScrollView, Video } from "@/components/ui";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { PageView } from "@/components/page-view";
@@ -18,7 +18,13 @@ import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
 import { ButtonCore, DialogCore, DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
-import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
+import {
+  fetchContentListOfWorkoutPlan,
+  fetchContentProfileOfWorkoutPlan,
+  fetchContentProfileOfWorkoutPlanProcess,
+  fetchWorkoutPlanProfile,
+  fetchWorkoutPlanProfileProcess,
+} from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType, WorkoutPlanStepTypeTextMap, WorkoutSetTypeTextMap } from "@/biz/workout_plan/constants";
 import { createWorkoutDay } from "@/biz/workout_day/services";
 import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
@@ -32,6 +38,8 @@ import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/service
 import { Result } from "@/domains/result";
 import { StudentSelect2ViewModel } from "@/biz/student/student_select";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
+import { VideoWithPointsModel, WorkoutPlanVideoPlayView } from "./components/video-play";
+import { PlayerCore } from "@/domains/player";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -41,9 +49,18 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         client: props.client,
       }),
     },
-    workout_day: { create: new RequestCore(createWorkoutDay, { client: props.client }) },
+    content_of_workout_plan: {
+      list: new ListCore(new RequestCore(fetchContentListOfWorkoutPlan, { client: props.client })),
+      profile: new RequestCore(fetchContentProfileOfWorkoutPlan, {
+        process: fetchContentProfileOfWorkoutPlanProcess,
+        client: props.client,
+      }),
+    },
+    workout_day: { create: new RequestCore(createWorkoutDay, { client: props.client, onFailed() {} }) },
     equipment: {
-      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+      list: new ListCore(
+        new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client })
+      ),
     },
     student: {
       list: new ListCore(new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client })),
@@ -68,6 +85,12 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
       if (Number.isNaN(id)) {
         return Result.Err("错误参数");
       }
+      (async () => {
+        const r = await request.content_of_workout_plan.list.init();
+        if (r.error) {
+          return;
+        }
+      })();
       const r = await ui.$profile.methods.fetch({ id });
       if (r.error) {
         return Result.Err(r.error);
@@ -99,6 +122,9 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
           ui.$dialog_buy_guide.show();
           return;
         }
+        props.app.tip({
+          text: [r.error.message],
+        });
         return;
       }
       props.history.push("root.workout_day", {
@@ -112,6 +138,36 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     handleClickWorkoutAction(act: { action_id: number }) {
       ui.$workout_action.methods.fetch({ id: act.action_id });
       ui.$workout_action.ui.$dialog.show();
+    },
+    async handleClickContentOfWorkoutPlan(v: { id: number }) {
+      let profile = request.content_of_workout_plan.profile.response;
+      const click_other_content = profile && profile.id !== v.id;
+      if (click_other_content || !profile) {
+        const r = await request.content_of_workout_plan.profile.run({ id: v.id });
+        if (r.error) {
+          props.app.tip({
+            text: [r.error.message],
+          });
+          return;
+        }
+      }
+      console.log("before if (!profile");
+      profile = request.content_of_workout_plan.profile.response;
+      if (!profile) {
+        console.warn("the profile not existing");
+        return;
+      }
+      const { details, video_url } = profile;
+      ui.$dialog_content.setPoints(
+        details.points.map((v) => {
+          return {
+            time: v.time,
+            time_text: v.time_text,
+            text: v.workout_action_name,
+          };
+        })
+      );
+      ui.$dialog_content.play(video_url);
     },
   };
   const ui = {
@@ -180,7 +236,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         }),
       ],
     }),
-    $workout_action: WorkoutActionProfileViewModel({ ignore_history: true, client: props.client }),
+    $workout_action: WorkoutActionProfileViewModel({ ignore_history: true, app: props.app, client: props.client }),
     $dialog_buy_guide: new DialogCore({}),
     $btn_goto_subscription: new ButtonCore({
       onClick() {
@@ -188,6 +244,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         props.history.push("root.subscription_plan_profile");
       },
     }),
+    $dialog_content: VideoWithPointsModel({ app: props.app, points: [] }),
   };
   let _students: { id: number; nickname: string; avatar_url?: string }[] = [
     {
@@ -211,6 +268,9 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     get students() {
       return ui.$select_student.state.list;
     },
+    get contents() {
+      return request.content_of_workout_plan.list.response;
+    },
   };
   enum Events {
     StateChange,
@@ -223,7 +283,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   ui.$profile.onStateChange(() => methods.refresh());
   ui.$profile.onError(() => methods.refresh());
   ui.$select_student.onStateChange(() => methods.refresh());
-  request.workout_day.create.onFailed(() => {}, { override: true });
+  request.content_of_workout_plan.list.onStateChange(() => methods.refresh());
 
   return {
     state: _state,
@@ -296,7 +356,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 <div class="flex items-center justify-between mt-2">
                   <div class="duration flex items-center gap-1">
                     <Clock class="w-4 h-4 text-w-fg-1" />
-                    <div class="text-sm text-w-fg-1">{state().profile!.estimated_duration_text}</div>
+                    <div class="text-sm text-w-fg-1">预计总耗时{state().profile!.estimated_duration_text}</div>
                   </div>
                   <div class="text-w-fg-1 text-[12px]">{state().profile!.created_at}创建</div>
                 </div>
@@ -336,7 +396,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
               </div>
               <div class="steps border-2 border-w-fg-3 rounded-lg">
                 <div class="p-4 border-b-2 border-w-fg-3">
-                  <div class="text-w-fg-0">内容明细</div>
+                  <div class="text-w-fg-0">训练内容</div>
                 </div>
                 <div class="p-4 space-y-2">
                   <For each={state().profile!.steps}>
@@ -504,6 +564,45 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                   </div>
                 </div>
               </Show>
+              <Show when={state().contents.dataSource.length}>
+                <div class="students rounded-lg border-2 border-w-fg-3">
+                  <div class="p-4 border-b-2 border-w-fg-3">
+                    <div class="text-w-fg-0">视频参考</div>
+                  </div>
+                  <div class="p-4 grid grid-cols-2 gap-2">
+                    <For each={state().contents.dataSource}>
+                      {(v) => {
+                        return (
+                          <div
+                            class="border border-w-fg-3 rounded-lg p-2"
+                            onClick={() => {
+                              vm.methods.handleClickContentOfWorkoutPlan(v);
+                            }}
+                          >
+                            <div class="text-lg text-w-fg-0 truncate">{v.title}</div>
+                            <div class="flex items-center gap-2 mt-2">
+                              <Show
+                                when={v.creator.avatar_url}
+                                fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                              >
+                                <div
+                                  class="w-[24px] h-[24px] rounded-full"
+                                  style={{
+                                    "background-image": `url('${v.creator.avatar_url}')`,
+                                    "background-size": "cover",
+                                    "background-position": "center",
+                                  }}
+                                ></div>
+                              </Show>
+                              <div class="text-sm text-w-fg-1">{v.creator.nickname}</div>
+                            </div>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </div>
+                </div>
+              </Show>
               <div class="muscle rounded-lg border-2 border-w-fg-3">
                 <div class="p-4 border-b border-w-fg-3">
                   <div class="text-w-fg-0">锻炼肌肉</div>
@@ -568,6 +667,9 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
       </Sheet>
       <Sheet ignore_safe_height store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
         <WorkoutActionProfileView store={vm.ui.$workout_action} />
+      </Sheet>
+      <Sheet ignore_safe_height store={vm.ui.$dialog_content.ui.$dialog_outer} app={props.app}>
+        <WorkoutPlanVideoPlayView store={vm.ui.$dialog_content} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_buy_guide} app={props.app}>
         <div class="p-4">

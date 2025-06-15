@@ -11,8 +11,19 @@ import { InputCore } from "@/domains/ui/form/input";
 import { TagInputCore } from "@/domains/ui/form/tag-input";
 import { SelectCore } from "@/domains/ui";
 import { Result } from "@/domains/result";
+import { ListCore } from "@/domains/list";
+import { RequestCore } from "@/domains/request";
+import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 
 export function WorkoutActionEditorViewModel(props: Pick<ViewComponentProps, "client" | "app">) {
+  const request = {
+    equipment: {
+      list: new ListCore(
+        new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client })
+      ),
+    },
+  };
+
   let _muscles: MuscleProfile[] = [];
 
   const $values = new ObjectFieldCore({
@@ -89,7 +100,7 @@ export function WorkoutActionEditorViewModel(props: Pick<ViewComponentProps, "cl
       equipments: new SingleFieldCore({
         name: "equipments",
         label: "器械",
-        input: EquipmentSelectViewModel({ defaultValue: [], client: props.client }),
+        input: EquipmentSelectViewModel({ defaultValue: [], list: request.equipment.list }),
       }),
       details: new ObjectFieldCore({
         name: "details",

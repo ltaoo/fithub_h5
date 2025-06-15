@@ -114,9 +114,14 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     const { destroy = true } = options;
     if (destroy === false) {
       // 不销毁，但是要隐藏
-      this.visible = false;
-      this.emit(Events.Hidden);
+      this.exit = true;
+      this.enter = false;
       this.emit(Events.StateChange, { ...this.state });
+      setTimeout(() => {
+        this.visible = false;
+        this.emit(Events.Hidden);
+        this.emit(Events.StateChange, { ...this.state });
+      }, 180);
       return;
     }
     this.exit = true;

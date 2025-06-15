@@ -1,9 +1,11 @@
+import dayjs from "dayjs";
+
 import { BaseDomain, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request/index";
 import { HttpClientCore } from "@/domains/http_client/index";
 import { Result } from "@/domains/result/index";
 
-import { login, register, validate, fetch_user_profile } from "./services";
+import { login, register, validate, fetch_user_profile, refresh_token } from "./services";
 
 export enum Events {
   Tip,
@@ -12,14 +14,17 @@ export enum Events {
   Logout,
   /** 身份凭证失效 */
   Expired,
+  /** 凭证刷新 */
+  TokenRefresh,
   StateChange,
 }
 type TheTypesOfEvents = {
   [Events.Tip]: string[];
   [Events.Error]: Error;
-  [Events.Login]: UserState & { token: string };
+  [Events.Login]: UserState & { token: string; expires_at: string };
   [Events.Logout]: void;
   [Events.Expired]: void;
+  [Events.TokenRefresh]: UserState & { token: string; expires_at: string };
   [Events.StateChange]: UserState;
 };
 
@@ -40,11 +45,12 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   name = "UserCore";
   debug = false;
 
-  id: string = "";
-  nickname: string = "Anonymous";
-  avatar_url: string = "";
-  token: string = "";
-  isLogin: boolean = false;
+  id = "";
+  nickname = "Anonymous";
+  avatar_url = "";
+  token = "";
+  expires_at = "";
+  isLogin = false;
   needRegister = false;
 
   get state(): UserState {
@@ -112,12 +118,13 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     }
     this.values = {};
     this.isLogin = true;
-    const { id, nickname, avatar_url, token } = r.data;
+    const { id, nickname, avatar_url, token, expires_at } = r.data;
     this.id = id;
     this.nickname = nickname;
     this.avatar_url = avatar_url;
     this.token = token;
-    this.emit(Events.Login, { ...this.state, token: this.token });
+    this.expires_at = expires_at;
+    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: this.expires_at });
     return Result.Ok(r.data);
   }
   /** 退出登录 */
@@ -143,13 +150,14 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     }
     this.values = {};
     this.isLogin = true;
-    const { id, nickname, avatar_url, token } = r.data;
+    const { id, nickname, avatar_url, token, expires_at } = r.data;
     this.id = id;
     this.nickname = nickname;
     this.avatar_url = avatar_url;
     this.token = token;
+    this.expires_at = expires_at;
     this.needRegister = false;
-    this.emit(Events.Login, { ...this.state, token: this.token });
+    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: this.expires_at });
     return Result.Ok(r.data);
   }
   async fetchProfile() {
@@ -161,6 +169,34 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       return r;
     }
     return Result.Ok(r.data);
+  }
+  _refreshing = false;
+  async refreshToken() {
+    if (this._refreshing) {
+      return;
+    }
+    console.log("[BIZ]user/index - refreshToken - before ", this.expires_at);
+    if (!this.expires_at) {
+      return;
+    }
+    console.log("[BIZ]user/index - refreshToken - before ", dayjs(this.expires_at).format("YYYY-MM-DD HH:mm:ss"));
+    const expires_at = dayjs(this.expires_at).subtract(8, "hour");
+    if (dayjs().isAfter(expires_at)) {
+      this._refreshing = true;
+      const r = await new RequestCore(refresh_token, { client: this.$client, onFailed() {} }).run();
+      this._refreshing = false;
+      if (r.error) {
+        return;
+      }
+      const { token, expires_at } = r.data;
+      this.token = token;
+      this.expires_at = expires_at;
+      this.emit(Events.TokenRefresh, { ...this.state, token: this.token, expires_at: this.expires_at });
+    }
+  }
+  setToken(v: string) {
+    this.token = v;
+    this.isLogin = !!v;
   }
 
   onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
@@ -174,5 +210,8 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   }
   onExpired(handler: Handler<TheTypesOfEvents[Events.Expired]>) {
     return this.on(Events.Expired, handler);
+  }
+  onTokenRefresh(handler: Handler<TheTypesOfEvents[Events.TokenRefresh]>) {
+    return this.on(Events.TokenRefresh, handler);
   }
 }

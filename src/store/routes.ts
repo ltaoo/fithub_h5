@@ -106,6 +106,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_day_catch_up_on: {
+        title: "训练日",
+        pathname: "/workout_day/catch_up_on",
+        options: {
+          require: ["login"],
+        },
+      },
       workout_day_list: {
         title: "历史训练记录",
         pathname: "/workout_day/list",
@@ -137,6 +144,13 @@ const configure = {
       student_profile: {
         title: "学员详情",
         pathname: "/home/student_profile",
+        options: {
+          require: ["login"],
+        },
+      },
+      student_workout_day_list: {
+        title: "训练记录",
+        pathname: "/student/workout_day/list",
         options: {
           require: ["login"],
         },
@@ -182,20 +196,6 @@ const configure = {
       tools_metronome: {
         title: "节拍器",
         pathname: "/tools_metronome",
-      },
-      fake_chat: {
-        title: "沟通",
-        pathname: "/fake_chat",
-        options: {
-          require: [],
-        },
-      },
-      fake_chat_profile: {
-        title: "沟通详情",
-        pathname: "/fake_chat_profile",
-        options: {
-          require: [],
-        },
       },
       muscle: {
         title: "肌肉列表",

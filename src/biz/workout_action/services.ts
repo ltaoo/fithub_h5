@@ -382,9 +382,9 @@ export function fetchWorkoutActionHistoryListOfWorkoutActionProcess(
   if (r.error) {
     return Result.Err(r.error);
   }
-  const { page_size, list, total } = r.data;
+  const { list } = r.data;
   return Result.Ok({
-    page_size,
+    ...r.data,
     list: list.map((v) => {
       return {
         id: v.id,
@@ -399,6 +399,41 @@ export function fetchWorkoutActionHistoryListOfWorkoutActionProcess(
         },
       };
     }),
-    total,
+  });
+}
+
+/**
+ * 获取「指定动作」的所有 up主内容
+ */
+export function fetchContentListOfWorkoutAction(body: Partial<FetchParams> & { workout_action_id: number }) {
+  return request.post<
+    ListResponseWithCursor<{
+      id: number;
+      title: string;
+      description: string;
+      video_url: string;
+      like_count: number;
+      creator: {
+        nickname: string;
+        avatar_url: string;
+      };
+    }>
+  >("/api/workout_action/content/list", {
+    page: body.page,
+    page_size: body.pageSize,
+    workout_action_id: body.workout_action_id,
+  });
+}
+
+export function fetchContentListOfWorkoutActionProcess(r: TmpRequestResp<typeof fetchContentListOfWorkoutAction>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const { list } = r.data;
+  return Result.Ok({
+    ...r.data,
+    list: list.map((v) => {
+      return v;
+    }),
   });
 }

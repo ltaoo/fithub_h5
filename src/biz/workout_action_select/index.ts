@@ -2,6 +2,7 @@
  * @file 健身动作选择
  */
 import { $workout_action_list } from "@/store";
+import { ViewComponentProps } from "@/store/types";
 import {
   fetchWorkoutActionList,
   fetchWorkoutActionListProcess,
@@ -20,10 +21,11 @@ import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectC
 import { BizError } from "@/domains/error";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 
-export function WorkoutActionSelectDialogViewModel(props: {
+export function WorkoutActionSelectViewModel(props: {
   defaultValue: { id: number | string; zh_name: string }[];
   list: typeof $workout_action_list;
   multiple?: boolean;
+  app: ViewComponentProps["app"];
   client: HttpClientCore;
   onChange?: (action: WorkoutActionProfile[]) => void;
   onOk?: (actions: { id: number | string; zh_name: string }[]) => void;
@@ -201,7 +203,7 @@ export function WorkoutActionSelectDialogViewModel(props: {
         ui.$dialog.hide();
       },
     }),
-    $workout_action: WorkoutActionProfileViewModel({ client: props.client }),
+    $workout_action: WorkoutActionProfileViewModel({ app: props.app, client: props.client }),
     $view: new ScrollViewCore({
       async onReachBottom() {
         await request.action.list.loadMore();
@@ -292,6 +294,9 @@ export function WorkoutActionSelectDialogViewModel(props: {
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
+    init() {
+      request.action.list.init();
+    },
     clear() {
       _selected = [];
       bus.emit(Events.Change, []);
@@ -299,6 +304,10 @@ export function WorkoutActionSelectDialogViewModel(props: {
     handleOk: methods.handleOk,
     ready() {
       // request.action.list.init();
+    },
+    destroy() {
+      bus.destroy();
+      request.action.list.destroy();
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);
@@ -318,4 +327,4 @@ export function WorkoutActionSelectDialogViewModel(props: {
   return vm;
 }
 
-export type WorkoutActionSelectDialogViewModel = ReturnType<typeof WorkoutActionSelectDialogViewModel>;
+export type WorkoutActionSelectViewModel = ReturnType<typeof WorkoutActionSelectViewModel>;

@@ -36,6 +36,7 @@ export type DialogProps = {
   footer?: boolean;
   closeable?: boolean;
   mask?: boolean;
+  open?: boolean;
   onCancel?: () => void;
   onOk?: () => void;
   onUnmounted?: () => void;
@@ -77,16 +78,20 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
     };
   }
 
-  constructor(options: Partial<{ _name: string }> & DialogProps = {}) {
-    super(options);
+  constructor(props: Partial<{ _name: string }> & DialogProps = {}) {
+    super(props);
 
-    const { title, footer = true, mask = true, closeable = true, onOk, onCancel, onUnmounted } = options;
+    const { title, footer = true, open = false, mask = true, closeable = true, onOk, onCancel, onUnmounted } = props;
     if (title) {
       this.title = title;
     }
     this.footer = footer;
     this.closeable = closeable;
     this.mask = mask;
+    this.open = open;
+    if (open) {
+      this.present.show();
+    }
     if (onOk) {
       this.onOk(onOk);
     }
@@ -136,12 +141,12 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
     this.present.show();
   }
   /** 隐藏弹窗 */
-  hide() {
+  hide(opt: Partial<{ destroy: boolean }> = {}) {
     // if (this.open === false) {
     //   return;
     // }
     // this.emit(Events.Cancel);
-    this.present.hide();
+    this.present.hide(opt);
   }
   ok() {
     this.emit(Events.OK);

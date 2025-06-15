@@ -9,12 +9,14 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { MultipleAvatar } from "@/components/avatar/multiple";
 import { Avatar } from "@/components/avatar";
+import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
 import { fetchStartedWorkoutDayList, fetchStartedWorkoutDayListProcess } from "@/biz/workout_day/services";
 import { RouteViewCore } from "@/domains/route_view";
+import { ScrollViewCore } from "@/domains/ui";
 
 import { WorkoutDayUpdateView } from "./update";
 
@@ -28,7 +30,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
     },
   };
   type TheWorkoutDay = TheResponseOfRequestCore<typeof request.workout_day.started_list>["list"][number];
-  type TheStudent = { id: number; nickname: string; avatar_url: string };
+  type TheStudent = { id: number; nickname: string; avatar_url: string; is_self: boolean };
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -37,12 +39,22 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     handleClickStart(day: TheWorkoutDay) {
-      if (day.is_self) {
-        props.history.replace("root.workout_day_self", {
-          id: String(day.id),
-          multiple: "0",
-        });
-        return;
+      // if (day.is_self) {
+      //   props.history.replace("root.workout_day_self", {
+      //     id: String(day.id),
+      //     multiple: "0",
+      //   });
+      //   return;
+      // }
+      if (day.students.length === 1) {
+        const v = day.students[0];
+        if (v.is_self) {
+          props.history.replace("root.workout_day_self", {
+            id: String(day.id),
+            multiple: "0",
+          });
+          return;
+        }
       }
       for (let i = 0; i < day.students.length; i += 1) {
         const v = day.students[i];
@@ -56,7 +68,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
           title: "",
         });
         _views_for_student.push(view);
-        _students.push({ id: v.id, nickname: v.nickname, avatar_url: v.avatar_url });
+        _students.push({ id: v.id, nickname: v.nickname, avatar_url: v.avatar_url, is_self: v.is_self });
       }
       _working = true;
       methods.refresh();
@@ -69,7 +81,9 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
       methods.refresh();
     },
   };
-  const ui = {};
+  const ui = {
+    $view: new ScrollViewCore(),
+  };
 
   let _working = false;
   let _students: TheStudent[] = [];
@@ -130,37 +144,39 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
   const [state, vm] = useViewModel(WorkoutDayMultiplePersonViewModel, [props]);
 
   return (
-    <div class="p-2">
+    <>
       <Show when={!state().working}>
-        <div class="space-y-2">
-          <For each={state().list}>
-            {(v) => {
-              return (
-                <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                  <div class="flex">
-                    <div class="px-2 rounded-full bg-green-500 text-white text-sm">已开始</div>
-                  </div>
-                  <div class="mt-2 text-w-fg-0">{v.workout_plan.title}</div>
-                  <div class="flex text-w-fg-1 text-sm">
-                    <div>开始时间</div>
-                    <div>{v.started_at_text}</div>
-                  </div>
-                  <div class="flex items-center justify-between mt-4">
-                    <MultipleAvatar value={v.students} />
-                    <div
-                      class="px-4 py-2 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm"
-                      onClick={() => {
-                        vm.methods.handleClickStart(v);
-                      }}
-                    >
-                      继续
+        <PageView store={vm}>
+          <div class="space-y-2">
+            <For each={state().list}>
+              {(v) => {
+                return (
+                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                    <div class="flex">
+                      <div class="px-2 rounded-full bg-green-500 text-white text-sm">已开始</div>
+                    </div>
+                    <div class="mt-2 text-w-fg-0">{v.workout_plan.title}</div>
+                    <div class="flex text-w-fg-1 text-sm">
+                      <div>开始时间</div>
+                      <div>{v.started_at_text}</div>
+                    </div>
+                    <div class="flex items-center justify-between mt-4">
+                      <MultipleAvatar value={v.students} />
+                      <div
+                        class="px-4 py-2 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm"
+                        onClick={() => {
+                          vm.methods.handleClickStart(v);
+                        }}
+                      >
+                        继续
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            }}
-          </For>
-        </div>
+                );
+              }}
+            </For>
+          </div>
+        </PageView>
       </Show>
       <Show when={state().working}>
         <div>
@@ -188,7 +204,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
         </div>
       </Show>
       <Show when={state().students.length}>
-        <div class="fixed left-2 bottom-20 w-full">
+        <div class="fixed bottom-[56px] w-full p-2">
           <div class="inline-flex items-center gap-2 rounded-full p-2 bg-w-bg-5">
             <div
               classList={{
@@ -216,20 +232,25 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                       vm.methods.handleClickStudent(s, idx());
                     }}
                   >
-                    <div>
-                      <div class="w-[32px] h-[32px] rounded-full bg-w-bg-3">
-                        <Show
-                          when={s.avatar_url}
-                          fallback={
-                            <div class="flex items-center justify-center w-full h-full">
-                              <div class="text-w-fg-0 text-sm">{s.nickname[0]}</div>
-                            </div>
-                          }
-                        >
-                          <img class="w-full h-full object-contain" src={s.avatar_url} />
-                        </Show>
-                      </div>
-                    </div>
+                    <Show
+                      when={!s.is_self}
+                      fallback={
+                        <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-2">
+                          <div class="text-w-fg-0 text-sm">我</div>
+                        </div>
+                      }
+                    >
+                      <Show
+                        when={s.avatar_url}
+                        fallback={
+                          <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-3">
+                            <div class="text-w-fg-0 text-sm">{s.nickname[0]}</div>
+                          </div>
+                        }
+                      >
+                        <img class="w-[32px] h-[32px] rounded-full object-contain" src={s.avatar_url} />
+                      </Show>
+                    </Show>
                   </div>
                 );
               }}
@@ -246,8 +267,9 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
               </div>
             </div> */}
           </div>
+          <div class="safe-height safe-height--no-color"></div>
         </div>
       </Show>
-    </div>
+    </>
   );
 }

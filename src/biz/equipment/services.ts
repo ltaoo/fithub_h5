@@ -11,41 +11,69 @@ import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
 import { parseJSONStr } from "@/utils";
 
-export function fetchEquipmentList(params: Partial<{ ids: number[] }> = {}) {
-  return request.post<{
-    list: {
+export function fetchEquipmentList(body: Partial<FetchParams> & { ids: number[] }) {
+  return request.post<
+    ListResponse<{
       id: number;
       name: string;
       zh_name: string;
       overview: string;
-      media: string;
-    }[];
-    total: number;
-  }>("/api/equipment/list", {
-    ids: params.ids,
+      tags: string;
+      alias: string;
+      sort_idx: number;
+      medias: string;
+    }>
+  >("/api/equipment/list", {
+    page_size: body.pageSize,
+    page: body.page,
+    ids: body.ids,
   });
 }
-
 export function fetchEquipmentListProcess(r: TmpRequestResp<typeof fetchEquipmentList>) {
   if (r.error) {
     return Result.Err(r.error);
   }
   return Result.Ok({
-    list: r.data.list.map((equipment) => {
+    ...r.data,
+    list: r.data.list.map((v) => {
       return {
-        id: equipment.id,
-        name: equipment.name,
-        zh_name: equipment.zh_name,
-        overview: equipment.overview,
-        media: equipment.media ? JSON.parse(equipment.media) : {},
+        id: v.id,
+        name: v.name,
+        zh_name: v.zh_name,
+        alias: v.alias,
+        overview: v.overview,
+        tags: v.tags.split(",").filter(Boolean),
+        sort_idx: v.sort_idx,
+        medias: (() => {
+          const r = parseJSONStr<{ pics: string[] }>(v.medias);
+          if (r.error) {
+            return {
+              pics: [] as string[],
+            };
+          }
+          return {
+            pics: r.data.pics ?? [],
+          };
+        })(),
       };
     }),
-    total: r.data.total,
   });
 }
 
 export type WorkoutEquipmentProfile = UnpackedResult<ReturnType<typeof fetchEquipmentListProcess>>["list"][number];
 
-export function createEquipment(params: { name: string; zh_name: string; overview: string; media: string }) {
-  return request.post<void>("/api/equipment/create", params);
+type EquipmentBody = {
+  name: string;
+  zh_name: string;
+  alias: string;
+  overview: string;
+  sort_idx: number;
+  medias: string;
+};
+export function createEquipment(body: EquipmentBody) {
+  return request.post<void>("/api/equipment/create", body);
+}
+
+export function updateEquipment(body: EquipmentBody & { id: number }) {
+  return request.post<void>("/api/equipment/update", body);
 }

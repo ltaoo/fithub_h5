@@ -8,6 +8,7 @@ export function SelectViewModel<T extends { id: number }>(props: {
   defaultValue: T[];
   list: T[];
   multiple?: boolean;
+  disabled?: boolean;
   onChange?: (list: T[]) => void;
 }) {
   const request = {};
@@ -68,11 +69,15 @@ export function SelectViewModel<T extends { id: number }>(props: {
   };
 
   let _multiple = props.multiple ?? true;
+  let _disabled = props.disabled ?? true;
   let _selected: T[] = props.defaultValue ?? [];
   let _list: T[] = props.list ?? [];
   let _state = {
     get value() {
       return _selected;
+    },
+    get disabled() {
+      return _disabled;
     },
     get selected() {
       return _selected.flatMap((item) => {

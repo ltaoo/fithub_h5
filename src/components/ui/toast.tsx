@@ -17,7 +17,7 @@ export const Toast = (props: { store: ToastCore }) => {
   return (
     <ToastPrimitive.Root store={props.store}>
       <ToastPrimitive.Portal store={props.store}>
-        <Show when={state().mask || state().icon === "loading"}>
+        {/* <Show when={state().mask || state().icon === "loading"}>
           <ToastPrimitive.Overlay
             store={props.store}
             classList={{
@@ -26,22 +26,23 @@ export const Toast = (props: { store: ToastCore }) => {
               "animate-out fade-out": state().exit,
             }}
           />
-        </Show>
+        </Show> */}
         <div
           classList={{
-            "fixed z-[99999] inset-0 top-60": true,
+            "fixed z-[99999] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2": true,
           }}
         >
           <ToastPrimitive.Content
             store={props.store}
             classList={{
-              "p-6 w-120 h-120 ": true,
-              "duration-200": true,
+              // "p-6 w-120 h-120 ": true,
+              "relative duration-200": true,
               "animate-in fade-in": state().enter,
               "animate-out fade-out": state().exit,
             }}
           >
-            <div class="absolute left-1/2 -translate-x-1/2 space-y-4 p-6 w-120 h-120 rounded-xl bg-w-bg-5 text-w-fg-1">
+            <div class="z-0 absolute inset-0 rounded-xl bg-black opacity-90"></div>
+            <div class="z-10 relative space-y-4 p-6 w-120 h-120">
               <Show when={state().icon === "loading"}>
                 <div class="relative left-1/2 w-6 h-6 -translate-x-1/2">
                   <Loader class="w-full h-full animate-spin" />

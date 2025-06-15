@@ -27,6 +27,8 @@ enum WorkoutPlanOrScheduleType {
 }
 
 function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
+  // const DefaultWorkoutPlanOrScheduleType = WorkoutPlanOrScheduleType.WorkoutPlan
+
   const request = {
     workout_plan: {
       list: new ListCore(
@@ -109,7 +111,10 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
     }),
     $input_keyword: new InputCore({ defaultValue: "", placeholder: "请输入关键词" }),
     $input_view_select: new SelectCore({
-      defaultValue: WorkoutPlanOrScheduleType.WorkoutPlan,
+      defaultValue:
+        props.view.query.schedule === "1"
+          ? WorkoutPlanOrScheduleType.WorkoutSchedule
+          : WorkoutPlanOrScheduleType.WorkoutPlan,
       options: [
         {
           value: WorkoutPlanOrScheduleType.WorkoutPlan,
@@ -165,7 +170,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       return request.workout_schedule.list.response;
     },
     get tab_id() {
-      return ui.$input_view_select.value ?? WorkoutPlanOrScheduleType.WorkoutPlan;
+      return ui.$input_view_select.value;
     },
   };
   enum Events {

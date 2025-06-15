@@ -25,8 +25,6 @@ import { HomeStudentProfilePage } from "@/pages/student/profile";
 import { EquipmentListView } from "@/pages/equipment/list";
 import { WorkoutDayUpdateView } from "@/pages/workout_day/update";
 import { WorkoutDayPreparingPage } from "@/pages/workout_day/prepare";
-import { MemberListInFakeChatPage } from "@/pages/fake_chat/members";
-import { ChatProfileInFakeChatPage } from "@/pages/fake_chat/profile";
 import { HomeMineView } from "@/pages/mine";
 import { WorkoutScheduleCreateView } from "@/pages/workout_schedule/create";
 import { WorkoutScheduleUpdateView } from "@/pages/workout_schedule/update";
@@ -58,6 +56,8 @@ import { MaxRMTestToolView } from "@/pages/tools/max_rm_test";
 import { ApplicationSettingsView } from "@/pages/settings";
 import { SubscriptionOrderView } from "@/pages/subscription_plan/profile";
 import { FeaturePlaygroundView } from "@/pages/test/profile";
+import { WorkoutDayCatchUpOnView } from "@/pages/workout_day/catch_up_on";
+import { StudentWorkoutDayListView } from "@/pages/student/workout_day_list";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -96,11 +96,13 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.student_create": HomeStudentCreatePage,
   "root.student_update": HomeStudentUpdatePage,
   "root.student_profile": HomeStudentProfilePage,
+  "root.student_workout_day_list": StudentWorkoutDayListView,
   "root.home_layout.mine": HomeMineView,
   // 训练记录
   "root.workout_day": WorkoutDayMultiplePersonView,
   "root.workout_day_self": WorkoutDayUpdateView,
   "root.workout_day_prepare": WorkoutDayPreparingPage,
+  "root.workout_day_catch_up_on": WorkoutDayCatchUpOnView,
   "root.workout_day_list": WorkoutDayListView,
   "root.workout_day_profile": WorkoutDayProfileView,
   "root.action_history_list": WorkoutActionHistoryListView,
@@ -120,8 +122,5 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.exam": ExamAnswerView,
   "root.exam_result": PaperResultView,
   "root.exam_result_list": PaperResultListView,
-  // 假聊
-  "root.fake_chat": MemberListInFakeChatPage,
-  "root.fake_chat_profile": ChatProfileInFakeChatPage,
   "root.test": FeaturePlaygroundView,
 };

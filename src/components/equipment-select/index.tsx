@@ -28,7 +28,7 @@ export function EquipmentSelectView(props: { store: EquipmentSelectViewModel }) 
               <button
                 class="text-slate-400"
                 onClick={() => {
-                  vm.methods.remove(equipment);
+                  vm.remove(equipment);
                 }}
               >
                 <X class="w-4 h-4" />
@@ -47,28 +47,28 @@ export function EquipmentSelectView(props: { store: EquipmentSelectViewModel }) 
             }
             const { left, top, width, height } = e.target.getBoundingClientRect();
             console.log("[EQUIPMENT-SELECT] onAnimationEnd", left, top, width, height);
-            vm.ui.$popover.popper.setReference({
-              $el: e.target as HTMLElement,
-              getRect: () => {
-                return {
-                  x: left,
-                  y: top,
-                  left,
-                  top,
-                  width,
-                  height,
-                  right: left + width,
-                  bottom: top + height,
-                };
-              },
-            });
-            vm.ui.$popover.toggle();
+            // vm.ui.$popover.popper.setReference({
+            //   $el: e.target as HTMLElement,
+            //   getRect: () => {
+            //     return {
+            //       x: left,
+            //       y: top,
+            //       left,
+            //       top,
+            //       width,
+            //       height,
+            //       right: left + width,
+            //       bottom: top + height,
+            //     };
+            //   },
+            // });
+            // vm.ui.$popover.toggle();
           }}
         >
           选择设备
         </button>
       </div>
-      <PopoverPrimitive.Portal store={vm.ui.$popover}>
+      {/* <PopoverPrimitive.Portal store={vm.ui.$popover}>
         <PopoverPrimitive.Content
           store={vm.ui.$popover}
           class="z-100 fixed left-0 top-0 w-[340px] h-[480px] overflow-y-auto bg-white p-1 rounded-md border"
@@ -95,7 +95,7 @@ export function EquipmentSelectView(props: { store: EquipmentSelectViewModel }) 
             }}
           </For>
         </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
+      </PopoverPrimitive.Portal> */}
     </div>
   );
 }

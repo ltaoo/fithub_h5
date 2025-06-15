@@ -15,15 +15,14 @@ export function Video(props: { store: PlayerCore }) {
   });
   onMount(() => {
     // console.log("[COMPONENT]Video - onMount", $video, $$video);
-    setTimeout(() => {
-      const $$video = $video;
-      // console.log("[COMPONENT]Video - onMount", $video, $$video);
-      if (!$$video) {
-        return;
-      }
-      store.setMounted();
-      connect($$video, store);
-    }, 200);
+    const $$video = $video;
+    console.log("[COMPONENT]Video - onMount", $video, $$video);
+    if (!$$video) {
+      return;
+    }
+    store.setMounted();
+    connect($$video, store);
+    store.setConnected();
   });
 
   const { width, height, ready, poster } = state();

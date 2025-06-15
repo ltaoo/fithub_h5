@@ -10,7 +10,7 @@ import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { WorkoutActionCard } from "@/components/workout-action-card";
-import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
+import { WorkoutActionSelectView } from "@/components/workout-action-select3";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
 import { Sheet } from "@/components/ui/sheet";
 import { SetCompleteBtn } from "@/components/set-complete-btn";
@@ -51,7 +51,7 @@ import {
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
 import { CountdownViewModel } from "@/biz/countdown";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { getSetValueUnit, SetValueInputViewModel, SetValueUnit } from "@/biz/set_value_input";
 import {
   fetchWorkoutActionListByIds,
@@ -972,9 +972,10 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $action_select_view: new ScrollViewCore(),
     $start_btn: new ButtonCore(),
     /** 动作选择弹窗 */
-    $workout_action_dialog: WorkoutActionSelectDialogViewModel({
+    $workout_action_dialog: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: $workout_action_list,
+      app: props.app,
       client: props.client,
       onOk(acts) {
         if (acts.length === 0) {
@@ -1133,7 +1134,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $day_duration: StopwatchViewModel({}),
     $countdown_presence: new PresenceCore(),
     // $workout_action_profile_dialog: new DialogCore({ footer: false }),
-    $workout_action_profile: WorkoutActionProfileViewModel({ client: props.client }),
+    $workout_action_profile: WorkoutActionProfileViewModel({ app: props.app, client: props.client }),
     $tools: new PresenceCore({}),
     $dialog_overview: new DialogCore({}),
     $dialog_remark: new DialogCore({}),
@@ -1236,10 +1237,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       ],
     }),
     $dialog_give_up_confirm: new DialogCore({}),
-    $workout_action_select: WorkoutActionSelectDialogViewModel({
+    $workout_action_select: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: $workout_action_list,
       client: props.client,
+      app: props.app,
       async onOk(actions) {},
       onError(error) {
         props.app.tip({
@@ -1536,47 +1538,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           hidden: state().profile?.status !== WorkoutDayStatus.Started,
         }}
       >
-        <div class="z-0 fixed bottom-0 left-0 w-full bg-w-bg-1">
-          <div class="p-2">
-            <Show
-              when={state().profile?.status === WorkoutDayStatus.Started}
-              fallback={
-                <div class="flex items-center justify-between">
-                  <Skeleton class="w-[88px] h-[40px]" />
-                  <div class="flex items-center gap-2">
-                    <Skeleton class="w-[60px] h-[36px]" />
-                    <Skeleton class="w-[40px] h-[40px] rounded-full" />
-                  </div>
-                </div>
-              }
-            >
-              <div class="flex items-center justify-between">
-                <DayDurationTextView store={vm.ui.$day_duration} />
-                <div class="flex items-center gap-2">
-                  <div
-                    class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-0 text-sm"
-                    onClick={() => {
-                      vm.methods.showWorkoutDayCompleteConfirmDialog();
-                    }}
-                  >
-                    完成
-                  </div>
-                  <div
-                    class="p-2 rounded-full bg-w-bg-5"
-                    onClick={(event) => {
-                      const client = event.currentTarget.getBoundingClientRect();
-                      vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
-                    }}
-                  >
-                    <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-                  </div>
-                </div>
-              </div>
-            </Show>
-          </div>
-        </div>
-        <div class="absolute top-0 bottom-[56px] left-0 w-full">
-          <ScrollView store={vm.ui.$view} class="scroll--hidden">
+        <div class="h-screen bg-w-bg-0">
+          <ScrollView store={vm.ui.$view} class="h-full scroll--hidden">
             <div
               class="p-2 rounded-lg transition-all duration-300"
               style={{ transform: `translateY(${-state().height}px)` }}
@@ -1792,8 +1755,50 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
             <div class="py-4">
               <div class="text-sm text-w-fg-1 text-center">胜利就在眼前 加油!</div>
             </div>
+            {/* 32是预留出的一些空间，不至于内容和底部操作栏靠得太近 */}
             <div class="h-[32px]"></div>
+            {/* 56是底部操作栏 bottom-operation-bar 的高度 */}
+            <div class="h-[56px]"></div>
+            <div class="safe-height safe-height--no-color"></div>
           </ScrollView>
+          <div class="bottom-operation-bar z-10 fixed bottom-0 left-0 w-full bg-w-bg-1">
+            <Show
+              when={state().profile?.status === WorkoutDayStatus.Started}
+              fallback={
+                <div class="flex items-center justify-between">
+                  <Skeleton class="w-[88px] h-[40px]" />
+                  <div class="flex items-center gap-2">
+                    <Skeleton class="w-[60px] h-[36px]" />
+                    <Skeleton class="w-[40px] h-[40px] rounded-full" />
+                  </div>
+                </div>
+              }
+            >
+              <div class="flex items-center justify-between p-2">
+                <DayDurationTextView store={vm.ui.$day_duration} />
+                <div class="flex items-center gap-2">
+                  <div
+                    class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-0 text-sm"
+                    onClick={() => {
+                      vm.methods.showWorkoutDayCompleteConfirmDialog();
+                    }}
+                  >
+                    完成
+                  </div>
+                  <div
+                    class="p-2 rounded-full bg-w-bg-5"
+                    onClick={(event) => {
+                      const client = event.currentTarget.getBoundingClientRect();
+                      vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
+                    }}
+                  >
+                    <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+                  </div>
+                </div>
+              </div>
+            </Show>
+            <div class="safe-height"></div>
+          </div>
         </div>
       </div>
       <Show when={state().profile_view}>
@@ -1807,7 +1812,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
         />
       </Show>
       <Sheet ignore_safe_height store={vm.ui.$workout_action_dialog.ui.$dialog} app={props.app}>
-        <WorkoutActionSelect3View store={vm.ui.$workout_action_dialog} app={props.app} />
+        <WorkoutActionSelectView store={vm.ui.$workout_action_dialog} app={props.app} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_num_keyboard} app={props.app}>
         <div class="p-2">

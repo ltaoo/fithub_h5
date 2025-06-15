@@ -7,8 +7,9 @@ const DEFAULT_CACHE_VALUES = {
   user: {
     id: "",
     username: "anonymous",
-    token: "",
     avatar: "",
+    token: "",
+    expires_at: "",
   },
   theme: "",
   dialog_flags: {} as Record<string, { show_at: number }>,

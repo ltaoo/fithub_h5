@@ -10,11 +10,7 @@ import { members } from "./data";
 
 function MemberListInFakeChatViewModel(props: ViewComponentProps) {
   const methods = {
-    handleClick(member: any) {
-      props.history.push("root.fake_chat_profile", {
-        id: member.id,
-      });
-    },
+    handleClick(member: any) {},
   };
   const ui = {
     $view: new ScrollViewCore(),

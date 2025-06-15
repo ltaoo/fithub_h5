@@ -12,13 +12,13 @@ import { Sheet } from "@/components/ui/sheet";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { PageView } from "@/components/page-view";
 import { Divider } from "@/components/divider";
-import { WorkoutActionSelect3View } from "@/components/workout-action-select3";
+import { WorkoutActionSelectView } from "@/components/workout-action-select3";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, CheckboxCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { SetCountdownViewModel } from "@/biz/set_countdown";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { toFixed } from "@/utils";
 
 import { MaxRMCountdownView } from "./components/max-rm-countdown";
@@ -388,10 +388,11 @@ export function MaxRMTestViewModel(props: ViewComponentProps) {
         ui.$select_workout_action.ui.$dialog.show();
       },
     }),
-    $select_workout_action: WorkoutActionSelectDialogViewModel({
+    $select_workout_action: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: $workout_action_list,
       multiple: false,
+      app: props.app,
       client: props.client,
       async onOk(actions) {
         if (actions.length === 0) {
@@ -648,7 +649,7 @@ export function MaxRMTestToolView(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet ignore_safe_height store={vm.ui.$select_workout_action.ui.$dialog} app={props.app}>
-        <WorkoutActionSelect3View store={vm.ui.$select_workout_action} app={props.app} />
+        <WorkoutActionSelectView store={vm.ui.$select_workout_action} app={props.app} />
       </Sheet>
     </>
   );

@@ -29,6 +29,10 @@ import { storage } from "./storage";
 // }
 onRequestCreated((ins) => {
   // console.log("[STORE]store/index - before ins.onFailed", ins._name);
+  ins.beforeRequest(() => {
+    console.log("[STORE]store/index - before user.refreshToken");
+    user.refreshToken();
+  });
   ins.onFailed((e) => {
     // console.log("[STORE]store/index - onRequestCreated ins.onFailed", e.code);
     app.tip({
@@ -80,13 +84,19 @@ export const app = new Application({
   async beforeReady() {
     const { pathname, query } = history.$router;
     const route = routesWithPathname[pathname];
-    console.log("[ROOT]onMount", pathname, route, app.$user.isLogin);
+    console.log("[ROOT]onMount", pathname, query, route, app.$user.isLogin);
     client.appendHeaders({
       Authorization: app.$user.token,
     });
     request.appendHeaders({
       Authorization: app.$user.token,
     });
+    if (query.token) {
+      user.setToken(`Bearer ${query.token}`);
+      request.appendHeaders({
+        Authorization: user.token,
+      });
+    }
     if (!route) {
       history.push("root.notfound");
       return Result.Ok(null);
@@ -115,6 +125,10 @@ export const app = new Application({
     return Result.Ok(null);
   },
 });
+
+// setTimeout(() => {
+//   user.refreshToken();
+// }, 1000 * 60 * 10);
 
 export const $workout_action_list = new ListCore(
   new RequestCore(fetchWorkoutActionList, {
@@ -191,6 +205,15 @@ user.onLogin((profile) => {
     Authorization: user.token,
   });
   history.push("root.home_layout.index");
+});
+user.onTokenRefresh((profile) => {
+  storage.set("user", profile);
+  client.appendHeaders({
+    Authorization: user.token,
+  });
+  request.appendHeaders({
+    Authorization: user.token,
+  });
 });
 user.onLogout(() => {
   storage.clear("user");

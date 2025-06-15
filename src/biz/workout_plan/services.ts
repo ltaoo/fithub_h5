@@ -133,6 +133,7 @@ export function fetchWorkoutPlanProfile(body: { id: number }) {
     created_at: string;
   }>("/api/workout_plan/profile", { id: body.id });
 }
+
 export function parseWorkoutPlanStepsString(details: string) {
   const r = parseJSONStr<WorkoutPlanDetailsJSON250424>(details);
   if (r.error) {
@@ -200,7 +201,75 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
   });
 }
 
-export function fetchWorkoutPlanList(params: Partial<FetchParams> & { keyword?: string }) {
+export function fetchContentListOfWorkoutPlan(body: Partial<FetchParams> & { keyword?: string }) {
+  return request.post<
+    ListResponse<{
+      id: number;
+      title: string;
+      description: string;
+      video_url: string;
+      details: string;
+      like_count: number;
+      creator: {
+        nickname: string;
+        avatar_url: string;
+      };
+    }>
+  >("/api/workout_plan/content/list", {
+    page: body.page,
+    page_size: body.pageSize,
+  });
+}
+export function fetchContentProfileOfWorkoutPlan(body: { id: number }) {
+  return request.post<{
+    id: number;
+    title: string;
+    description: string;
+    video_url: string;
+    details: string;
+    creator: {
+      nickname: string;
+      avatar_url: string;
+    };
+  }>("/api/workout_plan/content/profile", {
+    id: body.id,
+  });
+}
+export function fetchContentProfileOfWorkoutPlanProcess(r: TmpRequestResp<typeof fetchContentProfileOfWorkoutPlan>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const data = r.data;
+  return Result.Ok({
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    video_url: data.video_url,
+    details: (() => {
+      const r = parseJSONStr<{
+        points: {
+          /** 秒数 */
+          time: number;
+          time_text: string;
+          /** 文本 */
+          // text: string;
+          workout_action_name: string;
+        }[];
+      }>(data.details);
+      if (r.error) {
+        return {
+          points: [],
+        };
+      }
+      return {
+        points: r.data.points ?? [],
+      };
+    })(),
+    creator: data.creator,
+  });
+}
+
+export function fetchWorkoutPlanList(body: Partial<FetchParams> & { keyword?: string }) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -215,9 +284,9 @@ export function fetchWorkoutPlanList(params: Partial<FetchParams> & { keyword?: 
       };
     }>
   >("/api/workout_plan/list", {
-    page: params.page,
-    page_size: params.pageSize,
-    keyword: params.keyword,
+    page: body.page,
+    page_size: body.pageSize,
+    keyword: body.keyword,
   });
 }
 export function fetchWorkoutPlanListProcess(r: TmpRequestResp<typeof fetchWorkoutPlanList>) {

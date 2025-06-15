@@ -11,9 +11,11 @@ import {
   fetchWorkoutActionListByIds,
   fetchWorkoutActionListByIdsProcess,
 } from "@/biz/workout_action/services";
+import { Result } from "@/domains/result";
+import { ListCore } from "@/domains/list";
+import { Muscles } from "@/biz/muscle/data";
 
 import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "./services";
-import { Result } from "@/domains/result";
 
 export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
   const request = {
@@ -30,11 +32,16 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         client: props.client,
       }),
     },
-    muscle: {
-      list: new RequestCore(fetchMuscleList, { process: fetchMuscleListProcess, client: props.client }),
-    },
+    // muscle: {
+    //   list: new RequestCore(fetchMuscleList, { process: fetchMuscleListProcess, client: props.client }),
+    // },
     equipment: {
-      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+      list: new ListCore(
+        new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+        {
+          pageSize: 36,
+        }
+      ),
     },
   };
   const methods = {
@@ -48,25 +55,29 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         return Result.Err(r.error);
       }
       const { muscle_ids, equipment_ids, steps } = r.data;
+      console.log("[BIZ]workout_plan/workout_plan - fetch - before muscle_ids.length", muscle_ids);
       if (muscle_ids.length) {
-        const r2 = await request.muscle.list.run({ ids: muscle_ids });
-        if (r2.error) {
-          return Result.Err(r2.error);
-        }
-        _muscles = r2.data.list.map((v) => {
+        // const r2 = await request.muscle.list.run({ ids: muscle_ids });
+        // if (r2.error) {
+        //   return Result.Err(r2.error);
+        // }
+        _muscles = Muscles.filter((v) => {
+          return muscle_ids.includes(v.id);
+        }).map((v) => {
           return {
             id: v.id,
-            zh_name: v.zh_name,
+            zh_name: v.name,
           };
         });
+        console.log("[BIZ]workout_plan/workout_plan - fetch - after _muscles =", _muscles);
         methods.refresh();
       }
       if (equipment_ids.length) {
-        const r3 = await request.equipment.list.run({ ids: equipment_ids });
+        const r3 = await request.equipment.list.search({ ids: equipment_ids });
         if (r3.error) {
           return Result.Err(r3.error);
         }
-        _equipments = r3.data.list.map((v) => {
+        _equipments = r3.data.dataSource.map((v) => {
           return {
             id: v.id,
             zh_name: v.zh_name,

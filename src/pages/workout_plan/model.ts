@@ -26,7 +26,7 @@ import {
   updateWorkoutPlan,
   WorkoutPlanDetailsJSON250424,
 } from "@/biz/workout_plan/services";
-import { WorkoutActionSelectDialogViewModel } from "@/biz/workout_action_select";
+import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import {
   fetchWorkoutActionListByIds,
   fetchWorkoutActionListByIdsProcess,
@@ -41,6 +41,7 @@ import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_templa
 import { debounce } from "@/utils/lodash/debounce";
 
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
+import { ListCore } from "@/domains/list";
 
 export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "history" | "client" | "app">) {
   const request = {
@@ -59,7 +60,9 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       }),
     },
     equipment: {
-      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+      list: new ListCore(
+        new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client })
+      ),
     },
   };
   function calc_estimated_duration(
@@ -136,11 +139,12 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
             }, [])
         ),
       ];
-      const r3 = await request.equipment.list.run({ ids: equipment_ids });
+      // @ts-ignore
+      const r3 = await request.equipment.list.search({ ids: equipment_ids });
       if (r3.error) {
         return;
       }
-      _equipments = r3.data.list.map((v) => {
+      _equipments = r3.data.dataSource.map((v) => {
         return {
           id: v.id,
           zh_name: v.zh_name,
@@ -388,9 +392,10 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     $input_duration: new InputCore({ defaultValue: "0" }),
     $input_suggestions: new InputCore({ defaultValue: "", placeholder: "例如围训练期饮食注意事项" }),
     $input_tags: WorkoutPlanTagSelectViewModel(),
-    $workout_action_select: WorkoutActionSelectDialogViewModel({
+    $workout_action_select: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: $workout_action_list,
+      app: props.app,
       client: props.client,
       async onOk(actions) {
         for (let i = 0; i < actions.length; i += 1) {

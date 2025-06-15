@@ -17,13 +17,14 @@ import { RequestCore } from "@/domains/request";
 import { continueWorkoutDay, fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
 import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 import { RefCore } from "@/domains/ui/cur";
+import { fetchStudentWorkoutDayList, fetchStudentWorkoutDayListProcess } from "@/biz/student/services";
 
-function WorkoutDayListViewModel(props: ViewComponentProps) {
+function StudentWorkoutDayListViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutDayList, {
-          process: fetchWorkoutDayListProcess,
+        new RequestCore(fetchStudentWorkoutDayList, {
+          process: fetchStudentWorkoutDayListProcess,
           client: props.client,
         })
       ),
@@ -128,7 +129,11 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      request.workout_day.list.init();
+      const student_id = Number(props.view.query.student_id);
+      if (Number.isNaN(student_id)) {
+        return;
+      }
+      request.workout_day.list.init({ id: student_id });
     },
     destroy() {
       bus.destroy();
@@ -139,25 +144,25 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
   };
 }
 
-export function WorkoutDayListView(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(WorkoutDayListViewModel, [props]);
+export function StudentWorkoutDayListView(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(StudentWorkoutDayListViewModel, [props]);
   return (
     <>
       <PageView
         store={vm}
-        operations={
-          <Flex class="justify-between">
-            <div></div>
-            <IconButton
-              onClick={(event) => {
-                const { x, y } = event.currentTarget.getBoundingClientRect();
-                vm.ui.$menu.toggle({ x, y });
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-            </IconButton>
-          </Flex>
-        }
+        // operations={
+        //   <Flex class="justify-between">
+        //     <div></div>
+        //     <IconButton
+        //       onClick={(event) => {
+        //         const { x, y } = event.currentTarget.getBoundingClientRect();
+        //         vm.ui.$menu.toggle({ x, y });
+        //       }}
+        //     >
+        //       <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+        //     </IconButton>
+        //   </Flex>
+        // }
       >
         <ListView store={vm.request.workout_day.list} class="space-y-2">
           <For each={state().response.dataSource}>

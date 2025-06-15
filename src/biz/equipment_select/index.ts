@@ -1,102 +1,140 @@
-import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
+/**
+ * @file 通用多选选择
+ */
 import { base, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
-import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
-import { PopoverCore, SelectCore } from "@/domains/ui";
+import { ListCore } from "@/domains/list";
+import { ButtonCore, DialogCore, InputCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
+import { SelectViewModel } from "@/biz/select_base";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
 
-export function EquipmentSelectViewModel(props: {
-  defaultValue: { id: number | string }[];
+export function EquipmentSelectViewModel<T extends ListCore<any>>(props: {
+  defaultValue: T[];
+  multiple?: boolean;
   disabled?: boolean;
-  client: HttpClientCore;
+  list: T;
+  onOk?: (v: TheItemTypeFromListCore<T>[]) => void;
 }) {
-  let _disabled = props.disabled ?? false;
-  let _selected: { id: number | string }[] = [];
-  let _equipments: TheResponseOfRequestCore<typeof request.equipment.list>["list"] = [];
-  let _state = {
-    get value() {
-      return _selected.flatMap((item) => {
-        const matched = _equipments.find((e) => e.id === item.id);
-        if (!matched) {
-          return [];
-        }
-        return [matched];
-      });
-    },
-    get equipments() {
-      return _equipments;
-    },
-    get disabled() {
-      return _disabled;
-    },
-  };
+  type TheItemInterface = TheItemTypeFromListCore<typeof props.list>;
   const request = {
-    equipment: {
-      list: new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client }),
+    data: {
+      list: props.list,
     },
   };
   const methods = {
-    select(equipment: { id: number | string }) {
-      const existing = _selected.find((item) => item.id === equipment.id);
-      if (existing) {
-        _selected = _selected.filter((item) => item.id !== equipment.id);
-      } else {
-        _selected.push(equipment);
-      }
+    refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    remove(equipment: { id: number | string }) {
-      _selected = _selected.filter((item) => item.id !== equipment.id);
-      bus.emit(Events.StateChange, { ..._state });
+    cancel() {
+      ui.$dialog.hide();
+    },
+    mapListWithId(...args: Parameters<typeof ui.$select.methods.mapListWithIds>) {
+      return ui.$select.methods.mapListWithIds(...args);
+    },
+    findWithId(...args: Parameters<typeof ui.$select.methods.findWithId>) {
+      return ui.$select.methods.findWithId(...args);
+    },
+    search(value: string) {
+      request.data.list.search({
+        keyword: value,
+      });
     },
   };
   const ui = {
-    $dropdown: new SelectCore({
-      defaultValue: "",
-      options: [],
+    $select: SelectViewModel<TheItemInterface>({
+      defaultValue: props.defaultValue,
+      list: [],
+      multiple: props.multiple,
+      disabled: props.disabled,
     }),
-    $popover: new PopoverCore(),
+    $dialog: new DialogCore(),
+    $scroll: new ScrollViewCore({
+      async onReachBottom() {
+        await request.data.list.loadMore();
+        ui.$scroll.finishLoadingMore();
+      },
+    }),
+    $input_keyword: new InputCore({ defaultValue: "" }),
+    $btn_search_submit: new ButtonCore({
+      onClick() {
+        const v = ui.$input_keyword.value;
+        request.data.list.search({ keyword: v });
+      },
+    }),
+    $btn_confirm: new ButtonCore({
+      onClick() {
+        if (props.onOk) {
+          props.onOk(ui.$select.value);
+        }
+      },
+    }),
+  };
+
+  let _state = {
+    get value() {
+      return ui.$select.state.value;
+    },
+    get disabled() {
+      return ui.$select.state.disabled;
+    },
+    get selected() {
+      return ui.$select.state.selected;
+    },
+    get list() {
+      return ui.$select.state.list;
+    },
+    get response() {
+      return request.data.list.response;
+    },
   };
   enum Events {
+    Ok,
     Change,
+    RequestLoaded,
     StateChange,
   }
   type TheTypesOfEvents = {
-    [Events.Change]: typeof _selected;
+    [Events.Ok]: TheItemInterface[];
+    [Events.RequestLoaded]: TheItemInterface[];
+    [Events.Change]: TheItemInterface;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
-  request.equipment.list.onStateChange((state) => {
-    console.log("[BIZ]equipment_select - request.equipment.list.onStateChange", state.response);
-    if (!state.response) {
-      return;
-    }
-    _equipments = state.response.list;
+
+  request.data.list.onStateChange((state) => {
+    ui.$select.methods.setOptions(state.dataSource);
     bus.emit(Events.StateChange, { ..._state });
+  });
+  ui.$select.onStateChange(() => methods.refresh());
+  bus.on(Events.Change, (actions) => {
+    if (props.onOk) {
+      props.onOk(actions);
+    }
   });
 
   return {
     shape: "custom" as const,
-    type: "equipment_select",
+    type: "multiple-select",
     state: _state,
     methods,
+    request,
     ui,
     get value() {
-      return _selected.flatMap((item) => {
-        const matched = _equipments.find((e) => e.id === item.id);
-        if (!matched) {
-          return [];
-        }
-        return [matched];
-      });
+      return ui.$select.value;
     },
     get defaultValue() {
       return props.defaultValue;
     },
-    setValue(value: { id: number | string }[]) {
-      _selected = value;
+    ready() {},
+    setValue: ui.$select.setValue,
+    select: ui.$select.select,
+    remove: ui.$select.methods.remove,
+    clear: ui.$select.clear,
+    init() {
+      request.data.list.init();
     },
-    ready() {
-      request.equipment.list.run({});
+    onListLoaded(handler: Handler<TheTypesOfEvents[Events.RequestLoaded]>) {
+      return bus.on(Events.RequestLoaded, handler);
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);

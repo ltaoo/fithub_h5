@@ -124,6 +124,7 @@ export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
       return {
         ...v,
         finished_at_text: dayjs(v.finished_at).format("YYYY-MM-DD"),
+        started_at_text: dayjs(v.started_at).format("YYYY-MM-DD"),
         workout_plan: {
           ...v.workout_plan,
           tags: v.workout_plan.tags.split(",").filter(Boolean),

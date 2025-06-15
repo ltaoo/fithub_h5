@@ -18,6 +18,7 @@ enum MediaResolutionTypes {
 }
 
 enum Events {
+  Connected,
   Mounted,
   /** 改变播放地址（切换剧集、分辨率或视频文件） */
   UrlChange,
@@ -63,6 +64,7 @@ enum Events {
   StateChange,
 }
 type TheTypesOfEvents = {
+  [Events.Connected]: void;
   [Events.Mounted]: boolean;
   [Events.UrlChange]: { url: string; thumbnail?: string };
   [Events.CurrentTimeChange]: { currentTime: number };
@@ -145,10 +147,13 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
   get currentTime() {
     return this._currentTime;
   }
+  url = "";
   playing = false;
+  paused = false;
   poster?: string;
   subtitle: PlayerState["subtitle"] = null;
   _mounted = false;
+  _connected = false;
   /** 默认是不能播放的，只有用户交互后可以播放 */
   _target_current_time = 0;
   _subtitleVisible = false;
@@ -193,10 +198,10 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     };
   }
 
-  constructor(options: { app: Application<any>; volume?: number; rate?: number }) {
-    super();
+  constructor(props: { unique_id?: string; app: Application<any>; volume?: number; rate?: number }) {
+    super(props);
 
-    const { app, volume, rate } = options;
+    const { app, volume, rate } = props;
     if (volume) {
       this._curVolume = volume;
     }
@@ -208,7 +213,7 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
 
   bindAbstractNode(node: PlayerCore["_abstractNode"]) {
     this._abstractNode = node;
-    // console.log("[DOMAIN]player/index - bindAbstractNode", node, this.pendingRate);
+    console.log("[DOMAIN]player/index - bindAbstractNode", this.unique_id, node, this.pendingRate);
     if (this._abstractNode) {
       if (this.pendingRate) {
         this.changeRate(this.pendingRate);
@@ -232,6 +237,7 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     this.hasPlayed = true;
     this._abstractNode.setRate(this._curRate);
     this.playing = true;
+    this.paused = false;
     this.emit(Events.StateChange, { ...this.state });
   }
   /** 暂停播放 */
@@ -241,6 +247,7 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     }
     this._abstractNode.pause();
     this.playing = false;
+    this.paused = true;
     this.emit(Events.StateChange, { ...this.state });
   }
   /** 改变音量 */
@@ -326,7 +333,7 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     }
     this._size = {
       width: app.screen.width,
-      height: h,
+      height: h > app.screen.height ? app.screen.height : h,
     };
     this.emit(Events.SizeChange, { ...this._size });
     this.emit(Events.StateChange, { ...this.state });
@@ -402,12 +409,18 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     }
     return this._abstractNode.canPlayType(type);
   }
+  _pending_url = "";
   load(url: string) {
-    console.log("[DOMAIN]player - load", url, this._abstractNode);
+    console.log("[DOMAIN]player - load", this.unique_id, url, this._abstractNode);
     this._canPlay = false;
     if (!this._abstractNode) {
+      this._pending_url = url;
       return;
     }
+    if (url && url === this.url) {
+      return;
+    }
+    this.url = url;
     this._abstractNode.load(url);
   }
   startAdjustCurrentTime() {
@@ -495,9 +508,25 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.StateChange, { ...this.state });
   }
   setMounted() {
+    console.log("[DOMAIN]player/index - setMounted - before", this._mounted, this._pending_url);
     this._mounted = true;
+    if (this._pending_url && this._abstractNode) {
+      const u = this._pending_url;
+      this._pending_url = "";
+      this.load(u);
+    }
     this.emit(Events.Mounted);
     this.emit(Events.Ready);
+  }
+  setConnected() {
+    console.log("[DOMAIN]player/index - setConnected - before", this._mounted, this._pending_url);
+    this._mounted = true;
+    if (this._pending_url && this._abstractNode) {
+      const u = this._pending_url;
+      this._pending_url = "";
+      this.load(u);
+    }
+    this.emit(Events.Connected);
   }
   setInvalid(msg: string) {
     this.errorMsg = msg;
@@ -644,5 +673,8 @@ export class PlayerCore extends BaseDomain<TheTypesOfEvents> {
   }
   onMounted(handler: Handler<TheTypesOfEvents[Events.Mounted]>) {
     return this.on(Events.Mounted, handler);
+  }
+  onConnected(handler: Handler<TheTypesOfEvents[Events.Connected]>) {
+    return this.on(Events.Connected, handler);
   }
 }

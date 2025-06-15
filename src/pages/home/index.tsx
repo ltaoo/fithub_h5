@@ -8,12 +8,12 @@ import dayjs from "dayjs";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { WorkoutPlanCard } from "@/components/workout-plan-card";
-import { ScrollView, Skeleton } from "@/components/ui";
+import { Button, ScrollView, Skeleton } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
 
 import { RequestCore } from "@/domains/request";
 import { base, Handler } from "@/domains/base";
-import { DialogCore, ScrollViewCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { ListCore } from "@/domains/list";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
@@ -50,7 +50,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         new RequestCore(fetchWorkoutDayList, {
           process: fetchWorkoutDayListProcess,
           client: props.client,
-        })
+        }),
+        {
+          search: {
+            status: WorkoutDayStatus.Finished,
+          },
+        }
       ),
       has_started: new RequestCore(checkHasStartedWorkoutDay, {
         client: props.client,
@@ -101,7 +106,11 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       _cur_day = day;
       const v = dayjs(day.value);
       const the_date_text = v.format("YYYY-MM-DD");
-      const completed_plans = request.workout_day.list.response.dataSource;
+      const today_text = dayjs().format("YYYY-MM-DD");
+      const completed_plans = request.workout_day.list.response.dataSource.filter((v) => {
+        return v.status === WorkoutDayStatus.Finished;
+      });
+      console.log("[PAGE]home/index - handleClickDay - before completed_plan_ids = ", completed_plans);
       const completed_plan_ids = completed_plans.map((v) => v.workout_plan.id);
       const schedule_of_the_day = _schedules[the_date_text];
       /** 指定天内完成的 不属于计划中的训练 */
@@ -119,8 +128,19 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             });
           }
         }
+      } else {
+        for (let i = 0; i < completed_plans.length; i += 1) {
+          const vv = completed_plans[i];
+          if (vv.day === the_date_text) {
+            extra_workout_days.push({
+              id: vv.id,
+              workout_plan_id: vv.workout_plan.id,
+              title: vv.workout_plan.title,
+              finished_at_text: vv.finished_at_text,
+            });
+          }
+        }
       }
-      const today_text = dayjs().format("YYYY-MM-DD");
       _cur_day_profile = {
         month_text: `${v.month() + 1}月`,
         day_text: `${v.date()}日`,
@@ -143,7 +163,6 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             return {
               type: WorkoutScheduleDayType.Empty,
               workout_plans: [],
-              extra_completed_workout_days: [],
             };
           }
           return {
@@ -154,9 +173,9 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
                 completed: completed_plan_ids.includes(v.id),
               };
             }),
-            extra_completed_workout_days: extra_workout_days,
           };
         })(),
+        extra_completed_workout_days: extra_workout_days,
       };
       const matched = request.workout_day.list.response.dataSource.find((v) => {
         return dayjs(day.value).isSame(v.day, "date");
@@ -166,6 +185,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           status: matched.status,
         };
       }
+      console.log(_cur_day_profile);
       methods.refresh();
       if (ui.$dialog_calendar.state.open) {
         return;
@@ -303,6 +323,14 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       },
     }),
     $dialog_workout_tip: new DialogCore({}),
+    $btn_goto_workout_schedule: new ButtonCore({
+      onClick() {
+        ui.$dialog_calendar.hide();
+        props.history.push("root.workout_plan_list", {
+          schedule: "1",
+        });
+      },
+    }),
   };
 
   type TheDay = { id: number; value: Date };
@@ -319,8 +347,8 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     schedule: {
       type: WorkoutScheduleDayType;
       workout_plans: { id: number; completed: boolean; title: string; overview: string; tags: string }[];
-      extra_completed_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[];
     };
+    extra_completed_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[];
   } | null = null;
   let _schedules: Record<
     string,
@@ -644,16 +672,26 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               </div>
             </div>
             <div class="text-w-fg-0">{state().day?.weekday_text}</div>
+            <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Empty}>
+              <div class="pt-4">
+                <div class="text-w-fg-1 text-center">暂无周期计划</div>
+                <div class="mt-2">
+                  <Button class="w-full" store={vm.ui.$btn_goto_workout_schedule}>
+                    前往添加
+                  </Button>
+                </div>
+              </div>
+            </Show>
             <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Resting}>
-              <div class="py-4">
+              <div class="pt-4">
                 <div class="flex flex-col items-center gap-2">
                   <Coffee class="w-6 h-6 text-w-fg-0" />
                   <div class="text-w-fg-1">休息日</div>
                 </div>
               </div>
             </Show>
-            <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Workout}>
-              <div class="py-4 space-y-2">
+            <div class="pt-4 space-y-2">
+              <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Workout}>
                 <For each={state().day?.schedule.workout_plans}>
                   {(v) => {
                     return (
@@ -698,34 +736,34 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                     );
                   }}
                 </For>
-                <For each={state().day?.schedule.extra_completed_workout_days}>
-                  {(v) => {
-                    return (
-                      <div
-                        class="p-2 border-2 border-w-fg-3 rounded-lg"
-                        onClick={() => {
-                          vm.ui.$dialog_calendar.hide();
-                          props.history.push("root.workout_day_profile", {
-                            id: String(v.id),
-                          });
-                        }}
-                      >
-                        <div class="text-w-fg-0">{v.title}</div>
-                        {/* <div class="text-w-fg-1 text-sm">{v.overview}</div> */}
-                        <div class="flex items-center justify-between">
-                          <div class="text-sm text-w-fg-1">完成于{v.finished_at_text}</div>
+              </Show>
+              <For each={state().day?.extra_completed_workout_days}>
+                {(v) => {
+                  return (
+                    <div
+                      class="p-2 border-2 border-w-fg-3 rounded-lg"
+                      onClick={() => {
+                        vm.ui.$dialog_calendar.hide();
+                        props.history.push("root.workout_day_profile", {
+                          id: String(v.id),
+                        });
+                      }}
+                    >
+                      <div class="text-w-fg-0">{v.title}</div>
+                      {/* <div class="text-w-fg-1 text-sm">{v.overview}</div> */}
+                      <div class="flex items-center justify-between">
+                        <div class="text-sm text-w-fg-1">完成于{v.finished_at_text}</div>
+                        <div>
                           <div>
-                            <div>
-                              <Check class="w-6 h-6 text-green-500" />
-                            </div>
+                            <Check class="w-6 h-6 text-green-500" />
                           </div>
                         </div>
                       </div>
-                    );
-                  }}
-                </For>
-              </div>
-            </Show>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
           </Show>
         </div>
       </CalendarSheet>

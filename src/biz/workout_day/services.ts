@@ -35,7 +35,7 @@ export function createWorkoutDay(body: {
 }) {
   return request.post<{ ids: number[] }>("/api/workout_day/create", {
     workout_plan_id: body.workout_plan_id,
-    student_ids: body.student_ids.filter(Boolean),
+    student_ids: body.student_ids,
     start_when_create: body.start_when_create,
   });
 }
@@ -82,33 +82,37 @@ export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
       id: number;
       status: WorkoutDayStatus;
       idx: number;
-      is_self: boolean;
       started_at_text: string;
-      students: { id: number; nickname: string; avatar_url: string; workout_day_id: number }[];
+      students: {
+        id: number;
+        nickname: string;
+        avatar_url: string;
+        is_self: boolean;
+        /** 这个字段似乎没啥用 */
+        workout_day_id: number;
+      }[];
       workout_plan: { id: number; title: string };
     }
   > = {};
   for (let i = 0; i < r.data.list.length; i += 1) {
     const v = r.data.list[i];
     const started_at = dayjs(v.started_at);
-    const uid = started_at.unix();
-    groups[uid] = groups[uid] || {
+    const group_no = started_at.unix().valueOf();
+    groups[group_no] = groups[group_no] || {
       id: v.id,
       idx: started_at.unix(),
-      is_self: v.student.id === v.coach_id,
       status: v.status,
       started_at_text: started_at.format("HH:mm"),
       students: [],
       workout_plan: v.workout_plan,
     };
-    if (v.student.id !== v.coach_id) {
-      groups[uid].students.push({
-        id: v.student.id,
-        nickname: v.student.nickname,
-        avatar_url: v.student.avatar_url,
-        workout_day_id: v.id,
-      });
-    }
+    groups[group_no].students.push({
+      id: v.student.id,
+      nickname: v.student.nickname,
+      avatar_url: v.student.avatar_url,
+      is_self: v.student.id === v.coach_id,
+      workout_day_id: v.id,
+    });
   }
   return Result.Ok({
     list: Object.values(groups).sort((a, b) => b.idx - a.idx),
@@ -490,7 +494,7 @@ export function fetchWorkoutDayCurStep(body: { id: number }) {
  * @param body
  * @returns
  */
-export function fetchWorkoutDayList(body: FetchParams) {
+export function fetchWorkoutDayList(body: Partial<FetchParams> & { status: WorkoutDayStatus }) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -505,6 +509,7 @@ export function fetchWorkoutDayList(body: FetchParams) {
   >("/api/workout_day/list", {
     page_size: body.pageSize,
     page: body.page,
+    status: body.status,
   });
 }
 

@@ -2,7 +2,7 @@
  * @file 学员详情
  */
 import { For, Show } from "solid-js";
-import { Check, CircleX, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
+import { Check, ChevronRight, CircleX, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -74,6 +74,11 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         id: String(workout_plan.id),
         student_id: String(v.id),
         student_nickname: v.nickname,
+      });
+    },
+    gotoWorkoutDayListView() {
+      props.history.push("root.student_workout_day_list", {
+        student_id: props.view.query.id,
       });
     },
     handleClickDate(date: { yyyy: string; value: Date }) {
@@ -426,8 +431,16 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               </div>
             </div> */}
             <div class="relative border-2 border-w-fg-3 rounded-lg">
-              <div class="header p-4 border-b-2 border-w-fg-3">
-                <div class="text-w-fg-0">训练日历</div>
+              <div class="flex items-center justify-between p-4 border-b-2 border-w-fg-3">
+                <div class="font-semibold text-w-fg-0">训练日历</div>
+                <div
+                  class="p-1 rounded-full bg-w-bg-5"
+                  onClick={() => {
+                    vm.methods.gotoWorkoutDayListView();
+                  }}
+                >
+                  <ChevronRight class="w-5 h-5 text-w-fg-1" />
+                </div>
               </div>
               <div class="body p-4">
                 <div class="grid grid-cols-7 gap-2">
@@ -456,7 +469,7 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
                               >
                                 <div class="text-center text-sm text-w-fg-0">{date.text}</div>
                                 <Show when={date.has_workout_day}>
-                                  <div class="absolute left-1/2 -translate-x-1/2 flex justify-center">
+                                  <div class="absolute right-1 top-1 flex justify-center">
                                     <div class="w-[6px] h-[6px] rounded-full bg-green-500" />
                                   </div>
                                 </Show>
