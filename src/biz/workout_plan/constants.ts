@@ -64,9 +64,18 @@ export enum WorkoutScheduleType {
   Weekly = 1,
   Monthly = 2,
   None = 3,
+  /** 按天数循环 */
+  Days = 4,
 }
+export const WorkoutScheduleTypeTextMap: Record<WorkoutScheduleType, string> = {
+  [WorkoutScheduleType.Weekly]: "周循环",
+  [WorkoutScheduleType.Monthly]: "月循环",
+  [WorkoutScheduleType.Days]: "天循环",
+  [WorkoutScheduleType.None]: "不循环",
+};
 export enum WorkoutScheduleDayType {
-  Empty = 0,
+  NoSchedule = 0,
   Workout = 1,
   Resting = 2,
+  Empty = 4,
 }

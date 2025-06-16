@@ -3,7 +3,7 @@
  */
 import { For, Show } from "solid-js";
 import dayjs from "dayjs";
-import { ChevronDown } from "lucide-solid";
+import { ChevronDown, Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -13,15 +13,16 @@ import { Sheet } from "@/components/ui/sheet";
 import { Select } from "@/components/ui/select";
 import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
 import { PageView } from "@/components/page-view";
+import { Switcher } from "@/components/ui/switch";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
+import { WorkoutScheduleType } from "@/biz/workout_plan/constants";
 
 import { WorkoutScheduleValuesModel } from "./model";
-import { Switcher } from "@/components/ui/switch";
 
 function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
   const $model = WorkoutScheduleValuesModel(props);
@@ -34,10 +35,12 @@ function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     handleClickWeekday: $model.methods.handleClickWeekday,
+    handleClickDay: $model.methods.handleClickDay,
+    addDay: $model.methods.addDay,
     ensureSelectedWorkoutPlan: $model.methods.ensureSelectedWorkoutPlan,
     hideWorkoutPlanSelectDialog: $model.methods.hideWorkoutPlanSelectDialog,
     toBody: $model.methods.toBody,
-    submit: $model.methods.submit,
+    submit: $model.methods.createWorkoutSchedule,
   };
   const ui = {
     $view: $model.ui.$view,
@@ -63,13 +66,13 @@ function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
 
   let _state = {
     get weekdays() {
-      return ui.$calendar.state.weekdays.map((weekday) => {
-        return {
-          ...weekday,
-          weekday_text: map_weekday_text(dayjs(weekday.value).day()),
-          plan_id: $model.state.selected_plan_map[weekday.id] ?? null,
-        };
-      });
+      return $model.state.weekdays;
+    },
+    get days() {
+      return $model.state.days;
+    },
+    get schedule_type() {
+      return $model.state.schedule_type;
     },
   };
   enum Events {
@@ -132,12 +135,17 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
             <Select store={vm.ui.$values.fields.level.input}></Select>
           </div>
           <div class="flied">
-            <div class="label text-sm text-w-fg-0">循环周期</div>
+            <div class="label text-sm text-w-fg-0">循环类型</div>
             <Select store={vm.ui.$values.fields.type.input}></Select>
           </div>
           <div class="field">
             <div class="label text-sm text-w-fg-0">计划安排</div>
-            <div class="grid grid-cols-7 gap-2 mt-2">
+            <div
+              class="grid grid-cols-7 gap-2 mt-2"
+              classList={{
+                hidden: state().schedule_type !== WorkoutScheduleType.Weekly,
+              }}
+            >
               <For each={state().weekdays}>
                 {(day) => {
                   return (
@@ -153,14 +161,56 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
                         <div class="text-w-fg-0 text-sm">{day.weekday_text}</div>
                       </div>
                       <Show when={day.plan_id}>
-                        <div class="absolute left-1/2 -bottom-2 flex justify-center w-full -translate-x-1/2">
-                          <div class="w-[6px] h-[6px] rounded-full bg-green-300"></div>
+                        <div class="absolute left-1/2 bottom-2 flex justify-center w-full -translate-x-1/2">
+                          <div class="w-[6px] h-[6px] rounded-full bg-green-500"></div>
                         </div>
                       </Show>
                     </div>
                   );
                 }}
               </For>
+            </div>
+            <div
+              class="grid grid-cols-7 gap-2 mt-2"
+              classList={{
+                hidden: state().schedule_type !== WorkoutScheduleType.Days,
+              }}
+            >
+              <For each={state().days}>
+                {(day) => {
+                  return (
+                    <div class="relative">
+                      <div
+                        classList={{
+                          "flex items-center justify-center py-4 border-2 border-w-fg-3 rounded-full": true,
+                        }}
+                        onClick={() => {
+                          vm.methods.handleClickDay(day);
+                        }}
+                      >
+                        <div class="text-w-fg-0 text-sm">{day.text}</div>
+                      </div>
+                      <Show when={day.plan_id}>
+                        <div class="absolute left-1/2 bottom-2 flex justify-center w-full -translate-x-1/2">
+                          <div class="w-[6px] h-[6px] rounded-full bg-green-500"></div>
+                        </div>
+                      </Show>
+                    </div>
+                  );
+                }}
+              </For>
+              <div
+                classList={{
+                  "flex items-center justify-center py-4 border-2 border-w-fg-3 rounded-full": true,
+                }}
+                onClick={() => {
+                  vm.methods.addDay();
+                }}
+              >
+                <div class="text-w-fg-0 text-sm">
+                  <Plus class="w-4 h-4" />
+                </div>
+              </div>
             </div>
           </div>
           <div class="field">

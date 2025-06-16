@@ -33,7 +33,7 @@ function WorkoutScheduleUpdateViewModel(props: ViewComponentProps) {
     ensureSelectedWorkoutPlan: $model.methods.ensureSelectedWorkoutPlan,
     hideWorkoutPlanSelectDialog: $model.methods.hideWorkoutPlanSelectDialog,
     toBody: $model.methods.toBody,
-    submit: $model.methods.submit,
+    submit: $model.methods.createWorkoutSchedule,
   };
   const ui = {
     $view: new ScrollViewCore({}),

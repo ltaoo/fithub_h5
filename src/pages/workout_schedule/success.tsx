@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { CheckCircle2, Divide } from "lucide-solid";
+import { CheckCircle2, Coffee, Divide } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -21,6 +21,11 @@ function WorkoutScheduleCreateSuccessViewModel(props: ViewComponentProps) {
     back() {
       props.history.back();
     },
+    handleClickWorkoutPlan(plan: { id: number }) {
+      props.history.push("root.workout_plan_profile", {
+        id: String(plan.id),
+      });
+    },
   };
   const ui = {
     $view: new ScrollViewCore(),
@@ -33,6 +38,9 @@ function WorkoutScheduleCreateSuccessViewModel(props: ViewComponentProps) {
     },
     get profile() {
       return ui.$profile.state.profile;
+    },
+    get schedules() {
+      return ui.$profile.state.schedules;
     },
     get error() {
       return ui.$profile.state.error;
@@ -94,25 +102,40 @@ export function WorkoutScheduleCreateSuccessView(props: ViewComponentProps) {
             </div>
             {/* <div class="text-w-fg-0">周期安排</div> */}
             <div class="mt-4 space-y-2">
-              <For each={state().profile?.schedules}>
+              <For each={state().schedules}>
                 {(schedule) => {
                   return (
                     <div class="relative p-4 border-2 border-w-fg-3 rounded-lg">
-                      <div></div>
                       <Show
                         when={schedule.type === WorkoutScheduleDayType.Workout}
                         fallback={
-                          <div class="flex items-center gap-2">
-                            <div class="rounded-full px-2 bg-w-bg-5 text-sm text-white">{schedule.day_text}</div>
-                            <div class="text-w-fg-1 text-sm">休息</div>
+                          <div class="flex flex-col items-center gap-2">
+                            <Coffee class="w-6 h-6 text-w-fg-1" />
+                            <div class="text-w-fg-1 text-sm">{schedule.day_text}休息</div>
                           </div>
                         }
                       >
                         <div class="flex items-center gap-2">
                           <div class="rounded-full px-2 bg-blue-500 text-sm text-white">{schedule.day_text}</div>
-                          <div class="text-w-fg-0">{schedule.title}</div>
+                          <div class="space-y-2">
+                            <For each={schedule.workout_plans}>
+                              {(plan) => {
+                                return (
+                                  <div
+                                    onClick={() => {
+                                      if (schedule.type === WorkoutScheduleDayType.Workout) {
+                                        vm.methods.handleClickWorkoutPlan(plan);
+                                      }
+                                    }}
+                                  >
+                                    <div class="text-w-fg-0">{plan.title}</div>
+                                    <div class="text-w-fg-1 text-sm">预计{plan.estimated_duration_text}</div>
+                                  </div>
+                                );
+                              }}
+                            </For>
+                          </div>
                         </div>
-                        <div class="mt-2 text-w-fg-1 text-sm">预计{schedule.estimated_duration_text}</div>
                       </Show>
                     </div>
                   );

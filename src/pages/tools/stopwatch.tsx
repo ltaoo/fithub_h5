@@ -1,14 +1,15 @@
+import { For, Show } from "solid-js";
+
 import { ViewComponentProps } from "@/store/types";
+import { useViewModel } from "@/hooks";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { ScrollView } from "@/components/ui";
+import { PageView } from "@/components/page-view";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { useViewModel } from "@/hooks";
 import { ScrollViewCore } from "@/domains/ui";
 import { StopwatchViewModel } from "@/biz/stopwatch";
-import { For, Show } from "solid-js";
-import { PageView } from "@/components/page-view";
 
 function StopwatchToolViewModel(props: ViewComponentProps) {
   const methods = {

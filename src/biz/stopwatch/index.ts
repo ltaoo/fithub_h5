@@ -106,7 +106,7 @@ export function StopwatchViewModel(props: {
     setStartedAt(v: number) {
       _time = new Date().valueOf() - v;
       refresh_time_text(_time);
-      console.log("[BIZ]stopwatch - setStartedAt", v, _time, _time_text);
+      // console.log("[BIZ]stopwatch - setStartedAt", v, _time, _time_text);
       methods.refresh();
       // tick(new Date().valueOf(), { force: true });
     },

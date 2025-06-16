@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { JSX, Show } from "solid-js";
 
 import { useViewModelStore } from "@/hooks";
 import { base, Handler } from "@/domains/base";
@@ -41,12 +41,13 @@ export function SetActionViewModel(props: { id: number | string; zh_name: string
 }
 export type SetActionViewModel = ReturnType<typeof SetActionViewModel>;
 
-export function SetActionView(props: {
-  store: SetActionViewModel;
-  highlight?: boolean;
-  idx?: number;
-  onClick?: () => void;
-}) {
+export function SetActionView(
+  props: {
+    store: SetActionViewModel;
+    highlight?: boolean;
+    idx?: number;
+  } & JSX.HTMLAttributes<HTMLDivElement>
+) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
@@ -63,14 +64,7 @@ export function SetActionView(props: {
           <div class="text-sm">{props.idx}</div>
         </div>
       </Show>
-      <div
-        class="relative left-[4px] text-w-fg-0"
-        onClick={(event) => {
-          if (props.onClick) {
-            props.onClick();
-          }
-        }}
-      >
+      <div class="relative left-[4px] text-w-fg-0" onClick={props.onClick}>
         {state().zh_name}
       </div>
     </div>

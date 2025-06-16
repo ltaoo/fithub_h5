@@ -204,7 +204,7 @@ export class InputCore<T> extends BaseDomain<TheTypesOfEvents<T>> implements Val
     this.emit(Events.StateChange, { ...this.state });
   }
   clear() {
-    console.log("[COMPONENT]ui/input/index - clear", this.defaultValue);
+    // console.log("[COMPONENT]ui/input/index - clear", this.defaultValue);
     this.value = this.defaultValue;
     // this.emit(Events.Change, this.value);
     this.emit(Events.Clear);
@@ -273,7 +273,7 @@ export class InputInListCore<K extends string, T> extends BaseDomain<TheTypesInL
     } = {}
   ) {
     const { defaultValue = this.defaultValue } = options;
-    console.log("[DOMAIN]input/index - bind", unique_id, this.cached);
+    // console.log("[DOMAIN]input/index - bind", unique_id, this.cached);
     const existing = this.cached[unique_id];
     if (existing) {
       return existing;

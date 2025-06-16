@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 import { BaseDomain, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request/index";
@@ -21,10 +21,10 @@ export enum Events {
 type TheTypesOfEvents = {
   [Events.Tip]: string[];
   [Events.Error]: Error;
-  [Events.Login]: UserState & { token: string; expires_at: string };
+  [Events.Login]: UserState & { token: string; expires_at: number };
   [Events.Logout]: void;
   [Events.Expired]: void;
-  [Events.TokenRefresh]: UserState & { token: string; expires_at: string };
+  [Events.TokenRefresh]: UserState & { token: string; expires_at: number };
   [Events.StateChange]: UserState;
 };
 
@@ -33,6 +33,7 @@ type UserProps = {
   username: string;
   avatar: string;
   token: string;
+  expires_at: number;
 };
 type UserState = UserProps & {
   // id: string;
@@ -49,7 +50,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   nickname = "Anonymous";
   avatar_url = "";
   token = "";
-  expires_at = "";
+  expires_at: null | Dayjs = null;
   isLogin = false;
   needRegister = false;
 
@@ -59,6 +60,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       username: this.nickname,
       avatar: this.avatar_url,
       token: this.token,
+      expires_at: this.expires_at ? this.expires_at.unix() : 0,
     };
   }
   values: Partial<{ email: string; password: string }> = {};
@@ -69,13 +71,16 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   constructor(props: Partial<{ _name: string }> & UserProps, client: HttpClientCore) {
     super(props);
 
-    const { id, username, avatar, token } = props;
+    const { id, username, avatar, token, expires_at } = props;
     // console.log("[DOMAIN]user/index - initialize", props);
     this.id = id;
     this.nickname = username;
     this.avatar_url = avatar;
     this.isLogin = !!token;
     this.token = token;
+    if (expires_at) {
+      this.expires_at = dayjs(expires_at * 1000);
+    }
     this.$client = client;
   }
   inputEmail(value: string) {
@@ -123,8 +128,8 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     this.nickname = nickname;
     this.avatar_url = avatar_url;
     this.token = token;
-    this.expires_at = expires_at;
-    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: this.expires_at });
+    this.expires_at = dayjs(expires_at * 1000);
+    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: expires_at });
     return Result.Ok(r.data);
   }
   /** 退出登录 */
@@ -155,9 +160,9 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     this.nickname = nickname;
     this.avatar_url = avatar_url;
     this.token = token;
-    this.expires_at = expires_at;
+    this.expires_at = dayjs(expires_at * 1000);
     this.needRegister = false;
-    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: this.expires_at });
+    this.emit(Events.Login, { ...this.state, token: this.token, expires_at: expires_at });
     return Result.Ok(r.data);
   }
   async fetchProfile() {
@@ -172,16 +177,22 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   }
   _refreshing = false;
   async refreshToken() {
+    // console.log("[BIZ]user/index - refreshToken - before ", this._refreshing, this.expires_at);
     if (this._refreshing) {
       return;
     }
-    console.log("[BIZ]user/index - refreshToken - before ", this.expires_at);
     if (!this.expires_at) {
       return;
     }
-    console.log("[BIZ]user/index - refreshToken - before ", dayjs(this.expires_at).format("YYYY-MM-DD HH:mm:ss"));
     const expires_at = dayjs(this.expires_at).subtract(8, "hour");
-    if (dayjs().isAfter(expires_at)) {
+    const need_refresh = dayjs().isAfter(expires_at);
+    // console.log(
+    //   "[BIZ]user/index - refreshToken - before ",
+    //   this.expires_at.format("YYYY-MM-DD HH:mm:ss"),
+    //   expires_at.format("YYYY-MM-DD HH:mm:ss"),
+    //   need_refresh
+    // );
+    if (need_refresh) {
       this._refreshing = true;
       const r = await new RequestCore(refresh_token, { client: this.$client, onFailed() {} }).run();
       this._refreshing = false;
@@ -190,8 +201,8 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       }
       const { token, expires_at } = r.data;
       this.token = token;
-      this.expires_at = expires_at;
-      this.emit(Events.TokenRefresh, { ...this.state, token: this.token, expires_at: this.expires_at });
+      this.expires_at = dayjs(expires_at * 1000);
+      this.emit(Events.TokenRefresh, { ...this.state, token: this.token, expires_at: expires_at });
     }
   }
   setToken(v: string) {

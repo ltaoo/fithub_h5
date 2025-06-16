@@ -17,7 +17,7 @@ export function login(body: { email: string; password: string }) {
     avatar_url: string;
     verified: string;
     token: string;
-    expires_at: string;
+    expires_at: number;
   }>("/api/auth/web_login", {
     email: body.email,
     password: body.password,
@@ -36,7 +36,7 @@ export function register(body: { email: string; password: string }) {
     avatar_url: string;
     verified: string;
     token: string;
-    expires_at: string;
+    expires_at: number;
   }>("/api/auth/web_register", {
     email: body.email,
     password: body.password,
@@ -48,7 +48,7 @@ export function logout(body: { email: string; password: string }) {
 }
 
 export function refresh_token() {
-  return request.post<{ token: string; expires_at: string }>("/api/auth/refresh_token", {});
+  return request.post<{ token: string; expires_at: number }>("/api/auth/refresh_token", {});
 }
 
 export function get_token() {

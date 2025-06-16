@@ -9,7 +9,7 @@ const DEFAULT_CACHE_VALUES = {
     username: "anonymous",
     avatar: "",
     token: "",
-    expires_at: "",
+    expires_at: 0,
   },
   theme: "",
   dialog_flags: {} as Record<string, { show_at: number }>,

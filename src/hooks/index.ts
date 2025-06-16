@@ -36,11 +36,12 @@ export function useViewModelStore<
     setState(v);
   });
   onMount(() => {});
-  onCleanup(() => {
-    if (vm.destroy) {
-      vm.destroy();
-    }
-  });
+  // 注释掉是因为一个 store 可能被 A B 两个组件共同使用，A 组件卸载后如果取消所有监听，B 组件就无法同步状态了
+  // onCleanup(() => {
+  //   if (vm.destroy) {
+  //     vm.destroy();
+  //   }
+  // });
   if (vm.ready && !opt.silence) {
     vm.ready();
   }

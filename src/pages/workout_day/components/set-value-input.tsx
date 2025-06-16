@@ -7,7 +7,7 @@ import { SingleFieldCore } from "@/domains/ui/formv2";
 import { SetValueInputViewModel } from "@/biz/set_value_input";
 
 export function SetValueInput(
-  props: { store: SingleFieldCore<SetValueInputViewModel> } & JSX.HTMLAttributes<HTMLDivElement>
+  props: { width?: number; store: SingleFieldCore<SetValueInputViewModel> } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   const [field, $field] = useViewModelStore(props.store);
   const [input, $input] = useViewModelStore(props.store.input);
@@ -20,6 +20,10 @@ export function SetValueInput(
         "border-w-fg-3": field().status === "normal",
         "border-yellow-500": field().status === "focus",
         "border-red-500 dark:border-red-800": field().status === "error",
+        [props.class ?? ""]: true,
+      }}
+      style={{
+        width: `${props.width ?? 88}px`,
       }}
       onClick={(event) => {
         if (props.onClick) {

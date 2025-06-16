@@ -30,7 +30,7 @@ export function WorkoutActionSelectView(props: {
             <Select store={vm.ui.$input_type_select} />
           </div>
           <Input store={vm.ui.$input_keyword} />
-          <Button store={vm.ui.$btn_search_submit} size="sm">
+          <Button store={vm.ui.$btn_search_submit} size="sm" class="w-[88px]">
             搜索
           </Button>
         </div>

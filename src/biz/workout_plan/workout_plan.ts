@@ -148,8 +148,9 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
   };
 }
 
-export function buildSetAct(act: { id: number | string; zh_name: string }, extra: Partial<{ hiit: boolean }> = {}) {
+export function buildSetAct(act: { id: number | string; zh_name: string }, extra: { uid: number; hiit: boolean }) {
   return {
+    uid: extra.uid,
     id: Number(act.id),
     zh_name: act.zh_name,
     reps: extra?.hiit ? 30 : 12,

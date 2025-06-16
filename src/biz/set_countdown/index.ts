@@ -94,6 +94,12 @@ export function SetCountdownViewModel(props: {
       }
       ui.$stopwatch.pause();
     },
+    /** 最后一组动作，没有倒计时，然后又新增了一组，倒计时出现，这时候希望它不能开始倒计时，就调用这个方法 */
+    complete() {
+      _paused = true;
+      ui.$countdown.setComplete();
+      methods.refresh();
+    },
     ready() {},
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {
       return bus.on(Events.Start, handler);

@@ -20,6 +20,9 @@ import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { Result } from "@/domains/result";
 import {
   fetchMyWorkoutScheduleList,
+  fetchMyWorkoutScheduleListProcess,
+  fetchWorkoutPlanList,
+  fetchWorkoutPlanListProcess,
   fetchWorkoutPlanSetList,
   fetchWorkoutPlanSetListProcess,
 } from "@/biz/workout_plan/services";
@@ -37,6 +40,7 @@ import { sleep } from "@/utils";
 
 import { HomeViewTabHeader } from "./components/tabs";
 import { CalendarSheet } from "./components/calendar_sheet";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -64,8 +68,16 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         },
       }),
     },
+    workout_plan: {
+      list: new ListCore(
+        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client })
+      ),
+    },
     workout_schedule: {
-      enabled: new RequestCore(fetchMyWorkoutScheduleList, { client: props.client }),
+      enabled: new RequestCore(fetchMyWorkoutScheduleList, {
+        process: fetchMyWorkoutScheduleListProcess,
+        client: props.client,
+      }),
     },
   };
   const methods = {
@@ -104,7 +116,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         return;
       }
       _cur_day = day;
-      const v = dayjs(day.value);
+      const v = dayjs(day.value).startOf("d");
       const the_date_text = v.format("YYYY-MM-DD");
       const today_text = dayjs().format("YYYY-MM-DD");
       const completed_plans = request.workout_day.list.response.dataSource.filter((v) => {
@@ -141,6 +153,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           }
         }
       }
+      // console.log("[]before _cur_day_profile = ", dayjs(v).isBefore(dayjs(), "d"), dayjs(v).format("YYYY-MM-DD"));
       _cur_day_profile = {
         month_text: `${v.month() + 1}月`,
         day_text: `${v.date()}日`,
@@ -156,12 +169,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           ]
         }`,
         is_today: the_date_text === today_text,
-        is_pass_day: dayjs(v).isBefore(dayjs()),
+        is_pass_day: dayjs(v).isBefore(dayjs(), "d"),
         workout_day: null,
         schedule: (() => {
           if (!schedule_of_the_day) {
             return {
-              type: WorkoutScheduleDayType.Empty,
+              type: WorkoutScheduleDayType.NoSchedule,
               workout_plans: [],
             };
           }
@@ -232,22 +245,58 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           return;
         }
         const { list } = r.data;
+        const workout_plan_ids: number[] = [];
+        for (let a = 0; a < list.length; a += 1) {
+          const schedule = list[a];
+          for (let b = 0; b < schedule.schedules.length; b += 1) {
+            const ids = schedule.schedules[b].workout_plan_ids;
+            for (let c = 0; c < ids.length; c += 1) {
+              if (!workout_plan_ids.includes(ids[c])) {
+                workout_plan_ids.push(ids[c]);
+              }
+            }
+          }
+        }
+        const r2 = await request.workout_plan.list.search({ ids: workout_plan_ids });
+        if (r2.error) {
+          return;
+        }
         const schedules = buildWorkoutScheduleWithSpecialDay(
           list.map((v) => {
+            // console.log(v.schedules);
             return {
               type: v.type,
+              start_date: v.start_date,
               days: v.schedules.map((vv) => {
                 return {
+                  idx: vv.idx,
                   day: vv.day,
                   weekday: vv.weekday,
-                  workout_plan: {
-                    id: vv.workout_plan_id,
-                    title: vv.title,
-                    overview: vv.overview,
-                    tags: vv.tags,
-                  },
+                  workout_plans: (() => {
+                    const result: TheItemTypeFromListCore<typeof request.workout_plan.list>[] = [];
+                    for (let i = 0; i < vv.workout_plan_ids.length; i += 1) {
+                      const plan_id = vv.workout_plan_ids[i];
+                      const m = r2.data.dataSource.find((plan) => plan.id === plan_id);
+                      if (m) {
+                        result.push(m);
+                      }
+                    }
+                    return result;
+                  })(),
                 };
               }),
+              // days: v.schedules.map((vv) => {
+              //   return {
+              //     day: vv.day,
+              //     weekday: vv.weekday,
+              //     workout_plan: {
+              //       id: vv.workout_plan_id,
+              //       title: vv.title,
+              //       overview: vv.overview,
+              //       tags: vv.tags,
+              //     },
+              //   };
+              // }),
             };
           }),
           new Date()
@@ -377,11 +426,17 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             const m = _schedules[day.yyyy];
             if (!m) {
               return {
-                status: WorkoutScheduleDayType.Empty,
+                status: WorkoutScheduleDayType.NoSchedule,
                 r,
               };
             }
             if (m.type === WorkoutScheduleDayType.Resting) {
+              return {
+                status: m.type,
+                r,
+              };
+            }
+            if (m.type === WorkoutScheduleDayType.Empty) {
               return {
                 status: m.type,
                 r,
@@ -672,7 +727,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               </div>
             </div>
             <div class="text-w-fg-0">{state().day?.weekday_text}</div>
-            <Show when={state().day?.schedule.type === WorkoutScheduleDayType.Empty}>
+            <Show when={state().day?.schedule.type === WorkoutScheduleDayType.NoSchedule}>
               <div class="pt-4">
                 <div class="text-w-fg-1 text-center">暂无周期计划</div>
                 <div class="mt-2">

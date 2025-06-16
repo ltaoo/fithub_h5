@@ -75,17 +75,17 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       let set_duration = Number(set.set_rest_duration);
       for (let j = 0; j < set.actions.length; j += 1) {
         const act = set.actions[j];
-        const reps = act.reps;
+        const reps = Number(act.reps);
         const reps_unit = act.reps_unit;
         if (reps_unit === getSetValueUnit("秒")) {
-          set_duration += Number(reps);
+          set_duration += reps;
         }
         if (reps_unit === getSetValueUnit("分")) {
-          set_duration += Number(reps) * 60;
+          set_duration += reps * 60;
         }
         if (reps_unit === getSetValueUnit("次")) {
-          // 一次大概是 6s
-          set_duration += Number(reps) * 6;
+          // 所有动作按一次大概是 6s 计算
+          set_duration += reps * 6;
         }
       }
       duration += set_duration * Number(set.set_count);
@@ -319,7 +319,6 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       const data = r.data;
       ui.$input_title.setValue(data.title);
       ui.$input_overview.setValue(data.overview);
-
       for (let i = 0; i < data.steps.length; i += 1) {
         const vv = data.steps[i];
         const field = ui.$input_actions.append({ silence: true });

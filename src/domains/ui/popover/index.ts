@@ -14,10 +14,20 @@ const ALIGN_OPTIONS = ["start", "center", "end"] as const;
 enum Events {
   Show,
   Hidden,
+  StateChange,
 }
 type TheTypesOfEvents = {
   [Events.Show]: void;
   [Events.Hidden]: void;
+  [Events.StateChange]: PopoverState;
+};
+type PopoverState = {
+  isPlaced: boolean;
+  x: number;
+  y: number;
+  visible: boolean;
+  enter: boolean;
+  exit: boolean;
 };
 type PopoverProps = {
   side?: Side;
@@ -32,6 +42,24 @@ export class PopoverCore extends BaseDomain<TheTypesOfEvents> {
 
   _side: Side;
   _align: Align;
+
+  visible = false;
+  enter = false;
+  exit = false;
+  get state(): PopoverState {
+    return {
+      // visible: this.visible,
+      // enter: this.enter,
+      // exit: this.exit,
+      isPlaced: this.popper.state.isPlaced,
+      x: this.popper.state.x,
+      y: this.popper.state.y,
+
+      enter: this.present.state.enter,
+      visible: this.present.state.visible,
+      exit: this.present.state.exit,
+    };
+  }
 
   constructor(props: { _name?: string } & PopoverProps = {}) {
     super();
@@ -51,21 +79,36 @@ export class PopoverCore extends BaseDomain<TheTypesOfEvents> {
       console.log("[DOMAIN/ui]popover/index - onDismiss");
       this.hide();
     });
+    this.present.onStateChange(() => {
+      this.emit(Events.StateChange, { ...this.state });
+    });
+    this.popper.onStateChange(() => {
+      this.emit(Events.StateChange, { ...this.state });
+    });
   }
 
-  visible = false;
-  get state() {
-    return {
-      visible: this.visible,
-    };
-  }
-
-  toggle() {
+  ready() {}
+  destroy() {}
+  toggle(position?: Partial<{ x: number; y: number; width: number; height: number }>) {
     console.log("[DOMAIN/ui]popover/index - toggle");
     const { visible } = this;
     if (visible) {
       this.hide();
       return;
+    }
+    if (position) {
+      const { x, y, width = 8, height = 8 } = position;
+      this.popper.updateReference({
+        // @ts-ignore
+        getRect() {
+          return {
+            width,
+            height,
+            x,
+            y,
+          };
+        },
+      });
     }
     this.show();
   }
@@ -118,10 +161,13 @@ export class PopoverCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   onShow(handler: Handler<TheTypesOfEvents[Events.Show]>) {
-    this.on(Events.Show, handler);
+    return this.on(Events.Show, handler);
   }
   onHide(handler: Handler<TheTypesOfEvents[Events.Hidden]>) {
-    this.on(Events.Hidden, handler);
+    return this.on(Events.Hidden, handler);
+  }
+  onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
+    return this.on(Events.StateChange, handler);
   }
 
   get [Symbol.toStringTag]() {

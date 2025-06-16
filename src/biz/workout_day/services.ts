@@ -172,7 +172,7 @@ export type WorkoutDayStepProgressJSON250531 = {
   set_idx: number;
   /** 当前做到动作的组中第几个动作了 */
   act_idx: number;
-  /** 作用暂定吧 */
+  /** 更新数据时，避免将没有填写的组默认输入 0 提交上去了 */
   touched_set_idx: string[];
   /** 动作/组  */
   sets: {
@@ -212,13 +212,61 @@ export type WorkoutDayStepProgressJSON250531 = {
   }[];
 };
 
+export type WorkoutDayStepProgressJSON250616 = {
+  v: "250616";
+  /** 当前做到第几个动作了 */
+  step_idx: number;
+  /** 当前做到动作的第几组了 */
+  set_idx: number;
+  /** 当前做到动作的组中第几个动作了 */
+  act_idx: number;
+  /** 更新数据时，避免将没有填写的组默认输入 0 提交上去了 */
+  touched_set_uid: string[];
+  /** 动作/组  */
+  sets: {
+    step_uid: number;
+    uid: number;
+    actions: {
+      uid: number;
+      /** 动作id，用于后面记录该记录动作执行历史，获取最大重量、最大次数等统计参考数据 */
+      action_id: number;
+      /** 计数数量 */
+      reps: number;
+      /** 计数单位 */
+      reps_unit: SetValueUnit;
+      /** 重量数值 */
+      weight: number;
+      /** 重量单位 */
+      weight_unit: SetValueUnit;
+      /** 是否完成 */
+      completed: boolean;
+      /** 完成时间 */
+      completed_at: number;
+      /** 如果该动作是计时，还剩多久 */
+      time1: number;
+      /** 如果该动作是计时，休息时间还剩多久 */
+      time2: number;
+      /** 如果该动作是计时，休息已过去多久 */
+      time3: number;
+    }[];
+    /** 休息时间还剩多久 */
+    remaining_time: number;
+    /** 休息时间已过去多久 */
+    exceed_time: number;
+    /** 组是否完成 */
+    completed: boolean;
+    /** 备注 */
+    remark: string;
+  }[];
+};
+
 /**
  * 更新训练日执行内容
  * @param body
  * @returns
  */
-export function updateWorkoutDayStepContent(body: { id: number | string; content: WorkoutDayStepProgressJSON250531 }) {
-  console.log("[SERVICE]workout_day - updateWorkoutDayStepContent", body.content);
+export function updateWorkoutDayStepContent(body: { id: number | string; content: WorkoutDayStepProgressJSON250616 }) {
+  // console.log("[SERVICE]workout_day - updateWorkoutDayStepContent", body.content);
   return request.post("/api/workout_day/update_steps", {
     id: Number(body.id),
     data: JSON.stringify(body.content),
@@ -247,13 +295,37 @@ export type WorkoutDayStepDetailsJSON250424 = {
     note: string;
   }[];
 };
+export type WorkoutDayStepDetailsJSON250616 = {
+  v: "250616";
+  steps: {
+    uid: number;
+    sets: {
+      uid: number;
+      type: WorkoutPlanSetType;
+      actions: {
+        /** 在组中的动作uid，超级组可能用上。不使用 id 可能一组存在两个相同的动作 */
+        uid: number;
+        /** 动作id */
+        id: number;
+        zh_name: string;
+        reps: number;
+        reps_unit: SetValueUnit;
+        weight: string;
+        rest_duration: number;
+      }[];
+      rest_duration: number;
+      weight: string;
+    }[];
+    note: string;
+  }[];
+};
 
 /**
  * 更新训练日计划内容
  * @param body
  * @returns
  */
-export function updateWorkoutDayPlanDetails(body: { id: string; content: WorkoutDayStepDetailsJSON250424 }) {
+export function updateWorkoutDayPlanDetails(body: { id: string; content: WorkoutDayStepDetailsJSON250616 }) {
   return request.post("/api/workout_day/update_details", {
     id: Number(body.id),
     data: body.content.steps.length === 0 ? "" : JSON.stringify(body.content),
@@ -305,44 +377,83 @@ export function fetchWorkoutDayProfile(body: { id: number }) {
     day_number: number;
     student_id: number;
     // steps: WorkoutPlanStepResp[];
-    workout_plan: { title: string; overview: string; tags: string; details: string };
+    workout_plan: {
+      id: number;
+      title: string;
+      overview: string;
+      tags: string;
+      details: string;
+      creator: { nickname: string; avatar_url: string };
+    };
   }>("/api/workout_day/profile", body);
 }
 function parseWorkoutDayDetailsString(details: string) {
-  const r = parseJSONStr<WorkoutDayStepDetailsJSON250424>(details);
+  const r = parseJSONStr<WorkoutDayStepDetailsJSON250424 | WorkoutDayStepDetailsJSON250616>(details);
   if (r.error) {
     return [];
   }
-  const data = r.data.steps;
-  const result: WorkoutDayStepDetailsJSON250424["steps"] = [];
-  const steps = data;
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    result.push({
-      idx: i,
-      sets: step.sets.map((set, idx) => {
-        return {
-          idx,
-          type: set.type as WorkoutPlanSetType,
-          rest_duration: set.rest_duration,
-          weight: set.weight,
-          actions: set.actions.map((act, idx) => {
-            return {
-              idx,
-              id: act.id,
-              zh_name: act.zh_name,
-              reps: act.reps,
-              reps_unit: act.reps_unit,
-              weight: act.weight,
-              rest_duration: act.rest_duration,
-              note: "",
-            };
-          }),
-        };
-      }),
-      note: step.note,
-    });
+  const result: WorkoutDayStepDetailsJSON250616["steps"] = [];
+  if (r.data.v === "250424") {
+    const steps = r.data.steps as WorkoutDayStepDetailsJSON250424["steps"];
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      result.push({
+        uid: i,
+        sets: step.sets.map((set, idx) => {
+          return {
+            uid: idx,
+            type: set.type as WorkoutPlanSetType,
+            rest_duration: set.rest_duration,
+            weight: set.weight,
+            actions: set.actions.map((act, act_idx) => {
+              return {
+                uid: act_idx,
+                id: act.id,
+                zh_name: act.zh_name,
+                reps: act.reps,
+                reps_unit: act.reps_unit,
+                weight: act.weight,
+                rest_duration: act.rest_duration,
+                note: "",
+              };
+            }),
+          };
+        }),
+        note: step.note,
+      });
+    }
   }
+  if (r.data.v === "250616") {
+    const steps = r.data.steps as WorkoutDayStepDetailsJSON250616["steps"];
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      result.push({
+        uid: step.uid,
+        sets: step.sets.map((set, idx) => {
+          return {
+            uid: set.uid,
+            type: set.type as WorkoutPlanSetType,
+            rest_duration: set.rest_duration,
+            weight: set.weight,
+            actions: set.actions.map((act, idx) => {
+              return {
+                uid: act.uid,
+                id: act.id,
+                zh_name: act.zh_name,
+                reps: act.reps,
+                reps_unit: act.reps_unit,
+                weight: act.weight,
+                rest_duration: act.rest_duration,
+                note: "",
+              };
+            }),
+          };
+        }),
+        note: step.note,
+      });
+    }
+  }
+
   return result;
 }
 export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWorkoutDayProfile>) {
@@ -350,41 +461,74 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     return Result.Err(r.error);
   }
   const workout_day = r.data;
-  const pending_steps = ((): Omit<WorkoutDayStepProgressJSON250531, "v"> => {
-    const r = parseJSONStr<WorkoutDayStepProgressJSON250424 | WorkoutDayStepProgressJSON250531>(
-      workout_day.pending_steps
-    );
+  const pending_steps = ((): Omit<WorkoutDayStepProgressJSON250616, "v"> => {
+    const r = parseJSONStr<
+      WorkoutDayStepProgressJSON250424 | WorkoutDayStepProgressJSON250531 | WorkoutDayStepProgressJSON250616
+    >(workout_day.pending_steps);
     if (r.error) {
       return {
         step_idx: 0,
         set_idx: 0,
         act_idx: 0,
-        touched_set_idx: [],
+        touched_set_uid: [],
         sets: [],
       };
     }
     if (r.data.v === "250424") {
       const d = r.data as WorkoutDayStepProgressJSON250424;
       return {
-        step_idx: r.data.step_idx,
-        set_idx: r.data.set_idx,
-        act_idx: r.data.act_idx,
-        touched_set_idx: r.data.touched_set_idx,
-        sets:
-          r.data.sets.map((set) => {
-            return {
-              ...set,
-              completed: false,
-            };
-          }) || [],
+        step_idx: d.step_idx,
+        set_idx: d.set_idx,
+        act_idx: d.act_idx,
+        touched_set_uid: d.touched_set_idx,
+        sets: (d.sets ?? []).map((set) => {
+          return {
+            ...set,
+            step_uid: set.step_idx,
+            uid: set.idx,
+            actions: set.actions.map((vv) => {
+              return {
+                ...vv,
+                action_id: Number(vv.action_id),
+                uid: vv.idx,
+              };
+            }),
+            completed: false,
+          };
+        }),
       };
     }
+    if (r.data.v === "250531") {
+      const d = r.data as WorkoutDayStepProgressJSON250531;
+      return {
+        step_idx: d.step_idx,
+        set_idx: d.set_idx,
+        act_idx: d.act_idx,
+        touched_set_uid: d.touched_set_idx,
+        sets: (d.sets ?? []).map((set) => {
+          return {
+            ...set,
+            step_uid: set.step_idx,
+            uid: set.idx,
+            actions: set.actions.map((vv) => {
+              return {
+                ...vv,
+                action_id: Number(vv.action_id),
+                uid: vv.idx,
+              };
+            }),
+            completed: false,
+          };
+        }),
+      };
+    }
+    const d = r.data as WorkoutDayStepProgressJSON250616;
     return {
-      step_idx: r.data.step_idx,
-      set_idx: r.data.set_idx,
-      act_idx: r.data.act_idx,
-      touched_set_idx: r.data.touched_set_idx,
-      sets: r.data.sets || [],
+      step_idx: d.step_idx,
+      set_idx: d.set_idx,
+      act_idx: d.act_idx,
+      touched_set_uid: d.touched_set_uid,
+      sets: d.sets || [],
     };
   })();
   let total_weight = 0;
@@ -405,10 +549,10 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
   }
   // const seconds = dayjs(workout_day.started_at).valueOf() / 1000 - dayjs(workout_day.finished_at).valueOf() / 1000;
   const seconds =
-    workout_day.status === WorkoutDayStatus.Finished
+    workout_day.status === WorkoutDayStatus.Finished && workout_day.finished_at
       ? dayjs(workout_day.finished_at).diff(dayjs(workout_day.started_at), "seconds")
       : 0;
-  console.log(seconds, dayjs(workout_day.finished_at).format("HH:mm"), dayjs(workout_day.started_at).format("HH:mm"));
+  // console.log(seconds, dayjs(workout_day.finished_at).format("HH:mm"), dayjs(workout_day.started_at).format("HH:mm"));
   return Result.Ok({
     id: workout_day.id,
     title: workout_day.workout_plan.title,
@@ -430,8 +574,11 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     //   return seconds_to_hour_minute_seconds(seconds);
     // })(),
     minutes: seconds_to_minutes(seconds),
+    /** 填写的数据内容 */
     pending_steps,
+    /** 动作内容 */
     steps: (() => {
+      /** 如果手动编辑了训练内容 */
       if (workout_day.updated_details) {
         return parseWorkoutDayDetailsString(workout_day.updated_details);
       }
@@ -440,15 +587,16 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       for (let a = 0; a < d.length; a += 1) {
         const step = d[a];
         const rr = {
-          idx: a,
+          uid: a,
           sets: (() => {
-            const sets: WorkoutDayStepDetailsJSON250424["steps"][number]["sets"] = [];
+            const sets: WorkoutDayStepDetailsJSON250616["steps"][number]["sets"] = [];
             for (let b = 0; b < step.set_count; b += 1) {
               sets.push({
-                idx: b,
+                uid: b,
                 type: step.set_type,
-                actions: step.actions.map((act) => {
+                actions: step.actions.map((act, idx) => {
                   return {
+                    uid: idx,
                     id: Number(act.action.id),
                     zh_name: act.action.zh_name,
                     reps: act.reps,
@@ -474,6 +622,12 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       return steps;
     })(),
     student_id: workout_day.student_id,
+    workout_plan: {
+      id: workout_day.workout_plan.id,
+      title: workout_day.workout_plan.title,
+      overview: workout_day.workout_plan.overview,
+      creator: workout_day.workout_plan.creator,
+    },
   });
 }
 

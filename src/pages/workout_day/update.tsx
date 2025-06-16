@@ -2,18 +2,20 @@
  * @file 训练日记录
  */
 import { For, Show } from "solid-js";
-import { CircleCheck, Info, Loader, MoreHorizontal, StopCircle, X } from "lucide-solid";
+import { Bird, CircleCheck, Info, Loader, MoreHorizontal, StopCircle, X } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
-import { Button, DropdownMenu, ScrollView, Skeleton, Textarea } from "@/components/ui";
+import { Button, DropdownMenu, Popover, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { WorkoutActionCard } from "@/components/workout-action-card";
 import { WorkoutActionSelectView } from "@/components/workout-action-select3";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
 import { Sheet } from "@/components/ui/sheet";
 import { SetCompleteBtn } from "@/components/set-complete-btn";
+import { SetValueView } from "@/components/set-value-view";
+import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
@@ -23,6 +25,7 @@ import {
   DropdownMenuCore,
   InputCore,
   MenuItemCore,
+  PopoverCore,
   PresenceCore,
   ScrollViewCore,
 } from "@/domains/ui";
@@ -40,10 +43,9 @@ import {
   giveUpHWorkoutDay,
   updateWorkoutDayStepContent,
   updateWorkoutDayPlanDetails,
-  WorkoutDayStepDetailsJSON250424,
-  WorkoutDayStepProgressJSON250531,
+  WorkoutDayStepDetailsJSON250616,
+  WorkoutDayStepProgressJSON250616,
 } from "@/biz/workout_day/services";
-import { fetchWorkoutPlanProfile, fetchWorkoutPlanProfileProcess } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import {
   fetchWorkoutActionHistoryListOfWorkoutAction,
@@ -60,7 +62,18 @@ import {
   fetchWorkoutActionProfileProcess,
 } from "@/biz/workout_action/services";
 import { SetCountdownViewModel } from "@/biz/set_countdown";
-import { calc_bottom_padding_need_add, has_num_value, has_value, remove_arr_item, update_arr_item } from "@/utils";
+import { RouteViewCore } from "@/domains/route_view";
+import { Muscles } from "@/biz/muscle/data";
+import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
+import {
+  calc_bottom_padding_need_add,
+  has_num_value,
+  has_value,
+  remove_arr_item,
+  toFixed,
+  update_arr_item,
+} from "@/utils";
+import { toNumber } from "@/utils/primitive";
 
 import { SetCountdownView } from "./components/set-countdown";
 import { SetValueInput } from "./components/set-value-input";
@@ -71,43 +84,12 @@ import { SetActionCountdownBtn } from "./components/set-countdown-btn";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
 import { WorkoutDayProfileView } from "./profile";
-import { RouteViewCore } from "@/domains/route_view";
-import { Muscles } from "@/biz/muscle/data";
-import { SetValueView } from "@/components/set-value-view";
-import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
-import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
 export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   /** 页面处于多学员环境中 */
-  const is_multiple_view = !!props.view.query.multiple;
-
+  const is_multiple_view = props.view.query.multiple === "1";
   const request = {
-    workout_plan: {
-      profile: new RequestCore(fetchWorkoutPlanProfile, {
-        process: fetchWorkoutPlanProfileProcess,
-        client: props.client,
-      }),
-    },
-    workout_action: {
-      list_by_id: new RequestCore(fetchWorkoutActionListByIds, {
-        process: fetchWorkoutActionListByIdsProcess,
-        client: props.client,
-      }),
-      profile: new RequestCore(fetchWorkoutActionProfile, {
-        process: fetchWorkoutActionProfileProcess,
-        client: props.client,
-      }),
-    },
-    workout_action_history: {
-      list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
-          process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
-          client: props.client,
-        }),
-        { pageSize: 3 }
-      ),
-    },
     workout_day: {
       profile: new RequestCore(fetchWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
@@ -117,6 +99,15 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       update_details: new RequestCore(updateWorkoutDayPlanDetails, { client: props.client }),
       give_up: new RequestCore(giveUpHWorkoutDay, { client: props.client }),
       complete: new RequestCore(completeWorkoutDay, { client: props.client }),
+    },
+    workout_action_history: {
+      list: new ListCore(
+        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
+          process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
+          client: props.client,
+        }),
+        { pageSize: 3 }
+      ),
     },
   };
   const methods = {
@@ -152,8 +143,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         act_idx: opt.act_idx,
         rect: opt.rect,
       });
+      const step = _steps[opt.step_idx];
+      const set = step.sets[opt.set_idx];
+      const act = set.actions[opt.act_idx];
       methods.showNumInput({
-        key: `${opt.step_idx}-${opt.set_idx}-${opt.act_idx}`,
+        key: `${step.uid}-${set.uid}-${act.uid}`,
         for: opt.for,
       });
     },
@@ -201,29 +195,168 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     removeSet(opt: { step_idx: number; set_idx: number }) {
       const step = _steps[opt.step_idx];
       const set = step.sets[opt.set_idx];
-      const set_k = `${opt.step_idx}-${opt.set_idx}`;
-      ui.$set_countdowns.delete(set_k);
-      for (let i = 0; i < set.actions.length; i += 1) {
-        const k = `${set_k}-${i}`;
-        ui.$set_actions.delete(k);
-        ui.$fields_reps.delete(k);
-        ui.$fields_weight.delete(k);
-        ui.$set_act_countdowns.delete(k);
-        ui.$inputs_completed.delete(k);
+      const r = (() => {
+        console.log("[PAGE]workout_day/update - removeSet", opt.step_idx, opt.set_idx);
+        console.log("[]", _cur_step_idx, _cur_set_idx);
+        const is_remove_cur_set = opt.step_idx === _cur_step_idx && opt.set_idx === _cur_set_idx;
+        const is_remove_last_set = step.sets.length === 1;
+        const step_is_last_step = _steps.length === 1;
+        console.log("[]step_is_last_step", step_is_last_step);
+        console.log("[]is_remove_last_set", is_remove_last_set);
+        console.log("[]is_remove_cur_set", is_remove_cur_set);
+        if (step_is_last_step && is_remove_last_set) {
+          return Result.Err("无法删除最后一组动作");
+        }
+        _steps = update_arr_item(_steps, opt.step_idx, {
+          uid: step.uid,
+          sets: remove_arr_item(step.sets, opt.set_idx),
+          note: step.note,
+        });
+        if (is_remove_last_set) {
+          _steps = remove_arr_item(_steps, opt.step_idx);
+        }
+        if (!is_remove_cur_set) {
+          // 不是移除当前高亮的，但是高亮通过 idx 标记，idx = 2，删除了 0，视觉上高亮变成了下一个
+          if (opt.set_idx < _cur_set_idx) {
+            _cur_set_idx -= 1;
+          }
+          return Result.Ok(null);
+        }
+        let next_set_idx = _cur_set_idx - 1;
+        if (next_set_idx < 0) {
+          next_set_idx = 0;
+        }
+        _cur_set_idx = next_set_idx;
+        if (is_remove_last_set) {
+          _cur_set_idx = 0;
+          let next_step_idx = _cur_step_idx - 1;
+          if (next_step_idx < 0) {
+            next_step_idx = 0;
+          }
+          _cur_step_idx = next_step_idx;
+        }
+        return Result.Ok(null);
+      })();
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
       }
-      // 删不了，不能用 idx 下标，改成 id
-      _steps = update_arr_item(_steps, opt.step_idx, {
-        idx: step.idx,
-        sets: remove_arr_item(step.sets, opt.set_idx),
-        note: step.note,
-      });
-      console.log(opt);
+      console.log("[]complete remove", _cur_step_idx, _cur_set_idx);
+      const step_set_uid = `${step.uid}-${set.uid}`;
+      if (_touched_set_uid.includes(step_set_uid)) {
+        _touched_set_uid = _touched_set_uid.filter((v) => v !== step_set_uid);
+      }
+      ui.$set_countdowns.delete(step_set_uid);
+      for (let i = 0; i < set.actions.length; i += 1) {
+        const act = set.actions[i];
+        const step_set_act_uid = `${step_set_uid}-${act.uid}`;
+        ui.$set_actions.delete(step_set_act_uid);
+        ui.$fields_reps.delete(step_set_act_uid);
+        ui.$fields_weight.delete(step_set_act_uid);
+        ui.$set_act_countdowns.delete(step_set_act_uid);
+        ui.$inputs_completed.delete(step_set_act_uid);
+      }
+      methods.refresh();
+    },
+    addSet(opt: { step_idx: number }) {
+      const step = _steps[opt.step_idx];
       methods.refresh();
     },
     pauseAllRunningSetCountdowns() {
       ui.$running_set_countdowns.forEach(($countdown) => {
         $countdown.pause();
       });
+    },
+    /** 给 set 增加 ViewModel */
+    appendSet(
+      set: {
+        step_uid: number;
+        uid: number;
+        type: WorkoutPlanSetType;
+        rest_duration: number;
+        actions: {
+          uid: number;
+          id: number;
+          zh_name: string;
+          reps: number;
+          reps_unit: SetValueUnit;
+          weight: string;
+          rest_duration: number;
+        }[];
+        completed: boolean;
+      },
+      // 该组当前数据记录
+      pending_set: WorkoutDayStepProgressJSON250616["sets"][number] | null,
+      opt: Partial<{ silence: boolean }> = {}
+    ) {
+      // const a = set.step_uid;
+      // const b = set.uid;
+      const step_set_uid = `${set.step_uid}-${set.uid}`;
+      const step_idx = _steps.findIndex((v) => v.uid === set.step_uid);
+      if (step_idx === -1) {
+        return;
+      }
+      const set_idx = _steps[step_idx].sets.findIndex((v) => v.uid === set.uid);
+      if (set_idx === -1) {
+        return;
+      }
+      if (set.rest_duration) {
+        // 组间歇倒计时
+        const $countdown = SetCountdownViewModel({
+          // countdown: 10,
+          countdown: set.rest_duration,
+          remaining: pending_set?.remaining_time ?? 0,
+          exceed: pending_set?.exceed_time ?? 0,
+          finished: set.completed,
+        });
+        $countdown.onStart(() => {
+          methods.pauseAllRunningSetCountdowns();
+          console.log("[PAGE]workout_day/update - after $countdown.onStart", set);
+          ui.$running_set_countdowns.set(step_set_uid, $countdown);
+          // if ([WorkoutPlanSetType.HIIT].includes(set.type)) {
+          //   const k = `${a}-${b}-${set.actions.length - 1}`;
+          //   const $last_action_countdown = ui.$set_act_countdowns.get(k);
+          //   if ($last_action_countdown && $last_action_countdown.state.running) {
+          //     $last_action_countdown.pause();
+          //   }
+          // }
+          methods.setCurSet({ step_idx, set_idx });
+        });
+        $countdown.onStop(() => {
+          ui.$running_set_countdowns.delete(step_set_uid);
+          methods.nextSet();
+        });
+        ui.$set_countdowns.set(step_set_uid, $countdown);
+        // if (!the_set_completed) {
+        //   estimated_duration += set.rest_duration;
+        // }
+      }
+      // let estimated_set_duration = 0;
+      for (let c = 0; c < set.actions.length; c += 1) {
+        const action = set.actions[c];
+        methods.appendSetAct({
+          step_idx,
+          set_idx,
+          idx: c,
+          action,
+          pending_set: pending_set,
+        });
+        // estimated_set_duration += action.reps * 5;
+      }
+      ui.$inputs_set_remark.set(step_set_uid, new InputCore({ defaultValue: pending_set?.remark ?? "" }));
+      ui.$btns_more.set(
+        step_set_uid,
+        new ButtonCore({
+          onClick() {
+            ui.$ref_cur_set_idx.select({
+              step_idx,
+              idx: set_idx,
+            });
+          },
+        })
+      );
     },
     appendSetAct(opt: {
       step_idx: number;
@@ -237,20 +370,28 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         weight: string;
         rest_duration: number;
       };
-      pending_set?: WorkoutDayStepProgressJSON250531["sets"][number];
+      pending_set: WorkoutDayStepProgressJSON250616["sets"][number] | null;
     }) {
       const { step_idx: a, set_idx: b, idx: c, action, pending_set } = opt;
-      const set_k = `${a}-${b}`;
-      const k = `${a}-${b}-${c}`;
-      const prev_set_k = `${a}-${b - 1}`;
-      const prev_k = `${a}-${b}-${c - 1}`;
-      const next_k = `${a}-${b}-${c + 1}`;
+      console.log("[PAGE]workout_day/update - appendSetAct", a, b, c, action);
+      const step = _steps[a];
+      const set = step.sets[b];
+      const act = set.actions[c];
+      const prev_set = step.sets[b - 1];
+      const prev_act = set.actions[c - 1];
+      const next_act = set.actions[c + 1];
+      const cur_step_set_uid = `${step.uid}-${set.uid}`;
+      const cur_step_set_act_uid = `${step.uid}-${set.uid}-${act.uid}`;
+      const prev_step_set_uid = prev_set ? `${step.uid}-${prev_set.uid}` : null;
+      const prev_step_set_act_uid = prev_act ? `${step.uid}-${set.uid}-${prev_act.uid}` : null;
+      const next_step_set_act_uid = next_act ? `${step.uid}-${set.uid}-${next_act.uid}` : null;
+      const is_last_act = c === set.actions.length - 1;
       // const pending_action = pending_set?.actions.find((act) => act.idx === c);
-      const pending_action = pending_set?.actions[c];
+      const pending_action = pending_set?.actions.find((a) => a.uid === act.uid);
       // const act = _steps[a].sets[b].actions[c];
-      ui.$set_actions.set(k, SetActionViewModel({ id: action.id, zh_name: action.zh_name }));
+      ui.$set_actions.set(cur_step_set_act_uid, SetActionViewModel({ id: action.id, zh_name: action.zh_name }));
       ui.$fields_weight.set(
-        k,
+        cur_step_set_act_uid,
         new SingleFieldCore({
           label: "",
           name: "",
@@ -262,7 +403,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         })
       );
       ui.$fields_reps.set(
-        k,
+        cur_step_set_act_uid,
         new SingleFieldCore({
           label: "",
           name: "",
@@ -273,12 +414,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           }),
         })
       );
-      const is_last_act = c === _steps[a].sets[b].actions.length - 1;
       if ([getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps_unit)) {
         const $action_countdown = SetActionCountdownViewModel({
           // workout_duration: 10,
           // rest_duration: 5,
-          countdown: action.reps,
+          countdown: toNumber(action.reps, 90),
           rest_duration: action.rest_duration,
           time1: pending_action?.time1,
           time2: pending_action?.time2,
@@ -291,19 +431,23 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             step_idx: opt.step_idx,
             set_idx: opt.set_idx,
           });
-          const $prev_act_countdown = ui.$set_act_countdowns.get(prev_k);
-          if ($prev_act_countdown) {
-            $prev_act_countdown.pause();
+          if (prev_step_set_act_uid) {
+            const $prev_act_countdown = ui.$set_act_countdowns.get(prev_step_set_act_uid);
+            if ($prev_act_countdown) {
+              $prev_act_countdown.pause();
+            }
           }
-          const $prev_set_countdown = ui.$set_countdowns.get(prev_set_k);
-          if ($prev_set_countdown && $prev_set_countdown.state.running) {
-            $prev_set_countdown.pause();
+          if (prev_step_set_uid) {
+            const $prev_set_countdown = ui.$set_countdowns.get(prev_step_set_uid);
+            if ($prev_set_countdown && $prev_set_countdown.state.running) {
+              $prev_set_countdown.pause();
+            }
           }
           methods.setCurSet({ step_idx: a, set_idx: b });
         });
         $action_countdown.onFinished(() => {
           /** 在动作倒计时结束后，尝试去将动作「完成」 */
-          const $cur_act_check = ui.$inputs_completed.get(k);
+          const $cur_act_check = ui.$inputs_completed.get(cur_step_set_act_uid);
           if ($cur_act_check) {
             methods.completeSetAct({
               step_idx: a,
@@ -312,22 +456,24 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
               ignore_when_completed: true,
             });
           }
-          const $next_act_countdown = ui.$set_act_countdowns.get(next_k);
-          if ($next_act_countdown) {
-            $next_act_countdown.start();
-          }
-          const is_last_act = !$next_act_countdown;
-          if (is_last_act) {
-            const $countdown = ui.$set_countdowns.get(set_k);
-            if ($countdown) {
-              $countdown.start();
+          if (next_step_set_act_uid) {
+            const $next_act_countdown = ui.$set_act_countdowns.get(next_step_set_act_uid);
+            if ($next_act_countdown) {
+              $next_act_countdown.start();
+            }
+            const is_last_act = !$next_act_countdown;
+            if (is_last_act) {
+              const $countdown = ui.$set_countdowns.get(cur_step_set_uid);
+              if ($countdown) {
+                $countdown.start();
+              }
             }
           }
         });
-        ui.$set_act_countdowns.set(k, $action_countdown);
+        ui.$set_act_countdowns.set(cur_step_set_act_uid, $action_countdown);
       }
       ui.$inputs_completed.set(
-        k,
+        cur_step_set_act_uid,
         new InputCore({ defaultValue: pending_action?.completed ? pending_action?.completed_at : 0 })
       );
     },
@@ -342,14 +488,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       ignore_update_steps?: boolean;
     }) {
       console.log("[PAGE]workout_day/create - handleCompleteSet", opt);
-      const kk = `${opt.step_idx}-${opt.set_idx}`;
-      if (!_touched_set_idx.includes(kk)) {
-        _touched_set_idx.push(kk);
-      }
-      if (ui.$dialog_num_keyboard.state.open) {
-        ui.$dialog_num_keyboard.hide();
-      }
-      const common_error_tip = "异常数据";
+      const common_error_tip = "异常操作";
       const step = _steps[opt.step_idx];
       if (!step) {
         return Result.Err(common_error_tip);
@@ -358,13 +497,24 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if (!set) {
         return Result.Err(common_error_tip);
       }
+      const act = set.actions[opt.act_idx];
+      if (!set) {
+        return Result.Err(common_error_tip);
+      }
+      const step_set_uid = `${step.uid}-${set.uid}`;
+      if (!_touched_set_uid.includes(step_set_uid)) {
+        _touched_set_uid.push(step_set_uid);
+      }
+      if (ui.$dialog_num_keyboard.state.open) {
+        ui.$dialog_num_keyboard.hide();
+      }
       const is_last_step = opt.step_idx === _steps.length - 1;
       const is_last_set = opt.set_idx === step.sets.length - 1;
       const is_last_act = opt.act_idx === set.actions.length - 1;
-      const k = `${opt.step_idx}-${opt.set_idx}-${opt.act_idx}`;
-      const $field_reps = ui.$fields_reps.get(k);
-      const $field_weight = ui.$fields_weight.get(k);
-      const $input_completed = ui.$inputs_completed.get(k);
+      const step_set_act_uid = `${step_set_uid}-${act.uid}`;
+      const $field_reps = ui.$fields_reps.get(step_set_act_uid);
+      const $field_weight = ui.$fields_weight.get(step_set_act_uid);
+      const $input_completed = ui.$inputs_completed.get(step_set_act_uid);
       if (!$field_reps || !$field_weight || !$input_completed) {
         console.log("[PAGE]workout_day/create - no inputs", $field_reps, $field_weight, $input_completed);
         return Result.Err(common_error_tip);
@@ -382,15 +532,16 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         }
         // 取消完成状态
         $input_completed.setValue(0);
+        // @todo 这里还没更新 _cur_set_idx 吧？
         methods.updateSteps({
           step_idx: _cur_step_idx,
-          set_idx: _next_set_idx,
+          set_idx: _cur_set_idx,
         });
         result.completed = false;
         return Result.Ok(result);
       }
-      const vv_weight = Number($field_weight.input.value || $field_weight.input.placeholder);
-      const vv_reps = Number($field_reps.input.value || $field_reps.input.placeholder);
+      const vv_weight = toNumber($field_weight.input.value || $field_weight.input.placeholder);
+      const vv_reps = toNumber($field_reps.input.value || $field_reps.input.placeholder);
       console.log(
         "[PAGE]workout_day/update - completeSetAct after vv_reps =",
         $field_weight.input.value,
@@ -399,7 +550,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       );
       // return Result.Err("he");
       const errors: { msg: string }[] = [];
-      if (isNaN(vv_weight)) {
+      if (vv_weight === null) {
         const tip = "不合法的重量值";
         errors.push({
           msg: tip,
@@ -408,7 +559,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         console.warn(tip, vv_weight, $field_weight.input.value, $field_weight.input.placeholder);
         return Result.Err(tip);
       }
-      if (isNaN(vv_reps)) {
+      if (vv_reps === null) {
         const tip = "不合法的计数值";
         errors.push({
           msg: tip,
@@ -426,11 +577,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       $field_reps.setValue(vv_reps);
       $input_completed.setValue(dayjs().unix());
       _cur_step_idx = opt.step_idx;
-      _next_set_idx = opt.set_idx;
+      _cur_set_idx = opt.set_idx;
       if (!opt.ignore_update_steps) {
         methods.updateSteps({
           step_idx: _cur_step_idx,
-          set_idx: _next_set_idx,
+          set_idx: _cur_set_idx,
         });
       }
       if (is_last_act) {
@@ -454,8 +605,9 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       }
       let the_set_is_completed = true;
       for (let i = 0; i < set.actions.length; i += 1) {
-        const _k = `${opt.step_idx}-${opt.set_idx}-${i}`;
-        const $input_act_completed = ui.$inputs_completed.get(_k);
+        const act = set.actions[i];
+        const _step_set_act_uid = `${step_set_uid}-${act.uid}`;
+        const $input_act_completed = ui.$inputs_completed.get(_step_set_act_uid);
         if ($input_act_completed && !$input_act_completed.value) {
           the_set_is_completed = false;
         }
@@ -463,36 +615,42 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       if (!the_set_is_completed) {
         return Result.Ok(result);
       }
+      const $countdown = ui.$set_countdowns.get(step_set_uid);
       if (is_last_step && is_last_set && the_set_is_completed) {
         methods.showWorkoutDayCompleteConfirmDialog();
+        if ($countdown) {
+          $countdown.complete();
+        }
         return Result.Ok(result);
       }
-      const $countdown = ui.$set_countdowns.get(`${opt.step_idx}-${opt.set_idx}`);
       // console.log("[]handleCompleteSet - ", _cur_step_idx, _next_set_idx, $countdown);
       if ($countdown && !$countdown.state.paused) {
         $countdown.start();
       }
       /** 使用当前的表单值，作为下一组的备用表单值 */
       let next_set_idx = opt.set_idx + 1;
-      let next_set = _steps[opt.step_idx].sets[next_set_idx];
+      let next_set = step.sets[next_set_idx];
       if (next_set) {
+        const next_step_set_uid = `${step.uid}-${next_set.uid}`;
         for (let i = 0; i < next_set.actions.length; i++) {
-          const cur_act_idx = `${opt.step_idx}-${opt.set_idx}-${i}`;
-          const the_act_idx_in_next_set = `${opt.step_idx}-${next_set_idx}-${i}`;
-          const $field_cur_weight = ui.$fields_weight.get(cur_act_idx);
-          const $field_cur_reps = ui.$fields_reps.get(cur_act_idx);
+          const act = next_set.actions[i];
+          // const next_act = next_set.actions
+          const _cur_step_set_act_uid = `${step_set_uid}-${act.uid}`;
+          const the_act_idx_in_next_set = `${next_step_set_uid}-${act.uid}`;
+          const $field_cur_weight = ui.$fields_weight.get(_cur_step_set_act_uid);
+          const $field_cur_reps = ui.$fields_reps.get(_cur_step_set_act_uid);
           const $field_next_weight = ui.$fields_weight.get(the_act_idx_in_next_set);
           const $field_next_reps = ui.$fields_reps.get(the_act_idx_in_next_set);
           if ($field_cur_weight && $field_next_weight) {
-            const v = Number($field_cur_weight.input.value || $field_cur_weight.input.placeholder);
-            if (!isNaN(v)) {
+            const v = toNumber($field_cur_weight.input.value || $field_cur_weight.input.placeholder);
+            if (v) {
               $field_next_weight.input.setPlaceholder(v);
             }
             $field_next_weight.input.setUnit($field_cur_weight.input.unit);
           }
           if ($field_cur_reps && $field_next_reps) {
-            const v = Number($field_cur_reps.input.value || $field_cur_reps.input.placeholder);
-            if (!Number.isNaN(v)) {
+            const v = toNumber($field_cur_reps.input.value || $field_cur_reps.input.placeholder);
+            if (v) {
               $field_next_reps.input.setPlaceholder(v);
             }
             $field_next_reps.input.setUnit($field_cur_reps.input.unit);
@@ -503,21 +661,21 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     setCurSet(opt: { step_idx: number; set_idx: number }) {
       _cur_step_idx = opt.step_idx;
-      _next_set_idx = opt.set_idx;
+      _cur_set_idx = opt.set_idx;
       console.log("[PAGE]workout_day/update setCurSet before methods.updateSteps", opt);
       methods.updateSteps({
         step_idx: _cur_step_idx,
-        set_idx: _next_set_idx,
+        set_idx: _cur_set_idx,
       });
       methods.refresh();
     },
     nextSet() {
       const cur_step = _steps[_cur_step_idx];
-      console.log("[PAGE]workout_day/update - nextSet", _cur_step_idx, _next_set_idx, cur_step.sets.length);
-      _next_set_idx += 1;
-      if (_next_set_idx > cur_step.sets.length - 1) {
+      console.log("[PAGE]workout_day/update - nextSet", _cur_step_idx, _cur_set_idx, cur_step.sets.length);
+      _cur_set_idx += 1;
+      if (_cur_set_idx > cur_step.sets.length - 1) {
         _cur_step_idx += 1;
-        _next_set_idx = 0;
+        _cur_set_idx = 0;
         if (_cur_step_idx > _steps.length - 1) {
           return;
         }
@@ -526,11 +684,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250531",
+          v: "250616",
           step_idx: _cur_step_idx,
-          set_idx: _next_set_idx,
+          set_idx: _cur_set_idx,
           act_idx: _cur_act_idx,
-          touched_set_idx: _touched_set_idx,
+          touched_set_uid: _touched_set_uid,
           sets: data,
         },
       });
@@ -571,18 +729,18 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       await request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250531",
+          v: "250616",
           step_idx: 0,
           set_idx: 0,
           act_idx: 0,
-          touched_set_idx: [],
+          touched_set_uid: [],
           sets: [],
         },
       });
       request.workout_day.update_details.run({
         id: props.view.query.id,
         content: {
-          v: "250424",
+          v: "250616",
           steps: [],
         },
       });
@@ -598,26 +756,30 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       let total_volume = 0;
       const uncompleted_actions: { step_idx: number; set_idx: number; act_idx: number }[] = [];
       for (let a = 0; a < _steps.length; a += 1) {
+        const step = _steps[a];
         for (let b = 0; b < _steps[a].sets.length; b += 1) {
           const set = _steps[a].sets[b];
           const actions = [];
           for (let c = 0; c < set.actions.length; c += 1) {
-            const k = `${a}-${b}-${c}`;
-            const $field_reps = ui.$fields_reps.get(k);
-            const $field_weight = ui.$fields_weight.get(k);
-            const $input_completed = ui.$inputs_completed.get(k);
+            const act = set.actions[c];
+            const step_set_act_uid = `${step.uid}-${set.uid}-${act.uid}`;
+            const $field_reps = ui.$fields_reps.get(step_set_act_uid);
+            const $field_weight = ui.$fields_weight.get(step_set_act_uid);
+            const $input_completed = ui.$inputs_completed.get(step_set_act_uid);
             if ($input_completed && $field_reps && $field_weight) {
               if ($input_completed.value && $field_reps.input.value && $field_weight.input.value) {
-                const v_reps = Number($field_reps.input.value);
-                const v_weight = Number($field_weight.input.value);
+                const v_reps = toNumber($field_reps.input.value, 0);
+                const v_weight = toNumber($field_weight.input.value, 0);
                 let real_weight = v_weight;
                 if ($field_weight.input.unit === getSetValueUnit("磅")) {
-                  real_weight = Number((real_weight * 0.45).toFixed(1));
+                  real_weight = toFixed(real_weight * 0.45, 1);
                 }
                 if ($field_reps.input.unit === getSetValueUnit("次")) {
                   real_weight = real_weight * v_reps;
                 }
-                total_volume += real_weight;
+                if (real_weight > 0) {
+                  total_volume += real_weight;
+                }
                 actions.push({
                   id: set.actions[c].id,
                   zh_name: set.actions[c].zh_name,
@@ -655,24 +817,25 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         weight: 0,
         tips: [] as string[],
       };
-      console.log("[PAGE]workout_day/update - toBody 1", _touched_set_idx);
-      const data: WorkoutDayStepProgressJSON250531["sets"] = [];
+      console.log("[PAGE]workout_day/update - toBody 1", _touched_set_uid);
+      const data: WorkoutDayStepProgressJSON250616["sets"] = [];
       for (let a = 0; a < _steps.length; a++) {
         const step = _steps[a];
         for (let b = 0; b < step.sets.length; b++) {
-          if (!_touched_set_idx.includes(`${a}-${b}`)) {
+          const set = step.sets[b];
+          const step_set_uid = `${step.uid}-${set.uid}`;
+          if (!_touched_set_uid.includes(step_set_uid)) {
             continue;
           }
-          const set = step.sets[b];
           let set_completed = false;
-          const actions: WorkoutDayStepProgressJSON250531["sets"][number]["actions"] = [];
+          const actions: WorkoutDayStepProgressJSON250616["sets"][number]["actions"] = [];
           for (let c = 0; c < set.actions.length; c++) {
-            const kkk = `${a}-${b}-${c}`;
-            const $field_weight = ui.$fields_weight.get(kkk);
-            const $field_reps = ui.$fields_reps.get(kkk);
-            const $input_check = ui.$inputs_completed.get(kkk);
-            const $act_countdown = ui.$set_act_countdowns.get(kkk);
-
+            const act = set.actions[c];
+            const step_set_act_uid = `${step.uid}-${set.uid}-${act.uid}`;
+            const $field_weight = ui.$fields_weight.get(step_set_act_uid);
+            const $field_reps = ui.$fields_reps.get(step_set_act_uid);
+            const $input_check = ui.$inputs_completed.get(step_set_act_uid);
+            const $act_countdown = ui.$set_act_countdowns.get(step_set_act_uid);
             const completed = $input_check?.value;
             if (!completed) {
               set_completed = false;
@@ -684,25 +847,17 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
                 if (has_num_value($field_weight.input.value)) {
                   return Number($field_weight.input.value);
                 }
-                const v1 = Number($field_weight.input.placeholder);
-                if (Number.isNaN(v1)) {
-                  return 0;
-                }
-                return v1;
+                return toNumber($field_weight.input.placeholder, 0);
               })();
               const vv_reps = (() => {
                 if (has_num_value($field_reps.input.value)) {
                   return Number($field_reps.input.value);
                 }
-                const v1 = Number($field_reps.input.placeholder);
-                if (Number.isNaN(v1)) {
-                  return 0;
-                }
-                return v1;
+                return toNumber($field_reps.input.placeholder, 0);
               })();
               actions.push({
-                idx: c,
-                action_id: set.actions[c].id,
+                uid: act.uid,
+                action_id: act.id,
                 reps: vv_reps,
                 reps_unit: $field_reps.input.unit,
                 weight: vv_weight,
@@ -716,12 +871,12 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
               total.weight += vv_weight * vv_reps;
             }
           }
-          const $countdown = ui.$set_countdowns.get(`${a}-${b}`);
-          const $remark = ui.$inputs_set_remark.get(`${a}-${b}`);
+          const $countdown = ui.$set_countdowns.get(step_set_uid);
+          const $remark = ui.$inputs_set_remark.get(step_set_uid);
           // console.log("[PAGE]workout_day/update - $countdown", $countdown?.state.remaining);
           data.push({
-            step_idx: a,
-            idx: b,
+            step_uid: step.uid,
+            uid: set.uid,
             actions,
             remaining_time: $countdown?.state.remaining ?? 0,
             exceed_time: $countdown?.state.exceed ?? 0,
@@ -759,7 +914,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       request.workout_day.update_details.run({
         id: props.view.query.id,
         content: {
-          v: "250424",
+          v: "250616",
           steps: _steps,
         },
       });
@@ -767,25 +922,65 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 更新动作执行进度 */
     updateSteps(opt: { step_idx: number; set_idx: number }) {
       const { data } = methods.toBody();
-      console.log("[PAGE]workout_day/update - updateSteps before update_steps.run", data, _touched_set_idx);
+      console.log("[PAGE]workout_day/update - updateSteps before update_steps.run", opt, data, _touched_set_uid);
       return request.workout_day.update_steps.run({
         id: props.view.query.id,
         content: {
-          v: "250531",
+          v: "250616",
           step_idx: opt.step_idx,
           set_idx: opt.set_idx,
           act_idx: _cur_act_idx,
-          touched_set_idx: _touched_set_idx,
+          touched_set_uid: _touched_set_uid,
           sets: data,
         },
       });
     },
     async handleClickWorkoutAction(action: { id: number }) {
-      ui.$workout_action_profile.ui.$dialog.show();
-      ui.$workout_action_profile.methods.fetch(action);
+      const student_id = request.workout_day.profile.response?.student_id;
+      if (!student_id) {
+        props.app.tip({
+          text: ["异常操作"],
+        });
+        return;
+      }
+      ui.$ref_workout_action.select(action);
+      request.workout_action_history.list.search({ workout_action_id: action.id, student_id });
+      // ui.$workout_action_profile.ui.$dialog.show();
+      // ui.$workout_action_profile.methods.fetch(action);
+    },
+    showWorkoutActionDialog() {
+      const cur_set_key = ui.$ref_cur_set_idx.value;
+      if (!cur_set_key) {
+        return;
+      }
+      const set = _steps[cur_set_key.step_idx]?.sets[cur_set_key.idx];
+      if (set) {
+        const ids = set.actions.map((act) => {
+          return {
+            id: act.id,
+            zh_name: act.zh_name,
+          };
+        });
+        // 更新动作选择弹窗的状态，如 是否支持多选、禁用的动作、选中的动作 等
+        if (
+          [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(set.type)
+        ) {
+          ui.$workout_action_select.methods.setMode("single");
+          ui.$workout_action_select.methods.setDisabled(ids.map((v) => v.id));
+        }
+        if ([WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)) {
+          ui.$workout_action_select.methods.setMode("multiple");
+          ui.$workout_action_select.methods.setDisabled([]);
+          ui.$workout_action_select.setValue(ids);
+        }
+      }
+      if (ui.$workout_action_select.request.action.list.response.initial) {
+        ui.$workout_action_select.init();
+      }
+      ui.$workout_action_select.ui.$dialog.show();
     },
     /** 完成该次训练 */
-    async submit() {
+    async completeTheWorkoutDay() {
       // const { data } = methods.toBody();
       props.app.tip({
         icon: "loading",
@@ -803,7 +998,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       props.app.tip({
-        text: ["完成！"],
+        text: ["完成"],
       });
       ui.$dialog_overview.hide();
       if (!is_multiple_view) {
@@ -896,13 +1091,14 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         new MenuItemCore({
           label: "备注",
           onClick() {
-            const cur_set_key = ui.$ref_cur_set_key.value;
+            const cur_set_key = ui.$ref_cur_set_idx.value;
             if (!cur_set_key) {
               return;
             }
-            const a = cur_set_key.step_idx;
-            const b = cur_set_key.idx;
-            const $remark = ui.$inputs_set_remark.get(`${a}-${b}`);
+            const { step_idx, idx } = cur_set_key;
+            const step = _steps[step_idx];
+            const set = step.sets[idx];
+            const $remark = ui.$inputs_set_remark.get(`${step.uid}-${set.uid}`);
             if (!$remark) {
               props.app.tip({
                 text: ["异常操作"],
@@ -915,70 +1111,52 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           },
         }),
         new MenuItemCore({
-          label: "修改动作",
+          label: "修改当前动作",
           onClick() {
             ui.$menu_set.hide();
-            ui.$ref_action_dialog_for.select("change_action");
-            const cur_set_key = ui.$ref_cur_set_key.value;
-            if (!cur_set_key) {
-              return;
-            }
-            const set = _steps[cur_set_key.step_idx]?.sets[cur_set_key.idx];
-            if (set) {
-              const ids = set.actions.map((act) => {
-                return {
-                  id: act.id,
-                  zh_name: act.zh_name,
-                };
-              });
-              if (
-                [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Decreasing, WorkoutPlanSetType.Increasing].includes(
-                  set.type
-                )
-              ) {
-                ui.$workout_action_dialog.methods.setMode("single");
-                ui.$workout_action_dialog.methods.setDisabled(ids.map((v) => v.id));
-              }
-              if ([WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(set.type)) {
-                ui.$workout_action_dialog.methods.setMode("multiple");
-                ui.$workout_action_dialog.methods.setDisabled([]);
-                ui.$workout_action_dialog.setValue(ids);
-              }
-            }
-            ui.$workout_action_dialog.ui.$dialog.show();
+            ui.$ref_action_dialog_for.select("change_cur_action");
+            methods.showWorkoutActionDialog();
           },
         }),
         new MenuItemCore({
           label: "删除",
-          onClick() {
-            const cur_set_key = ui.$ref_cur_set_key.value;
+          async onClick() {
+            const cur_set_key = ui.$ref_cur_set_idx.value;
             if (!cur_set_key) {
               return;
             }
             const { step_idx, idx } = cur_set_key;
             methods.removeSet({ step_idx, set_idx: idx });
+            console.log("[]after methods.removeSet", _cur_step_idx, _cur_set_idx);
+            // 连续调用接口必须等同一个完成再调另一个
+            await methods.updateSteps({
+              step_idx: _cur_step_idx,
+              set_idx: _cur_set_idx,
+            });
+            methods.updateDetails();
             ui.$menu_set.hide();
           },
         }),
       ],
     }),
-    $ref_cur_set_key: new RefCore<{ step_idx: number; idx: number }>(),
+    $ref_cur_set_idx: new RefCore<{ step_idx: number; idx: number }>(),
     $ref_cur_step: new RefCore<{ idx: number }>(),
     $ref_input_key: new RefCore<{ key: string; for: "reps" | "weight" }>(),
-    $ref_action_dialog_for: new RefCore<"add_action" | "change_action">(),
+    /** 打开动作选择弹窗的目的 增加动作 修改动作 */
+    $ref_action_dialog_for: new RefCore<"add_action" | "change_action" | "change_cur_action">(),
     $view: new ScrollViewCore(),
     $workout_plan_dialog_btn: new ButtonCore(),
     $action_select_dialog: new DialogCore({}),
     $action_select_view: new ScrollViewCore(),
     $start_btn: new ButtonCore(),
     /** 动作选择弹窗 */
-    $workout_action_dialog: WorkoutActionSelectViewModel({
+    $workout_action_select: WorkoutActionSelectViewModel({
       defaultValue: [],
       list: $workout_action_list,
       app: props.app,
       client: props.client,
-      onOk(acts) {
-        if (acts.length === 0) {
+      onOk(selected_acts) {
+        if (selected_acts.length === 0) {
           props.app.tip({
             text: ["请选择动作"],
           });
@@ -987,10 +1165,14 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         const target = ui.$ref_action_dialog_for.value;
         console.log("[]$workout_action_dialog - after target", target);
         if (!target) {
+          props.app.tip({
+            text: ["操作异常"],
+          });
           return;
         }
-        if (target === "change_action") {
-          const set_idx = ui.$ref_cur_set_key.value;
+        // 修改动作
+        if (["change_action", "change_cur_action"].includes(target)) {
+          const set_idx = ui.$ref_cur_set_idx.value;
           console.log("[]$ref_cur_set_key - after set_idx", set_idx);
           if (!set_idx) {
             props.app.tip({
@@ -998,38 +1180,43 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             });
             return;
           }
-          const [a] = [set_idx.step_idx];
+          const a = set_idx.step_idx;
           const step = _steps[a];
           const next_sets: (typeof step)["sets"] = [];
-          for (let b = 0; b < step.sets.length; b += 1) {
+          function updateSetWithSelectedActs(b: number) {
+            const set = step.sets[b];
+            const step_set_uid = `${step.uid}-${set.uid}`;
             const next_set = {
-              idx: step.sets[b].idx,
-              type: step.sets[b].type,
-              actions: [...step.sets[b].actions],
-              weight: step.sets[b].weight,
-              rest_duration: step.sets[b].rest_duration,
+              idx: set.uid,
+              type: set.type,
+              actions: set.actions,
+              weight: set.weight,
+              rest_duration: set.rest_duration,
             };
             // console.log("[]$find matched set - after set_idx", a, b, acts.length, set.actions.length);
             // const { nodes_added, nodes_removed } = diff(set.actions, acts);
             let i = 0;
             const next_actions = [...next_set.actions];
             const next_actions_count = next_actions.length;
-            for (; i < acts.length; i += 1) {
-              // const act = set.actions[i];
-              const k = `${a}-${b}-${i}`;
-              const $act = ui.$set_actions.get(k);
-              const act = { id: acts[i].id, zh_name: acts[i].zh_name };
+            for (; i < selected_acts.length; i += 1) {
+              const selected_act = selected_acts[i];
+              const act = set.actions[i];
+              const step_set_uid = `${step.uid}-${set.uid}-${act.uid}`;
+              const $act = ui.$set_actions.get(step_set_uid);
               (() => {
+                // 替换已存在的动作组中的 动作信息
                 if ($act) {
-                  console.log("[]update act", i, act.zh_name);
-                  next_actions[i].id = Number(act.id);
-                  next_actions[i].zh_name = act.zh_name;
-                  $act.change(act);
+                  console.log("[]update act", i, selected_act.zh_name);
+                  next_actions[i].id = Number(selected_act.id);
+                  next_actions[i].zh_name = selected_act.zh_name;
+                  $act.change(selected_act);
                   return;
                 }
+                // 给已存在动作组中 增加动作（一般出现在 HIIT、递增递减组、超级组
                 const prev_act = next_actions[i - 1];
-                console.log("[]append act", i, act.zh_name);
-                const act_payload = buildSetAct(act, {
+                console.log("[]append act", i, selected_act.zh_name);
+                const act_payload = buildSetAct(selected_act, {
+                  uid: next_actions.length,
                   hiit: prev_act?.reps_unit === getSetValueUnit("秒"),
                 });
                 methods.appendSetAct({
@@ -1037,47 +1224,61 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
                   set_idx: b,
                   idx: i,
                   action: act_payload,
-                  pending_set: undefined,
+                  pending_set: null,
                 });
                 next_actions.push(act_payload);
               })();
             }
             for (; i < next_actions_count; i += 1) {
-              ui.$set_actions.delete(`${a}-${b}-${i}`);
-              console.log("[]delete act", i, next_actions[i].zh_name);
+              const act = next_actions[i];
+              ui.$set_actions.delete(`${step_set_uid}-${act.uid}`);
+              // console.log("[]delete act", i, next_actions[i].zh_name);
               next_actions.splice(i, 1);
             }
             next_sets.push({
-              idx: next_set.idx,
+              uid: next_set.idx,
               type: next_set.type,
               actions: next_actions,
               weight: next_set.weight,
               rest_duration: next_set.rest_duration,
             });
           }
+          for (let b = 0; b < step.sets.length; b += 1) {
+            if (target === "change_cur_action") {
+              if (b === set_idx.idx) {
+                updateSetWithSelectedActs(b);
+              } else {
+                next_sets.push(step.sets[b]);
+              }
+            }
+            if (target === "change_action") {
+              updateSetWithSelectedActs(b);
+            }
+          }
           _steps = update_arr_item(_steps, a, {
-            idx: step.idx,
+            uid: step.uid,
             sets: next_sets,
             note: step.note,
           });
-          ui.$workout_action_dialog.ui.$dialog.hide();
+          ui.$workout_action_select.ui.$dialog.hide();
           methods.refresh();
           methods.updateDetails();
           return;
         }
+        // 增加动作
         const v = ui.$ref_cur_step.value;
-        console.log("[PAGE]workout_day/create", acts, v);
+        console.log("[PAGE]workout_day/create", selected_acts, v);
         if (v) {
           const step = _steps[v.idx];
-          if (acts.length === 1) {
+          if (selected_acts.length === 1) {
             _steps = update_arr_item(_steps, v.idx, {
-              idx: step.idx,
+              uid: step.uid,
               sets: step.sets.map((set, idx) => {
                 return {
-                  idx,
+                  uid: idx,
                   type: set.type,
-                  actions: acts.map((act) => {
-                    return buildSetAct(act);
+                  actions: selected_acts.map((act, idx) => {
+                    return buildSetAct(act, { uid: idx, hiit: false });
                   }),
                   rest_duration: 90,
                   weight: "RPE 6",
@@ -1087,21 +1288,22 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             });
           }
           ui.$ref_cur_step.clear();
-          ui.$workout_action_dialog.methods.clear();
-          ui.$workout_action_dialog.ui.$dialog.hide();
+          ui.$workout_action_select.methods.clear();
+          ui.$workout_action_select.ui.$dialog.hide();
           methods.refresh();
           return;
         }
+        // @todo 这是什么场景
         _steps = [
           ..._steps,
           {
-            idx: _steps.length,
+            uid: _steps.length,
             sets: [
               {
-                idx: 0,
+                uid: 0,
                 type: WorkoutPlanSetType.Normal,
-                actions: acts.map((act) => {
-                  return buildSetAct(act);
+                actions: selected_acts.map((act, idx) => {
+                  return buildSetAct(act, { uid: idx, hiit: false });
                 }),
                 rest_duration: 90,
                 weight: "RPE 6",
@@ -1110,8 +1312,8 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             note: "",
           },
         ];
-        ui.$workout_action_dialog.methods.clear();
-        ui.$workout_action_dialog.ui.$dialog.hide();
+        ui.$workout_action_select.methods.clear();
+        ui.$workout_action_select.ui.$dialog.hide();
         methods.refresh();
       },
       onError(error) {
@@ -1158,7 +1360,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           });
           return;
         }
-        const cur_set_key = ui.$ref_cur_set_key.value;
+        const cur_set_key = ui.$ref_cur_set_idx.value;
         if (!cur_set_key) {
           return;
         }
@@ -1170,7 +1372,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         $input.setValue(v);
         methods.updateSteps({
           step_idx: _cur_step_idx,
-          set_idx: _next_set_idx,
+          set_idx: _cur_set_idx,
         });
         ui.$input_remark.clear();
         ui.$dialog_remark.hide();
@@ -1223,35 +1425,23 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             ui.$dialog_give_up_confirm.show();
           },
         }),
-        // new MenuItemCore({
-        //   label: "重置",
-        //   async onClick() {
-        //     ui.$menu_workout_day.hide();
-        //     props.app.tip({
-        //       icon: "loading",
-        //       text: ["提交中..."],
-        //     });
-        //     await methods.resetPendingSteps();
-        //   },
-        // }),
+        new MenuItemCore({
+          label: "重置",
+          async onClick() {
+            ui.$menu_workout_day.hide();
+            props.app.tip({
+              icon: "loading",
+              text: ["提交中..."],
+            });
+            await methods.resetPendingSteps();
+          },
+        }),
       ],
     }),
     $dialog_give_up_confirm: new DialogCore({}),
-    $workout_action_select: WorkoutActionSelectViewModel({
-      defaultValue: [],
-      list: $workout_action_list,
-      client: props.client,
-      app: props.app,
-      async onOk(actions) {},
-      onError(error) {
-        props.app.tip({
-          text: [error.message],
-        });
-      },
-    }),
     $btn_workout_day_submit: new ButtonCore({
       onClick() {
-        methods.submit();
+        methods.completeTheWorkoutDay();
       },
     }),
     /** 放弃按钮 */
@@ -1261,15 +1451,88 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         ui.$dialog_give_up_confirm.show();
       },
     }),
+    $ref_workout_action: new RefCore<{ id: number }>(),
+    $popover_action: new PopoverCore(),
+    $btn_workout_action_profile: new ButtonCore({
+      onClick() {
+        const v = ui.$ref_workout_action.value;
+        if (!v) {
+          props.app.tip({
+            text: ["异常操作"],
+          });
+          return;
+        }
+        ui.$popover_action.hide();
+        ui.$workout_action_profile.ui.$dialog.show();
+        ui.$workout_action_profile.methods.fetch({ id: v.id });
+      },
+    }),
+    $btn_workout_action_change: new ButtonCore({
+      onClick() {
+        ui.$ref_action_dialog_for.select("change_action");
+        ui.$popover_action.hide();
+        methods.showWorkoutActionDialog();
+      },
+    }),
+    /** 给 step.sets 增加一组 */
+    $btn_workout_action_add_set: new ButtonCore({
+      onClick() {
+        const set_key = ui.$ref_cur_set_idx.value;
+        if (!set_key) {
+          return;
+        }
+        const { step_idx, idx } = set_key;
+        const step = _steps[step_idx];
+        const set = step.sets[_steps[step_idx].sets.length - 1];
+        if (!set) {
+          return;
+        }
+        console.log("[PAGE]workout_day/update - btn_workout_action_add_set before appendSet", set);
+        const max_uid = Math.max.apply(
+          null,
+          step.sets.map((v) => v.uid)
+        );
+        const appended_set = {
+          uid: max_uid + 1,
+          type: set.type,
+          actions: set.actions,
+          rest_duration: set.rest_duration,
+          weight: set.weight,
+        };
+        const next_sets = [...step.sets, appended_set];
+        _steps = update_arr_item(_steps, step_idx, {
+          ...step,
+          sets: next_sets,
+        });
+        console.log("[]before methods.appendSet - the uid", step.sets.length);
+        methods.appendSet(
+          {
+            ...appended_set,
+            step_uid: step.uid,
+            completed: false,
+          },
+          null
+        );
+        ui.$popover_action.hide();
+        // methods.updateSteps({ step_idx: _cur_step_idx, set_idx: _cur_set_idx });
+        methods.updateDetails();
+        methods.refresh();
+      },
+    }),
   };
+  /** 弹出键盘时页面需要弹起的高度 */
   let _height = 0;
-  let _steps: WorkoutDayStepDetailsJSON250424["steps"] = [];
+  /** 训练计划的动作内容，将其按组拆分出来的详细步骤 */
+  let _steps: WorkoutDayStepDetailsJSON250616["steps"] = [];
   let _cur_step_idx = 0;
-  let _next_set_idx = 0;
+  /** 当前组 */
+  let _cur_set_idx = 0;
   let _cur_act_idx = 0;
-  let _touched_set_idx: string[] = [];
+  /** 好像没啥用，就是用来避免提交后端时把未填写的组作为数据 0 提交上去 */
+  let _touched_set_uid: string[] = [];
   let _duration = "分钟";
   let _estimated_duration = "分钟";
+  /** 统计 */
   let _stats: {
     started_at: string;
     finished_at: string;
@@ -1289,6 +1552,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     uncompleted_actions: [],
     sets: [],
   };
+  /** 详情视图，用于多学员场景，单个学员完成时展示其完成状态 */
   let _profile_view: RouteViewCore | null = null;
   let _state = {
     get profile() {
@@ -1300,14 +1564,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     get height() {
       return _height;
     },
-    get loading() {
-      return request.workout_action.profile.loading;
-    },
     get cur_workout_action_history() {
       return request.workout_action_history.list.response.dataSource;
     },
-    get next_set_idx() {
-      return _next_set_idx;
+    get cur_set_idx() {
+      return _cur_set_idx;
     },
     get cur_step_idx() {
       return _cur_step_idx;
@@ -1315,9 +1576,9 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     get duration() {
       return _duration;
     },
-    get estimated_duration() {
-      return _estimated_duration;
-    },
+    // get estimated_duration() {
+    //   return _estimated_duration;
+    // },
     get stats() {
       return _stats;
     },
@@ -1333,6 +1594,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  request.workout_action_history.list.onStateChange(() => methods.refresh());
   ui.$set_value_input.onSubmit((v) => {
     console.log("[PAGE]workout_day/create", v);
     ui.$dialog_num_keyboard.hide();
@@ -1383,10 +1645,6 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     }
     $field.input.setUnit(ui.$set_value_input.state.unit);
   });
-  request.workout_action.profile.onStateChange((v) => {
-    methods.refresh();
-  });
-  request.workout_action_history.list.onStateChange(() => methods.refresh());
 
   return {
     state: _state,
@@ -1395,12 +1653,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     methods,
     async ready() {
       console.log("[PAGE]home_workout_day/update ready");
-      const id = props.view.query.id;
-      if (!id) {
+      const id = Number(props.view.query.id);
+      if (Number.isNaN(id)) {
         return;
       }
-      ui.$workout_action_dialog.request.action.list.init();
-      const r = await request.workout_day.profile.run({ id: Number(id) });
+      const r = await request.workout_day.profile.run({ id });
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -1408,44 +1665,33 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       const { status, steps, pending_steps, started_at } = r.data;
+      // ui.$workout_action_dialog.request.action.list.init();
       console.log(
         "[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started",
         steps,
         pending_steps
       );
       if (status === WorkoutDayStatus.Started) {
-        console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
+        // console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
         ui.$day_duration.setStartedAt(started_at.valueOf());
         ui.$day_duration.play();
       }
       _stats.started_at = started_at.format("YYYY-MM-DD HH:mm");
       _cur_step_idx = pending_steps.step_idx;
-      _next_set_idx = pending_steps.set_idx;
+      _cur_set_idx = pending_steps.set_idx;
       _cur_act_idx = pending_steps.act_idx;
-      _touched_set_idx = pending_steps.touched_set_idx;
+      _touched_set_uid = pending_steps.touched_set_uid;
       _steps = steps;
       /** 预计花费时间 */
-      let estimated_duration = 0;
+      // let estimated_duration = 0;
       for (let a = 0; a < _steps.length; a += 1) {
         const step = _steps[a];
         for (let b = 0; b < step.sets.length; b += 1) {
           const set = step.sets[b];
-          const pending_set = pending_steps.sets.find((set) => {
-            return set.step_idx === a && set.idx === b;
-          });
-          const kk = `${a}-${b}`;
-          ui.$inputs_set_remark.set(kk, new InputCore({ defaultValue: pending_set?.remark ?? "" }));
-          ui.$btns_more.set(
-            kk,
-            new ButtonCore({
-              onClick() {
-                ui.$ref_cur_set_key.select({
-                  step_idx: a,
-                  idx: b,
-                });
-              },
-            })
-          );
+          const pending_set =
+            pending_steps.sets.find((v) => {
+              return v.step_uid === step.uid && v.uid === set.uid;
+            }) ?? null;
           // let is_completed = a < pending_steps.step_idx;
           // if (a === pending_steps.step_idx) {
           //   is_completed = b < pending_steps.set_idx;
@@ -1467,54 +1713,19 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           if (all_act_completed) {
             the_set_completed = true;
           }
-          if (set.rest_duration) {
-            const $countdown = SetCountdownViewModel({
-              // countdown: 10,
-              countdown: set.rest_duration,
-              remaining: pending_set?.remaining_time ?? 0,
-              exceed: pending_set?.exceed_time ?? 0,
-              finished: the_set_completed,
-            });
-            $countdown.onStart(() => {
-              methods.pauseAllRunningSetCountdowns();
-              console.log("[PAGE]workout_day/update - after $countdown.onStart", set);
-              ui.$running_set_countdowns.set(`${a}-${b}`, $countdown);
-              if ([WorkoutPlanSetType.HIIT].includes(set.type)) {
-                const k = `${a}-${b}-${set.actions.length - 1}`;
-                // console.log("[]the k is", k);
-                const $last_action_countdown = ui.$set_act_countdowns.get(k);
-                if ($last_action_countdown && $last_action_countdown.state.running) {
-                  $last_action_countdown.pause();
-                }
-              }
-              methods.setCurSet({ step_idx: a, set_idx: b });
-            });
-            $countdown.onStop(() => {
-              ui.$running_set_countdowns.delete(`${a}-${b}`);
-              methods.nextSet();
-            });
-            ui.$set_countdowns.set(`${a}-${b}`, $countdown);
-            if (!the_set_completed) {
-              estimated_duration += set.rest_duration;
-            }
-          }
-          let estimated_set_duration = 0;
-          for (let c = 0; c < set.actions.length; c += 1) {
-            const action = set.actions[c];
-            methods.appendSetAct({
-              step_idx: a,
-              set_idx: b,
-              idx: c,
-              action,
-              pending_set,
-            });
-            estimated_set_duration += action.reps * 5;
-          }
-          if (!the_set_completed) {
-            estimated_duration += estimated_set_duration;
-          }
+          methods.appendSet(
+            {
+              ...set,
+              step_uid: step.uid,
+              completed: the_set_completed,
+            },
+            pending_set
+          );
+          // if (!the_set_completed) {
+          //   estimated_duration += estimated_set_duration;
+          // }
         }
-        _estimated_duration = `${Math.floor(estimated_duration / 60)}分钟`;
+        // _estimated_duration = `${Math.floor(estimated_duration / 60)}分钟`;
       }
       methods.refresh();
     },
@@ -1546,14 +1757,26 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
             >
               <div class="space-y-8">
                 <For each={state().steps}>
-                  {(step, a) => {
+                  {(step, step_idx) => {
                     return (
                       <div class="">
                         <Show when={step.note}>
-                          <div class="flex gap-2">
-                            <div class="w-[40px] h-[40px] rounded-full bg-w-bg-5"></div>
-                            <div class="relative">
-                              <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] bg-w-bg-5">
+                          <div class="flex gap-2 pb-2">
+                            <Show
+                              when={state().profile?.workout_plan.creator}
+                              fallback={<div class="mt-2 w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
+                            >
+                              <div
+                                class="mt-2 w-[32px] h-[32px] rounded-full bg-w-bg-5"
+                                style={{
+                                  "background-image": `url('${state().profile?.workout_plan.creator.avatar_url}')`,
+                                  "background-size": "cover",
+                                  "background-position": "center",
+                                }}
+                              ></div>
+                            </Show>
+                            <div class="relative flex-1">
+                              <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] text-w-fg-1 text-sm bg-w-bg-5">
                                 {step.note}
                               </div>
                             </div>
@@ -1561,10 +1784,14 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                         </Show>
                         <div class="space-y-2 w-full">
                           <For each={step.sets}>
-                            {(set, b) => {
-                              const is_cur_set = () => state().cur_step_idx === a() && state().next_set_idx === b();
+                            {(set, set_idx) => {
+                              const step_set_uid = () => `${step.uid}-${set.uid}`;
+                              const is_cur_set = () =>
+                                state().cur_step_idx === step_idx() && state().cur_set_idx === set_idx();
                               const is_last_set = () =>
-                                a() === state().steps.length - 1 && b() === step.sets.length - 1;
+                                step_idx() === state().steps.length - 1 && set_idx() === step.sets.length - 1;
+                              const first_act = set.actions[0];
+                              const first_act_uid = () => `${step_set_uid}-${first_act.uid}`;
                               return (
                                 <>
                                   <div class="overflow-hidden relative w-full">
@@ -1582,7 +1809,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                         class="z-10 absolute right-4 top-4"
                                         onClick={(event) => {
                                           const client = event.currentTarget.getBoundingClientRect();
-                                          vm.ui.$ref_cur_set_key.select({ step_idx: a(), idx: b() });
+                                          vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
                                           vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
                                         }}
                                       >
@@ -1593,14 +1820,17 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                           when={
                                             [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
                                               set.type
-                                            ) && vm.ui.$set_actions.get(`${a()}-${b()}-0`)
+                                            ) && vm.ui.$set_actions.get(first_act_uid())
                                           }
                                         >
                                           <SetActionView
-                                            store={vm.ui.$set_actions.get(`${a()}-${b()}-0`)!}
-                                            idx={b() + 1}
+                                            store={vm.ui.$set_actions.get(first_act_uid())!}
+                                            idx={set_idx() + 1}
                                             highlight={is_cur_set()}
-                                            onClick={() => {
+                                            onClick={(event) => {
+                                              const { x, y } = event.currentTarget.getBoundingClientRect();
+                                              vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
+                                              vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
                                               vm.methods.handleClickWorkoutAction(set.actions[0]);
                                             }}
                                           />
@@ -1615,13 +1845,13 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                               "bg-w-green": is_cur_set(),
                                             }}
                                           >
-                                            <div class="text-sm">{b() + 1}</div>
+                                            <div class="text-sm">{set_idx() + 1}</div>
                                           </div>
                                         </Show>
                                         <div class="space-y-2 w-full">
                                           <For each={set.actions}>
-                                            {(action, c) => {
-                                              const act_k = `${a()}-${b()}-${c()}`;
+                                            {(action, act_idx) => {
+                                              const act_uid = `${step_set_uid()}-${action.uid}`;
                                               const is_countdown_reps = () =>
                                                 [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
                                                   action.reps_unit
@@ -1631,31 +1861,48 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                   <Show
                                                     when={
                                                       ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                                      vm.ui.$set_actions.get(act_k)
+                                                      vm.ui.$set_actions.get(act_uid)
                                                     }
                                                   >
                                                     <SetActionView
-                                                      store={vm.ui.$set_actions.get(act_k)!}
-                                                      idx={[WorkoutPlanSetType.Normal].includes(set.type) ? b() + 1 : 0}
+                                                      store={vm.ui.$set_actions.get(act_uid)!}
+                                                      idx={
+                                                        [WorkoutPlanSetType.Normal].includes(set.type)
+                                                          ? set_idx() + 1
+                                                          : 0
+                                                      }
                                                       highlight={is_cur_set()}
-                                                      onClick={() => {
+                                                      onClick={(event) => {
+                                                        const { x, y } = event.currentTarget.getBoundingClientRect();
+                                                        vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
+                                                        vm.ui.$ref_cur_set_idx.select({
+                                                          step_idx: step_idx(),
+                                                          idx: set_idx(),
+                                                        });
                                                         vm.methods.handleClickWorkoutAction(action);
                                                       }}
                                                     />
                                                   </Show>
                                                   <div class="flex items-center gap-2 mt-2">
-                                                    <Show when={vm.ui.$fields_weight.get(act_k)}>
+                                                    <Show when={vm.ui.$fields_weight.get(act_uid)}>
                                                       <SetValueInput
-                                                        store={vm.ui.$fields_weight.get(act_k)!}
-                                                        class="w-[68px] border-2 border-w-fg-3 rounded-lg p-2"
+                                                        class="w-[128px]"
+                                                        width={128}
+                                                        store={vm.ui.$fields_weight.get(act_uid)!}
                                                         onClick={(event) => {
                                                           const client = event.currentTarget.getBoundingClientRect();
-                                                          console.log("[]beforeShowNumInput1", a(), b(), c(), client.y);
+                                                          console.log(
+                                                            "[]beforeShowNumInput1",
+                                                            step_idx(),
+                                                            set_idx(),
+                                                            act_idx(),
+                                                            client.y
+                                                          );
                                                           vm.methods.handleShowNumKeyboard({
                                                             for: "weight",
-                                                            step_idx: a(),
-                                                            set_idx: b(),
-                                                            act_idx: c(),
+                                                            step_idx: step_idx(),
+                                                            set_idx: set_idx(),
+                                                            act_idx: act_idx(),
                                                             rect: {
                                                               x: client.x,
                                                               y: client.y,
@@ -1666,18 +1913,23 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                         }}
                                                       />
                                                     </Show>
-                                                    <Show when={vm.ui.$fields_reps.get(act_k)}>
+                                                    <Show when={vm.ui.$fields_reps.get(act_uid)}>
                                                       <SetValueInput
-                                                        store={vm.ui.$fields_reps.get(act_k)!}
-                                                        class="w-[68px] border border-w-fg-3 rounded-md p-2"
+                                                        store={vm.ui.$fields_reps.get(act_uid)!}
+                                                        class=""
                                                         onClick={(event) => {
                                                           const client = event.currentTarget.getBoundingClientRect();
-                                                          console.log("[]beforeShowNumInput2", a(), b(), c());
+                                                          console.log(
+                                                            "[]beforeShowNumInput2",
+                                                            step_idx(),
+                                                            set_idx(),
+                                                            act_idx()
+                                                          );
                                                           vm.methods.handleShowNumKeyboard({
                                                             for: "reps",
-                                                            step_idx: a(),
-                                                            set_idx: b(),
-                                                            act_idx: c(),
+                                                            step_idx: step_idx(),
+                                                            set_idx: set_idx(),
+                                                            act_idx: act_idx(),
                                                             rect: {
                                                               x: client.x,
                                                               y: client.y,
@@ -1688,27 +1940,27 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                         }}
                                                       />
                                                     </Show>
-                                                    <Show when={vm.ui.$inputs_completed.get(act_k)}>
+                                                    <Show when={vm.ui.$inputs_completed.get(act_uid)}>
                                                       <SetCompleteBtn
-                                                        store={vm.ui.$inputs_completed.get(act_k)!}
+                                                        store={vm.ui.$inputs_completed.get(act_uid)!}
                                                         highlight={is_cur_set()}
                                                         onClick={(event) => {
                                                           vm.methods.handleCompleteSetAction({
-                                                            step_idx: a(),
-                                                            set_idx: b(),
-                                                            act_idx: c(),
+                                                            step_idx: step_idx(),
+                                                            set_idx: set_idx(),
+                                                            act_idx: act_idx(),
                                                           });
                                                         }}
                                                       />
                                                     </Show>
                                                   </div>
                                                   <Show
-                                                    when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_k)}
+                                                    when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_uid)}
                                                   >
                                                     <div class="rounded-md p-2 mt-1 border-2 border-w-fg-3">
                                                       <SetActionCountdownView
                                                         highlight={is_cur_set()}
-                                                        store={vm.ui.$set_act_countdowns.get(act_k)!}
+                                                        store={vm.ui.$set_act_countdowns.get(act_uid)!}
                                                       />
                                                     </div>
                                                   </Show>
@@ -1732,9 +1984,9 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                           "border-w-fg-2 bg-w-bg-5": is_cur_set(),
                                         }}
                                       >
-                                        <Show when={vm.ui.$set_countdowns.get(`${a()}-${b()}`)}>
+                                        <Show when={vm.ui.$set_countdowns.get(step_set_uid())}>
                                           <SetCountdownView
-                                            store={vm.ui.$set_countdowns.get(`${a()}-${b()}`)!}
+                                            store={vm.ui.$set_countdowns.get(step_set_uid())!}
                                             highlight={is_cur_set()}
                                           />
                                         </Show>
@@ -1811,8 +2063,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           view={state().profile_view!}
         />
       </Show>
-      <Sheet ignore_safe_height store={vm.ui.$workout_action_dialog.ui.$dialog} app={props.app}>
-        <WorkoutActionSelectView store={vm.ui.$workout_action_dialog} app={props.app} />
+      <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
+        <WorkoutActionSelectView store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_num_keyboard} app={props.app}>
         <div class="p-2">
@@ -1904,6 +2156,48 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
+      <Popover store={vm.ui.$popover_action}>
+        <div class="space-y-2">
+          <For
+            each={state().cur_workout_action_history}
+            fallback={
+              <div>
+                <div class="mt-4 p-2">
+                  <div class="w-full h-[180px] flex items-center justify-center">
+                    <div class="flex flex-col items-center justify-center text-w-fg-1">
+                      <Bird class="w-12 h-12 text-w-fg-1" />
+                      <div class="mt-4 flex items-center space-x-2">
+                        <div class="text-center">暂无历史数据</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          >
+            {(v) => {
+              return (
+                <div>
+                  {/* <div>{v.action.zh_name}</div> */}
+                  <SetValueView reps={v.reps} reps_unit={v.reps_unit} weight={v.weight} weight_unit={v.weight_unit} />
+                  <div class="text-w-fg-1 text-sm">{v.created_at_relative}</div>
+                </div>
+              );
+            }}
+          </For>
+          <div class="operation flex items-center gap-2 mt-4">
+            <Button store={vm.ui.$btn_workout_action_profile} size="sm">
+              详情
+            </Button>
+            <Button store={vm.ui.$btn_workout_action_change} size="sm">
+              修改整组动作
+            </Button>
+            <Button store={vm.ui.$btn_workout_action_add_set} size="sm">
+              增加1组
+            </Button>
+          </div>
+        </div>
+      </Popover>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>
       <DropdownMenu store={vm.ui.$menu_workout_day}></DropdownMenu>
     </>

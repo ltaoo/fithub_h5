@@ -40,6 +40,7 @@ import { StudentSelect2ViewModel } from "@/biz/student/student_select";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 import { VideoWithPointsModel, WorkoutPlanVideoPlayView } from "./components/video-play";
 import { PlayerCore } from "@/domains/player";
+import { toNumber } from "@/utils/primitive";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -81,12 +82,12 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
           nickname: student_nickname,
         });
       }
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (!id) {
         return Result.Err("错误参数");
       }
       (async () => {
-        const r = await request.content_of_workout_plan.list.init();
+        const r = await request.content_of_workout_plan.list.init({ workout_plan_id: id });
         if (r.error) {
           return;
         }
@@ -569,7 +570,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                   <div class="p-4 border-b-2 border-w-fg-3">
                     <div class="text-w-fg-0">视频参考</div>
                   </div>
-                  <div class="p-4 grid grid-cols-2 gap-2">
+                  <div class="p-4 space-y-2">
                     <For each={state().contents.dataSource}>
                       {(v) => {
                         return (

@@ -94,7 +94,7 @@ export function SetValueInputViewModel(props: { defaultValue?: string; placehold
       bus.emit(Events.Submit, _text);
     },
   };
-  console.log("[BIZ]set_value_input - before ui", props.defaultValue, props.placeholder);
+  // console.log("[BIZ]set_value_input - before ui", props.defaultValue, props.placeholder);
   const ui = {
     $input: new InputCore({
       defaultValue: props.defaultValue,

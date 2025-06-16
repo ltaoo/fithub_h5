@@ -28,9 +28,7 @@ import { storage } from "./storage";
 //   request.setEnv("dev");
 // }
 onRequestCreated((ins) => {
-  // console.log("[STORE]store/index - before ins.onFailed", ins._name);
   ins.beforeRequest(() => {
-    console.log("[STORE]store/index - before user.refreshToken");
     user.refreshToken();
   });
   ins.onFailed((e) => {

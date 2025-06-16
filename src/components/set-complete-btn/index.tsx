@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Check, Circle, Pause, Play } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";

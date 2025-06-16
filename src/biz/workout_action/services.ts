@@ -1,14 +1,15 @@
+import dayjs from "dayjs";
+
 import { request } from "@/biz/requests";
 import { idsMapValue } from "@/biz/services/utils";
 import { ListResponseWithCursor } from "@/biz/requests/types";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 import { FetchParams } from "@/domains/list/typing";
-import { parseJSONStr } from "@/utils";
+import { parseJSONStr, relative_time_from_now } from "@/utils";
 
 import { WorkoutActionSteps, WorkoutActionProblems, WorkoutActionStepsJSON250608 } from "./types";
 import { WorkoutActionType } from "./constants";
-import dayjs from "dayjs";
 
 type PartialWorkoutAction = {
   id: number;
@@ -393,6 +394,7 @@ export function fetchWorkoutActionHistoryListOfWorkoutActionProcess(
         weight: v.weight,
         weight_unit: v.weight_unit,
         created_at: dayjs(new Date(v.created_at)).format("YYYY-MM-DD HH:mm"),
+        created_at_relative: relative_time_from_now(v.created_at),
         action: {
           id: v.action.id,
           zh_name: v.action.zh_name,

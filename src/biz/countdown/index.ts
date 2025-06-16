@@ -341,6 +341,11 @@ export function CountdownViewModel(props: {
     setStartedAt: methods.setStartedAt,
     addSeconds: methods.addSeconds,
     subSeconds: methods.subSeconds,
+    setComplete() {
+      _is_pending = false;
+      _is_completed = true;
+      methods.refresh();
+    },
     destroy() {
       cancelAnimationFrame(_animation_frame_id);
       bus.destroy();
