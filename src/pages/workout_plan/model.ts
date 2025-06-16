@@ -327,7 +327,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
           set_count: vv.set_count,
           set_rest_duration: vv.set_rest_duration,
           set_weight: vv.set_weight,
-          set_note: vv.note,
+          set_note: vv.set_note,
           actions: vv.actions.map((vvv) => {
             return {
               action: vvv.action,

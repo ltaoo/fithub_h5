@@ -15,6 +15,7 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 import { Result } from "@/domains/result";
 import { toFixed } from "@/utils";
+import { toNumber } from "@/utils/primitive";
 
 export function BMICalcViewModel(props: ViewComponentProps) {
   const methods = {
@@ -25,12 +26,12 @@ export function BMICalcViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     calcBMI() {
-      const weight = Number(ui.$input_weight.value);
-      const height = Number(ui.$input_height.value);
-      if (Number.isNaN(weight)) {
+      const weight = toNumber(ui.$input_weight.value);
+      const height = toNumber(ui.$input_height.value);
+      if (weight === null) {
         return Result.Err("请输入合法体重值");
       }
-      if (Number.isNaN(height)) {
+      if (height === null) {
         return Result.Err("请输入合法身高值");
       }
       if (!weight) {

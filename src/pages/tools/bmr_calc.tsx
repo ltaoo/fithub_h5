@@ -10,6 +10,7 @@ import { Button, Input, ScrollView } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
 import { Select } from "@/components/ui/select";
 import { NavigationBar1 } from "@/components/navigation-bar1";
+import { PageView } from "@/components/page-view";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
@@ -17,7 +18,7 @@ import { ButtonCore, DialogCore, InputCore, ScrollViewCore, SelectCore } from "@
 import { RefCore } from "@/domains/ui/cur";
 import { toFixed, update_arr_item } from "@/utils";
 import { Result } from "@/domains/result";
-import { PageView } from "@/components/page-view";
+import { toNumber } from "@/utils/primitive";
 
 export function BMRCalcViewModel(props: ViewComponentProps) {
   const methods = {
@@ -28,18 +29,18 @@ export function BMRCalcViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     calcBMR() {
-      const weight = Number(ui.$input_weight.value);
-      const age = Number(ui.$input_age.value);
-      const height = Number(ui.$input_height.value);
+      const weight = toNumber(ui.$input_weight.value);
+      const age = toNumber(ui.$input_age.value);
+      const height = toNumber(ui.$input_height.value);
       const gender = ui.$input_gender.value;
       const activity = ui.$input_activity.value ?? 1.2;
-      if (Number.isNaN(weight)) {
+      if (weight === null) {
         return Result.Err("请输入合法体重值");
       }
-      if (Number.isNaN(height)) {
+      if (height === null) {
         return Result.Err("请输入合法身高值");
       }
-      if (Number.isNaN(age)) {
+      if (age === null) {
         return Result.Err("请输入合法年龄值");
       }
       if (!weight) {

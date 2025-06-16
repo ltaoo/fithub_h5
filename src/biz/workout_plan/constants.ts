@@ -79,3 +79,34 @@ export enum WorkoutScheduleDayType {
   Resting = 2,
   Empty = 4,
 }
+
+export const WorkoutPlanTags = [
+  {
+    value: "胸",
+    text: "胸",
+  },
+  {
+    value: "背",
+    text: "背",
+  },
+  {
+    value: "肩",
+    text: "肩",
+  },
+  {
+    value: "手臂",
+    text: "手臂",
+  },
+  {
+    value: "下肢",
+    text: "下肢",
+  },
+  {
+    value: "三分化",
+    text: "三分化",
+  },
+  {
+    value: "五分化",
+    text: "五分化",
+  },
+];

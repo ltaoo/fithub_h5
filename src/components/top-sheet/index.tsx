@@ -8,34 +8,32 @@ import { Show } from "@/packages/ui/show";
 
 import { DialogCore } from "@/domains/ui/dialog";
 
-export function CalendarSheet(
-  props: {
-    position?: "bottom" | "top" | "left" | "right";
-    size?: "content" | "default" | "sm" | "lg" | "xl" | "full";
-    store: DialogCore;
-    app: ViewComponentProps["app"];
-  } & JSX.HTMLAttributes<HTMLDivElement>
+export function TopSheet(
+  props: { top: number; store: DialogCore; app: ViewComponentProps["app"] } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
     <DialogPrimitive.Portal store={props.store}>
       <div
-        class="fixed left-1/2 -translate-x-1/2 top-[92px] bottom-0"
+        class="fixed left-1/2 -translate-x-1/2 bottom-0"
         classList={{
           "w-[375px] mx-auto": props.app.env.pc,
           "w-full ": !props.app.env.pc,
         }}
-        style={{ "z-index": 99 }}
+        style={{ "z-index": 99, top: `${props.top}px` }}
       >
         <DialogPrimitive.Overlay
           store={vm}
           classList={{
-            "fixed inset-0 top-[92px] z-0 bg-black/50 transition-all duration-200": true,
+            "fixed inset-0 z-0 bg-black/50 transition-all duration-200": true,
             block: state().visible,
             hidden: !state().visible,
             "animate-in fade-in": state().enter,
             "animate-out fade-out": state().exit,
+          }}
+          style={{
+            top: `${props.top}px`,
           }}
           onClick={() => {
             vm.hide();

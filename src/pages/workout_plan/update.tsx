@@ -29,6 +29,7 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { BizError } from "@/domains/error";
+import { toNumber } from "@/utils/primitive";
 
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
@@ -74,8 +75,8 @@ function WorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return;
       }
       $model.ready();

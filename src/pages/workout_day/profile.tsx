@@ -22,6 +22,7 @@ import {
   fetchWorkoutActionHistoryListOfWorkoutDayProcess,
 } from "@/biz/workout_action/services";
 import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
+import { toNumber } from "@/utils/primitive";
 
 function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -83,8 +84,8 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     async ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         props.app.tip({
           text: ["参数错误"],
         });

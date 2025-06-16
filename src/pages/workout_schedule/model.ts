@@ -8,7 +8,6 @@ import { Result } from "@/domains/result";
 import { CheckboxCore, InputCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { RefCore } from "@/domains/ui/cur";
-import { TagInputCore } from "@/domains/ui/form/tag-input";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { RequestCore } from "@/domains/request";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
@@ -145,7 +144,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      const { title, overview, level, tags, type, status } = r.data;
+      const { title, overview, level, type, status } = r.data;
       if (!title) {
         return Result.Err("请输入标题");
       }
@@ -158,7 +157,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
         overview,
         level: level ?? 1,
         status: status ? 1 : 2,
-        tags: tags.join(","),
+        tags: "",
         type: type ?? WorkoutScheduleType.Weekly,
         details: JSON.stringify({
           schedules: (() => {
@@ -248,11 +247,6 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
               },
             ],
           }),
-        }),
-        tags: new SingleFieldCore({
-          label: "标签",
-          name: "tags",
-          input: new TagInputCore({}),
         }),
         type: new SingleFieldCore({
           label: "循环类型",

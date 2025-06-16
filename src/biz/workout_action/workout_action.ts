@@ -38,8 +38,7 @@ export function WorkoutActionProfileViewModel(props: {
         new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
           process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
           client: props.client,
-        }),
-        { pageSize: 3 }
+        })
       ),
     },
     workout_action_content: {
@@ -134,7 +133,7 @@ export function WorkoutActionProfileViewModel(props: {
         },
         {
           id: 3,
-          text: "动作历史",
+          text: "最大重量记录",
         },
       ],
       onMounted() {
@@ -145,10 +144,10 @@ export function WorkoutActionProfileViewModel(props: {
           return;
         }
         if (v.id === 2) {
-          request.workout_action_content.list.init({ workout_action_id: _profile.id });
+          request.workout_action_content.list.search({ workout_action_id: _profile.id });
         }
         if (v.id === 3 && !props.ignore_history) {
-          request.workout_action_history.list.init({ workout_action_id: _profile.id });
+          request.workout_action_history.list.search({ workout_action_id: _profile.id, order_by: "weight DESC" });
         }
       },
     }),

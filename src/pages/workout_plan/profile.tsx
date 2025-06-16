@@ -38,9 +38,11 @@ import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/service
 import { Result } from "@/domains/result";
 import { StudentSelect2ViewModel } from "@/biz/student/student_select";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
-import { VideoWithPointsModel, WorkoutPlanVideoPlayView } from "./components/video-play";
+import { VideoWithPointsModel } from "@/biz/content/video_play";
 import { PlayerCore } from "@/domains/player";
 import { toNumber } from "@/utils/primitive";
+
+import { WorkoutPlanVideoPlayView } from "./components/video-play";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -537,34 +539,6 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                   </For>
                 </div>
               </div>
-              <Show when={state().selected_students.length}>
-                <div class="students rounded-lg border-2 border-w-fg-3">
-                  <div class="p-4 border-b-2 border-w-fg-3">
-                    <div class="text-w-fg-0">参与人</div>
-                  </div>
-                  <div class="p-4 flex flex-wrap gap-4">
-                    <For each={state().selected_students}>
-                      {(v) => {
-                        return (
-                          <div class="relative">
-                            <div
-                              class="absolute right-0 top-0 p-1 border-2 border-w-fg-3 rounded-full bg-w-bg-5 translate-x-2 -translate-y-2"
-                              onClick={() => {
-                                vm.methods.removeStudent({
-                                  id: Number(v.id),
-                                });
-                              }}
-                            >
-                              <X class="w-2.5 h-2.5 text-w-fg-0" />
-                            </div>
-                            <Avatar nickname={v.nickname} avatar_url={v.avatar_url} />
-                          </div>
-                        );
-                      }}
-                    </For>
-                  </div>
-                </div>
-              </Show>
               <Show when={state().contents.dataSource.length}>
                 <div class="students rounded-lg border-2 border-w-fg-3">
                   <div class="p-4 border-b-2 border-w-fg-3">
@@ -597,6 +571,34 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                               </Show>
                               <div class="text-sm text-w-fg-1">{v.creator.nickname}</div>
                             </div>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </div>
+                </div>
+              </Show>
+              <Show when={state().selected_students.length}>
+                <div class="students rounded-lg border-2 border-w-fg-3">
+                  <div class="p-4 border-b-2 border-w-fg-3">
+                    <div class="text-w-fg-0">参与人</div>
+                  </div>
+                  <div class="p-4 flex flex-wrap gap-4">
+                    <For each={state().selected_students}>
+                      {(v) => {
+                        return (
+                          <div class="relative">
+                            <div
+                              class="absolute right-0 top-0 p-1 border-2 border-w-fg-3 rounded-full bg-w-bg-5 translate-x-2 -translate-y-2"
+                              onClick={() => {
+                                vm.methods.removeStudent({
+                                  id: Number(v.id),
+                                });
+                              }}
+                            >
+                              <X class="w-2.5 h-2.5 text-w-fg-0" />
+                            </div>
+                            <Avatar nickname={v.nickname} avatar_url={v.avatar_url} />
                           </div>
                         );
                       }}

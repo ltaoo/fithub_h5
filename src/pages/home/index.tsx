@@ -10,6 +10,7 @@ import { useViewModel } from "@/hooks";
 import { WorkoutPlanCard } from "@/components/workout-plan-card";
 import { Button, ScrollView, Skeleton } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
+import { TopSheet } from "@/components/top-sheet";
 
 import { RequestCore } from "@/domains/request";
 import { base, Handler } from "@/domains/base";
@@ -18,6 +19,7 @@ import { CalendarCore } from "@/domains/ui/calendar";
 import { ListCore } from "@/domains/list";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { Result } from "@/domains/result";
+import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import {
   fetchMyWorkoutScheduleList,
   fetchMyWorkoutScheduleListProcess,
@@ -39,8 +41,6 @@ import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
 import { sleep } from "@/utils";
 
 import { HomeViewTabHeader } from "./components/tabs";
-import { CalendarSheet } from "./components/calendar_sheet";
-import { TheItemTypeFromListCore } from "@/domains/list/typing";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -70,7 +70,8 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     },
     workout_plan: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client })
+        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client }),
+        { pageSize: 100 }
       ),
     },
     workout_schedule: {
@@ -119,31 +120,24 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       const v = dayjs(day.value).startOf("d");
       const the_date_text = v.format("YYYY-MM-DD");
       const today_text = dayjs().format("YYYY-MM-DD");
-      const completed_plans = request.workout_day.list.response.dataSource.filter((v) => {
-        return v.status === WorkoutDayStatus.Finished;
+      const completed_plans_in_the_day = request.workout_day.list.response.dataSource.filter((v) => {
+        return v.status === WorkoutDayStatus.Finished && v.day === the_date_text;
       });
-      console.log("[PAGE]home/index - handleClickDay - before completed_plan_ids = ", completed_plans);
-      const completed_plan_ids = completed_plans.map((v) => v.workout_plan.id);
+      const completed_plan_ids_in_the_day = completed_plans_in_the_day.map((v) => v.workout_plan.id);
+      // console.log("[PAGE]home/index - handleClickDay - before completed_plan_ids = ", completed_plan_ids);
       const schedule_of_the_day = _schedules[the_date_text];
       /** 指定天内完成的 不属于计划中的训练 */
       const extra_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[] = [];
       if (schedule_of_the_day) {
         const plan_ids_today_need_to_do = schedule_of_the_day.workout_plans.map((v) => v.id);
-        for (let i = 0; i < completed_plans.length; i += 1) {
-          const vv = completed_plans[i];
-          if (vv.day === the_date_text && vv.finished_at_text && !plan_ids_today_need_to_do.includes(vv.id)) {
-            extra_workout_days.push({
-              id: vv.id,
-              workout_plan_id: vv.workout_plan.id,
-              title: vv.workout_plan.title,
-              finished_at_text: vv.finished_at_text,
-            });
-          }
-        }
-      } else {
-        for (let i = 0; i < completed_plans.length; i += 1) {
-          const vv = completed_plans[i];
-          if (vv.day === the_date_text) {
+        console.log(
+          "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
+          plan_ids_today_need_to_do,
+          completed_plan_ids_in_the_day
+        );
+        for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
+          const vv = completed_plans_in_the_day[i];
+          if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
             extra_workout_days.push({
               id: vv.id,
               workout_plan_id: vv.workout_plan.id,
@@ -183,7 +177,20 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             workout_plans: schedule_of_the_day.workout_plans.map((v) => {
               return {
                 ...v,
-                completed: completed_plan_ids.includes(v.id),
+                ...(() => {
+                  const idx = completed_plans_in_the_day.findIndex((vv) => vv.workout_plan.id === v.id);
+                  console.log("find idx", idx, v.id);
+                  if (idx === -1) {
+                    return {
+                      completed: false,
+                      finished_at_text: "",
+                    };
+                  }
+                  return {
+                    finished_at_text: completed_plans_in_the_day[idx].finished_at_text,
+                    completed: true,
+                  };
+                })(),
               };
             }),
           };
@@ -198,7 +205,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           status: matched.status,
         };
       }
-      console.log(_cur_day_profile);
+      console.log("[PAGE]home/index - cur_day_profile", _cur_day_profile);
       methods.refresh();
       if (ui.$dialog_calendar.state.open) {
         return;
@@ -307,7 +314,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         //   alert(1);
         // }
         methods.refresh();
-        console.log(schedules);
+        // console.log(schedules);
       })();
       const r = await request.workout_plan_set.list.run();
       if (r.error) {
@@ -395,13 +402,23 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     } | null;
     schedule: {
       type: WorkoutScheduleDayType;
-      workout_plans: { id: number; completed: boolean; title: string; overview: string; tags: string }[];
+      workout_plans: {
+        id: number;
+        title: string;
+        overview: string;
+        tags: string;
+        completed: boolean;
+        finished_at_text: string;
+      }[];
     };
     extra_completed_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[];
   } | null = null;
   let _schedules: Record<
     string,
-    { type: WorkoutScheduleDayType; workout_plans: { id: number; title: string; overview: string; tags: string }[] }
+    {
+      type: WorkoutScheduleDayType;
+      workout_plans: { id: number; title: string; overview: string; tags: string }[];
+    }
   > = {};
   const _state = {
     get weekdays() {
@@ -717,7 +734,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
           </div>
         </div>
       </Show>
-      <CalendarSheet store={vm.ui.$dialog_calendar} app={props.app}>
+      <TopSheet top={92} store={vm.ui.$dialog_calendar} app={props.app}>
         <div class="bg-w-bg-0 p-4 border-b border-w-fg-3">
           <Show when={state().day}>
             <div class="flex items-center text-w-fg-0">
@@ -762,7 +779,11 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                         <div class="text-w-fg-0">{v.title}</div>
                         <div class="text-w-fg-1 text-sm">{v.overview}</div>
                         <div class="flex items-center justify-between">
-                          <div></div>
+                          <div>
+                            <Show when={v.completed}>
+                              <div class="text-sm text-w-fg-1">完成于{v.finished_at_text}</div>
+                            </Show>
+                          </div>
                           <div>
                             <Show
                               when={!v.completed}
@@ -773,15 +794,17 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                               }
                             >
                               <Show
-                                when={!state().day?.is_pass_day}
+                                when={state().day?.is_today}
                                 fallback={
-                                  <div>
-                                    <div class="text-sm text-w-fg-1">未完成</div>
-                                  </div>
+                                  <Show when={state().day?.is_pass_day}>
+                                    <div>
+                                      <div class="text-sm text-w-fg-1">未完成</div>
+                                    </div>
+                                  </Show>
                                 }
                               >
                                 <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0">
-                                  <div class="text-sm">fight!</div>
+                                  <div class="text-sm">开始训练</div>
                                 </div>
                               </Show>
                             </Show>
@@ -821,7 +844,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
             </div>
           </Show>
         </div>
-      </CalendarSheet>
+      </TopSheet>
       <Sheet store={vm.ui.$dialog_workout_tip} app={props.app}>
         <div class="p-2">
           <div class="text-xl text-w-fg-0 text-center">提示</div>

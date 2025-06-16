@@ -32,7 +32,10 @@ export function WorkoutScheduleViewModel(props: { client: HttpClientCore }) {
     },
     workout_plan: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client })
+        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client }),
+        {
+          pageSize: 100,
+        }
       ),
     },
     workout_day: {
@@ -271,8 +274,9 @@ export function buildWorkoutScheduleWithSpecialDay(
   > = {};
   for (let i = 0; i < schedules.length; i += 1) {
     const { type, days, start_date } = schedules[i];
+    // console.log("[BIZ]workout_plan/workout_schedule - schedule", type, days, start_date);
     // console.log("[]buildWorkoutScheduleWithSpecialDay", days, type === WorkoutScheduleType.Days);
-    if (type === WorkoutScheduleType.Days) {
+    if (type === WorkoutScheduleType.Days && days.length) {
       for (let j = 1; j < 8; j += 1) {
         const weekday = dayjs(day).set("day", j);
         const weekday_text = weekday.format("YYYY-MM-DD");
@@ -290,9 +294,9 @@ export function buildWorkoutScheduleWithSpecialDay(
           const diff = weekday.diff(start_date, "d") % days.length;
           const dd = days[diff];
           // const day_text = start_date.add(dd.idx, "d").format("YYYY-MM-DD");k
-          // console.log(start_date.format("YYYY-MM-DD"), weekday_text, diff);
+          // console.log(start_date.format("YYYY-MM-DD"), weekday_text, diff, days);
           // workout_plans_in_day[day_text] = workout_plans_in_day[day_text] || [];
-          if (dd.workout_plans.length) {
+          if (dd && dd.workout_plans.length) {
             for (let a = 0; a < dd.workout_plans.length; a += 1) {
               const pp = dd.workout_plans[a];
               workout_plans_in_day[weekday_text].push({
@@ -370,6 +374,7 @@ export function buildWorkoutScheduleWithSpecialDay(
       // }
     }
   }
+  // console.log("[BIZ]workout_plan/workout_schedule - schedule", workout_plans_in_day);
   return Object.keys(workout_plans_in_day)
     .map((day_text) => {
       const schedules = workout_plans_in_day[day_text];
@@ -389,7 +394,7 @@ export function buildWorkoutScheduleWithSpecialDay(
           workout_plans.push(s.workout_plan);
         }
       }
-      console.log(day_text, workout_plans);
+      // console.log(day_text, workout_plans);
       // for ()
       // : schedules
       //             .filter((v) => {

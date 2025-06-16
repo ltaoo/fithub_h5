@@ -20,11 +20,11 @@ const Portal = (
   const { store, enterClassName, exitClassName } = props;
 
   return (
-    <Presence store={store.present} classList={props.classList}>
-      <PortalPrimitive>
+    <PortalPrimitive>
+      <Presence store={store.present} classList={props.classList}>
         <div class={props.class}>{props.children}</div>
-      </PortalPrimitive>
-    </Presence>
+      </Presence>
+    </PortalPrimitive>
   );
 };
 

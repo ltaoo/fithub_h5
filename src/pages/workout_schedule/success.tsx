@@ -12,6 +12,7 @@ import { base, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
 import { WorkoutScheduleViewModel } from "@/biz/workout_plan/workout_schedule";
 import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
+import { toNumber } from "@/utils/primitive";
 
 function WorkoutScheduleCreateSuccessViewModel(props: ViewComponentProps) {
   const methods = {
@@ -63,8 +64,8 @@ function WorkoutScheduleCreateSuccessViewModel(props: ViewComponentProps) {
     methods,
     state: _state,
     ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         props.app.tip({
           text: ["参数异常"],
         });

@@ -48,7 +48,7 @@ export type WorkoutPlanStepJSON250607 = {
     rest_duration: number;
     note: string;
   }[];
-  note: string;
+  set_note: string;
 };
 
 export type WorkoutPlanActionPayload = {

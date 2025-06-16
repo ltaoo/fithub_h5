@@ -8,6 +8,7 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
+import { Divider } from "@/components/divider";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -15,7 +16,7 @@ import { DialogCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore, TheResponseOfRequestCore } from "@/domains/request";
 import { fetchExamResult, fetchExamResultProcess } from "@/biz/paper/services";
 import { ExamStatus, QuizAnswerStatus, QuizChoiceInAnswerStatus } from "@/biz/paper/constants";
-import { Divider } from "@/components/divider";
+import { toNumber } from "@/utils/primitive";
 
 function ExamResultViewModel(props: ViewComponentProps) {
   const request = {
@@ -80,8 +81,8 @@ function ExamResultViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     async ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return;
       }
       const r = await request.exam.result.run({ id });

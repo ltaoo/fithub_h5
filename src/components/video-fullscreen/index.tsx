@@ -25,7 +25,7 @@ export function VideoFullscreen(props: { store: PlayerCore; onClose?: () => void
   //   });
 
   return (
-    <div class="relative h-screen">
+    <div class="relative h-screen bg-w-bg-0">
       <div class="flex items-center h-full">
         <Video store={props.store} />
       </div>

@@ -367,13 +367,14 @@ export function fetchWorkoutActionHistoryListOfWorkoutDayProcess(
  * 获取「指定动作」的所有历史记录
  */
 export function fetchWorkoutActionHistoryListOfWorkoutAction(
-  body: Partial<FetchParams> & { workout_action_id: number; student_id: number }
+  body: Partial<FetchParams> & { workout_action_id?: number; student_id?: number; order_by?: string }
 ) {
   return request.post<ListResponseWithCursor<WorkoutAction>>("/api/workout_action_history/list_of_workout_action", {
     page: body.page,
     page_size: body.pageSize,
     workout_action_id: body.workout_action_id,
     student_id: body.student_id,
+    order_by: body.order_by,
   });
 }
 

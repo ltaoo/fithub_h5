@@ -55,8 +55,8 @@ function WorkoutScheduleProfileViewModel(props: ViewComponentProps) {
       methods.refresh();
     },
     async cancelWorkoutSchedule() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return;
       }
       ui.$btn_apply.setLoading(true);
@@ -162,8 +162,8 @@ function WorkoutScheduleProfileViewModel(props: ViewComponentProps) {
     methods,
     state: _state,
     async ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         props.app.tip({
           text: ["参数异常"],
         });

@@ -261,19 +261,19 @@ export function relative_time_from_now(time: string) {
   const date = dayjs(time);
   const now = dayjs();
   const minute_diff = now.diff(date, "minute");
-  let relativeTimeString;
+  let str;
   if (minute_diff >= 7 * 24 * 60) {
-    relativeTimeString = "7天前";
+    str = date.format("YYYY-MM-DD HH:mm");
   } else if (minute_diff >= 24 * 60) {
-    relativeTimeString = now.diff(date, "day") + "天前"; // 显示天数级别的时间差
+    str = now.diff(date, "day") + "天前"; // 显示天数级别的时间差
   } else if (minute_diff >= 60) {
-    relativeTimeString = now.diff(date, "hour") + "小时前"; // 显示小时级别的时间差
+    str = now.diff(date, "hour") + "小时前"; // 显示小时级别的时间差
   } else if (minute_diff > 0) {
-    relativeTimeString = minute_diff + "分钟前"; // 显示分钟级别的时间差
+    str = minute_diff + "分钟前"; // 显示分钟级别的时间差
   } else {
-    relativeTimeString = "刚刚"; // 不到1分钟，显示“刚刚”
+    str = "刚刚"; // 不到1分钟，显示“刚刚”
   }
-  return relativeTimeString;
+  return str;
 }
 
 export function noop() {}

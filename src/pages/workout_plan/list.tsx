@@ -9,6 +9,8 @@ import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Select } from "@/components/ui/select";
+import { IconButton } from "@/components/icon-btn/icon-btn";
+import { TagInput, TagSelectInput } from "@/components/ui/tag-input";
 
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore, SelectCore } from "@/domains/ui";
@@ -20,6 +22,8 @@ import {
   fetchWorkoutPlanList,
   fetchWorkoutPlanListProcess,
 } from "@/biz/workout_plan/services";
+import { TagInputCore } from "@/domains/ui/form/tag-input";
+import { WorkoutPlanTags } from "@/biz/workout_plan/constants";
 
 enum WorkoutPlanOrScheduleType {
   WorkoutPlan = 1,
@@ -110,6 +114,13 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       },
     }),
     $input_keyword: new InputCore({ defaultValue: "", placeholder: "请输入关键词" }),
+    $input_tag: TagSelectInput({
+      options: WorkoutPlanTags,
+      app: props.app,
+      onChange(v) {
+        request.workout_plan.list.search({ tag: v[0] ?? "" });
+      },
+    }),
     $input_view_select: new SelectCore({
       defaultValue:
         props.view.query.schedule === "1"
@@ -214,18 +225,10 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
     <>
       <PageView
         store={vm}
+        no_padding
         operations={
-          <div class="flex items-center gap-2">
-            <Select store={vm.ui.$input_view_select}></Select>
-            <Input store={vm.ui.$input_keyword} />
-            <div
-              class="p-2 rounded-full bg-w-bg-5"
-              onClick={() => {
-                vm.methods.search();
-              }}
-            >
-              <Search class="w-6 h-6 text-w-fg-0" />
-            </div>
+          <div class="flex items-center justify-between gap-2">
+            <div></div>
             <div
               class="p-2 rounded-full bg-w-bg-5"
               onClick={(event) => {
@@ -238,128 +241,144 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
           </div>
         }
       >
-        <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>
-          <ListView
-            store={vm.request.workout_plan.list}
-            class="space-y-2"
-            skeleton={
-              <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[28px]" />
-              </div>
-            }
+        <div class="flex items-center gap-2 p-2 border-b border-w-fg-3">
+          <Select store={vm.ui.$input_view_select}></Select>
+          <Input store={vm.ui.$input_keyword} />
+          <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>
+            <TagInput store={vm.ui.$input_tag} />
+          </Show>
+          <IconButton
+            onClick={() => {
+              vm.methods.search();
+            }}
           >
-            <For each={state().response_plan.dataSource}>
-              {(v) => {
-                return (
-                  <div
-                    class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
-                    onClick={() => {
-                      vm.methods.handleClickWorkoutPlan(v);
-                    }}
-                  >
-                    <div class="text-lg text-w-fg-0">{v.title}</div>
-                    <div class="mt-2 text-sm  text-w-fg-1">{v.overview}</div>
-                    <div class="mt-2">
-                      <div class="flex items-center gap-1 text-w-fg-1">
-                        <Clock class="w-4 h-4" />
-                        <div class="text-sm  text-w-fg-1">{v.estimated_duration_text}</div>
-                      </div>
-                    </div>
-                    <Show when={v.tags.length}>
-                      <div class="flex flex-wrap gap-2 mt-4">
-                        <For each={v.tags}>
-                          {(text) => {
-                            return (
-                              <div class="px-2 py-1 rounded-lg border border-2 border-w-fg-3 text-sm text-w-fg-1">
-                                {text}
-                              </div>
-                            );
-                          }}
-                        </For>
-                      </div>
-                    </Show>
-                    <div class="flex items-center justify-between mt-4">
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <Show
-                            when={v.creator.avatar_url}
-                            fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
-                          >
-                            <div
-                              class="w-[24px] h-[24px] rounded-full"
-                              style={{
-                                "background-image": `url('${v.creator.avatar_url}')`,
-                                "background-size": "cover",
-                                "background-position": "center",
-                              }}
-                            ></div>
-                          </Show>
-                          <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+            <Search class="w-6 h-6 text-w-fg-0" />
+          </IconButton>
+        </div>
+        <div class="p-2">
+          <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>
+            <ListView
+              store={vm.request.workout_plan.list}
+              class="space-y-2"
+              skeleton={
+                <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
+                  <Skeleton class="w-[68px] h-[28px]" />
+                </div>
+              }
+            >
+              <For each={state().response_plan.dataSource}>
+                {(v) => {
+                  return (
+                    <div
+                      class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
+                      onClick={() => {
+                        vm.methods.handleClickWorkoutPlan(v);
+                      }}
+                    >
+                      <div class="text-lg text-w-fg-0">{v.title}</div>
+                      <div class="mt-2 text-sm  text-w-fg-1">{v.overview}</div>
+                      <div class="mt-2">
+                        <div class="flex items-center gap-1 text-w-fg-1">
+                          <Clock class="w-4 h-4" />
+                          <div class="text-sm  text-w-fg-1">{v.estimated_duration_text}</div>
                         </div>
                       </div>
-                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
-                        详情
-                      </div>
-                    </div>
-                  </div>
-                );
-              }}
-            </For>
-          </ListView>
-        </Show>
-        <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutSchedule}>
-          <ListView
-            store={vm.request.workout_schedule.list}
-            class="space-y-2"
-            skeleton={
-              <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
-                <Skeleton class="w-[68px] h-[28px]" />
-              </div>
-            }
-          >
-            <For each={state().response_schedule.dataSource}>
-              {(v) => {
-                return (
-                  <div
-                    class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
-                    onClick={() => {
-                      vm.methods.handleClickWorkoutSchedule(v);
-                    }}
-                  >
-                    <div class="absolute right-4 top-4">
-                      <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
-                    </div>
-                    <div class="text-lg text-w-fg-0">{v.title}</div>
-                    <div class="text-sm text-w-fg-1">{v.overview}</div>
-                    <div class="flex items-center justify-between mt-4">
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <Show
-                            when={v.creator.avatar_url}
-                            fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
-                          >
-                            <div
-                              class="w-[24px] h-[24px] rounded-full"
-                              style={{
-                                "background-image": `url('${v.creator.avatar_url}')`,
-                                "background-size": "cover",
-                                "background-position": "center",
-                              }}
-                            ></div>
-                          </Show>
-                          <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+                      <Show when={v.tags.length}>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                          <For each={v.tags}>
+                            {(text) => {
+                              return (
+                                <div class="px-2 py-1 rounded-lg border border-2 border-w-fg-3 text-sm text-w-fg-1">
+                                  {text}
+                                </div>
+                              );
+                            }}
+                          </For>
+                        </div>
+                      </Show>
+                      <div class="flex items-center justify-between mt-4">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <Show
+                              when={v.creator.avatar_url}
+                              fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                            >
+                              <div
+                                class="w-[24px] h-[24px] rounded-full"
+                                style={{
+                                  "background-image": `url('${v.creator.avatar_url}')`,
+                                  "background-size": "cover",
+                                  "background-position": "center",
+                                }}
+                              ></div>
+                            </Show>
+                            <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+                          </div>
+                        </div>
+                        <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
+                          详情
                         </div>
                       </div>
-                      <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
-                        详情
+                    </div>
+                  );
+                }}
+              </For>
+            </ListView>
+          </Show>
+          <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutSchedule}>
+            <ListView
+              store={vm.request.workout_schedule.list}
+              class="space-y-2"
+              skeleton={
+                <div class="p-4 rounded-lg border-2 border-w-fg-3 text-w-fg-1">
+                  <Skeleton class="w-[68px] h-[28px]" />
+                </div>
+              }
+            >
+              <For each={state().response_schedule.dataSource}>
+                {(v) => {
+                  return (
+                    <div
+                      class="overflow-hidden relative w-full p-4 rounded-lg border-2 border-w-fg-3"
+                      onClick={() => {
+                        vm.methods.handleClickWorkoutSchedule(v);
+                      }}
+                    >
+                      <div class="absolute right-4 top-4">
+                        <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
+                      </div>
+                      <div class="text-lg text-w-fg-0">{v.title}</div>
+                      <div class="text-sm text-w-fg-1">{v.overview}</div>
+                      <div class="flex items-center justify-between mt-4">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <Show
+                              when={v.creator.avatar_url}
+                              fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                            >
+                              <div
+                                class="w-[24px] h-[24px] rounded-full"
+                                style={{
+                                  "background-image": `url('${v.creator.avatar_url}')`,
+                                  "background-size": "cover",
+                                  "background-position": "center",
+                                }}
+                              ></div>
+                            </Show>
+                            <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
+                          </div>
+                        </div>
+                        <div class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm text-w-fg-0">
+                          详情
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }}
-            </For>
-          </ListView>
-        </Show>
+                  );
+                }}
+              </For>
+            </ListView>
+          </Show>
+        </div>
       </PageView>
       <DropdownMenu store={vm.ui.$dropdown_menu} />
     </>

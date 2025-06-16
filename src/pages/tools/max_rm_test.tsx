@@ -13,6 +13,7 @@ import { NavigationBar1 } from "@/components/navigation-bar1";
 import { PageView } from "@/components/page-view";
 import { Divider } from "@/components/divider";
 import { WorkoutActionSelectView } from "@/components/workout-action-select3";
+import { SetValueView } from "@/components/set-value-view";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
@@ -20,9 +21,6 @@ import { ButtonCore, CheckboxCore, DialogCore, InputCore, ScrollViewCore } from 
 import { SetCountdownViewModel } from "@/biz/set_countdown";
 import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { toFixed } from "@/utils";
-
-import { MaxRMCountdownView } from "./components/max-rm-countdown";
-import { MaxRMCompleteBtn } from "./components/max-rm-complete-btn";
 import { RequestCore } from "@/domains/request";
 import {
   createWorkoutActionHistory,
@@ -31,7 +29,10 @@ import {
 } from "@/biz/workout_action/services";
 import { getSetValueUnit } from "@/biz/set_value_input";
 import { ListCore } from "@/domains/list";
-import { SetValueView } from "@/components/set-value-view";
+import { toNumber } from "@/utils/primitive";
+
+import { MaxRMCountdownView } from "./components/max-rm-countdown";
+import { MaxRMCompleteBtn } from "./components/max-rm-complete-btn";
 
 function round_to_nearest_five(num: number): number {
   const last_digit = num % 10;
@@ -148,15 +149,15 @@ export function MaxRMTestViewModel(props: ViewComponentProps) {
       methods.refresh();
     },
     buildTestSteps() {
-      const weight = Number(ui.$input_weight.value);
-      const reps = Number(ui.$input_reps.value);
-      if (Number.isNaN(weight)) {
+      const weight = toNumber(ui.$input_weight.value);
+      const reps = toNumber(ui.$input_reps.value);
+      if (weight === null) {
         props.app.tip({
           text: ["请输入合法重量值"],
         });
         return;
       }
-      if (Number.isNaN(reps)) {
+      if (reps === null) {
         props.app.tip({
           text: ["请输入合法次数值"],
         });

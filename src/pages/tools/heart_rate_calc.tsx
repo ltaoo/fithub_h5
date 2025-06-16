@@ -9,6 +9,7 @@ import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ButtonCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { Result } from "@/domains/result";
+import { toNumber } from "@/utils/primitive";
 
 enum IntensityLevel {
   CardioHealth = "心肺健康",
@@ -70,13 +71,13 @@ function HeartRateCalcViewModel(props: ViewComponentProps) {
       return "未知强度";
     },
     calc() {
-      const age = Number(ui.$input_age.value);
-      const resting_heart_rate = Number(ui.$input_heart_rate.value);
+      const age = toNumber(ui.$input_age.value);
+      const resting_heart_rate = toNumber(ui.$input_heart_rate.value);
       const intensity_level = ui.$input_intensity_level.value;
-      if (Number.isNaN(resting_heart_rate)) {
+      if (resting_heart_rate === null) {
         return Result.Err("请输入合法静息心率");
       }
-      if (Number.isNaN(age)) {
+      if (age === null) {
         return Result.Err("请输入合法年龄值");
       }
       if (!age) {

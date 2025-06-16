@@ -1,51 +1,143 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, For, JSX, Show } from "solid-js";
 import { X } from "lucide-solid";
 
+import { ViewComponentProps } from "@/store/types";
+import { useViewModelStore } from "@/hooks";
+import { TopSheet } from "@/components/top-sheet";
+
+import { base, Handler } from "@/domains/base";
+import { BizError } from "@/domains/error";
 import { TagInputCore } from "@/domains/ui/form/tag-input";
+import { DialogCore } from "@/domains/ui";
 
-export function TagInput(props: { store: TagInputCore }) {
-  const { store } = props;
+export function TagSelectInput(props: {
+  options: { value: string; text: string }[];
+  app: ViewComponentProps["app"];
+  onChange?: (v: string[]) => void;
+}) {
+  const methods = {
+    refresh() {
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    select(v: string) {
+      if (_value.includes(v)) {
+        _value = _value.filter((vv) => vv !== v);
+      } else {
+        _value = [v];
+      }
+      bus.emit(Events.Change, _value);
+      methods.refresh();
+    },
+  };
+  const ui = {
+    $dialog: new DialogCore({}),
+  };
 
-  const [state, setState] = createSignal(store.state);
-  store.onStateChange((v) => setState(v));
+  let _value: string[] = [];
+  let _options = props.options ?? [];
+  let _state = {
+    get value() {
+      return _value;
+    },
+    get options() {
+      return _options.map((v) => {
+        return {
+          ...v,
+          selected: _value.includes(v.value),
+        };
+      });
+    },
+  };
+  enum Events {
+    Change,
+    StateChange,
+    Error,
+  }
+  type TheTypesOfEvents = {
+    [Events.Change]: typeof _value;
+    [Events.StateChange]: typeof _state;
+    [Events.Error]: BizError;
+  };
+  const bus = base<TheTypesOfEvents>();
+
+  if (props.onChange) {
+    bus.on(Events.Change, props.onChange);
+  }
+
+  return {
+    methods,
+    ui,
+    state: _state,
+    app: props.app,
+    ready() {},
+    destroy() {
+      bus.destroy();
+    },
+    onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
+      return bus.on(Events.Change, handler);
+    },
+    onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
+      return bus.on(Events.StateChange, handler);
+    },
+  };
+}
+export type TagSelectInput = ReturnType<typeof TagSelectInput>;
+
+export function TagInput(props: { store: TagSelectInput } & JSX.HTMLAttributes<HTMLDivElement>) {
+  const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap gap-2 p-2 border rounded-md min-h-10 items-center">
-        <For each={state().value}>
-          {(tag, index) => {
+    <>
+      <div
+        classList={{
+          "overflow-hidden flex items-center h-10 w-[68px] rounded-xl truncate border-2 border-w-fg-3 py-2 px-3 text-w-fg-0 bg-transparent":
+            true,
+          "focus:outline-none focus:ring-w-bg-3": true,
+          "disabled:cursor-not-allowed disabled:opacity-50": true,
+          "placeholder:text-w-fg-2": true,
+          [props.class ?? ""]: true,
+        }}
+        style={{
+          "vertical-align": "bottom",
+        }}
+        onClick={(event) => {
+          const { x, y } = event;
+          vm.ui.$dialog.show();
+        }}
+      >
+        <For each={state().value} fallback={<div class="text-w-fg-2">请选择标签</div>}>
+          {(text, index) => {
             return (
-              <div class="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
-                <span>{tag}</span>
-                <button
-                  type="button"
-                  class="text-gray-500 hover:text-gray-700"
-                  onClick={() => {
-                    store.removeTag(tag);
-                  }}
-                >
-                  <X size={14} />
-                </button>
+              <div class="">
+                {text}
+                <Show when={index() !== state().value.length - 1}>、</Show>
               </div>
             );
           }}
         </For>
-        <input
-          type="text"
-          value={state().inputValue}
-          class="flex-grow outline-none min-w-20"
-          placeholder={"输入标签并按回车添加..."}
-          onInput={(e) => {
-            store.input(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              store.addTag();
-            }
-          }}
-        />
       </div>
-    </div>
+      <TopSheet top={56} store={vm.ui.$dialog} app={vm.app}>
+        <div class="flex flex-wrap gap-2 bg-w-bg-0 p-4">
+          <For each={state().options}>
+            {(opt) => {
+              return (
+                <div
+                  classList={{
+                    "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
+                    "border-w-fg-3": !opt.selected,
+                    "border-w-fg-2 bg-w-bg-5 text-w-fg-0": opt.selected,
+                  }}
+                  onClick={() => {
+                    vm.methods.select(opt.value);
+                  }}
+                >
+                  <div>{opt.text}</div>
+                </div>
+              );
+            }}
+          </For>
+        </div>
+      </TopSheet>
+    </>
   );
 }

@@ -1,17 +1,18 @@
 import { Show } from "solid-js";
+import { Loader2 } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
+import { Button } from "@/components/ui";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { cancelReport, deleteReport, fetchReportProfile, fetchReportProfileProcess } from "@/biz/report/services";
-import { Loader2 } from "lucide-solid";
-import { Button } from "@/components/ui";
 import { Result } from "@/domains/result";
+import { toNumber } from "@/utils/primitive";
 
 function ReportProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -29,8 +30,8 @@ function ReportProfileViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     async cancelReport() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         const tip = "参数错误";
         return Result.Err(tip);
       }
@@ -43,8 +44,8 @@ function ReportProfileViewModel(props: ViewComponentProps) {
       return Result.Ok(null);
     },
     async deleteReport() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         const tip = "参数错误";
         return Result.Err(tip);
       }
@@ -112,8 +113,8 @@ function ReportProfileViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return;
       }
       request.report.profile.run({ id });

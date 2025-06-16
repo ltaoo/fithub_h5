@@ -2,7 +2,7 @@
  * @file 训练日记录
  */
 import { For, Show } from "solid-js";
-import { Bird, CircleCheck, Info, Loader, MoreHorizontal, StopCircle, X } from "lucide-solid";
+import { Bird, CircleCheck, Info, Loader, MoreHorizontal, Play, StopCircle, X } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -16,6 +16,9 @@ import { Sheet } from "@/components/ui/sheet";
 import { SetCompleteBtn } from "@/components/set-complete-btn";
 import { SetValueView } from "@/components/set-value-view";
 import { WorkoutActionProfileView } from "@/components/workout-action-profile";
+import { StopwatchView } from "@/components/stopwatch";
+import { IconButton } from "@/components/icon-btn/icon-btn";
+import { WorkoutPlanVideoPlayView } from "@/pages/workout_plan/components/video-play";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
@@ -65,6 +68,13 @@ import { SetCountdownViewModel } from "@/biz/set_countdown";
 import { RouteViewCore } from "@/domains/route_view";
 import { Muscles } from "@/biz/muscle/data";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
+import { VideoWithPointsModel } from "@/biz/content/video_play";
+import {
+  fetchContentListOfWorkoutPlan,
+  fetchContentListOfWorkoutPlanProcess,
+  fetchContentProfileOfWorkoutPlan,
+  fetchContentProfileOfWorkoutPlanProcess,
+} from "@/biz/workout_plan/services";
 import {
   calc_bottom_padding_need_add,
   has_num_value,
@@ -105,9 +115,20 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
           process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
           client: props.client,
-        }),
-        { pageSize: 3 }
+        })
       ),
+    },
+    content_of_workout_plan: {
+      list: new ListCore(
+        new RequestCore(fetchContentListOfWorkoutPlan, {
+          process: fetchContentListOfWorkoutPlanProcess,
+          client: props.client,
+        })
+      ),
+      profile: new RequestCore(fetchContentProfileOfWorkoutPlan, {
+        process: fetchContentProfileOfWorkoutPlanProcess,
+        client: props.client,
+      }),
     },
   };
   const methods = {
@@ -373,7 +394,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       pending_set: WorkoutDayStepProgressJSON250616["sets"][number] | null;
     }) {
       const { step_idx: a, set_idx: b, idx: c, action, pending_set } = opt;
-      console.log("[PAGE]workout_day/update - appendSetAct", a, b, c, action);
+      // console.log("[PAGE]workout_day/update - appendSetAct", a, b, c, action);
       const step = _steps[a];
       const set = step.sets[b];
       const act = set.actions[c];
@@ -767,7 +788,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             const $field_weight = ui.$fields_weight.get(step_set_act_uid);
             const $input_completed = ui.$inputs_completed.get(step_set_act_uid);
             if ($input_completed && $field_reps && $field_weight) {
-              if ($input_completed.value && $field_reps.input.value && $field_weight.input.value) {
+              if ($input_completed.value) {
                 const v_reps = toNumber($field_reps.input.value, 0);
                 const v_weight = toNumber($field_weight.input.value, 0);
                 let real_weight = v_weight;
@@ -781,8 +802,8 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
                   total_volume += real_weight;
                 }
                 actions.push({
-                  id: set.actions[c].id,
-                  zh_name: set.actions[c].zh_name,
+                  id: act.id,
+                  zh_name: act.zh_name,
                   reps: v_reps,
                   reps_unit: $field_reps.input.unit,
                   weight: v_weight,
@@ -810,6 +831,25 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       _stats.uncompleted_actions = uncompleted_actions;
       ui.$dialog_overview.show();
       methods.refresh();
+    },
+    handleClickVideoPoint(v: { video_key: string; time: number }) {
+      ui.$popover_action.hide();
+      ui.$dialog_content.ui.$dialog_outer.show();
+      ui.$dialog_content.ui.$video.onCanPlay(() => {
+        ui.$dialog_content.ui.$video.setCurrentTime(v.time);
+        ui.$dialog_content.ui.$video.play();
+      });
+      ui.$dialog_content.ui.$video.onConnected(() => {
+        ui.$dialog_content.ui.$video.load(v.video_key);
+      });
+      if (ui.$dialog_content.ui.$video._mounted) {
+        if (ui.$dialog_content.ui.$video.url !== v.video_key) {
+          ui.$dialog_content.ui.$video.load(v.video_key);
+          return;
+        }
+        ui.$dialog_content.ui.$video.setCurrentTime(v.time);
+        ui.$dialog_content.ui.$video.play();
+      }
     },
     toBody() {
       const total = {
@@ -1412,6 +1452,13 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         //   },
         // }),
         new MenuItemCore({
+          label: "秒表",
+          onClick() {
+            ui.$menu_workout_day.hide();
+            ui.$dialog_stopwatch.show();
+          },
+        }),
+        new MenuItemCore({
           label: "使用说明",
           onClick() {
             ui.$dialog_using_guide.show();
@@ -1425,20 +1472,26 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             ui.$dialog_give_up_confirm.show();
           },
         }),
-        new MenuItemCore({
-          label: "重置",
-          async onClick() {
-            ui.$menu_workout_day.hide();
-            props.app.tip({
-              icon: "loading",
-              text: ["提交中..."],
-            });
-            await methods.resetPendingSteps();
-          },
-        }),
+        // new MenuItemCore({
+        //   label: "重置",
+        //   async onClick() {
+        //     ui.$menu_workout_day.hide();
+        //     props.app.tip({
+        //       icon: "loading",
+        //       text: ["提交中..."],
+        //     });
+        //     await methods.resetPendingSteps();
+        //   },
+        // }),
       ],
     }),
     $dialog_give_up_confirm: new DialogCore({}),
+    $stopwatch: StopwatchViewModel({}),
+    $dialog_stopwatch: new DialogCore({
+      onCancel() {
+        ui.$stopwatch.pause();
+      },
+    }),
     $btn_workout_day_submit: new ButtonCore({
       onClick() {
         methods.completeTheWorkoutDay();
@@ -1519,11 +1572,14 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         methods.refresh();
       },
     }),
+    $dialog_content: VideoWithPointsModel({ app: props.app, points: [] }),
   };
   /** 弹出键盘时页面需要弹起的高度 */
   let _height = 0;
   /** 训练计划的动作内容，将其按组拆分出来的详细步骤 */
   let _steps: WorkoutDayStepDetailsJSON250616["steps"] = [];
+  let _workout_action_points: Record<number, { title: string; time_text: string; time: number; video_key: string }[]> =
+    {};
   let _cur_step_idx = 0;
   /** 当前组 */
   let _cur_set_idx = 0;
@@ -1572,6 +1628,24 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     get cur_step_idx() {
       return _cur_step_idx;
+    },
+    get selected_act() {
+      const act = ui.$ref_workout_action.value;
+      if (!act) {
+        return null;
+      }
+      const matched_points = (_workout_action_points[act.id] ?? []).map((p, i) => {
+        return {
+          title: p.title,
+          time: p.time,
+          time_text: p.time_text,
+          video_key: p.video_key,
+        };
+      });
+      return {
+        id: act.id,
+        points: matched_points,
+      };
     },
     get duration() {
       return _duration;
@@ -1652,9 +1726,9 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     request,
     methods,
     async ready() {
-      console.log("[PAGE]home_workout_day/update ready");
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      console.log("[PAGE]home_workout_day/update ready", id);
+      if (id === null) {
         return;
       }
       const r = await request.workout_day.profile.run({ id });
@@ -1664,13 +1738,49 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      const { status, steps, pending_steps, started_at } = r.data;
-      // ui.$workout_action_dialog.request.action.list.init();
+      const { status, steps, pending_steps, started_at, workout_plan } = r.data;
       console.log(
         "[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started",
         steps,
         pending_steps
       );
+      (async () => {
+        const r = await request.content_of_workout_plan.list.search({ workout_plan_id: workout_plan.id });
+        if (r.error) {
+          return;
+        }
+        const contents = r.data.dataSource;
+        const workout_action_points: Record<
+          number,
+          {
+            title: string;
+            time: number;
+            time_text: string;
+            video_key: string;
+            workout_action_id: number;
+          }[]
+        > = {};
+        for (let i = 0; i < contents.length; i += 1) {
+          const content = contents[i];
+          if (content.details.points) {
+            for (let j = 0; j < content.details.points.length; j += 1) {
+              const { workout_action_id, time, time_text } = content.details.points[j];
+              workout_action_points[workout_action_id] = workout_action_points[workout_action_id] || [];
+              if (content.video_key) {
+                workout_action_points[workout_action_id].push({
+                  title: content.title,
+                  time_text,
+                  time,
+                  workout_action_id,
+                  video_key: content.video_key,
+                });
+              }
+            }
+          }
+        }
+        _workout_action_points = workout_action_points;
+        // methods.refresh();
+      })();
       if (status === WorkoutDayStatus.Started) {
         // console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
         ui.$day_duration.setStartedAt(started_at.valueOf());
@@ -1764,10 +1874,10 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                           <div class="flex gap-2 pb-2">
                             <Show
                               when={state().profile?.workout_plan.creator}
-                              fallback={<div class="mt-2 w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
+                              fallback={<div class="w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
                             >
                               <div
-                                class="mt-2 w-[32px] h-[32px] rounded-full bg-w-bg-5"
+                                class="w-[32px] h-[32px] rounded-full bg-w-bg-5"
                                 style={{
                                   "background-image": `url('${state().profile?.workout_plan.creator.avatar_url}')`,
                                   "background-size": "cover",
@@ -2102,15 +2212,33 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
         </div>
       </Sheet>
       <Sheet store={vm.ui.$dialog_using_guide} app={props.app}>
-        <div class="p-2">
-          <div class="text-w-fg-0">
+        <div class="relative p-2">
+          <div class="absolute top-2 right-2">
+            <IconButton
+              onClick={() => {
+                vm.ui.$dialog_using_guide.hide();
+              }}
+            >
+              <X class="w-4 h-4 text-w-fg-1" />
+            </IconButton>
+          </div>
+          <div class="text-w-fg-0 h-[320px] overflow-y-auto">
             <div class="text-xl text-center text-w-fg-0">使用说明</div>
             <div class="mt-4 space-y-2">
               <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                 <div class="">重量</div>
                 <div class="text-sm mt-2 space-y-1">
                   <div>
+                    <span class="inline-block w-[18px]">1、</span>
                     <span>12RM 表示使用「一次最多做 12次」的重量</span>
+                  </div>
+                  <div>
+                    <span class="inline-block w-[18px]">2、</span>
+                    <span>自重动作，如「俯卧撑」重量需要填写0</span>
+                  </div>
+                  <div>
+                    <span class="inline-block w-[18px]">3、</span>
+                    <span>动作有辅助参与，如「引体向上机引体」重量可以填写负数</span>
                   </div>
                 </div>
               </div>
@@ -2156,36 +2284,46 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
+      <Sheet store={vm.ui.$dialog_stopwatch} app={props.app}>
+        <div class="min-h-[320px] flex justify-center pt-4">
+          <StopwatchView store={vm.ui.$stopwatch} />
+        </div>
+      </Sheet>
+      <Sheet ignore_safe_height store={vm.ui.$dialog_content.ui.$dialog_outer} app={props.app}>
+        <WorkoutPlanVideoPlayView store={vm.ui.$dialog_content} />
+      </Sheet>
       <Popover store={vm.ui.$popover_action}>
-        <div class="space-y-2">
-          <For
-            each={state().cur_workout_action_history}
-            fallback={
-              <div>
-                <div class="mt-4 p-2">
-                  <div class="w-full h-[180px] flex items-center justify-center">
-                    <div class="flex flex-col items-center justify-center text-w-fg-1">
-                      <Bird class="w-12 h-12 text-w-fg-1" />
-                      <div class="mt-4 flex items-center space-x-2">
-                        <div class="text-center">暂无历史数据</div>
+        <div class="space-y-2 w-[232px]">
+          <div class="h-[138px] overflow-y-auto">
+            <For
+              each={state().cur_workout_action_history}
+              fallback={
+                <div>
+                  <div class="p-2">
+                    <div class="w-full h-full flex items-center justify-center">
+                      <div class="flex flex-col items-center justify-center text-w-fg-1">
+                        <Bird class="w-12 h-12 text-w-fg-1" />
+                        <div class="mt-4 flex items-center space-x-2">
+                          <div class="text-center">暂无历史数据</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            }
-          >
-            {(v) => {
-              return (
-                <div>
-                  {/* <div>{v.action.zh_name}</div> */}
-                  <SetValueView reps={v.reps} reps_unit={v.reps_unit} weight={v.weight} weight_unit={v.weight_unit} />
-                  <div class="text-w-fg-1 text-sm">{v.created_at_relative}</div>
-                </div>
-              );
-            }}
-          </For>
-          <div class="operation flex items-center gap-2 mt-4">
+              }
+            >
+              {(v) => {
+                return (
+                  <div>
+                    {/* <div>{v.action.zh_name}</div> */}
+                    <SetValueView reps={v.reps} reps_unit={v.reps_unit} weight={v.weight} weight_unit={v.weight_unit} />
+                    <div class="text-w-fg-1 text-sm">{v.created_at_relative}</div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+          <div class="operation flex items-center flex-wrap gap-2 mt-4">
             <Button store={vm.ui.$btn_workout_action_profile} size="sm">
               详情
             </Button>
@@ -2196,6 +2334,29 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
               增加1组
             </Button>
           </div>
+          <Show when={state().selected_act?.points}>
+            <div class="space-y-2">
+              <For each={state().selected_act?.points}>
+                {(p) => {
+                  return (
+                    <div
+                      onClick={() => {
+                        vm.methods.handleClickVideoPoint(p);
+                      }}
+                    >
+                      <div class="text-w-fg-0">{p.title}</div>
+                      <div class="flex items-center gap-2">
+                        <div class="text-w-fg-1">{p.time_text}</div>
+                        <div class="p-2 rounded-full bg-w-bg-5">
+                          <Play class="w-4 h-4 text-w-fg-1" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </Show>
         </div>
       </Popover>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>

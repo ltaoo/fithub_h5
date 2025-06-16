@@ -151,29 +151,22 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
                   </div>
                 }
               >
-                <div class="mt-4 p-2">
-                  <div class="border-2 border-w-fg-3 rounded-lg">
-                    <div class="flex items-center justify-between p-2 border-b-2 border-w-fg-3">
-                      <div class="text-w-fg-0">最大重量</div>
-                    </div>
-                    <div class="p-2 space-y-2">
-                      <For each={state().histories}>
-                        {(v) => {
-                          return (
-                            <div class="">
-                              <SetValueView
-                                reps={v.reps}
-                                reps_unit={v.reps_unit}
-                                weight={v.weight}
-                                weight_unit={v.weight_unit}
-                              />
-                              <div class="text-sm text-w-fg-1">{v.created_at}</div>
-                            </div>
-                          );
-                        }}
-                      </For>
-                    </div>
-                  </div>
+                <div class="mt-4 p-2 space-y-2">
+                  <For each={state().histories}>
+                    {(v) => {
+                      return (
+                        <div class="">
+                          <SetValueView
+                            reps={v.reps}
+                            reps_unit={v.reps_unit}
+                            weight={v.weight}
+                            weight_unit={v.weight_unit}
+                          />
+                          <div class="text-sm text-w-fg-1">{v.created_at_relative}</div>
+                        </div>
+                      );
+                    }}
+                  </For>
                 </div>
               </Show>
             </Show>

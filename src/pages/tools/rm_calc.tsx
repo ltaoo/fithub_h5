@@ -8,13 +8,13 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Input, ScrollView } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
-import { NavigationBar1 } from "@/components/navigation-bar1";
+import { PageView } from "@/components/page-view";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, InputCore, ScrollViewCore } from "@/domains/ui";
 import { toFixed } from "@/utils";
-import { PageView } from "@/components/page-view";
+import { toNumber } from "@/utils/primitive";
 
 export function RMCalcViewModel(props: ViewComponentProps) {
   const methods = {
@@ -39,15 +39,15 @@ export function RMCalcViewModel(props: ViewComponentProps) {
     $input_reps: new InputCore({ defaultValue: 12 }),
     $btn_submit: new ButtonCore({
       onClick() {
-        const weight = Number(ui.$input_weight.value);
-        const reps = Number(ui.$input_reps.value);
-        if (Number.isNaN(weight)) {
+        const weight = toNumber(ui.$input_weight.value);
+        const reps = toNumber(ui.$input_reps.value);
+        if (weight === null) {
           props.app.tip({
             text: ["请输入合法重量值"],
           });
           return;
         }
-        if (Number.isNaN(reps)) {
+        if (reps === null) {
           props.app.tip({
             text: ["请输入合法次数值"],
           });

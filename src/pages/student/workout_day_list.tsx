@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
+import { useViewModel } from "@/hooks";
 import { DropdownMenu, ListView, ScrollView } from "@/components/ui";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { PageView } from "@/components/page-view";
@@ -11,13 +12,13 @@ import { IconButton } from "@/components/icon-btn/icon-btn";
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
-import { useViewModel } from "@/hooks";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { continueWorkoutDay, fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
 import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/constants";
 import { RefCore } from "@/domains/ui/cur";
 import { fetchStudentWorkoutDayList, fetchStudentWorkoutDayListProcess } from "@/biz/student/services";
+import { toNumber } from "@/utils/primitive";
 
 function StudentWorkoutDayListViewModel(props: ViewComponentProps) {
   const request = {
@@ -129,8 +130,8 @@ function StudentWorkoutDayListViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      const student_id = Number(props.view.query.student_id);
-      if (Number.isNaN(student_id)) {
+      const student_id = toNumber(props.view.query.student_id);
+      if (student_id === null) {
         return;
       }
       request.workout_day.list.init({ id: student_id });

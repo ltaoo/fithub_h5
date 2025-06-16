@@ -10,6 +10,7 @@ import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, Input, ListView, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
+import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
 
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
@@ -32,7 +33,7 @@ import { Result } from "@/domains/result";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
-import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
+import { toNumber } from "@/utils/primitive";
 
 function MemberProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -100,8 +101,8 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       });
     },
     async ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return Result.Err("参数错误");
       }
       (async () => {
@@ -195,8 +196,8 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     }),
     $btn_delete_confirm_ok: new ButtonCore({
       async onClick() {
-        const id = Number(props.view.query.id);
-        if (Number.isNaN(id)) {
+        const id = toNumber(props.view.query.id);
+        if (id === null) {
           return;
         }
         const r = await request.student.delete.run({ id });
@@ -226,8 +227,8 @@ function MemberProfileViewModel(props: ViewComponentProps) {
           });
           return;
         }
-        const id = Number(props.view.query.id);
-        if (Number.isNaN(id)) {
+        const id = toNumber(props.view.query.id);
+        if (id === null) {
           props.app.tip({
             text: ["异常数据"],
           });

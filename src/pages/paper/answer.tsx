@@ -25,6 +25,7 @@ import {
 import { PaperQuiz, PaperQuizAnswer } from "@/biz/paper/types";
 import { Result } from "@/domains/result";
 import { map_choice_value_text } from "@/biz/paper/utils";
+import { toNumber } from "@/utils/primitive";
 
 function ExamAnswerViewModel(props: ViewComponentProps) {
   const request = {
@@ -155,8 +156,8 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
       ui.$dialog_overview.show();
     },
     async submit() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         const tip = "参数错误";
         return Result.Err(tip);
       }
@@ -170,8 +171,8 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
       props.history.push("root.exam_result", props.view.query);
     },
     async giveUp() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         const tip = "参数错误";
         return Result.Err(tip);
       }
@@ -289,8 +290,8 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     async ready() {
-      const id = Number(props.view.query.id);
-      if (Number.isNaN(id)) {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
         return;
       }
       const r = await request.exam.profile.run({ id });
