@@ -4,6 +4,7 @@ export function useViewModel<
   T extends (...args: any[]) => {
     state: any;
     ready: () => void;
+    destroy?: () => void;
     onStateChange: (handler: (v: any) => any) => any;
   }
 >(factory: T, props: Parameters<T>): [Accessor<ReturnType<T>["state"]>, ReturnType<T>] {
@@ -17,6 +18,11 @@ export function useViewModel<
   });
   onMount(() => {
     $model.ready();
+  });
+  onCleanup(() => {
+    if ($model.destroy) {
+      $model.destroy();
+    }
   });
 
   return [state, $model];

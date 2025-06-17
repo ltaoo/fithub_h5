@@ -29,6 +29,7 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
   const $model = WorkoutActionEditorViewModel(props);
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $values: $model.$values,
     $back: new ButtonCore({
       onClick() {

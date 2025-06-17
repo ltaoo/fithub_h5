@@ -77,6 +77,7 @@ function WorkoutDayPreparingViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $dialog_student_select: new DialogCore({}),
     $dialog_workout_plan_select: new DialogCore({}),
     $input_student_select: StudentSelectViewModel({

@@ -40,6 +40,7 @@ function EquipmentListViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
     $dialog_profile: new DialogCore({}),
   };
   const methods = {

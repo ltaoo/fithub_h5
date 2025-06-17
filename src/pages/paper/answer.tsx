@@ -165,7 +165,7 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
       const r = await request.exam.complete.run({ id });
       ui.$btn_submit.setLoading(false);
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       ui.$dialog_overview.hide();
       props.history.push("root.exam_result", props.view.query);
@@ -180,7 +180,7 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
       const r = await request.exam.give_up.run({ id });
       ui.$btn_give_up.setLoading(false);
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       ui.$dialog_overview.hide();
       props.history.push("root.exam_result", props.view.query);
@@ -188,6 +188,7 @@ function ExamAnswerViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $btn_prev_quiz: new ButtonCore({
       disabled: true,
       onClick() {

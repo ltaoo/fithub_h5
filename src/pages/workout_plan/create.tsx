@@ -38,6 +38,7 @@ function WorkoutPlanCreateViewModel(props: ViewComponentProps) {
   const ui = {
     ...$model.ui,
     $view: new ScrollViewCore(),
+    $history: props.history,
   };
   let _state = {
     get fields() {

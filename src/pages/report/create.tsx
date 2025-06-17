@@ -34,7 +34,7 @@ function ReportCreateViewModel(props: ViewComponentProps) {
       });
       ui.$btn_report_submit.setLoading(false);
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       ui.$input_report.clear();
       return Result.Ok(null);
@@ -42,6 +42,7 @@ function ReportCreateViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $input_report: new InputCore({ defaultValue: "" }),
     $btn_report_submit: new ButtonCore({
       async onClick() {

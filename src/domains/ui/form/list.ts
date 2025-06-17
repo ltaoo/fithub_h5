@@ -92,9 +92,9 @@ export function ListContainerCore<T extends { defaultValue: any; factory: () => 
     // },
     removeFieldByIndex(index: number) {
       if (_list.length === 1) {
-        bus.tip({
-          text: ["至少保留一个"],
-        });
+        // bus.tip({
+        //   text: ["至少保留一个"],
+        // });
         return;
       }
       _list = _list.filter((f) => f.index !== index);

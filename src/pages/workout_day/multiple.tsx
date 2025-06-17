@@ -83,6 +83,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
   };
 
   let _working = false;

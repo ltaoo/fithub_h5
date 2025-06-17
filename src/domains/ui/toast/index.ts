@@ -86,19 +86,25 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
     this._icon = icon;
     this._texts = texts;
     this.emit(Events.StateChange, { ...this.state });
+
     if (this.timer !== null) {
       this.clearTimer();
+      // 已经有 toast 存在了，将之前的「等待」销毁，重新定时，等于 第一个3s 还没到，第二个 3s toast 又要出现，本质上就是延长了 toast 的时间
+      if (this._icon === "loading") {
+        // 如果是 loading，直接不要定时了，就会一直存在，直到外部手动隐藏
+        return;
+      }
       this.timer = setTimeout(() => {
         this.hide();
-        this.clearTimer();
-        this._mask = false;
       }, this.delay);
       return;
     }
     this.present.show();
+    if (this._icon === "loading") {
+      return;
+    }
     this.timer = setTimeout(() => {
       this.hide();
-      this.clearTimer();
     }, this.delay);
   }
   clearTimer() {
@@ -111,6 +117,7 @@ export class ToastCore extends BaseDomain<TheTypesOfEvents> {
   /** 隐藏弹窗 */
   hide() {
     this.present.hide();
+    this.clearTimer();
   }
 
   onShow(handler: Handler<TheTypesOfEvents[Events.Show]>) {

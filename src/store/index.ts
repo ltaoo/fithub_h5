@@ -104,7 +104,8 @@ export const app = new Application({
         history.push(route.name, query, { ignore: true });
         return Result.Ok(null);
       }
-      return Result.Err("can't goto layout");
+      history.push("root.home_layout.index");
+      return Result.Ok(null);
     }
     console.log("[STORE]beforeReady - before if (!app.$user.isLogin", app.$user.isLogin);
     if (!app.$user.isLogin) {
@@ -191,9 +192,6 @@ history.onRouteChange(({ ignore, reason, view, href }) => {
   //   history.$router.replaceState(href);
   // }
 });
-user.onTip((msg) => {
-  app.tip(msg);
-});
 user.onLogin((profile) => {
   storage.set("user", profile);
   client.appendHeaders({
@@ -202,7 +200,7 @@ user.onLogin((profile) => {
   request.appendHeaders({
     Authorization: user.token,
   });
-  history.push("root.home_layout.index");
+  history.destroyAllAndPush("root.home_layout.index");
 });
 user.onTokenRefresh((profile) => {
   storage.set("user", profile);
@@ -215,12 +213,17 @@ user.onTokenRefresh((profile) => {
 });
 user.onLogout(() => {
   storage.clear("user");
-  history.push("root.login");
+  history.destroyAllAndPush("root.login");
 });
 user.onExpired(() => {
   storage.clear("user");
   app.tip({
     text: ["token 已过期，请重新登录"],
   });
-  history.push("root.login");
+  history.destroyAllAndPush("root.login");
+});
+user.onError((e) => {
+  app.tip({
+    text: [e.message],
+  });
 });

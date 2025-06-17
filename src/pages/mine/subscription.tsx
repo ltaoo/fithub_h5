@@ -78,6 +78,7 @@ function MineSubscriptionViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
     $dialog_choices: new DialogCore({}),
     $btn_order_confirm: new ButtonCore({
       onClick() {

@@ -39,7 +39,7 @@ function ReportProfileViewModel(props: ViewComponentProps) {
       const r = await request.report.cancel.run({ id });
       ui.$btn_cancel.setLoading(false);
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       return Result.Ok(null);
     },
@@ -53,13 +53,14 @@ function ReportProfileViewModel(props: ViewComponentProps) {
       const r = await request.report.delete.run({ id });
       ui.$btn_delete.setLoading(false);
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       return Result.Ok(null);
     },
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $btn_cancel: new ButtonCore({
       async onClick() {
         const r = await methods.cancelReport();

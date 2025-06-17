@@ -27,6 +27,7 @@ function SubscriptionOrderViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $wechat: new DialogCore({}),
   };
 

@@ -37,6 +37,7 @@ function WorkoutScheduleUpdateViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $calendar: CalendarCore({
       today: new Date(),
     }),

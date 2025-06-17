@@ -77,6 +77,7 @@ function StudentWorkoutDayListViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
     $menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({

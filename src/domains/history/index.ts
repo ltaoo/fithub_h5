@@ -27,6 +27,8 @@ type TheTypesOfEvents = {
     pathname: string;
     query: Record<string, string>;
     reason: "back" | "forward" | "push" | "replace";
+    /** 用于在页面间传递标记、数据等 */
+    data?: any;
     /** 调用方希望忽略这次 route change */
     ignore?: boolean;
   };
@@ -145,6 +147,7 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
       //     },
       //   });
       // }
+      // @todo 切换 tab 的 push 行为，应该不变更栈
       this.stacks = this.stacks.slice(0, this.cursor + 1).concat(view);
       this.cursor += 1;
       view.parent.showView(view, { reason: "show_sibling", destroy: false });
@@ -296,7 +299,7 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
     // this.emit(Events.TopViewChange, created);
     this.emit(Events.StateChange, { ...this.state });
   }
-  back() {
+  back(opt: Partial<{ data: any }> = {}) {
     const target_cursor = this.cursor - 1;
     const view_prepare_to_show = this.stacks[target_cursor];
     // console.log("[DOMAIN]history - back", this.cursor, targetCursor, viewPrepareShow);
@@ -339,6 +342,7 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
       href: view_prepare_to_show.href,
       pathname: view_prepare_to_show.pathname,
       query: view_prepare_to_show.query,
+      data: opt.data,
     });
     this.emit(Events.Back);
     this.emit(Events.StateChange, { ...this.state });
@@ -382,6 +386,105 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
   reload() {
     // 销毁再初始化？
   }
+  /** 销毁所有页面，然后前往指定路由 */
+  destroyAllAndPush(
+    name: K,
+    query: Record<string, string> = {},
+    options: Partial<{
+      /** 不变更 history stack */
+      ignore: boolean;
+    }> = {}
+  ) {
+    // console.log("-----------");
+    // console.log("[DOMAIN]history/index - push target url is", name, "and cur href is", this.$router.href);
+    const { ignore } = options;
+    if (this.isLayout(name)) {
+      console.log("[DOMAIN]history/index - the target url is layout", name);
+      return;
+    }
+    const route1 = this.routes[name];
+    if (!route1) {
+      console.log("[DOMAIN]history/index - push 2. no matched route", name);
+      return;
+    }
+    const unique_key = [route1.pathname, query_stringify(query)].filter(Boolean).join("?");
+    if (unique_key === this.$router.href) {
+      // console.log("[DOMAIN]history/index - push target url is", uniqueKey, "and cur href is", this.$router.href);
+      return;
+    }
+    // @todo 这里不能写死 root
+    const v1 = this.views["root"];
+    const v2 = this.views["root.home_layout"];
+    const kk = Object.keys(this.views);
+    for (let i = 0; i < kk.length; i += 1) {
+      (() => {
+        const v = kk[i];
+        // if (["root", "root.home_layout"].includes(v)) {
+        //   return;
+        // }
+        const view = this.views[v];
+        view.unmount();
+      })();
+    }
+    this.views = {
+      ["root"]: v1,
+      ["root.home_layout"]: v2,
+    };
+    const route = (() => {
+      const m = this.routes[name];
+      if (!m) {
+        return null;
+      }
+      return m;
+    })();
+    if (!route) {
+      console.log("[DOMAIN]history/index - push 2. no matched route", unique_key);
+      return null;
+    }
+    const created = new RouteViewCore({
+      name: route.name,
+      pathname: route.pathname,
+      title: route.title,
+      query,
+      animation: route.options?.animation,
+      parent: null,
+    });
+    // created.onUnmounted(() => {
+    //   this.stacks = this.stacks.filter((s) => s.key !== created.key);
+    //   delete this.views[uniqueKey];
+    // });
+    this.views[unique_key] = created;
+    this.ensureParent(created);
+    if (!created.parent) {
+      console.log("[DOMAIN]history/index - push 3. ", route.name);
+      return;
+    }
+    this.$router.href = created.href;
+    this.$router.name = created.name;
+    // const viewsAfter = this.stacks.slice(this.cursor);
+    // for (let i = 0; i < viewsAfter.length; i += 1) {
+    //   const v = viewsAfter[i];
+    //   v.hide();
+    // }
+    this.stacks = this.stacks.slice(0, this.cursor + 1).concat(created);
+    this.cursor += 1;
+    created.parent.showView(created, { reason: "show_sibling", destroy: false });
+    this.emit(Events.RouteChange, {
+      reason: "push",
+      view: created,
+      name,
+      href: created.href,
+      pathname: created.pathname,
+      query: created.query,
+      ignore,
+    });
+    // this.emit(Events.TopViewChange, created);
+    this.emit(Events.StateChange, { ...this.state });
+  }
+  /** 跳转到兄弟页面 */
+  // pushSibling() {
+
+  // }
   ensureParent(view: RouteViewCore) {
     const { name } = view;
     if (view.parent) {

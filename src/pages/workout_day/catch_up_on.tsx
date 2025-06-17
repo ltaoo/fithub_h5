@@ -40,9 +40,9 @@ function CatchUpOnViewModel(props: ViewComponentProps) {
       props.history.back();
     },
   };
-
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({

@@ -44,6 +44,7 @@ function ExamResultViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $dialog_quiz: new DialogCore({}),
   };
 

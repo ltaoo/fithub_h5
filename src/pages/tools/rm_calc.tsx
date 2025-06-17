@@ -35,6 +35,7 @@ export function RMCalcViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $input_weight: new InputCore({ defaultValue: 80 }),
     $input_reps: new InputCore({ defaultValue: 12 }),
     $btn_submit: new ButtonCore({

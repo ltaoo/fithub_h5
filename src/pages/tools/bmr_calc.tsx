@@ -116,6 +116,7 @@ export function BMRCalcViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $input_age: new InputCore({ defaultValue: 18 }),
     $input_weight: new InputCore({ defaultValue: 60 }),
     $input_height: new InputCore({ defaultValue: 170 }),

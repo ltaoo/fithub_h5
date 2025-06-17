@@ -20,13 +20,13 @@ function Application() {
   const toast = new ToastCore();
 
   const [state, setState] = createSignal(app.state);
-  const [subViews, setSubViews] = createSignal(view.subViews);
+  const [views, setViews] = createSignal(view.subViews);
 
   app.onStateChange((nextState) => {
     setState(nextState);
   });
   view.onSubViewsChange((v) => {
-    setSubViews(v);
+    setViews(v);
   });
   app.onTip((msg) => {
     const { icon, text } = msg;
@@ -34,6 +34,16 @@ function Application() {
       icon,
       texts: text,
     });
+  });
+  app.onLoading((msg) => {
+    const { text } = msg;
+    toast.show({
+      icon: "loading",
+      texts: text,
+    });
+  });
+  app.onHideLoading(() => {
+    toast.hide();
   });
   onMount(() => {
     const { innerWidth, innerHeight, location } = window;
@@ -54,8 +64,8 @@ function Application() {
           </div>
         </div>
       </Show>
-      <Show when={subViews().length !== 0}>
-        <For each={subViews()}>
+      <Show when={views().length !== 0}>
+        <For each={views()}>
           {(subView, i) => {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];

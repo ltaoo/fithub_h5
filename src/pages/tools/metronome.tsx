@@ -76,6 +76,7 @@ function MetronomeToolViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $stopwatch: StopwatchViewModel({}),
   };
 

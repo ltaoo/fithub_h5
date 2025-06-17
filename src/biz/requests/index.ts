@@ -8,7 +8,7 @@ export const request = request_factory({
   process<T>(r: Result<{ code: number | string; msg: string; data: T }>) {
     // console.log("[common]", r);
     if (r.error) {
-      return Result.Err(r.error.message);
+      return Result.Err(r.error);
     }
     const { code, msg, data } = r.data;
     if (code !== 200) {
@@ -84,7 +84,7 @@ ListCore.commonProcessor = <T>(
       total: 0,
       noMore: false,
       empty: false,
-      error: new BizError(`${(error as Error).message}`),
+      error: new BizError([`${(error as Error).message}`]),
       // next_marker: "",
     };
   }

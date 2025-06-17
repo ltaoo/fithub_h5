@@ -29,6 +29,7 @@ function CountdownToolViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $countdown: CountdownViewModel({ countdown: 5 }),
   };
   let _state = {

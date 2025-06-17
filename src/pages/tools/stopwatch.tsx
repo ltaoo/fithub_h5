@@ -31,6 +31,7 @@ function StopwatchToolViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $stopwatch: StopwatchViewModel({}),
   };
   let _state = {

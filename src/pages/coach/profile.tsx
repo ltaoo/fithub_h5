@@ -24,6 +24,7 @@ function CoachProfileViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
   };
   let _state = {};
   enum Events {

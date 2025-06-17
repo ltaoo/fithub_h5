@@ -30,6 +30,7 @@ function WorkoutScheduleCreateSuccessViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $profile: WorkoutScheduleViewModel({ client: props.client }),
   };
 

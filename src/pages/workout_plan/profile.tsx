@@ -4,7 +4,7 @@
 import { Show, For, Switch, Match } from "solid-js";
 import { BicepsFlexed, ChevronLeft, CircleX, Clock, Hourglass, Loader, Loader2, MoreHorizontal, X } from "lucide-solid";
 
-import { ViewComponentProps } from "@/store/types";
+import { ViewComponentProps, PageKeys } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, ListView, ScrollView, Video } from "@/components/ui";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
@@ -175,6 +175,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $profile: WorkoutPlanViewModel({ client: props.client }),
     $btn_start_plan: new ButtonCore({
       async onClick() {
@@ -283,10 +284,17 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
+  request.content_of_workout_plan.list.onStateChange(() => methods.refresh());
   ui.$profile.onStateChange(() => methods.refresh());
   ui.$profile.onError(() => methods.refresh());
   ui.$select_student.onStateChange(() => methods.refresh());
-  request.content_of_workout_plan.list.onStateChange(() => methods.refresh());
+  const unlisten = props.history.onRouteChange((v) => {
+    if ((v.name as PageKeys) === "root.workout_plan_profile") {
+      if (v.reason === "back" && v.data?.update) {
+        methods.ready();
+      }
+    }
+  });
 
   return {
     state: _state,
@@ -298,6 +306,7 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
     },
     destroy() {
       bus.destroy();
+      unlisten();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -359,7 +368,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                 <div class="flex items-center justify-between mt-2">
                   <div class="duration flex items-center gap-1">
                     <Clock class="w-4 h-4 text-w-fg-1" />
-                    <div class="text-sm text-w-fg-1">预计总耗时{state().profile!.estimated_duration_text}</div>
+                    <div class="text-sm text-w-fg-1">预计耗时{state().profile!.estimated_duration_text}</div>
                   </div>
                   <div class="text-w-fg-1 text-[12px]">{state().profile!.created_at}创建</div>
                 </div>

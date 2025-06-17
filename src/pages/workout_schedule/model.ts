@@ -142,7 +142,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
     async toBody() {
       const r = await ui.$values.validate();
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       const { title, overview, level, type, status } = r.data;
       if (!title) {

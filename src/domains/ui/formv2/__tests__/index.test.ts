@@ -8,7 +8,7 @@ describe("Form", () => {
   it("should be a function", async () => {
     const form = new ObjectFieldCore({
       label: "用户信息",
-      name: "user",
+      // name: "user",
       fields: {
         name: new SingleFieldCore({
           label: "姓名",

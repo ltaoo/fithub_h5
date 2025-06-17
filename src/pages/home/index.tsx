@@ -529,7 +529,6 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     async ready() {
-      // ui.$dialog_workout_tip.show();
       const r = await methods.ready();
       if (r.error) {
         props.app.tip({

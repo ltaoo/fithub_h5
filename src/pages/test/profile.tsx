@@ -32,6 +32,7 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $btn: new ButtonCore({
       async onClick() {
         ui.$values.fields.persons.fields[0].field.setValue({

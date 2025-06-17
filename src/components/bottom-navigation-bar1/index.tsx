@@ -1,10 +1,11 @@
-import { ChevronLeft, Home } from "lucide-solid";
+import { Show } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
+import { ChevronLeft, Home } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
-import { Show } from "solid-js";
 
 export function BottomNavigationBar1(props: {
+  history: ViewComponentProps["history"];
   /** 到首页按钮 */
   home?: boolean;
   /** 隐藏边框线 */
@@ -23,6 +24,10 @@ export function BottomNavigationBar1(props: {
         <div
           class="p-2 w-[40px] rounded-full bg-w-bg-5"
           onClick={() => {
+            if (props.home) {
+              props.history.destroyAllAndPush("root.home_layout.index");
+              return;
+            }
             props.back();
           }}
         >

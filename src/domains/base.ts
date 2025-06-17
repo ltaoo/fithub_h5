@@ -17,21 +17,17 @@ const uid = uid_factory();
 
 // 这里必须给 Tip 显示声明值，否则默认为 0，会和其他地方声明的 Events 第一个 Key 冲突
 enum BaseEvents {
-  Tip = "__tip",
+  Loading = "__loading",
   Destroy = "__destroy",
 }
 type TheTypesOfBaseEvents = {
-  [BaseEvents.Tip]: {
-    icon?: unknown;
-    text: string[];
-  };
   [BaseEvents.Destroy]: void;
 };
 type BaseDomainEvents<E> = TheTypesOfBaseEvents & E;
 
+  // const uid = uid_factory();
 export function base<Events extends Record<EventType, unknown>>() {
   const emitter = mitt<BaseDomainEvents<Events>>();
-  const uid = uid_factory();
   let listeners: (() => void)[] = [];
 
   return {
@@ -48,14 +44,6 @@ export function base<Events extends Record<EventType, unknown>>() {
       return unlisten;
     },
     uid,
-    tip(content: { icon?: unknown; text: string[] }) {
-      // @ts-ignore
-      emitter.emit(BaseEvents.Tip, content);
-      return content.text.join("\n");
-    },
-    onTip(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Tip]>) {
-      return emitter.on(BaseEvents.Tip, handler);
-    },
     emit<Key extends keyof BaseDomainEvents<Events>>(event: Key, value?: BaseDomainEvents<Events>[Key]) {
       emitter.emit(event, value as any);
     },
@@ -144,11 +132,6 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     // @ts-ignore
     this._emitter.emit(event, value);
   }
-  tip(arg: { icon?: unknown; text: string[] }) {
-    // @ts-ignore
-    this._emitter.emit(BaseEvents.Tip, arg);
-    return arg.text.join("\n");
-  }
   /** 主动销毁所有的监听事件 */
   destroy() {
     // this.log(this.name, "destroy");
@@ -160,9 +143,6 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
       }
     });
     this.emit(BaseEvents.Destroy);
-  }
-  onTip(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Tip]>) {
-    return this.on(BaseEvents.Tip, handler);
   }
   onDestroy(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Destroy]>) {
     return this.on(BaseEvents.Destroy, handler);

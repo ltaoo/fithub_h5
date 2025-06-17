@@ -1,5 +1,5 @@
 import { createSignal, For, JSX, Show } from "solid-js";
-import { X } from "lucide-solid";
+import { Funnel, Tags, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
@@ -89,23 +89,24 @@ export function TagInput(props: { store: TagSelectInput } & JSX.HTMLAttributes<H
   return (
     <>
       <div
-        classList={{
-          "overflow-hidden flex items-center h-10 w-[68px] rounded-xl truncate border-2 border-w-fg-3 py-2 px-3 text-w-fg-0 bg-transparent":
-            true,
-          "focus:outline-none focus:ring-w-bg-3": true,
-          "disabled:cursor-not-allowed disabled:opacity-50": true,
-          "placeholder:text-w-fg-2": true,
-          [props.class ?? ""]: true,
-        }}
-        style={{
-          "vertical-align": "bottom",
-        }}
+        // classList={{
+        //   "overflow-hidden flex items-center h-10 w-[68px] rounded-xl truncate border-2 border-w-fg-3 py-2 px-3 text-w-fg-0 bg-transparent":
+        //     true,
+        //   "focus:outline-none focus:ring-w-bg-3": true,
+        //   "disabled:cursor-not-allowed disabled:opacity-50": true,
+        //   "placeholder:text-w-fg-2": true,
+        //   [props.class ?? ""]: true,
+        // }}
+        // style={{
+        //   "vertical-align": "bottom",
+        // }}
+        class="p-2 rounded-full bg-w-bg-5"
         onClick={(event) => {
           const { x, y } = event;
           vm.ui.$dialog.show();
         }}
       >
-        <For each={state().value} fallback={<div class="text-w-fg-2">请选择标签</div>}>
+        {/* <For each={state().value} fallback={<div class="text-w-fg-2">请选择标签</div>}>
           {(text, index) => {
             return (
               <div class="">
@@ -114,7 +115,13 @@ export function TagInput(props: { store: TagSelectInput } & JSX.HTMLAttributes<H
               </div>
             );
           }}
-        </For>
+        </For> */}
+        <Tags
+          class="w-6 h-6 text-w-fg-0"
+          classList={{
+            "text-w-green": state().value.length !== 0,
+          }}
+        />
       </div>
       <TopSheet top={56} store={vm.ui.$dialog} app={vm.app}>
         <div class="flex flex-wrap gap-2 bg-w-bg-0 p-4">

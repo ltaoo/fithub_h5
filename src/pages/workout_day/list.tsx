@@ -75,6 +75,7 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
     $menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({
@@ -145,19 +146,19 @@ export function WorkoutDayListView(props: ViewComponentProps) {
     <>
       <PageView
         store={vm}
-        operations={
-          <Flex class="justify-between">
-            <div></div>
-            <IconButton
-              onClick={(event) => {
-                const { x, y } = event.currentTarget.getBoundingClientRect();
-                vm.ui.$menu.toggle({ x, y });
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-            </IconButton>
-          </Flex>
-        }
+        // operations={
+        //   <Flex class="justify-between">
+        //     <div></div>
+        //     <IconButton
+        //       onClick={(event) => {
+        //         const { x, y } = event.currentTarget.getBoundingClientRect();
+        //         vm.ui.$menu.toggle({ x, y });
+        //       }}
+        //     >
+        //       <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+        //     </IconButton>
+        //   </Flex>
+        // }
       >
         <ListView store={vm.request.workout_day.list} class="space-y-2">
           <For each={state().response.dataSource}>

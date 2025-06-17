@@ -667,7 +667,7 @@ export function fetchWorkoutPlanSetListProcess(r: TmpRequestResp<typeof fetchWor
             type: vv.type,
             type_text: (() => {
               if (vv.type === 1) {
-                return "单天计划";
+                return "单次计划";
               }
               return "周期计划";
             })(),

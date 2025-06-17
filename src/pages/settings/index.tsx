@@ -38,6 +38,7 @@ function ApplicationSettingsViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $btn_logout: new ButtonCore({
       onClick() {
         methods.logout();

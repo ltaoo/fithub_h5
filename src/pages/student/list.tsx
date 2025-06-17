@@ -4,7 +4,7 @@
 import { For, Show } from "solid-js";
 import { Mars, Plus, Search, Venus } from "lucide-solid";
 
-import { ViewComponentProps } from "@/store/types";
+import { ViewComponentProps, PageKeys } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Input, ListView, ScrollView, Skeleton } from "@/components/ui";
 
@@ -70,6 +70,13 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   request.student.list.onStateChange(() => methods.refresh());
+  const unlisten = props.history.onRouteChange((v) => {
+    if ((v.name as PageKeys) === "root.home_layout.student_list") {
+      if (v.reason === "back") {
+        request.student.list.refresh();
+      }
+    }
+  });
 
   return {
     state: _state,
@@ -81,6 +88,7 @@ function HomeStudentListPageViewModel(props: ViewComponentProps) {
     },
     destroy() {
       bus.destroy();
+      unlisten();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

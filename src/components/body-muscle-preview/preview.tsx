@@ -112,7 +112,7 @@ export default function _BodyMusclePreview(props: {
   store: HumanBodyViewModel;
   onClick?: (part: BodyPartWithMuscles) => void;
 }) {
-  let elm: SVGSVGElement | undefined;
+  let $svg_elm: SVGSVGElement | undefined;
   let _cur_highlighted_muscles: string[] = [];
 
   function handleClick(e: MouseEvent) {
@@ -184,28 +184,29 @@ export default function _BodyMusclePreview(props: {
   }
   function set_paths_color(paths: string[], color: string) {
     for (let j = 0; j < paths.length; j += 1) {
-      const elm = document.querySelector(`#${paths[j]}`) as SVGElement | null;
+      const elm = document.querySelector(`#${props.store.uid} #${paths[j]}`) as SVGElement | null;
       if (elm) {
         elm.style.fill = color;
       }
     }
   }
 
+  props.store.onHighlightChange(({ muscles }) => {
+    console.log("[COMPONENT]body-muscle-preview - store.onHighlightChange", muscles);
+    highlight(muscles);
+  });
   onMount(() => {
-    elm?.addEventListener("click", handleClick);
+    $svg_elm?.addEventListener("click", handleClick);
     highlight(props.store.highlighted_muscles);
     disable_paths(disabled_parts);
+    props.store.setMounted();
   });
   onCleanup(() => {
-    elm?.removeEventListener("click", handleClick);
-  });
-  props.store.onHighlightChange(({ muscles }) => {
-    // console.log("[COMPONENT]body-muscle-preview - store.onHighlightChange", muscles);
-    highlight(muscles);
+    $svg_elm?.removeEventListener("click", handleClick);
   });
 
   return (
-    <svg ref={elm} class="w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 535 462">
+    <svg ref={$svg_elm} id={props.store.uid} class="w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 535 462">
       <path
         id="path14"
         fill="#f5f5f5"

@@ -37,11 +37,40 @@ import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
 import { map_parts_with_ids } from "@/biz/muscle/data";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
+import { ListCore } from "@/domains/list";
 import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 import { debounce } from "@/utils/lodash/debounce";
 
 import { ActionInput, ActionInputViewModel } from "./components/action-input";
-import { ListCore } from "@/domains/list";
+
+function calc_estimated_duration(
+  v: { set_count: number; set_rest_duration: number; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
+) {
+  const actions = v;
+  let duration = 0;
+  for (let i = 0; i < actions.length; i += 1) {
+    const set = actions[i];
+    let set_duration = Number(set.set_rest_duration);
+    for (let j = 0; j < set.actions.length; j += 1) {
+      const act = set.actions[j];
+      const reps = Number(act.reps);
+      const reps_unit = act.reps_unit;
+      if (reps_unit === getSetValueUnit("秒")) {
+        set_duration += reps;
+      }
+      if (reps_unit === getSetValueUnit("分")) {
+        set_duration += reps * 60;
+      }
+      if (reps_unit === getSetValueUnit("次")) {
+        // 所有动作按一次大概是 6s 计算
+        set_duration += reps * 6;
+      }
+    }
+    duration += set_duration * Number(set.set_count);
+  }
+  console.log("[PAGE]workout_plan/create - estimated duration", duration);
+  return duration;
+}
 
 export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "history" | "client" | "app">) {
   const request = {
@@ -65,36 +94,6 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       ),
     },
   };
-  function calc_estimated_duration(
-    v: { set_count: number; set_rest_duration: number; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
-  ) {
-    const actions = v;
-    let duration = 0;
-    for (let i = 0; i < actions.length; i += 1) {
-      const set = actions[i];
-      let set_duration = Number(set.set_rest_duration);
-      for (let j = 0; j < set.actions.length; j += 1) {
-        const act = set.actions[j];
-        const reps = Number(act.reps);
-        const reps_unit = act.reps_unit;
-        if (reps_unit === getSetValueUnit("秒")) {
-          set_duration += reps;
-        }
-        if (reps_unit === getSetValueUnit("分")) {
-          set_duration += reps * 60;
-        }
-        if (reps_unit === getSetValueUnit("次")) {
-          // 所有动作按一次大概是 6s 计算
-          set_duration += reps * 6;
-        }
-      }
-      duration += set_duration * Number(set.set_count);
-    }
-    console.log("[PAGE]workout_plan/create - estimated duration", duration);
-    const text = seconds_to_hour_with_template(duration, seconds_to_hour_template1);
-    ui.$input_duration.setValue(text);
-    return duration;
-  }
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -102,12 +101,13 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     back() {
       props.history.back();
     },
-    calc_estimated_duration,
     debounce_calc_estimated_duration: debounce(800, () => {
       ui.$input_actions.validate().then((r) => {
         // console.log("before methods.calc_estimated_duration", r.data);
         if (r.data) {
-          methods.calc_estimated_duration(r.data);
+          const v = calc_estimated_duration(r.data);
+          const text = seconds_to_hour_with_template(v, seconds_to_hour_template1);
+          ui.$input_duration.setValue(text);
         }
       });
     }),
@@ -139,7 +139,9 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
             }, [])
         ),
       ];
-      // @ts-ignore
+      if (equipment_ids.length === 0) {
+        return;
+      }
       const r3 = await request.equipment.list.search({ ids: equipment_ids });
       if (r3.error) {
         return;
@@ -169,7 +171,9 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       if (value_actions.length === 0) {
         return Result.Err("请至少添加一个动作");
       }
-      const value_estimated_duration = methods.calc_estimated_duration(value_actions);
+      const value_estimated_duration = calc_estimated_duration(value_actions);
+      // const text = seconds_to_hour_with_template(value_estimated_duration, seconds_to_hour_template1);
+      // ui.$input_duration.setValue(text);
       const muscle_ids: Record<number, boolean> = {};
       const equipment_ids: Record<number, boolean> = {};
       for (let i = 0; i < value_actions.length; i += 1) {
@@ -309,7 +313,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
       props.app.tip({
         text: ["更新成功"],
       });
-      props.history.back();
+      props.history.back({ data: { update: true } });
     },
     async fetch(id: number) {
       const r = await request.workout_plan.profile.run({ id });
@@ -362,6 +366,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
           const act = r.data.list[i];
           _action_profiles[act.id] = act;
         }
+        // console.log("[PAGE]workout_plan/model -before methods.refreshMuscles", _action_profiles);
         methods.refreshMuscles();
         methods.refreshEquipments();
       })();
@@ -505,7 +510,9 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
         ui.$input_actions.validate().then((r) => {
           console.log("before methods.calc_estimated_duration", r.data);
           if (r.data) {
-            methods.calc_estimated_duration(r.data);
+            const v = calc_estimated_duration(r.data);
+            const text = seconds_to_hour_with_template(v, seconds_to_hour_template1);
+            ui.$input_duration.setValue(text);
           }
         });
         ui.$workout_action_select.clear();
@@ -803,6 +810,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     methods.debounce_calc_estimated_duration();
   });
   ui.$workout_action_select.ui.$dialog.onStateChange(() => methods.refresh());
+  ui.$muscle.onStateChange(() => methods.refresh());
 
   return {
     methods,

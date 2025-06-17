@@ -44,6 +44,7 @@ function PaperResultListViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
   };
   let _state = {
     get response() {

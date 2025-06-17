@@ -16,18 +16,25 @@ type StringRuleCore = {
   minLength: number;
   maxLength: number;
 };
-type FieldRuleCore = CommonRuleCore & NumberRuleCore & StringRuleCore;
+type FieldRuleCore = Partial<
+  CommonRuleCore &
+    NumberRuleCore &
+    StringRuleCore & {
+      custom(v: any): Result<null>;
+    }
+>;
 type FormFieldCoreProps = {
-  label: string;
-  name: string;
+  label?: string;
+  /** @deprecated */
+  name?: string;
   rules?: FieldRuleCore[];
 };
 export function FormFieldCore<T>(props: FormFieldCoreProps) {
-  const { label, name } = props;
+  const { label } = props;
 
   return {
     label,
-    name,
+    // name,
     //     input,
 
     setValue() {},
@@ -58,7 +65,7 @@ type SingleFieldCoreProps<T> = FormFieldCoreProps & {
 type SingleFieldCoreState<T> = {
   symbol: string;
   label: string;
-  name: string;
+  // name: string;
   hidden: boolean;
   focus: boolean;
   error: BizError | null;
@@ -74,7 +81,7 @@ type SingleFieldCoreState<T> = {
 export class SingleFieldCore<T extends FormInputInterface<any>> {
   symbol = "SingleFieldCore" as const;
   _label: string;
-  _name: string;
+  // _name: string;
   _hidden = false;
   _error: BizError | null = null;
   _status: FieldStatus = "normal";
@@ -88,7 +95,7 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     return {
       symbol: this.symbol,
       label: this._label,
-      name: this._name,
+      // name: this._name,
       hidden: this._hidden,
       focus: this._focus,
       error: this._error,
@@ -105,10 +112,10 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   }
 
   constructor(props: SingleFieldCoreProps<T>) {
-    const { label, name, rules = [], input, hidden = false } = props;
+    const { label = "", rules = [], input, hidden = false } = props;
 
     this._label = label;
-    this._name = name;
+    // this._name = name;
     this._input = input;
     this._rules = rules;
     this._hidden = hidden;
@@ -125,9 +132,9 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   get label() {
     return this._label;
   }
-  get name() {
-    return this._name;
-  }
+  // get name() {
+  //   return this._name;
+  // }
   get hidden() {
     return this._hidden;
   }
@@ -160,23 +167,41 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   }
   async validate() {
     const value = this._input.value;
-    const errors: BizError[] = [];
+    const errors: string[] = [];
     for (let i = 0; i < this._rules.length; i += 1) {
       const rule = this._rules[i];
       if (rule.required && !value) {
-        errors.push(new BizError(`${this._label}不能为空`));
+        errors.push(`${this._label}不能为空`);
       }
-      if (this._input.shape === "number") {
-        if (rule.min && typeof value === "number" && value < rule.min) {
-          errors.push(new BizError(`${this._label}不能小于${rule.min}`));
+      if (rule.maxLength && value) {
+        if (String(value).length > rule.maxLength) {
+          errors.push(`${this._label}长度不能超过${rule.maxLength}`);
         }
-        if (rule.max && typeof value === "number" && value > rule.max) {
-          errors.push(new BizError(`${this._label}不能大于${rule.max}`));
+      }
+      if (rule.minLength && value) {
+        if (String(value).length < rule.minLength) {
+          errors.push(`${this._label}长度不能小于${rule.minLength}`);
+        }
+      }
+      if (rule.max) {
+        if (typeof value === "number" && value > rule.max) {
+          errors.push(`${this._label}不能大于${rule.max}`);
+        }
+      }
+      if (rule.min) {
+        if (typeof value === "number" && value < rule.min) {
+          errors.push(`${this._label}不能小于${rule.min}`);
+        }
+      }
+      if (rule.custom) {
+        const r = rule.custom(value);
+        if (r.error) {
+          errors.push(...r.error.messages);
         }
       }
     }
     if (errors.length > 0) {
-      return Result.Err(new BizError(errors.join("\n")));
+      return Result.Err(new BizError(errors));
     }
     return Result.Ok(value);
   }
@@ -252,7 +277,7 @@ export class ArrayFieldCore<
 > {
   symbol = "ArrayFieldCore" as const;
   _label: string;
-  _name: string;
+  // _name: string;
   _hidden = false;
   fields: { id: number; idx: number; field: ReturnType<T> }[] = [];
   _field: T;
@@ -273,9 +298,9 @@ export class ArrayFieldCore<
   }
 
   constructor(props: ArrayFieldCoreProps<T>) {
-    const { label, name, field, hidden = false } = props;
+    const { label = "", field, hidden = false } = props;
     this._label = label;
-    this._name = name;
+    // this._name = name;
     this._field = field;
     this._hidden = hidden;
     this.fields = [];
@@ -337,9 +362,9 @@ export class ArrayFieldCore<
   get label() {
     return this._label;
   }
-  get name() {
-    return this._name;
-  }
+  // get name() {
+  //   return this._name;
+  // }
   get hidden() {
     return this._hidden;
   }
@@ -396,20 +421,20 @@ export class ArrayFieldCore<
   }
   async validate(): Promise<Result<ArrayFieldValue<T>[]>> {
     const results: ArrayFieldValue<T>[] = [];
-    const errors: BizError[] = [];
+    const errors: string[] = [];
     for (let i = 0; i < this.fields.length; i += 1) {
       await (async () => {
         const field = this.fields[i];
         const r = await field.field.validate();
         if (r.error) {
-          errors.push(r.error);
+          errors.push(...r.error.messages);
           return;
         }
         results.push(r.data);
       })();
     }
     if (errors.length > 0) {
-      return Result.Err(new BizError(errors.join("\n")));
+      return Result.Err(errors);
     }
     return Result.Ok(results);
   }
@@ -597,11 +622,12 @@ function buildFieldsState<T extends Record<string, SingleFieldCore<any> | ArrayF
     label: string;
     name: string;
     hidden: boolean;
-  }[] = Object.values(fields).map((field) => {
+  }[] = Object.keys(fields).map((key) => {
+    const field = fields[key];
     return {
       symbol: field.symbol,
       label: field.label,
-      name: field.name,
+      name: key,
       hidden: field.hidden,
     };
   });
@@ -613,10 +639,11 @@ export class ObjectFieldCore<
 > {
   symbol = "ObjectFieldCore" as const;
   _label: string;
-  _name: string;
+  // _name: string;
   _hidden = false;
   _dirty = false;
   fields: T;
+  rules: FieldRuleCore[];
   _bus = base<TheObjectFieldCoreEvents<T>>();
 
   get state(): ObjectFieldCoreState {
@@ -629,11 +656,12 @@ export class ObjectFieldCore<
   }
 
   constructor(props: ObjectFieldCoreProps<T>) {
-    const { label, name, hidden = false, fields } = props;
+    const { label = "", hidden = false, fields, rules = [] } = props;
     this._label = label;
-    this._name = name;
+    // this._name = name;
     this._hidden = hidden;
     this.fields = fields;
+    this.rules = rules;
 
     setTimeout(() => {
       const _fields = Object.values(fields);
@@ -649,9 +677,9 @@ export class ObjectFieldCore<
   get label() {
     return this._label;
   }
-  get name() {
-    return this._name;
-  }
+  // get name() {
+  //   return this._name;
+  // }
   get hidden() {
     return this._hidden;
   }
@@ -743,7 +771,7 @@ export class ObjectFieldCore<
   }
   async validate(): Promise<Result<ObjectValue<T>>> {
     const results: ObjectValue<T> = {} as ObjectValue<T>;
-    const errors: BizError[] = [];
+    const errors: string[] = [];
     const keys = Object.keys(this.fields);
     for (let i = 0; i < keys.length; i += 1) {
       await (async () => {
@@ -751,7 +779,7 @@ export class ObjectFieldCore<
         const field = this.fields[key];
         const r = await field.validate();
         if (r.error) {
-          errors.push(r.error);
+          errors.push(...r.error.messages);
           return;
         }
         // @ts-ignore
@@ -759,7 +787,20 @@ export class ObjectFieldCore<
       })();
     }
     if (errors.length > 0) {
-      return Result.Err(new BizError(errors.join("\n")));
+      return Result.Err(errors);
+    }
+    const errors2: string[] = [];
+    for (let i = 0; i < this.rules.length; i += 1) {
+      const rule = this.rules[i];
+      if (rule.custom) {
+        const r = await rule.custom(results);
+        if (r.error) {
+          errors2.push(...r.error.messages);
+        }
+      }
+    }
+    if (errors2.length > 0) {
+      return Result.Err(errors2);
     }
     return Result.Ok(results);
   }

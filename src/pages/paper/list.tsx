@@ -36,14 +36,14 @@ function PaperListViewModel(props: ViewComponentProps) {
     async startExam(v: { id: number }) {
       const r = await request.exam.start.run({ paper_id: v.id });
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       return Result.Ok(r.data);
     },
     async fetchRunningExamList() {
       const r = await request.exam.running.run();
       if (r.error) {
-        return Result.Err(r.error.message);
+        return Result.Err(r.error);
       }
       _running_exam = r.data.list[0] ?? null;
       methods.refresh();
@@ -96,6 +96,7 @@ function PaperListViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
     $dropdown_menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({

@@ -1022,8 +1022,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 完成该次训练 */
     async completeTheWorkoutDay() {
       // const { data } = methods.toBody();
-      props.app.tip({
-        icon: "loading",
+      props.app.loading({
         text: [],
       });
       ui.$btn_workout_day_submit.setLoading(true);
@@ -1031,6 +1030,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         id: props.view.query.id,
       });
       ui.$btn_workout_day_submit.setLoading(false);
+      props.app.hideLoading();
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -1042,7 +1042,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       });
       ui.$dialog_overview.hide();
       if (!is_multiple_view) {
-        props.history.push("root.home_layout.index");
+        props.history.destroyAllAndPush("root.home_layout.index");
         return;
       }
       _profile_view = new RouteViewCore({
@@ -1060,13 +1060,13 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       methods.refresh();
     },
     async giveUp() {
-      props.app.tip({
-        icon: "loading",
+      props.app.loading({
         text: [],
       });
       ui.$btn_workout_day_give_up.setLoading(true);
       ui.$btn_give_up_confirm_ok.setLoading(true);
       const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
+      // props.app.hideLoading();
       ui.$btn_workout_day_give_up.setLoading(false);
       ui.$btn_give_up_confirm_ok.setLoading(false);
       if (r.error) {
@@ -1076,11 +1076,12 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         return;
       }
       ui.$dialog_overview.hide();
+      ui.$dialog_give_up_confirm.hide();
       props.app.tip({
         text: ["操作成功"],
       });
       if (!is_multiple_view) {
-        props.history.push("root.home_layout.index");
+        props.history.destroyAllAndPush("root.home_layout.index");
         return;
       }
       _profile_view = new RouteViewCore({
@@ -1427,17 +1428,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     /** 确认放弃弹窗中的 确定 按钮 */
     $btn_give_up_confirm_ok: new ButtonCore({
       async onClick() {
-        ui.$btn_give_up_confirm_ok.setLoading(true);
-        const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
-        ui.$btn_give_up_confirm_ok.setLoading(false);
-        if (r.error) {
-          props.app.tip({
-            text: [r.error.message],
-          });
-          return;
-        }
-        ui.$dialog_give_up_confirm.hide();
-        props.history.push("root.home_layout.index");
+        methods.giveUp();
       },
     }),
     $dialog_finish_confirm: new DialogCore({}),

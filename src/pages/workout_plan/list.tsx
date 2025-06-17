@@ -108,6 +108,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       onPullToRefresh: methods.handlePullToRefresh,
       onReachBottom: methods.handleLoadMore,
     }),
+    $history: props.history,
     $btn_back: new ButtonCore({
       onClick() {
         props.history.back();
@@ -149,14 +150,14 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
     $dropdown_menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({
-          label: "创建训练计划",
+          label: "创建单次计划",
           onClick() {
             ui.$dropdown_menu.hide();
             methods.gotoWorkoutPlanCreateView();
           },
         }),
         new MenuItemCore({
-          label: "创建周期安排",
+          label: "创建周期计划",
           onClick() {
             ui.$dropdown_menu.hide();
             methods.gotoWorkoutScheduleCreateView();
@@ -244,9 +245,6 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
         <div class="flex items-center gap-2 p-2 border-b border-w-fg-3">
           <Select store={vm.ui.$input_view_select}></Select>
           <Input store={vm.ui.$input_keyword} />
-          <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>
-            <TagInput store={vm.ui.$input_tag} />
-          </Show>
           <IconButton
             onClick={() => {
               vm.methods.search();
@@ -254,6 +252,9 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
           >
             <Search class="w-6 h-6 text-w-fg-0" />
           </IconButton>
+          <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>
+            <TagInput store={vm.ui.$input_tag} />
+          </Show>
         </div>
         <div class="p-2">
           <Show when={state().tab_id === WorkoutPlanOrScheduleType.WorkoutPlan}>

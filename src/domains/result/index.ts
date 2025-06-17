@@ -18,24 +18,32 @@ export const Result = {
     return result;
   },
   /** 构造失败结果 */
-  Err: <T>(message: string | BizError | Error | Result<null>, code?: string | number, data: unknown = null) => {
+  Err: <T>(
+    message: string | string[] | BizError | Error | Result<null>,
+    code?: string | number,
+    data: unknown = null
+  ) => {
     const result = {
       data,
       code,
       error: (() => {
-        if (typeof message === "string") {
+        if (Array.isArray(message)) {
           const e = new BizError(message, code, data);
+          return e;
+        }
+        if (typeof message === "string") {
+          const e = new BizError([message], code, data);
           return e;
         }
         if (message instanceof BizError) {
           return message;
         }
         if (typeof message === "object") {
-          const e = new BizError((message as Error).message, code, data);
+          const e = new BizError([(message as Error).message], code, data);
           return e;
         }
         if (!message) {
-          const e = new BizError("未知错误", code, data);
+          const e = new BizError(["未知错误"], code, data);
           return e;
         }
         const r = message as Result<null>;

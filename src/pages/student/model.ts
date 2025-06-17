@@ -6,12 +6,17 @@ import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 
 export function MemberValuesViewModel() {
   const $values_basic = new ObjectFieldCore({
-    label: "",
-    name: "basic",
     fields: {
       name: new SingleFieldCore({
         label: "姓名",
-        name: "name",
+        rules: [
+          {
+            required: true,
+          },
+          {
+            maxLength: 18,
+          },
+        ],
         input: new InputCore({
           defaultValue: "",
         }),

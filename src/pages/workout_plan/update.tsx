@@ -47,9 +47,9 @@ function WorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {
   const ui = {
     ...$model.ui,
     $view: new ScrollViewCore(),
+    $history: props.history,
   };
 
-  const workout_plan_id = Number(props.view.query.id);
   let _state = {
     get fields() {
       return $model.state.fields;

@@ -131,22 +131,6 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       return Result.Ok(null);
     },
   };
-
-  let _cur_day_profile: {
-    date_text: string;
-    weekday_text: string;
-    workout_days: {
-      id: number;
-      status: number;
-      finished_at: string;
-      finished_at_text: string;
-      workout_plan: {
-        title: string;
-        overview: string;
-        tags: string[];
-      };
-    }[];
-  } | null = null;
   const ui = {
     $view: new ScrollViewCore({
       async onPullToRefresh() {
@@ -154,6 +138,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         ui.$view.finishPullToRefresh();
       },
     }),
+    $history: props.history,
     $calendar: CalendarCore({
       today: new Date(),
     }),
@@ -278,6 +263,21 @@ function MemberProfileViewModel(props: ViewComponentProps) {
   };
 
   let _workout_day_list: { date_text: string }[] = [];
+  let _cur_day_profile: {
+    date_text: string;
+    weekday_text: string;
+    workout_days: {
+      id: number;
+      status: number;
+      finished_at: string;
+      finished_at_text: string;
+      workout_plan: {
+        title: string;
+        overview: string;
+        tags: string[];
+      };
+    }[];
+  } | null = null;
   let _state = {
     get loading() {
       return request.student.profile.loading;

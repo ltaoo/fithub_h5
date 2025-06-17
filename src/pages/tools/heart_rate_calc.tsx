@@ -126,6 +126,7 @@ function HeartRateCalcViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore(),
+    $history: props.history,
     $input_heart_rate: new InputCore({ defaultValue: 60 }),
     $input_age: new InputCore({ defaultValue: 18 }),
     $input_intensity_level: new InputCore({ defaultValue: IntensityLevel.CardioHealth }),

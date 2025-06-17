@@ -55,7 +55,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
         return Result.Err(r.error);
       }
       const { muscle_ids, equipment_ids, steps } = r.data;
-      console.log("[BIZ]workout_plan/workout_plan - fetch - before muscle_ids.length", muscle_ids);
+      // console.log("[BIZ]workout_plan/workout_plan - fetch - before muscle_ids.length", muscle_ids);
       if (muscle_ids.length) {
         // const r2 = await request.muscle.list.run({ ids: muscle_ids });
         // if (r2.error) {
@@ -69,7 +69,7 @@ export function WorkoutPlanViewModel(props: { client: HttpClientCore }) {
             zh_name: v.name,
           };
         });
-        console.log("[BIZ]workout_plan/workout_plan - fetch - after _muscles =", _muscles);
+        // console.log("[BIZ]workout_plan/workout_plan - fetch - after _muscles =", _muscles);
         methods.refresh();
       }
       if (equipment_ids.length) {

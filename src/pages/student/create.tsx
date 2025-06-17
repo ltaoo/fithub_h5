@@ -30,7 +30,7 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
     nextStep() {
       _cur_step += 1;
       if (_cur_step >= steps.length) {
-        methods.submit();
+        methods.createStudent();
         return;
       }
       bus.emit(Events.StepChange, _cur_step);
@@ -44,31 +44,19 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
       bus.emit(Events.StepChange, _cur_step);
       bus.emit(Events.StateChange, { ..._state });
     },
-    async submit() {
-      const basic_r = await vm.ui.$basic_values.validate();
-      if (basic_r.error) {
+    async createStudent() {
+      const r1 = await vm.ui.$basic_values.validate();
+      if (r1.error) {
+        props.app.tip({
+          text: r1.error.messages,
+        });
         return;
       }
       const values = {
-        name: basic_r.data.name,
-        age: basic_r.data.age,
-        gender: basic_r.data.gender,
-        // height: basic_r.data.height,
-        // weight: basic_r.data.weight,
+        name: r1.data.name,
+        age: r1.data.age,
+        gender: r1.data.gender,
       };
-      console.log("before !values.name", values);
-      if (!values.name) {
-        props.app.tip({
-          text: ["请输入姓名"],
-        });
-        return;
-      }
-      if (!values.age) {
-        props.app.tip({
-          text: ["请输入年龄"],
-        });
-        return;
-      }
       ui.$btn_submit.setLoading(true);
       const r = await request.student.create.run({
         name: values.name,
@@ -91,11 +79,12 @@ export function MemberCreateViewModel(props: ViewComponentProps) {
   const vm = MemberValuesViewModel();
   const ui = {
     $view: new ScrollViewCore({ disabled: true }),
+    $history: props.history,
     $values_basic: vm.ui.$basic_values,
     $dialog_test: new DialogCore(),
     $btn_submit: new ButtonCore({
       onClick() {
-        methods.submit();
+        methods.createStudent();
       },
     }),
   };

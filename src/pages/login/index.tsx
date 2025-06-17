@@ -4,28 +4,65 @@
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, Input } from "@/components/ui";
+
 import { base, Handler } from "@/domains/base";
 import { ButtonCore, InputCore } from "@/domains/ui";
+import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { Result } from "@/domains/result";
 
 function LoginViewModel(props: ViewComponentProps) {
   const ui = {
-    $input_email: new InputCore({
-      defaultValue: "",
-      placeholder: "请输入邮箱",
-      onChange(v) {
-        props.app.$user.inputEmail(v);
+    $form: new ObjectFieldCore({
+      rules: [],
+      fields: {
+        email: new SingleFieldCore({
+          label: "邮箱",
+          rules: [
+            {
+              maxLength: 18,
+              minLength: 5,
+              required: true,
+            },
+          ],
+          input: new InputCore({ defaultValue: "", placeholder: "请输入邮箱" }),
+        }),
+        password: new SingleFieldCore({
+          label: "密码",
+          rules: [
+            {
+              maxLength: 18,
+              required: true,
+            },
+          ],
+          input: new InputCore({ defaultValue: "", placeholder: "请输入密码", type: "password" }),
+        }),
       },
     }),
-    $input_pwd: new InputCore({
-      defaultValue: "",
-      type: "password",
-      placeholder: "请输入密码",
-      onChange(v) {
-        props.app.$user.inputPassword(v);
-      },
-    }),
+    // $input_email: new InputCore({
+    //   defaultValue: "",
+    //   placeholder: "请输入邮箱",
+    //   onChange(v) {
+    //     props.app.$user.inputEmail(v);
+    //   },
+    // }),
+    // $input_pwd: new InputCore({
+    //   defaultValue: "",
+    //   type: "password",
+    //   placeholder: "请输入密码",
+    //   onChange(v) {
+    //     props.app.$user.inputPassword(v);
+    //   },
+    // }),
     $btn_submit: new ButtonCore({
       async onClick() {
+        const r = await ui.$form.validate();
+        if (r.error) {
+          props.app.tip({ text: r.error.messages });
+          return;
+        }
+        const values = r.data;
+        props.app.$user.inputEmail(values.email);
+        props.app.$user.inputPassword(values.password);
         ui.$btn_submit.setLoading(true);
         await props.app.$user.login();
         ui.$btn_submit.setLoading(false);
@@ -33,7 +70,7 @@ function LoginViewModel(props: ViewComponentProps) {
     }),
     $btn_goto_home: new ButtonCore({
       async onClick() {
-        props.history.push("root.home_layout.index");
+        props.history.destroyAllAndPush("root.home_layout.index");
       },
     }),
   };
@@ -73,11 +110,11 @@ export function LoginPage(props: ViewComponentProps) {
       <div class="space-y-4 rounded-md text-w-fg-0">
         <div>
           <div>邮箱</div>
-          <Input class="mt-1" store={vm.ui.$input_email} />
+          <Input class="mt-1" store={vm.ui.$form.fields.email.input} />
         </div>
         <div>
           <div>密码</div>
-          <Input class="mt-1" store={vm.ui.$input_pwd} />
+          <Input class="mt-1" store={vm.ui.$form.fields.password.input} />
         </div>
       </div>
       <div class="w-full mt-8">

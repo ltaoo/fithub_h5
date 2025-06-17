@@ -73,6 +73,7 @@ function WorkoutActionListViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({ disabled: true }),
+    $history: props.history,
     // 动作列表接口相关逻辑在这里面
     $select: WorkoutActionSelectViewModel({
       defaultValue: [],

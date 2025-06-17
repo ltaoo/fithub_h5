@@ -174,7 +174,7 @@ export function WorkoutActionEditorViewModel(props: Pick<ViewComponentProps, "cl
   async function toBody() {
     const r = await $values.validate();
     if (r.error) {
-      return Result.Err(r.error.message);
+      return Result.Err(r.error);
     }
     const values = r.data;
     // console.log("[PAGE]home_action_create - Saving action:", values);

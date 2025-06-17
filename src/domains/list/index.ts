@@ -336,7 +336,7 @@ export class ListCore<
       ...params,
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -370,7 +370,7 @@ export class ListCore<
       page: page + 1,
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -399,7 +399,7 @@ export class ListCore<
       })(),
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -422,7 +422,7 @@ export class ListCore<
       page: page + 1,
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -455,7 +455,7 @@ export class ListCore<
       page: page + 1,
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -495,7 +495,7 @@ export class ListCore<
       })(),
     });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -517,7 +517,7 @@ export class ListCore<
     });
     this.emit(Events.AfterSearch, { params: args[0] });
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -542,7 +542,7 @@ export class ListCore<
     this.params = { ...this.initialParams };
     const res = await this.fetch(params);
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });
@@ -576,7 +576,7 @@ export class ListCore<
     });
     this.response.refreshing = false;
     if (res.error) {
-      this.tip({ icon: "error", text: [res.error.message] });
+      // this.tip({ icon: "error", text: [res.error.message] });
       this.response.error = res.error;
       this.emit(Events.Error, res.error);
       this.emit(Events.StateChange, { ...this.response });

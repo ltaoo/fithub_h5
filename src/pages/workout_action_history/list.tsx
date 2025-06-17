@@ -7,7 +7,10 @@ import { ViewComponentProps } from "@/store/types";
 import { ScrollView } from "@/components/ui";
 import { useViewModel } from "@/hooks";
 
-import { fetchWorkoutActionHistoryListOfWorkoutDay, fetchWorkoutActionHistoryListOfWorkoutDayProcess } from "@/biz/workout_action/services";
+import {
+  fetchWorkoutActionHistoryListOfWorkoutDay,
+  fetchWorkoutActionHistoryListOfWorkoutDayProcess,
+} from "@/biz/workout_action/services";
 import { base, Handler } from "@/domains/base";
 import { ScrollViewCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
@@ -37,6 +40,7 @@ function WorkoutActionHistoryViewModel(props: ViewComponentProps) {
         ui.$view.finishLoadingMore();
       },
     }),
+    $history: props.history,
   };
   let _state = {
     get response() {

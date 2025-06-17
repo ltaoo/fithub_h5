@@ -7,6 +7,9 @@ const configure = {
   root: {
     title: "ROOT",
     pathname: "/",
+    options: {
+      require: ["login"],
+    },
     children: {
       home_layout: {
         title: "首页布局",

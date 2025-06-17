@@ -67,7 +67,7 @@ export function WorkoutActionSelectViewModel(props: {
       }
       const v = _actions.find((item) => item.id === vv.id);
       if (!v) {
-        bus.emit(Events.Error, new BizError("健身动作不存在"));
+        bus.emit(Events.Error, new BizError(["健身动作不存在"]));
         return;
       }
       if (_mode === "multiple") {
@@ -118,7 +118,7 @@ export function WorkoutActionSelectViewModel(props: {
     },
     handleOk() {
       if (_selected.length === 0) {
-        bus.emit(Events.Error, new BizError("请选择健身动作"));
+        bus.emit(Events.Error, new BizError(["请选择健身动作"]));
         return;
       }
       if (props.onOk) {

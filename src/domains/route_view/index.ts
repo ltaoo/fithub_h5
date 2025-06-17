@@ -326,6 +326,9 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 卸载自身 */
   unmount() {
+    // console.log("[]unmount", this.subViews);
+    this.subViews = [];
+    this.emit(Events.StateChange, { ...this.state });
     // console.log("[DOMAIN]route_view - unmount", this.title);
     // this.onHidden(() => {
     //   this.destroy();

@@ -19,9 +19,6 @@ export const Presence = (props: { store: PresenceCore } & JSX.HTMLAttributes<HTM
         classList={props.classList}
         role="presentation"
         data-state={state().visible ? "open" : "closed"}
-        // onAnimationEnd={() => {
-        //   store.unmount();
-        // }}
         onClick={onClick}
       >
         {props.children}

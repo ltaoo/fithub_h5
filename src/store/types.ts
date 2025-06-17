@@ -11,6 +11,7 @@ import { HttpClientCore } from "@/domains/http_client";
 import { PageKeys } from "./routes";
 import { storage } from "./storage";
 
+export type { PageKeys };
 export type GlobalStorageValues = (typeof storage)["values"];
 export type ViewComponentProps = {
   app: Application<{ storage: typeof storage }>;

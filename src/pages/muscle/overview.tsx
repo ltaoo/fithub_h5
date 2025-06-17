@@ -27,6 +27,7 @@ function MuscleInPersonViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: new ScrollViewCore({}),
+    $history: props.history,
     $muscle: HumanBodyViewModel({
       highlighted: [],
     }),

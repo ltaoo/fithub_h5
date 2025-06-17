@@ -44,6 +44,8 @@ export type DeviceSizeTypes = keyof typeof mediaSizes;
 
 enum Events {
   Tip,
+  Loading,
+  HideLoading,
   Error,
   Login,
   Logout,
@@ -63,8 +65,10 @@ enum Events {
 }
 type TheTypesOfEvents = {
   [Events.Ready]: void;
-  // [EventsUserCore{ icon?: string; text: string[] };
   [Events.Error]: Error;
+  [Events.Tip]: { icon?: unknown; text: string[] };
+  [Events.Loading]: { text: string[] };
+  [Events.HideLoading]: void;
   [Events.Login]: {};
   [Events.Logout]: void;
   [Events.ForceUpdate]: void;
@@ -216,6 +220,21 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
   tipUpdate() {
     this.emit(Events.ForceUpdate);
   }
+  tip(arg: { icon?: unknown; text: string[] }) {
+    this.emit(Events.Tip, arg);
+    return arg.text.join("\n");
+  }
+  loading(arg: { text: string[] }) {
+    this.emit(Events.Loading, arg);
+    return {
+      hideLoading: () => {
+        this.emit(Events.HideLoading);
+      },
+    };
+  }
+  hideLoading() {
+    this.emit(Events.HideLoading);
+  }
   /** 手机震动 */
   vibrate() {}
   setSize(size: { width: number; height: number }) {
@@ -322,6 +341,15 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
   }
   onEscapeKeyDown(handler: Handler<TheTypesOfEvents[Events.EscapeKeyDown]>) {
     return this.on(Events.EscapeKeyDown, handler);
+  }
+  onTip(handler: Handler<TheTypesOfEvents[Events.Tip]>) {
+    return this.on(Events.Tip, handler);
+  }
+  onLoading(handler: Handler<TheTypesOfEvents[Events.Loading]>) {
+    return this.on(Events.Loading, handler);
+  }
+  onHideLoading(handler: Handler<TheTypesOfEvents[Events.HideLoading]>) {
+    return this.on(Events.HideLoading, handler);
   }
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);

@@ -6,11 +6,29 @@ export function HumanBodyViewModel(props: { highlighted: string[]; disabled?: bo
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
+    highlight_muscles(muscles: string[]) {
+      if (_mounted === false) {
+        _pending_highlighted_muscles = muscles;
+        return;
+      }
+      _highlighted_muscles = muscles;
+      bus.emit(Events.HighlightChange, { muscles });
+      methods.refresh();
+    },
+    setMounted() {
+      _mounted = true;
+      if (_pending_highlighted_muscles.length) {
+        methods.highlight_muscles(_pending_highlighted_muscles);
+        _pending_highlighted_muscles = [];
+      }
+    },
   };
   const ui = {};
 
   let _highlighted_muscles: string[] = props.highlighted;
+  let _pending_highlighted_muscles: string[] = [];
   let _disabled = props.disabled;
+  let _mounted = false;
   let _state = {
     get highlighted_muscles() {
       return _highlighted_muscles;
@@ -27,22 +45,24 @@ export function HumanBodyViewModel(props: { highlighted: string[]; disabled?: bo
     [Events.Error]: BizError;
   };
   const bus = base<TheTypesOfEvents>();
+  let _uid = bus.uid();
 
   return {
     methods,
     ui,
     state: _state,
+    get uid() {
+      return `m${_uid}`;
+    },
     get highlighted_muscles() {
       return _highlighted_muscles;
     },
     get disabled() {
       return _disabled;
     },
+    highlight_muscles: methods.highlight_muscles,
+    setMounted: methods.setMounted,
     ready() {},
-    highlight_muscles(muscles: string[]) {
-      _highlighted_muscles = muscles;
-      bus.emit(Events.HighlightChange, { muscles });
-    },
     onHighlightChange(handler: Handler<TheTypesOfEvents[Events.HighlightChange]>) {
       return bus.on(Events.HighlightChange, handler);
     },

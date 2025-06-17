@@ -44,6 +44,7 @@ function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
   };
   const ui = {
     $view: $model.ui.$view,
+    $history: props.history,
     $calendar: $model.ui.$calendar,
     $workout_plan_select: $model.ui.$workout_plan_select,
     $values: $model.ui.$values,
