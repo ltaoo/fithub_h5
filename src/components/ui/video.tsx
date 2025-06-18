@@ -32,13 +32,20 @@ export function Video(props: { store: PlayerCore }) {
   return (
     <div
       class="w-full"
-      style={
-        {
-          // width: `${width}px`,
-          // height: `${height}px`,
-          // overflow: "hidden",
-        }
-      }
+      style={{
+        // width: `${width}px`,
+        // height: `${height}px`,
+        overflow: "hidden",
+      }}
+      onTouchStart={(event) => {
+        event.stopPropagation();
+      }}
+      onTouchMove={(event) => {
+        event.stopPropagation();
+      }}
+      onTouchEnd={(event) => {
+        event.stopPropagation();
+      }}
     >
       <video
         ref={$video}
@@ -47,6 +54,7 @@ export function Video(props: { store: PlayerCore }) {
         controls={true}
         webkit-playsinline="true"
         plays-in-line
+        playsinline
         preload="none"
         height={height}
       />

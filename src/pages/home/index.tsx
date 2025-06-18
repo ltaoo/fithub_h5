@@ -128,23 +128,21 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       const schedule_of_the_day = _schedules[the_date_text];
       /** 指定天内完成的 不属于计划中的训练 */
       const extra_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[] = [];
-      if (schedule_of_the_day) {
-        const plan_ids_today_need_to_do = schedule_of_the_day.workout_plans.map((v) => v.id);
-        console.log(
-          "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
-          plan_ids_today_need_to_do,
-          completed_plan_ids_in_the_day
-        );
-        for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
-          const vv = completed_plans_in_the_day[i];
-          if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
-            extra_workout_days.push({
-              id: vv.id,
-              workout_plan_id: vv.workout_plan.id,
-              title: vv.workout_plan.title,
-              finished_at_text: vv.finished_at_text,
-            });
-          }
+      const plan_ids_today_need_to_do = schedule_of_the_day ? schedule_of_the_day.workout_plans.map((v) => v.id) : [];
+      console.log(
+        "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
+        plan_ids_today_need_to_do,
+        completed_plan_ids_in_the_day
+      );
+      for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
+        const vv = completed_plans_in_the_day[i];
+        if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
+          extra_workout_days.push({
+            id: vv.id,
+            workout_plan_id: vv.workout_plan.id,
+            title: vv.workout_plan.title,
+            finished_at_text: vv.finished_at_text,
+          });
         }
       }
       // console.log("[]before _cur_day_profile = ", dayjs(v).isBefore(dayjs(), "d"), dayjs(v).format("YYYY-MM-DD"));
@@ -251,10 +249,10 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         if (r.error) {
           return;
         }
-        const { list } = r.data;
+        // console.log("before loop r.data.list", r.data.list);
         const workout_plan_ids: number[] = [];
-        for (let a = 0; a < list.length; a += 1) {
-          const schedule = list[a];
+        for (let a = 0; a < r.data.list.length; a += 1) {
+          const schedule = r.data.list[a];
           for (let b = 0; b < schedule.schedules.length; b += 1) {
             const ids = schedule.schedules[b].workout_plan_ids;
             for (let c = 0; c < ids.length; c += 1) {
@@ -264,50 +262,38 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
             }
           }
         }
+        if (workout_plan_ids.length === 0) {
+          return;
+        }
         const r2 = await request.workout_plan.list.search({ ids: workout_plan_ids });
         if (r2.error) {
           return;
         }
-        const schedules = buildWorkoutScheduleWithSpecialDay(
-          list.map((v) => {
-            // console.log(v.schedules);
-            return {
-              type: v.type,
-              start_date: v.start_date,
-              days: v.schedules.map((vv) => {
-                return {
-                  idx: vv.idx,
-                  day: vv.day,
-                  weekday: vv.weekday,
-                  workout_plans: (() => {
-                    const result: TheItemTypeFromListCore<typeof request.workout_plan.list>[] = [];
-                    for (let i = 0; i < vv.workout_plan_ids.length; i += 1) {
-                      const plan_id = vv.workout_plan_ids[i];
-                      const m = r2.data.dataSource.find((plan) => plan.id === plan_id);
-                      if (m) {
-                        result.push(m);
-                      }
+        const workout_schedule_with_workout_plans = r.data.list.map((v) => {
+          return {
+            type: v.type,
+            start_date: v.start_date,
+            days: v.schedules.map((vv) => {
+              return {
+                idx: vv.idx,
+                day: vv.day,
+                weekday: vv.weekday,
+                workout_plans: (() => {
+                  const result: TheItemTypeFromListCore<typeof request.workout_plan.list>[] = [];
+                  for (let i = 0; i < vv.workout_plan_ids.length; i += 1) {
+                    const plan_id = vv.workout_plan_ids[i];
+                    const m = r2.data.dataSource.find((plan) => plan.id === plan_id);
+                    if (m) {
+                      result.push(m);
                     }
-                    return result;
-                  })(),
-                };
-              }),
-              // days: v.schedules.map((vv) => {
-              //   return {
-              //     day: vv.day,
-              //     weekday: vv.weekday,
-              //     workout_plan: {
-              //       id: vv.workout_plan_id,
-              //       title: vv.title,
-              //       overview: vv.overview,
-              //       tags: vv.tags,
-              //     },
-              //   };
-              // }),
-            };
-          }),
-          new Date()
-        );
+                  }
+                  return result;
+                })(),
+              };
+            }),
+          };
+        });
+        const schedules = buildWorkoutScheduleWithSpecialDay(workout_schedule_with_workout_plans, new Date());
         _schedules = schedules;
         const shouldTip = methods.checkShouldShowWorkoutTipDialog();
         // if (shouldTip) {
@@ -724,12 +710,12 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
       <Show when={state().has_workout_day}>
         <div class="absolute right-2 bottom-16">
           <div
-            class="p-4 rounded-full bg-w-bg-5"
+            class="p-4 rounded-full border-2 border-w-fg-3 bg-w-bg-5 shadow"
             onClick={() => {
               vm.methods.gotoWorkoutDayView();
             }}
           >
-            <div class="text-white text-sm text-w-fg-1">进行中的训练</div>
+            <div class="text-sm text-w-fg-1">进行中的训练</div>
           </div>
         </div>
       </Show>

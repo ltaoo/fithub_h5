@@ -23,6 +23,7 @@ import { PlayerCore } from "@/domains/player";
 
 export function WorkoutActionProfileViewModel(props: {
   ignore_history?: boolean;
+  extra_body?: Record<string, any>;
   app: ViewComponentProps["app"];
   client: HttpClientCore;
 }) {
@@ -147,7 +148,11 @@ export function WorkoutActionProfileViewModel(props: {
           request.workout_action_content.list.search({ workout_action_id: _profile.id });
         }
         if (v.id === 3 && !props.ignore_history) {
-          request.workout_action_history.list.search({ workout_action_id: _profile.id, order_by: "weight DESC" });
+          request.workout_action_history.list.search({
+            ..._extra_body,
+            workout_action_id: _profile.id,
+            order_by: "weight DESC",
+          });
         }
       },
     }),
@@ -160,6 +165,7 @@ export function WorkoutActionProfileViewModel(props: {
   };
 
   let _profile: (TheWorkoutActionProfile & { muscles: { name: string }[] }) | null = null;
+  let _extra_body = props.extra_body ?? {};
   let _state = {
     get profile() {
       return _profile;
@@ -204,6 +210,9 @@ export function WorkoutActionProfileViewModel(props: {
     ui,
     state: _state,
     app: props.app,
+    setExtraBody(v: Record<string, any>) {
+      _extra_body = v;
+    },
     ready() {},
     destroy() {
       bus.destroy();

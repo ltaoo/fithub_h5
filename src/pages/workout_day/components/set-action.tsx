@@ -61,7 +61,7 @@ export function SetActionView(
             "bg-w-green": props.highlight,
           }}
         >
-          <div class="text-sm">{props.idx}</div>
+          <div class="text-sm text-white">{props.idx}</div>
         </div>
       </Show>
       <div class="relative left-[4px] text-w-fg-0" onClick={props.onClick}>

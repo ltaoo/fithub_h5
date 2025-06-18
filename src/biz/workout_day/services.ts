@@ -376,6 +376,7 @@ export function fetchWorkoutDayProfile(body: { id: number }) {
     updated_details: string;
     day_number: number;
     student_id: number;
+    is_self: boolean;
     // steps: WorkoutPlanStepResp[];
     workout_plan: {
       id: number;
@@ -622,6 +623,7 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       return steps;
     })(),
     student_id: workout_day.student_id,
+    is_self: workout_day.is_self,
     workout_plan: {
       id: workout_day.workout_plan.id,
       title: workout_day.workout_plan.title,

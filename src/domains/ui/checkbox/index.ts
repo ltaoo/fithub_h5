@@ -27,7 +27,7 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
   label: string;
   disabled: CheckboxProps["disabled"];
   checked: boolean;
-  value: boolean;
+  // value: boolean;
   defaultChecked: boolean;
 
   presence: PresenceCore;
@@ -39,6 +39,9 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
       value: this.checked,
       disabled: this.disabled,
     };
+  }
+  get value() {
+    return this.state.value;
   }
   get defaultValue() {
     return this.defaultChecked;
@@ -53,7 +56,7 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
     this.label = label;
     this.disabled = disabled;
     this.checked = checked;
-    this.value = checked;
+    // this.value = checked;
     this.defaultChecked = checked;
 
     this.presence = new PresenceCore();

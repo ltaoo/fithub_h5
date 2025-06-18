@@ -52,7 +52,7 @@ export const Toast = (props: { store: ToastCore }) => {
                 <div class="">
                   <For each={state().texts}>
                     {(text) => {
-                      return <div class="whitespace-nowrap text-center">{text}</div>;
+                      return <div class="whitespace-nowrap text-center text-white">{text}</div>;
                     }}
                   </For>
                 </div>

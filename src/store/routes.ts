@@ -158,6 +158,13 @@ const configure = {
           require: ["login"],
         },
       },
+      student_workout_day_profile: {
+        title: "训练记录",
+        pathname: "/student/workout_day/profile",
+        options: {
+          require: ["login"],
+        },
+      },
       action_history_list: {
         title: "动作记录",
         pathname: "/action_history",

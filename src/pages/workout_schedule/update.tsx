@@ -42,7 +42,7 @@ function WorkoutScheduleUpdateViewModel(props: ViewComponentProps) {
       today: new Date(),
     }),
     $workout_plan_select: $model.ui.$workout_plan_select,
-    $values: $model.ui.$values,
+    $values: $model.ui.$form,
     $btn_submit: new ButtonCore({
       onClick() {
         methods.submit();

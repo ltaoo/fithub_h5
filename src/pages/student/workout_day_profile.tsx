@@ -1,5 +1,5 @@
 /**
- * @file 某次训练的详情
+ * @file 学员某次训练的详情
  */
 import { For, Show } from "solid-js";
 import { ChevronLeft, Loader2, X } from "lucide-solid";
@@ -26,17 +26,17 @@ import { WorkoutDayStatus, WorkoutDayStatusTextMap } from "@/biz/workout_day/con
 import { toNumber } from "@/utils/primitive";
 import { fetchStudentWorkoutDayProfile } from "@/biz/student/services";
 
-function WorkoutDayProfileViewModel(props: ViewComponentProps) {
+function StudentWorkoutDayProfileViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
-      profile: new RequestCore(fetchWorkoutDayProfile, {
+      profile: new RequestCore(fetchStudentWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
         client: props.client,
       }),
     },
     workout_action_history: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutDay, {
+        new RequestCore(fetchStudentWorkoutActionHistoryListOfWorkoutDay, {
           process: fetchWorkoutActionHistoryListOfWorkoutDayProcess,
           client: props.client,
         }),
@@ -94,7 +94,14 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      const r = await request.workout_day.profile.run({ id });
+      const student_id = toNumber(props.view.query.student_id, 0);
+      // if (student_id === null) {
+      //   props.app.tip({
+      //     text: ["参数错误"],
+      //   });
+      //   return;
+      // }
+      const r = await request.workout_day.profile.run({ id, student_id });
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -104,7 +111,7 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
       if (r.data.status !== WorkoutDayStatus.Finished) {
         return;
       }
-      request.workout_action_history.list.init({ workout_day_id: id });
+      request.workout_action_history.list.init({ workout_day_id: id, student_id });
     },
     destroy() {
       bus.destroy();
@@ -115,16 +122,12 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   };
 }
 
-export function WorkoutDayProfileView(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(WorkoutDayProfileViewModel, [props]);
+export function StudentWorkoutDayProfileView(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(StudentWorkoutDayProfileViewModel, [props]);
 
   return (
     <>
-      <PageView
-        store={vm}
-        home={props.view.query.home === "1"}
-        hide_bottom_bar={props.view.query.hide_bottom_bar === "1"}
-      >
+      <PageView store={vm} hide_bottom_bar={props.view.query.hide_bottom_bar === "1"}>
         <Show when={state().loading}>
           <div class="p-4 flex items-center justify-center">
             <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />

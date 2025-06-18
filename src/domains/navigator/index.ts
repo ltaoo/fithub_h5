@@ -119,7 +119,8 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
   /** router 基础信息 */
   // host: string;
   // protocol: string;
-  origin: string = "";
+  origin = "";
+  host = "";
 
   _pending: {
     pathname: string;
@@ -143,14 +144,15 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
 
   /** 启动路由监听 */
   async prepare(location: RouteLocation) {
-    // console.log("[DOMAIN]router - start");
-    const { pathname, href, search, origin } = location;
+    const { host, pathname, href, search, origin } = location;
+    // console.log("[DOMAIN]router - prepare", location);
     let cleanPathname = pathname;
     if (NavigatorCore.prefix && NavigatorCore.prefix.match(/^\/[a-z0-9A-Z]{1,}/)) {
       cleanPathname = pathname.replace(NavigatorCore.prefix!, "");
     }
     this.setPathname(cleanPathname);
     this.origin = origin;
+    this.host = host;
     this.location = location;
     // this.pathname = pathname;
     const query = buildQuery(href);

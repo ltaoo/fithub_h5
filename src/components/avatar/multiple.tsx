@@ -23,13 +23,13 @@ export function MultipleAvatar(props: MultipleAvatarProps) {
           {(s, idx) => {
             return (
               <div
-                class="relative inline-block h-8 w-8 rounded-full border-2 border-w-fg-3"
+                class="relative inline-block w-8 h-8 rounded-full"
                 style={{ "z-index": display_avatars().length - idx() }}
               >
                 <Show
                   when={!s.is_self}
                   fallback={
-                    <div class="flex h-full w-full items-center justify-center rounded-full bg-w-bg-5 text-sm text-w-fg-0 text-[12px]">
+                    <div class="flex w-full h-full items-center justify-center rounded-full bg-w-bg-5 text-sm text-w-fg-0 text-[12px]">
                       我
                     </div>
                   }
@@ -37,7 +37,7 @@ export function MultipleAvatar(props: MultipleAvatarProps) {
                   <Show
                     when={s.avatar_url}
                     fallback={
-                      <div class="flex h-full w-full items-center justify-center rounded-full bg-w-bg-5 text-sm text-w-fg-0 text-[12px]">
+                      <div class="flex w-full h-full items-center justify-center rounded-full bg-w-bg-5 text-sm text-w-fg-0 text-[12px]">
                         {s.nickname.charAt(0)}
                       </div>
                     }

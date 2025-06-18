@@ -20,6 +20,7 @@ import { ListCore } from "@/domains/list";
 import { HumanGenderType } from "@/biz/student/constants";
 import {
   deleteStudent,
+  fetchStudentAuthURL,
   fetchStudentList,
   fetchStudentProfile,
   fetchStudentProfileProcess,
@@ -47,6 +48,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       ),
       update: new RequestCore(updateStudentProfile, { client: props.client }),
       delete: new RequestCore(deleteStudent, { client: props.client }),
+      auth_url: new RequestCore(fetchStudentAuthURL, { client: props.client }),
     },
     workout_plan: {
       list: new ListCore(
@@ -98,6 +100,12 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       ui.$dialog_day_profile.hide();
       props.history.push("root.workout_day_profile", {
         id: String(day.id),
+      });
+    },
+    copyAuthURL(url: string) {
+      props.app.copy(url);
+      props.app.tip({
+        text: ["复制成功"],
       });
     },
     async ready() {
@@ -159,6 +167,29 @@ function MemberProfileViewModel(props: ViewComponentProps) {
             ui.$menu.hide();
             ui.$input_nickname.setValue(request.student.profile.response?.nickname ?? "");
             ui.$dialog_nickname.show();
+          },
+        }),
+        new MenuItemCore({
+          label: "生成访问链接",
+          async onClick() {
+            ui.$menu.hide();
+            const id = toNumber(props.view.query.id);
+            if (id === null) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            props.app.loading({ text: [] });
+            const r = await request.student.auth_url.run({ id });
+            if (r.error) {
+              props.app.tip({
+                text: [r.error.message],
+              });
+              return;
+            }
+            props.app.hideLoading();
+            ui.$dialog_auth_url.show();
           },
         }),
         // new MenuItemCore({
@@ -260,6 +291,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       },
     }),
     $dialog_day_profile: new DialogCore({}),
+    $dialog_auth_url: new DialogCore({}),
   };
 
   let _workout_day_list: { date_text: string }[] = [];
@@ -308,6 +340,12 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     get cur_date_profile() {
       return _cur_day_profile;
     },
+    get auth_url() {
+      if (!request.student.auth_url.response) {
+        return "";
+      }
+      return props.history.$router.origin + request.student.auth_url.response.url;
+    },
   };
   enum Events {
     StateChange,
@@ -318,6 +356,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
 
   request.student.profile.onStateChange(() => methods.refresh());
+  request.student.auth_url.onStateChange(() => methods.refresh());
   request.workout_plan.list.onStateChange(() => methods.refresh());
 
   return {
@@ -550,6 +589,21 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               确定
             </Button>
           </div>
+        </div>
+      </Sheet>
+      <Sheet store={vm.ui.$dialog_auth_url} app={props.app}>
+        <div class="p-4">
+          <div class="mb-4 text-center text-lg text-w-fg-0">访问链接</div>
+          <Show when={state().auth_url} fallback={<div class="py-4 text-center text-w-fg-0">链接生成中</div>}>
+            <div
+              onClick={() => {
+                vm.methods.copyAuthURL(state().auth_url);
+              }}
+            >
+              <div class="text-w-fg-0 break-all">{state().auth_url}</div>
+              <div class="mt-2 text-sm text-center text-w-fg-1">点击复制</div>
+            </div>
+          </Show>
         </div>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu} />

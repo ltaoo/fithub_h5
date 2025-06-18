@@ -336,6 +336,17 @@ export function fetchWorkoutActionHistoryListOfWorkoutDay(body: Partial<FetchPar
   });
 }
 
+export function fetchStudentWorkoutActionHistoryListOfWorkoutDay(
+  body: Partial<FetchParams> & { workout_day_id: number; student_id: number }
+) {
+  return request.post<ListResponseWithCursor<WorkoutAction>>("/api/student/workout_action_history/list", {
+    page: body.page,
+    page_size: body.pageSize,
+    workout_day_id: body.workout_day_id,
+    student_id: body.student_id,
+  });
+}
+
 export function fetchWorkoutActionHistoryListOfWorkoutDayProcess(
   r: TmpRequestResp<typeof fetchWorkoutActionHistoryListOfWorkoutDay>
 ) {

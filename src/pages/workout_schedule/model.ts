@@ -77,7 +77,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
         return;
       }
       // const selected = selected_plans[0];
-      const schedule_type = ui.$values.fields.type.value;
+      const schedule_type = ui.$form.fields.type.value;
       if (schedule_type === WorkoutScheduleType.Weekly) {
         const the_day = ui.$ref_weekday.value;
         if (!the_day) {
@@ -140,7 +140,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       methods.refresh();
     },
     async toBody() {
-      const r = await ui.$values.validate();
+      const r = await ui.$form.validate();
       if (r.error) {
         return Result.Err(r.error);
       }
@@ -151,7 +151,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       if (_selected_plans.length === 0) {
         return Result.Err("请至少增加一个训练计划");
       }
-      console.log("type - ", type, WorkoutScheduleType.Weekly === type);
+      // console.log("type - ", type, WorkoutScheduleType.Weekly === type, status);
       const body = {
         title,
         overview,
@@ -213,7 +213,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
     $calendar: CalendarCore({
       today: new Date(),
     }),
-    $values: new ObjectFieldCore({
+    $form: new ObjectFieldCore({
       label: "",
       name: "",
       fields: {
@@ -347,7 +347,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
       });
     },
     get schedule_type() {
-      return ui.$values.fields.type.value;
+      return ui.$form.fields.type.value;
     },
   };
   enum Events {
@@ -360,7 +360,7 @@ export function WorkoutScheduleValuesModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$values.fields.type.onChange(() => {
+  ui.$form.fields.type.onChange(() => {
     methods.refresh();
   });
   ui.$workout_plan_select.ui.$dialog.onCancel(() => {

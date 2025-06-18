@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { ChevronDown, MoreHorizontal, X } from "lucide-solid";
+import { ChevronDown, MoreHorizontal, Reply, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
@@ -33,6 +33,15 @@ export function WorkoutPlanVideoPlayView(props: { store: VideoWithPointsModel; o
                 }}
               >
                 <div class="px-2 text-w-fg-0">动作列表</div>
+              </IconButton>
+            </Show>
+            <Show when={state().time}>
+              <IconButton
+                onClick={(event) => {
+                  vm.replay();
+                }}
+              >
+                <Reply class="w-6 h-6 text-w-fg-0" />
               </IconButton>
             </Show>
             <IconButton

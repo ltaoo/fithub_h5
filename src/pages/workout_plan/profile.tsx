@@ -60,11 +60,6 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
       }),
     },
     workout_day: { create: new RequestCore(createWorkoutDay, { client: props.client, onFailed() {} }) },
-    equipment: {
-      list: new ListCore(
-        new RequestCore(fetchEquipmentList, { process: fetchEquipmentListProcess, client: props.client })
-      ),
-    },
     student: {
       list: new ListCore(new RequestCore(fetchStudentList, { process: fetchStudentListProcess, client: props.client })),
     },

@@ -668,7 +668,7 @@ export class ObjectFieldCore<
       for (let i = 0; i < _fields.length; i += 1) {
         const f = _fields[i];
         f.onChange(() => {
-          console.log("the object value change in ObjectFieldCore", f.label);
+          // console.log("the object value change in ObjectFieldCore", f.label, f.value);
           this._bus.emit(ObjectFieldEvents.Change);
         });
       }

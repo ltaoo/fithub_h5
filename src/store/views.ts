@@ -58,6 +58,7 @@ import { SubscriptionOrderView } from "@/pages/subscription_plan/profile";
 import { FeaturePlaygroundView } from "@/pages/test/profile";
 import { WorkoutDayCatchUpOnView } from "@/pages/workout_day/catch_up_on";
 import { StudentWorkoutDayListView } from "@/pages/student/workout_day_list";
+import { StudentWorkoutDayProfileView } from "@/pages/student/workout_day_profile";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -97,6 +98,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.student_update": HomeStudentUpdatePage,
   "root.student_profile": HomeStudentProfilePage,
   "root.student_workout_day_list": StudentWorkoutDayListView,
+  "root.student_workout_day_profile": StudentWorkoutDayProfileView,
   "root.home_layout.mine": HomeMineView,
   // 训练记录
   "root.workout_day": WorkoutDayMultiplePersonView,

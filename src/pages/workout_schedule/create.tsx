@@ -40,17 +40,19 @@ function WorkoutScheduleCreateViewModel(props: ViewComponentProps) {
     ensureSelectedWorkoutPlan: $model.methods.ensureSelectedWorkoutPlan,
     hideWorkoutPlanSelectDialog: $model.methods.hideWorkoutPlanSelectDialog,
     toBody: $model.methods.toBody,
-    submit: $model.methods.createWorkoutSchedule,
+    createWorkoutSchedule: $model.methods.createWorkoutSchedule,
   };
   const ui = {
     $view: $model.ui.$view,
     $history: props.history,
     $calendar: $model.ui.$calendar,
     $workout_plan_select: $model.ui.$workout_plan_select,
-    $values: $model.ui.$values,
+    $form: $model.ui.$form,
     $btn_submit: new ButtonCore({
-      onClick() {
-        methods.submit();
+      async onClick() {
+        ui.$btn_submit.setLoading(true);
+        await methods.createWorkoutSchedule();
+        ui.$btn_submit.setLoading(false);
       },
     }),
     $btn_workout_plan_cancel: new ButtonCore({
@@ -125,19 +127,19 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
               <div class="label text-sm text-w-fg-0">标题</div>
               <div class="text-red-500">*</div>
             </div>
-            <Input store={vm.ui.$values.fields.title.input} />
+            <Input store={vm.ui.$form.fields.title.input} />
           </div>
           <div class="flied">
             <div class="label text-sm text-w-fg-0">概要</div>
-            <Textarea store={vm.ui.$values.fields.overview.input} />
+            <Textarea store={vm.ui.$form.fields.overview.input} />
           </div>
           <div class="flied">
             <div class="label text-sm text-w-fg-0">建议等级</div>
-            <Select store={vm.ui.$values.fields.level.input}></Select>
+            <Select store={vm.ui.$form.fields.level.input}></Select>
           </div>
           <div class="flied">
             <div class="label text-sm text-w-fg-0">循环类型</div>
-            <Select store={vm.ui.$values.fields.type.input}></Select>
+            <Select store={vm.ui.$form.fields.type.input}></Select>
           </div>
           <div class="field">
             <div class="label text-sm text-w-fg-0">计划安排</div>
@@ -219,7 +221,7 @@ export function WorkoutScheduleCreateView(props: ViewComponentProps) {
               <div class="text-sm text-w-fg-0">外部是否可见</div>
             </div>
             <div class="mt-2">
-              <Switcher store={vm.ui.$values.fields.status.input} texts={["公开", "仅自己可见"]} />
+              <Switcher store={vm.ui.$form.fields.status.input} texts={["公开", "仅自己可见"]} />
               {/* <div class="text-sm text-w-fg-1">公开后无法删除，无法再次修改为仅自己可见</div> */}
             </div>
           </div>

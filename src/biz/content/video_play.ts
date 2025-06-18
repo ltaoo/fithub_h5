@@ -4,6 +4,7 @@ import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { PlayerCore } from "@/domains/player";
 import { DialogCore, DropdownMenuCore, MenuItemCore } from "@/domains/ui";
+import { sleep } from "@/utils";
 
 type VideoTimePoint = {
   time: number;
@@ -36,9 +37,13 @@ export function VideoWithPointsModel(props: { points: VideoTimePoint[]; app: Vie
   };
 
   let _points = props.points;
+  let _time = 0;
   let _state = {
     get points() {
       return _points;
+    },
+    get time() {
+      return _time;
     },
   };
   enum Events {
@@ -78,6 +83,19 @@ export function VideoWithPointsModel(props: { points: VideoTimePoint[]; app: Vie
     },
     load(url: string) {
       ui.$video.load(url);
+    },
+    async playWithTime(time: number, opt: Partial<{ delay: boolean }> = {}) {
+      _time = time;
+      methods.refresh();
+      ui.$video.setCurrentTime(time);
+      if (opt.delay) {
+        await sleep(800);
+      }
+      ui.$video.play();
+    },
+    replay() {
+      ui.$video.setCurrentTime(_time);
+      ui.$video.play();
     },
     setPoints(v: VideoTimePoint[]) {
       _points = v;

@@ -57,6 +57,10 @@ export function deleteStudent(body: { id: number }) {
   return request.post<{}>("/api/student/delete", body);
 }
 
+export function fetchStudentAuthURL(body: { id: number }) {
+  return request.post<{ url: string }>("/api/student/auth_url", body);
+}
+
 export function fetchStudentProfile(body: { id: number }) {
   return request.post<{
     id: number;
@@ -103,7 +107,7 @@ export function fetchStudentWorkoutDayList(
         tags: string;
       };
     }>
-  >("/api/student/workout_day_list", {
+  >("/api/student/workout_day/list", {
     page_size: body.pageSize,
     page: body.page,
     id: body.id,
@@ -132,4 +136,27 @@ export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
       };
     }),
   });
+}
+
+export function fetchStudentWorkoutDayProfile(body: { id: number; student_id?: number }) {
+  return request.post<{
+    id: number;
+    status: WorkoutDayStatus;
+    started_at: number;
+    finished_at: number;
+    pending_steps: string;
+    updated_details: string;
+    day_number: number;
+    is_self: boolean;
+    student_id: number;
+    // steps: WorkoutPlanStepResp[];
+    workout_plan: {
+      id: number;
+      title: string;
+      overview: string;
+      tags: string;
+      details: string;
+      creator: { nickname: string; avatar_url: string };
+    };
+  }>("/api/student/workout_day/profile", body);
 }
