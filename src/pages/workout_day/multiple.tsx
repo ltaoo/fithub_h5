@@ -3,7 +3,7 @@
  * 默认就是多个人，教练自己练，也算多个，只是无法切换到其他人
  */
 import { For, Show } from "solid-js";
-import { ChevronLeft, Plus } from "lucide-solid";
+import { Bird, ChevronLeft, Plus } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -149,7 +149,19 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
       <Show when={!state().working}>
         <PageView store={vm}>
           <div class="space-y-2">
-            <For each={state().list}>
+            <For
+              each={state().list}
+              fallback={
+                <div class="w-full h-[360px] center flex items-center justify-center">
+                  <div class="flex flex-col items-center justify-center text-w-fg-1">
+                    <Bird class="w-24 h-24" />
+                    <div class="mt-4 flex items-center space-x-2">
+                      <div class="text-center text-xl">列表为空</div>
+                    </div>
+                  </div>
+                </div>
+              }
+            >
               {(v) => {
                 return (
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">

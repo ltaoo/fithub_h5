@@ -36,3 +36,15 @@ export const Avatars = [
     url: `//static.fithub.top/avatars/${key}`,
   };
 });
+
+export enum CoachStudentRole {
+  CoachAndStudent = 1,
+  CoachAndStudentHasAccount = 2,
+  FriendAndFriend = 3,
+}
+
+export const CoachStudentRoleTextMap = {
+  [CoachStudentRole.CoachAndStudent]: "学员",
+  [CoachStudentRole.CoachAndStudentHasAccount]: "学员",
+  [CoachStudentRole.FriendAndFriend]: "好友",
+};

@@ -7,7 +7,7 @@ import { request } from "@/biz/requests";
 import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 
-import { HumanGenderType } from "./constants";
+import { HumanGenderType, CoachStudentRole, CoachStudentRoleTextMap } from "./constants";
 
 export function fetchStudentList(params: Partial<FetchParams> & { keyword: string }) {
   return request.post<
@@ -17,6 +17,8 @@ export function fetchStudentList(params: Partial<FetchParams> & { keyword: strin
       avatar_url: string;
       gender: number;
       age: number;
+      role: CoachStudentRole;
+      status: number;
     }>
   >("/api/student/list", {
     page: params.page,
@@ -38,13 +40,28 @@ export function fetchStudentListProcess(r: TmpRequestResp<typeof fetchStudentLis
         avatar_url: v.avatar_url,
         age: v.age,
         gender: v.gender,
+        role: v.role,
+        role_text: CoachStudentRoleTextMap[v.role],
+        status: v.status,
       };
     }),
   });
 }
 
-export function createStudent(data: { name: string; age: number; gender: number }) {
-  return request.post<{}>("/api/student/create", data);
+// export function fetchCoachProfile(body: { id: number }) {
+//   return request.post<{
+//     id: number;
+//     nickname: string;
+//     avatar_url: string;
+//   }>("/api/coach/profile", body);
+// }
+
+export function addFriend(body: { uid: string }) {
+  return request.post("/api/friend/add", body);
+}
+
+export function createStudent(body: { name: string; age: number; gender: number }) {
+  return request.post<{}>("/api/student/create", body);
 }
 
 export function updateStudentProfile(
@@ -61,6 +78,10 @@ export function fetchStudentAuthURL(body: { id: number }) {
   return request.post<{ url: string }>("/api/student/auth_url", body);
 }
 
+export function studentToFriend(body: { id: number }) {
+  return request.post("/api/student/to_friend", body);
+}
+
 export function fetchStudentProfile(body: { id: number }) {
   return request.post<{
     id: number;
@@ -70,19 +91,23 @@ export function fetchStudentProfile(body: { id: number }) {
     age: number;
     /** 性别 1男 2女 */
     gender: HumanGenderType;
+    status: number;
+    role: CoachStudentRole;
   }>("/api/student/profile", { id: body.id });
 }
 export function fetchStudentProfileProcess(r: TmpRequestResp<typeof fetchStudentProfile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
-  const data = r.data;
+  const v = r.data;
   return Result.Ok({
-    id: data.id,
-    nickname: data.nickname,
-    avatar_url: data.avatar_url,
-    age: data.age,
-    gender: data.gender,
+    id: v.id,
+    nickname: v.nickname,
+    avatar_url: v.avatar_url,
+    age: v.age,
+    gender: v.gender,
+    status: v.status,
+    role: v.role,
   });
 }
 

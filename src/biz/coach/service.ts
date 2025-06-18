@@ -11,9 +11,10 @@ import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
 import { parseJSONStr } from "@/utils";
 
-export function fetchCoachProfile(body: { id: number }) {
+export function fetchCoachProfile(body: { uid: number }) {
   return request.post<{
     id: number;
+    uid: string;
     nickname: string;
     avatar_url: string;
     bio: string;

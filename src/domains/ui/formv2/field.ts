@@ -15,6 +15,7 @@ type NumberRuleCore = {
 type StringRuleCore = {
   minLength: number;
   maxLength: number;
+  mode: "email" | "number";
 };
 type FieldRuleCore = Partial<
   CommonRuleCore &
@@ -191,6 +192,22 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
       if (rule.min) {
         if (typeof value === "number" && value < rule.min) {
           errors.push(`${this._label}不能小于${rule.min}`);
+        }
+      }
+      if (rule.mode && value) {
+        if (rule.mode === "email") {
+          const is_valid_email = (value as string).match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          );
+          if (!is_valid_email) {
+            errors.push(`${this._label}格式错误`);
+          }
+        }
+        if (rule.mode === "number") {
+          const is_valid_num = !Number.isNaN(Number(value));
+          if (!is_valid_num) {
+            errors.push(`${this._label}格式错误`);
+          }
         }
       }
       if (rule.custom) {

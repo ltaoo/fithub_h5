@@ -18,7 +18,7 @@ import { WorkoutPlanMineView } from "@/pages/workout_plan/plan_mine";
 import { WorkoutPlanSingleView } from "@/pages/workout_plan/plan_single";
 import { WorkoutPlanIntervalView } from "@/pages/workout_plan/plan_interval";
 import { WorkoutPlanRecommendView } from "@/pages/workout_plan/plan_recommend";
-import { HomeStudentListPage } from "@/pages/student/list";
+import { StudentListPage } from "@/pages/student/list";
 import { HomeStudentCreatePage } from "@/pages/student/create";
 import { HomeStudentUpdatePage } from "@/pages/student/update";
 import { HomeStudentProfilePage } from "@/pages/student/profile";
@@ -93,7 +93,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.workout_schedule_create_success": WorkoutScheduleCreateSuccessView,
   "root.workout_schedule_profile": WorkoutScheduleProfileView,
   // 学员管理
-  "root.home_layout.student_list": HomeStudentListPage,
+  "root.home_layout.student_list": StudentListPage,
   "root.student_create": HomeStudentCreatePage,
   "root.student_update": HomeStudentUpdatePage,
   "root.student_profile": HomeStudentProfilePage,

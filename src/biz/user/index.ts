@@ -2,7 +2,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { BaseDomain, base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { RequestCore } from "@/domains/request/index";
+import { RequestCore, TheResponseOfFetchFunction } from "@/domains/request/index";
 import { HttpClientCore } from "@/domains/http_client/index";
 import { Result } from "@/domains/result/index";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
@@ -433,6 +433,16 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       this.expires_at = dayjs(expires_at * 1000);
       this.emit(Events.TokenRefresh, { ...this.state, token: this.token, expires_at: expires_at });
     }
+  }
+  updateToken(data: TheResponseOfFetchFunction<typeof login>) {
+    const { id, nickname, avatar_url, token, expires_at } = data;
+    this.isLogin = true;
+    this.id = id;
+    this.nickname = nickname;
+    this.avatar_url = avatar_url;
+    this.token = token;
+    this.expires_at = dayjs(expires_at * 1000);
+    this.emit(Events.TokenRefresh, { ...this.state, token: this.token, expires_at: expires_at });
   }
   setToken(v: string) {
     this.token = v;

@@ -17,7 +17,7 @@ import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, Scro
 import { RequestCore } from "@/domains/request";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { ListCore } from "@/domains/list";
-import { HumanGenderType } from "@/biz/student/constants";
+import { CoachStudentRole, HumanGenderType } from "@/biz/student/constants";
 import {
   deleteStudent,
   fetchStudentAuthURL,
@@ -135,7 +135,12 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         }
         methods.refresh();
       })();
-      await request.student.profile.run({ id });
+      const r = await request.student.profile.run({ id });
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      if (r.data.role === CoachStudentRole.CoachAndStudent) {
+      }
       return Result.Ok(null);
     },
   };
@@ -400,15 +405,17 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               <Button class="w-full" store={vm.ui.$btn_start_workout}>
                 开始训练
               </Button>
-              <div
-                class="w-[40px] rounded-full p-2 bg-w-bg-5"
-                onClick={(event) => {
-                  const { x, y } = event.currentTarget.getBoundingClientRect();
-                  vm.ui.$menu.toggle({ x, y });
-                }}
-              >
-                <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-              </div>
+              <Show when={state().profile?.role === CoachStudentRole.CoachAndStudent}>
+                <div
+                  class="w-[40px] rounded-full p-2 bg-w-bg-5"
+                  onClick={(event) => {
+                    const { x, y } = event.currentTarget.getBoundingClientRect();
+                    vm.ui.$menu.toggle({ x, y });
+                  }}
+                >
+                  <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+                </div>
+              </Show>
             </div>
           }
         >
@@ -450,7 +457,9 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
                     >
                       <Venus class="w-4 h-4 text-pink-500" />
                     </Show>
-                    <div class="text-w-fg-1">{state().profile?.age}岁</div>
+                    <Show when={state().profile?.age}>
+                      <div class="text-w-fg-1">{state().profile?.age}岁</div>
+                    </Show>
                   </div>
                 </div>
               </div>

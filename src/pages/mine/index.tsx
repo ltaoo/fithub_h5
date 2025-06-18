@@ -21,19 +21,26 @@ import {
   fetchWorkoutDayList,
   fetchWorkoutDayListProcess,
 } from "@/biz/workout_day/services";
-import { fetch_user_profile, fetch_user_profile_process, update_user_profile } from "@/biz/user/services";
+import {
+  createAccount,
+  fetch_user_profile,
+  fetch_user_profile_process,
+  update_user_profile,
+} from "@/biz/user/services";
 import { fetchGiftCardProfile, usingGiftCard } from "@/biz/subscription/services";
 import { Result } from "@/domains/result";
 import { SubscriptionStatus } from "@/biz/subscription/constants";
 import { Avatars } from "@/biz/student/constants";
 import { SelectViewModel } from "@/biz/select_base";
 import { CalendarCore } from "@/domains/ui/calendar";
+import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
     mine: {
       profile: new RequestCore(fetch_user_profile, { process: fetch_user_profile_process, client: props.client }),
       update_profile: new RequestCore(update_user_profile, { client: props.client }),
+      create_account: new RequestCore(createAccount, { client: props.client }),
     },
     workout_action_history: {
       list: new ListCore(
@@ -111,12 +118,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
     async refreshMyProfile() {
       const r = await request.mine.profile.run();
       if (r.error) {
-        props.app.tip({
-          text: [r.error.message],
-        });
         return;
       }
-      const { nickname, avatar_url, subscription } = r.data;
+      const { nickname, avatar_url, subscription, no_account } = r.data;
       _nickname = nickname;
       _avatar_url = avatar_url;
       if (subscription && subscription.status === SubscriptionStatus.Active) {
@@ -124,6 +128,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
           name: subscription.name,
           expired_at: subscription.expired_at_text,
         };
+      }
+      if (no_account) {
+        ui.$dialog_account_create.show();
       }
       methods.refresh();
     },
@@ -137,6 +144,18 @@ function HomeMineViewModel(props: ViewComponentProps) {
       props.app.setTheme(t);
       _theme = props.app.theme;
       methods.refresh();
+    },
+    async createAccount() {
+      const r = await ui.$form_account.validate();
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      const r2 = await request.mine.create_account.run(r.data);
+      if (r2.error) {
+        return Result.Err(r2.error);
+      }
+      props.app.$user.updateToken(r2.data);
+      return Result.Ok(r2.data);
     },
   };
   const ui = {
@@ -167,6 +186,23 @@ function HomeMineViewModel(props: ViewComponentProps) {
           },
         }),
         new MenuItemCore({
+          label: "复制 UID",
+          onClick() {
+            const v = request.mine.profile.response;
+            if (!v) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            props.app.copy(v.uid);
+            props.app.tip({
+              text: ["复制成功"],
+            });
+            ui.$menu.hide();
+          },
+        }),
+        new MenuItemCore({
           label: "兑换礼品码",
           onClick() {
             ui.$menu.hide();
@@ -181,6 +217,51 @@ function HomeMineViewModel(props: ViewComponentProps) {
           },
         }),
       ],
+    }),
+    $dialog_account_create: new DialogCore(),
+    $form_account: new ObjectFieldCore({
+      fields: {
+        email: new SingleFieldCore({
+          label: "邮箱",
+          rules: [
+            {
+              required: true,
+              maxLength: 18,
+              minLength: 5,
+              mode: "email",
+            },
+          ],
+          input: new InputCore({ defaultValue: "", placeholder: "请输入邮箱" }),
+        }),
+        password: new SingleFieldCore({
+          label: "密码",
+          rules: [
+            {
+              required: true,
+              maxLength: 18,
+              minLength: 3,
+            },
+          ],
+          input: new InputCore({ defaultValue: "", placeholder: "请输入密码", type: "password" }),
+        }),
+      },
+    }),
+    $btn_account_create: new ButtonCore({
+      async onClick() {
+        ui.$btn_account_create.setLoading(true);
+        const r = await methods.createAccount();
+        ui.$btn_account_create.setLoading(false);
+        if (r.error) {
+          props.app.tip({
+            text: r.error.messages,
+          });
+          return;
+        }
+        props.app.tip({
+          text: ["操作成功"],
+        });
+        ui.$dialog_account_create.hide();
+      },
     }),
     $dialog_nickname_update: new DialogCore(),
     $input_nickname: new InputCore({
@@ -510,6 +591,28 @@ export function HomeMineView(props: ViewComponentProps) {
           </div>
         </div>
       </ScrollView>
+      <Sheet store={vm.ui.$dialog_account_create} app={props.app}>
+        <div class="p-2">
+          <div class="space-y-4">
+            <div class="text-xl text-center text-w-fg-0">补全帐号</div>
+            <div class="space-y-4 rounded-md text-w-fg-0">
+              <div>
+                <div>邮箱</div>
+                <Input class="mt-1" store={vm.ui.$form_account.fields.email.input} />
+              </div>
+              <div>
+                <div>密码</div>
+                <Input class="mt-1" store={vm.ui.$form_account.fields.password.input} />
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <Button class="w-full" store={vm.ui.$btn_account_create}>
+                提交
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Sheet>
       <Sheet store={vm.ui.$dialog_nickname_update} app={props.app}>
         <div class="p-2">
           <div class="space-y-4">

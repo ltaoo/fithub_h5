@@ -62,6 +62,7 @@ export function get_token() {
 export function fetch_user_profile() {
   return request.post<{
     id: number;
+    uid: string;
     nickname: string;
     avatar_url: string;
     subscription: {
@@ -69,19 +70,22 @@ export function fetch_user_profile() {
       name: string;
       expired_at: string;
     };
+    no_account: boolean;
   }>("/api/auth/profile");
 }
 export function fetch_user_profile_process(r: TmpRequestResp<typeof fetch_user_profile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
+  const v = r.data;
   return Result.Ok({
-    ...r.data,
+    ...v,
     subscription: {
-      ...r.data.subscription,
-      status_text: SubscriptionStatusTextMap[r.data.subscription.status],
-      expired_at_text: dayjs(r.data.subscription.expired_at).format("YYYY-MM-DD"),
+      ...v.subscription,
+      status_text: SubscriptionStatusTextMap[v.subscription.status],
+      expired_at_text: dayjs(v.subscription.expired_at).format("YYYY-MM-DD"),
     },
+    no_account: v.no_account,
   });
 }
 
@@ -91,4 +95,15 @@ export function validate(token: string) {
 
 export function update_user_profile(body: Partial<{ nickname: string; avatar_url: string }>) {
   return request.post("/api/auth/update_profile", body);
+}
+
+export function createAccount(body: { email: string; password: string }) {
+  return request.post<{
+    id: string;
+    nickname: string;
+    avatar_url: string;
+    verified: string;
+    token: string;
+    expires_at: number;
+  }>("/api/auth/create_account", body);
 }
