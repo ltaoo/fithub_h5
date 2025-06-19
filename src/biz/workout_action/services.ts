@@ -6,7 +6,7 @@ import { ListResponseWithCursor } from "@/biz/requests/types";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 import { FetchParams } from "@/domains/list/typing";
-import { parseJSONStr, relative_time_from_now } from "@/utils";
+import { parseJSONStr, relative_time_from_now, seconds_to_hour } from "@/utils";
 
 import { WorkoutActionSteps, WorkoutActionProblems, WorkoutActionStepsJSON250608 } from "./types";
 import { WorkoutActionType } from "./constants";
@@ -36,7 +36,7 @@ type PartialWorkoutAction = {
  * @returns
  */
 export function fetchWorkoutActionList(
-  params: Partial<FetchParams> & {
+  body: Partial<FetchParams> & {
     type?: WorkoutActionType | null;
     keyword?: string;
     tags?: string[];
@@ -44,13 +44,21 @@ export function fetchWorkoutActionList(
   }
 ) {
   return request.post<ListResponseWithCursor<PartialWorkoutAction>>("/api/workout_action/list", {
-    page_size: params.pageSize,
-    page: params.page,
-    next_marker: params.next_marker,
-    type: params.type ?? WorkoutActionType.Resistance,
-    keyword: params.keyword,
-    tag: params.tags?.join(",") ?? "",
-    tags2: params.tags2,
+    page_size: body.pageSize,
+    page: body.page,
+    next_marker: body.next_marker,
+    type: (() => {
+      if (!body.type) {
+        return null;
+      }
+      if (body.type === "all") {
+        return null;
+      }
+      return body.type;
+    })(),
+    keyword: body.keyword,
+    tag: body.tags?.join(",") ?? "",
+    tags2: body.tags2,
   });
 }
 export function fetchWorkoutActionListProcess(r: TmpRequestResp<typeof fetchWorkoutActionList>) {
@@ -424,9 +432,9 @@ export function fetchContentListOfWorkoutAction(body: Partial<FetchParams> & { w
     ListResponseWithCursor<{
       id: number;
       title: string;
-      description: string;
+      overview: string;
       video_url: string;
-      like_count: number;
+      time: number;
       creator: {
         nickname: string;
         avatar_url: string;
@@ -447,7 +455,10 @@ export function fetchContentListOfWorkoutActionProcess(r: TmpRequestResp<typeof 
   return Result.Ok({
     ...r.data,
     list: list.map((v) => {
-      return v;
+      return {
+        ...v,
+        time_text: seconds_to_hour(v.time),
+      };
     }),
   });
 }

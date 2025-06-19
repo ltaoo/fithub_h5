@@ -305,6 +305,34 @@ const configure = {
           require: ["login"],
         },
       },
+      content_list: {
+        title: "列表",
+        pathname: "/content/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      content_create: {
+        title: "创建",
+        pathname: "/content/create",
+        options: {
+          require: ["login"],
+        },
+      },
+      content_profile: {
+        title: "详情",
+        pathname: "/content/profile",
+        options: {
+          require: ["login"],
+        },
+      },
+      content_update: {
+        title: "更新",
+        pathname: "/content/update",
+        options: {
+          require: ["login"],
+        },
+      },
       report_list: {
         title: "反馈记录",
         pathname: "/report/list",

@@ -9,7 +9,7 @@ import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
 import { Button, Checkbox, Dialog, DropdownMenu, Input, ListView, ScrollView, Textarea } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
-import { WorkoutActionSelectView } from "@/components/workout-action-select3";
+import { WorkoutActionSelectView } from "@/components/workout-action-select";
 import { InputTextView } from "@/components/ui/input-text";
 import { WorkoutPlanTagSelectView } from "@/components/workout-plan-tag-select";
 import { Presence } from "@/components/ui/presence";

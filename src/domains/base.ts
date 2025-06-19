@@ -204,6 +204,9 @@ function HomeActionCreatePageViewModel(props: ViewComponentProps) {
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
+    onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+      return bus.on(Events.Error, handler);
+    },
   };
 }
 

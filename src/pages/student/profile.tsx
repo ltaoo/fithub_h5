@@ -403,7 +403,7 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
           operations={
             <div class="flex items-center gap-2">
               <Button class="w-full" store={vm.ui.$btn_start_workout}>
-                开始训练
+                {state().profile?.role === CoachStudentRole.FriendAndFriend ? "一起练" : "开始训练"}
               </Button>
               <Show when={state().profile?.role === CoachStudentRole.CoachAndStudent}>
                 <div

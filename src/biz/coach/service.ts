@@ -9,7 +9,9 @@ import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
-import { parseJSONStr } from "@/utils";
+import { parseJSONStr, seconds_to_hour } from "@/utils";
+
+import { CoachArticleType } from "./constants";
 
 export function fetchCoachProfile(body: { uid: number }) {
   return request.post<{
@@ -29,4 +31,95 @@ export function fetchCoachProfile(body: { uid: number }) {
       wechat: string;
     };
   }>("/api/coach/profile", body);
+}
+
+export function fetchArticleList(body: Partial<FetchParams>) {
+  return request.post<
+    ListResponse<{
+      id: number;
+      title: string;
+      overview: string;
+      type: CoachArticleType;
+      creator: {
+        nickname: string;
+        avatar_url: string;
+      };
+      created_at: string;
+    }>
+  >("/api/content/list", {
+    page_size: body.pageSize,
+    page: body.page,
+  });
+}
+
+export function createArticle(body: {
+  title: string;
+  overview: string;
+  type: CoachArticleType;
+  video_url: string;
+  time_points: {
+    time: number;
+    workout_action_id: number;
+    text: string;
+  }[];
+}) {
+  return request.post<{ id: number }>("/api/content/create", body);
+}
+
+export function updateArticle(body: {
+  id: number;
+  title: string;
+  overview: string;
+  type: CoachArticleType;
+  video_url: string;
+  time_points: {
+    id?: number;
+    time: number;
+    workout_action_id: number;
+    text: string;
+  }[];
+}) {
+  return request.post<{ id: number }>("/api/content/update", body);
+}
+
+export function fetchArticleProfile(body: { id: number }) {
+  return request.post<{
+    id: number;
+    title: string;
+    overview: string;
+    type: CoachArticleType;
+    video_url: string;
+    time_points: {
+      id: number;
+      time: number;
+      text: string;
+      workout_action: null | {
+        id: number;
+        zh_name: string;
+      };
+    }[];
+    is_author: boolean;
+    creator: {
+      nickname: string;
+      avatar_url: string;
+    };
+    created_at: string;
+  }>("/api/content/profile", body);
+}
+
+export function fetchArticleProfileProcess(r: TmpRequestResp<typeof fetchArticleProfile>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const v = r.data;
+  return Result.Ok({
+    ...v,
+    time_points: v.time_points.map((v) => {
+      return {
+        ...v,
+        time_text: seconds_to_hour(v.time),
+      };
+    }),
+    created_at: dayjs(v.created_at).format("YYYY-MM-DD HH:mm"),
+  });
 }

@@ -13,7 +13,7 @@ export function FieldV2(props: { store: SingleFieldCore<any> } & JSX.HTMLAttribu
       <div class="field">
         <div class="field__main">
           <div class="field__label flex items-center justify-between">
-            <div class="field__title ml-2">{state().label}</div>
+            <div class="field__title ml-2 text-sm text-w-fg-0">{state().label}</div>
           </div>
           <div class="field__content mt-1">
             <div class="field__value p-1">{props.children}</div>

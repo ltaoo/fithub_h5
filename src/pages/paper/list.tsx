@@ -13,7 +13,6 @@ import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { fetchPaperList, fetchRunningExam, giveUpExam, startExam } from "@/biz/paper/services";
 import { Result } from "@/domains/result";
-import { Sheet } from "@/components/ui/sheet";
 
 function PaperListViewModel(props: ViewComponentProps) {
   const request = {
@@ -50,17 +49,14 @@ function PaperListViewModel(props: ViewComponentProps) {
       return Result.Ok(r.data);
     },
     async handleStartExam(v: { id: number }) {
-      props.app.tip({
-        icon: "loading",
+      props.app.loading({
         text: ["载入中..."],
       });
       const r = await methods.startExam(v);
       if (r.error) {
-        props.app.tip({
-          text: [r.error.message],
-        });
         return;
       }
+      props.app.hideLoading();
       methods.gotoExamView(r.data);
     },
     gotoExamView(v: { id: number }) {

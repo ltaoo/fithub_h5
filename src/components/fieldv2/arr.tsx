@@ -1,16 +1,19 @@
 import { JSX } from "solid-js/jsx-runtime";
 import { createSignal, For, Show } from "solid-js";
-import { Plus, Trash } from "lucide-solid";
+import { ChevronDown, ChevronUp, Plus, Trash } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
+import { Flex } from "@/components/flex/flex";
+import { IconButton } from "@/components/icon-btn/icon-btn";
 
 import { ArrayFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 
 import { FieldV2 } from "./field";
 
-export function FieldArrV2<T extends () => any>(
+export function FieldArrV2<T extends (v: number) => any>(
   props: {
     store: ArrayFieldCore<T>;
+    hide_label?: boolean;
     render: (field: ReturnType<T>) => JSX.Element;
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
@@ -18,37 +21,72 @@ export function FieldArrV2<T extends () => any>(
 
   return (
     <Show when={!state().hidden}>
+      <Show when={!props.hide_label}>
+        <Flex class="field justify-between">
+          <div class="field__label flex items-center justify-between">
+            <div class="field__title ml-2 text-sm text-w-fg-0">{state().label}</div>
+          </div>
+          <IconButton
+            onClick={() => {
+              vm.append();
+            }}
+          >
+            <Plus class="w-4 h-4 text-w-fg-0" />
+          </IconButton>
+        </Flex>
+      </Show>
       <div
-        class="inline-block p-2 rounded-full bg-w-bg-5"
-        onClick={() => {
-          vm.append();
+        classList={{
+          [props.class ?? ""]: true,
         }}
       >
-        <Plus class="w-6 h-6" />
-      </div>
-      <For each={state().fields}>
-        {(field, idx) => {
-          const store = props.store.mapFieldWithIndex(idx());
-          if (store === null) {
-            return null;
-          }
-          return (
-            <div class="flex">
-              <div class="mt-2">{props.render(store.field)}</div>
-              <div class="operations flex items-center gap-2">
+        <For each={state().fields}>
+          {(field, idx) => {
+            const store = props.store.mapFieldWithIndex(idx());
+            if (store === null) {
+              return null;
+            }
+            return (
+              <div class="flex gap-2">
+                <div class="operations w-[32px] space-y-2">
+                  <IconButton>
+                    <div class="flex items-center justify-center w-4 h-4 text-w-fg-1">{idx() + 1}</div>
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      vm.removeByIndex(idx());
+                    }}
+                  >
+                    <Trash class="w-4 h-4 text-w-fg-1" />
+                  </IconButton>
+                  {/* <IconButton
+                    onClick={() => {
+                      vm.upIdx(idx());
+                    }}
+                  >
+                    <ChevronUp class="w-4 h-4 text-w-fg-1" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      vm.downIdx(idx());
+                    }}
+                  >
+                    <ChevronDown class="w-4 h-4 text-w-fg-1" />
+                  </IconButton> */}
+                </div>
                 <div
-                  class="inline-block p-2 rounded-full bg-w-bg-5"
-                  onClick={() => {
-                    vm.remove(idx());
+                  class=""
+                  classList={{
+                    "flex-1": true,
                   }}
                 >
-                  <Trash class="w-6 h-6" />
+                  {props.render(store.field)}
                 </div>
               </div>
-            </div>
-          );
-        }}
-      </For>
+            );
+          }}
+        </For>
+      </div>
     </Show>
   );
 }

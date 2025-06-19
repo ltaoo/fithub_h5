@@ -6,7 +6,7 @@ import { createSignal, For } from "solid-js";
 import { useViewModel, useViewModelStore } from "@/hooks";
 import { Input } from "@/components/ui/input";
 import * as PopoverPrimitive from "@/packages/ui/popover";
-import { SetValueInputViewModel } from "@/biz/set_value_input";
+import { SetValueInputViewModel } from "@/biz/input_set_value";
 import { base, Handler } from "@/domains/base";
 import { InputCore, PopoverCore } from "@/domains/ui";
 

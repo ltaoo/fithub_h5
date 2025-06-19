@@ -1,4 +1,4 @@
-import { SetValueUnit } from "@/biz/set_value_input";
+import { SetValueUnit } from "@/biz/input_set_value";
 
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "./constants";
 

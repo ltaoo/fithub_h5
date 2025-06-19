@@ -139,10 +139,13 @@ function ToolsViewModel(props: ViewComponentProps) {
     {
       title: "学习",
       menus: [
-        // {
-        //   title: "学习资料",
-        // icon: "//static.fithub.top/icons/icon8.jpeg",
-        // },
+        {
+          title: "内容",
+          icon: "//static.fithub.top/icons/icon8.jpeg",
+          onClick() {
+            props.history.push("root.content_list");
+          },
+        },
         {
           title: "答题挑战",
           icon: "//static.fithub.top/icons/icon6.jpeg",

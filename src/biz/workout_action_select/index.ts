@@ -22,7 +22,7 @@ import { BizError } from "@/domains/error";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 
 export function WorkoutActionSelectViewModel(props: {
-  defaultValue: { id: number | string; zh_name: string }[];
+  defaultValue?: { id: number | string; zh_name: string }[];
   list: typeof $workout_action_list;
   multiple?: boolean;
   app: ViewComponentProps["app"];
@@ -44,7 +44,7 @@ export function WorkoutActionSelectViewModel(props: {
       ui.$dialog.hide();
     },
     select(vv: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
-      console.log("[BIZ]workout_action_select2 - select", vv);
+      // console.log("[BIZ]workout_action_select2 - select", vv);
       const disabled = _disabled.includes(vv.id);
       if (disabled) {
         return;
@@ -124,6 +124,7 @@ export function WorkoutActionSelectViewModel(props: {
       if (props.onOk) {
         props.onOk(_selected);
       }
+      bus.emit(Events.Ok, _selected);
     },
     handleClickWorkoutAction(v: { id: number }) {
       ui.$workout_action.ui.$dialog.show();
@@ -135,18 +136,19 @@ export function WorkoutActionSelectViewModel(props: {
       defaultValue: WorkoutActionType.Resistance,
       options: WorkoutActionTypeOptions,
       async onChange(v) {
+        _selected_tag = "全部";
+        if (v) {
+          _tags = WorkoutActionTypeSubTagMap[v];
+        }
+        methods.refresh();
         const r = await request.action.list.search({
+          tags: [],
           type: v,
         });
         if (r.error) {
           bus.emit(Events.Error, r.error);
           return;
         }
-        _selected_tag = "全部";
-        if (v) {
-          _tags = WorkoutActionTypeSubTagMap[v];
-        }
-        methods.refresh();
         // ui.$search_type_select.hide();
       },
     }),
@@ -215,7 +217,7 @@ export function WorkoutActionSelectViewModel(props: {
   let _loading = true;
   let _multiple = props.multiple ?? true;
   let _selected: { id: number | string; zh_name: string }[] = (() => {
-    return props.defaultValue;
+    return props.defaultValue ?? [];
   })();
   let _disabled: (number | string)[] = [];
   let _mode = "multiple" as "multiple" | "single";
@@ -257,6 +259,7 @@ export function WorkoutActionSelectViewModel(props: {
     StateChange,
   }
   type TheTypesOfEvents = {
+    [Events.Ok]: typeof _selected;
     [Events.Change]: typeof _selected;
     [Events.StateChange]: typeof _state;
     [Events.Error]: BizError;
@@ -308,6 +311,9 @@ export function WorkoutActionSelectViewModel(props: {
     destroy() {
       bus.destroy();
       request.action.list.destroy();
+    },
+    onOk(handler: Handler<TheTypesOfEvents[Events.Ok]>) {
+      return bus.on(Events.Ok, handler);
     },
     onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);

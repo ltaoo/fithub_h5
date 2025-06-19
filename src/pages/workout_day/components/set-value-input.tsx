@@ -4,7 +4,7 @@ import { JSX } from "solid-js/jsx-runtime";
 import { useViewModelStore } from "@/hooks";
 import { InputCore } from "@/domains/ui";
 import { SingleFieldCore } from "@/domains/ui/formv2";
-import { SetValueInputViewModel } from "@/biz/set_value_input";
+import { SetValueInputViewModel } from "@/biz/input_set_value";
 
 export function SetValueInput(
   props: { width?: number; store: SingleFieldCore<SetValueInputViewModel> } & JSX.HTMLAttributes<HTMLDivElement>

@@ -100,8 +100,9 @@ export function WorkoutActionProfileViewModel(props: {
     cancel() {
       ui.$dialog.hide();
     },
-    playVideo(v: { video_url: string }) {
+    playVideo(v: { video_url: string; time: number }) {
       ui.$video.onCanPlay(() => {
+        ui.$video.setCurrentTime(v.time);
         ui.$video.play();
       });
       ui.$video.onConnected(() => {
@@ -111,6 +112,7 @@ export function WorkoutActionProfileViewModel(props: {
       });
       console.log("[BIZ]workout_action/workout_action_profile - before ui.$video.url ===", ui.$video.url, v.video_url);
       if (ui.$video.url === v.video_url && ui.$video.paused) {
+        ui.$video.setCurrentTime(v.time);
         ui.$video.play();
       }
       if (ui.$video.url !== v.video_url && ui.$video._mounted) {

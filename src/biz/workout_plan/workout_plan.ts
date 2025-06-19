@@ -5,7 +5,7 @@ import { BizError } from "@/domains/error";
 
 import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
-import { getSetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit } from "@/biz/input_set_value";
 import {
   fetchWorkoutActionList,
   fetchWorkoutActionListByIds,

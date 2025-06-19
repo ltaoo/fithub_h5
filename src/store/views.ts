@@ -59,6 +59,10 @@ import { FeaturePlaygroundView } from "@/pages/test/profile";
 import { WorkoutDayCatchUpOnView } from "@/pages/workout_day/catch_up_on";
 import { StudentWorkoutDayListView } from "@/pages/student/workout_day_list";
 import { StudentWorkoutDayProfileView } from "@/pages/student/workout_day_profile";
+import { ArticleCreateView } from "@/pages/article/create";
+import { ArticleListView } from "@/pages/article/list";
+import { ArticleProfileView } from "@/pages/article/profile";
+import { ArticleUpdateView } from "@/pages/article/update";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.login": LoginPage,
@@ -125,4 +129,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.exam_result": PaperResultView,
   "root.exam_result_list": PaperResultListView,
   "root.test": FeaturePlaygroundView,
+  // 内容
+  "root.content_create": ArticleCreateView,
+  "root.content_list": ArticleListView,
+  "root.content_profile": ArticleProfileView,
+  "root.content_update": ArticleUpdateView,
 };

@@ -12,7 +12,7 @@ import { InputCore, SelectCore } from "@/domains/ui";
 import { ArrayFieldCore, ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { FormInputInterface } from "@/domains/ui/formv2/types";
 import { WorkoutActionType } from "@/biz/workout_action/constants";
-import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit, SetValueUnit } from "@/biz/input_set_value";
 import { WorkoutPlanSetType, WorkoutPlanStepTypeTextMap, WorkoutSetTypeTextMap } from "@/biz/workout_plan/constants";
 import { diff, diff2 } from "@/utils/diff";
 

@@ -231,6 +231,7 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     })();
     // console.log("[DOMAIN]formv2 - SingleField - setValue", v);
     this._input.setValue(v);
+    // this._bus.emit(SingleFieldEvents.StateChange, { ...this.state });
   }
   setStatus(status: FieldStatus) {
     this._status = status;
@@ -406,7 +407,7 @@ export class ArrayFieldCore<
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   setValue(values: any[], extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
-    // console.log("[DOMAIN]ArrayFieldCore - setValue", extra.key, values, this.fields);
+    console.log("[DOMAIN]ArrayFieldCore - setValue", extra.key, values, this.fields);
     for (let i = 0; i < values.length; i += 1) {
       (() => {
         const v = values[i];
@@ -428,10 +429,11 @@ export class ArrayFieldCore<
           };
           this.fields[i] = field;
         }
-        field.field.setValue(v, { key: extra.key, idx: i, silence: extra.silence });
+        field.field.setValue(v, { idx: i, silence: extra.silence, key: extra.key });
       })();
     }
-    //     bus.emit(Events.StateChange, _state);
+    console.log("[DOMAIN]ArrayFieldCore - after setValue", this.fields);
+    this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
   clear() {
     this.setValue([]);
@@ -530,6 +532,7 @@ export class ArrayFieldCore<
   }
   remove(id: number) {
     const matched_idx = this.fields.findIndex((field) => field.id === id);
+    console.log("[BIZ]formv2/field - remove", id, matched_idx);
     if (matched_idx === -1) {
       return;
     }
@@ -542,6 +545,7 @@ export class ArrayFieldCore<
   }
   removeByIndex(idx: number) {
     const v = this.fields[idx];
+    console.log("[BIZ]formv2/field - remove", idx, v);
     if (v && v.field.symbol === "SingleFieldCore") {
       v.field.destroy();
     }
@@ -758,21 +762,22 @@ export class ObjectFieldCore<
     values: Partial<Record<keyof T, any>>,
     extra: Partial<{ key: keyof T; idx: number; silence: boolean }> = {}
   ) {
-    console.log("[DOMAIN]formv2 - setValue", values, extra, this.fields);
+    // console.log("[DOMAIN]formv2 - setValue", values, extra, this.fields);
     if (extra.key) {
       const field = this.fields[extra.key];
+      // console.log("[DOMAIN]formv2 - ObjectFieldCore setValue", field);
       if (field) {
         field.setValue(values[extra.key]);
       }
       return;
     }
-    const keys = Object.keys(this.fields) as Array<keyof T>;
+    const keys = Object.keys(this.fields);
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       const field = this.fields[key];
-      // console.log("[DOMAIN]ObjectFieldCore - before field.setValue", key, field);
+      // console.log("[DOMAIN]ObjectFieldCore - before field.setValue", key, values[key], field);
       // @ts-ignore
-      field.setValue(values[key], { key });
+      field.setValue(values[key]);
     }
   }
   refresh() {

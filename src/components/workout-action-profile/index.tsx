@@ -97,9 +97,9 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
                       {(v) => {
                         return (
                           <div class="p-4 border-2 border-w-fg-3 rounded-lg">
-                            <div>{v.title}</div>
-                            <Show when={v.description}>
-                              <div>{v.description}</div>
+                            <div class="text-w-fg-0">{v.title}</div>
+                            <Show when={v.overview}>
+                              <div class="text-w-fg-1 text-sm">{v.overview}</div>
                             </Show>
                             <div class="flex items-center justify-between  mt-4">
                               <div class="flex items-center gap-2">
@@ -119,12 +119,13 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
                                 <div class="text-sm text-w-fg-0">{v.creator.nickname}</div>
                               </div>
                               <div
-                                class="p-2 rounded-full bg-w-bg-5"
+                                class="flex items-center gap-2 p-2 rounded-full bg-w-bg-5"
                                 onClick={() => {
                                   vm.methods.playVideo(v);
                                 }}
                               >
-                                <Play class="w-6 h-6 text-w-fg-0" />
+                                <div class="text-blue-500">{v.time_text}</div>
+                                <Play class="w-4 h-4 text-w-fg-0" />
                               </div>
                             </div>
                           </div>

@@ -33,7 +33,7 @@ import {
   WorkoutActionProfile,
 } from "@/biz/workout_action/services";
 import { WorkoutPlanSetType, WorkoutPlanStepType } from "@/biz/workout_plan/constants";
-import { getSetValueUnit, SetValueUnit } from "@/biz/set_value_input";
+import { getSetValueUnit, SetValueUnit } from "@/biz/input_set_value";
 import { map_parts_with_ids } from "@/biz/muscle/data";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";

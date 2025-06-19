@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { request } from "@/biz/requests";
 import { idsMapValue } from "@/biz/services/utils";
 import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
-import { SetValueUnit } from "@/biz/set_value_input";
+import { SetValueUnit } from "@/biz/input_set_value";
 import { TheResponseOfFetchFunction } from "@/domains/request";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";

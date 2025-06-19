@@ -17,7 +17,7 @@ import { Flex } from "@/components/flex/flex";
 import { IconButton } from "@/components/icon-btn/icon-btn";
 import { MoreHorizontal } from "lucide-solid";
 import { Button } from "@/components/ui";
-import { WorkoutActionSelectView } from "@/components/workout-action-select3";
+import { WorkoutActionSelectView } from "@/components/workout-action-select";
 import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import { fetchWorkoutActionList, fetchWorkoutActionListProcess } from "@/biz/workout_action/services";
 
