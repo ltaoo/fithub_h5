@@ -14,7 +14,7 @@ import { WorkoutActionInputModel } from "@/biz/input_workout_action/input_workou
 import { Result } from "@/domains/result";
 import { createArticle, fetchArticleProfile, fetchArticleProfileProcess, updateArticle } from "@/biz/coach/service";
 import { RefCore } from "@/domains/ui/cur";
-import { seconds_to_hour, toFixed } from "@/utils";
+import { hour_text_to_seconds, seconds_to_hour_text, toFixed } from "@/utils";
 
 export function ArticleEditorModel(props: ViewComponentProps) {
   const request = {
@@ -41,7 +41,7 @@ export function ArticleEditorModel(props: ViewComponentProps) {
       const field = ui.$form.fields.details.fields.time_points.append();
       field.setValue({
         text: "",
-        video_time_text: seconds_to_hour($video.currentTime),
+        video_time_text: seconds_to_hour_text($video.currentTime),
         video_time: toFixed($video.currentTime, 0),
         workout_action: [],
       });
@@ -62,7 +62,7 @@ export function ArticleEditorModel(props: ViewComponentProps) {
         time_points: v.details.time_points.map((v) => {
           return {
             id: v.id,
-            time: v.video_time,
+            time: hour_text_to_seconds(v.video_time_text),
             text: v.text,
             workout_action_id: v.workout_action.length ? Number(v.workout_action[0].id) : 0,
           };
@@ -79,7 +79,7 @@ export function ArticleEditorModel(props: ViewComponentProps) {
       ui.$form.setValue({
         id: v.id,
         title: v.title,
-        overview: v.overview,
+        overview: v.overview.join("\n"),
         type: v.type,
         video_url: v.video_url,
         details: {
@@ -89,7 +89,7 @@ export function ArticleEditorModel(props: ViewComponentProps) {
               workout_action: p.workout_action ? [p.workout_action] : [],
               video_time: p.time,
               video_time_text: p.time_text,
-              text: p.text,
+              text: p.text.join("\n"),
             };
           }),
         },

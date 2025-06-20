@@ -59,6 +59,13 @@ export function FieldArrV2<T extends (v: number) => any>(
                   >
                     <Trash class="w-4 h-4 text-w-fg-1" />
                   </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      vm.insertAfter(field.id);
+                    }}
+                  >
+                    <Plus class="w-4 h-4 text-w-fg-1" />
+                  </IconButton>
                   {/* <IconButton
                     onClick={() => {
                       vm.upIdx(idx());

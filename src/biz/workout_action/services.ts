@@ -6,7 +6,7 @@ import { ListResponseWithCursor } from "@/biz/requests/types";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 import { FetchParams } from "@/domains/list/typing";
-import { parseJSONStr, relative_time_from_now, seconds_to_hour } from "@/utils";
+import { parseJSONStr, relative_time_from_now, seconds_to_hour_text } from "@/utils";
 
 import { WorkoutActionSteps, WorkoutActionProblems, WorkoutActionStepsJSON250608 } from "./types";
 import { WorkoutActionType } from "./constants";
@@ -457,7 +457,7 @@ export function fetchContentListOfWorkoutActionProcess(r: TmpRequestResp<typeof 
     list: list.map((v) => {
       return {
         ...v,
-        time_text: seconds_to_hour(v.time),
+        time_text: seconds_to_hour_text(v.time),
       };
     }),
   });

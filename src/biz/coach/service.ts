@@ -9,7 +9,7 @@ import { TmpRequestResp } from "@/domains/request/utils";
 import { Result, UnpackedResult } from "@/domains/result";
 import { TheResponseOfFetchFunction } from "@/domains/request";
 import { Unpacked } from "@/types";
-import { parseJSONStr, seconds_to_hour } from "@/utils";
+import { parseJSONStr, seconds_to_hour_text, toFixed } from "@/utils";
 
 import { CoachArticleType } from "./constants";
 
@@ -96,6 +96,7 @@ export function fetchArticleProfile(body: { id: number }) {
       workout_action: null | {
         id: number;
         zh_name: string;
+        score: number;
       };
     }[];
     is_author: boolean;
@@ -107,6 +108,27 @@ export function fetchArticleProfile(body: { id: number }) {
   }>("/api/content/profile", body);
 }
 
+const WorkoutActionScoreTextArr = [
+  "F-",
+  "F-",
+  "F",
+  "F+",
+  "D-",
+  "D",
+  "D+",
+  "C-",
+  "C",
+  "C+",
+  "B-",
+  "B",
+  "B+",
+  "A-",
+  "A",
+  "A+",
+  "S-",
+  "S",
+  "S+",
+];
 export function fetchArticleProfileProcess(r: TmpRequestResp<typeof fetchArticleProfile>) {
   if (r.error) {
     return Result.Err(r.error);
@@ -114,10 +136,24 @@ export function fetchArticleProfileProcess(r: TmpRequestResp<typeof fetchArticle
   const v = r.data;
   return Result.Ok({
     ...v,
+    overview: v.overview.split("\n"),
     time_points: v.time_points.map((v) => {
       return {
         ...v,
-        time_text: seconds_to_hour(v.time),
+        text: v.text.split("\n"),
+        time_text: seconds_to_hour_text(v.time),
+        score: (() => {
+          if (!v.workout_action) {
+            return null;
+          }
+          if (v.workout_action.score === 0) {
+            return null;
+          }
+          return {
+            text: WorkoutActionScoreTextArr[v.workout_action.score],
+            position: toFixed((v.workout_action.score / 18) * 100, 0),
+          };
+        })(),
       };
     }),
     created_at: dayjs(v.created_at).format("YYYY-MM-DD HH:mm"),

@@ -236,12 +236,35 @@ export function seconds_to_hour_with_template(
   return str;
 }
 
+export function hour_text_to_seconds(text: string) {
+  const matched = text.match(/[0-9]{1,}:[0-9]{1,}$/);
+  if (!matched) {
+    return 0;
+  }
+  const parts = text.split(":");
+  const { hours, minutes, seconds } = (() => {
+    if (parts.length === 3) {
+      return {
+        hours: Number(parts[0]),
+        minutes: Number(parts[1]),
+        seconds: Number(parts[2]),
+      };
+    }
+    return {
+      hours: 0,
+      minutes: Number(parts[0]),
+      seconds: Number(parts[1]),
+    };
+  })();
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
 /**
  * 秒数转时分秒
  * @param value
  * @returns
  */
-export function seconds_to_hour(value: number) {
+export function seconds_to_hour_text(value: number) {
   const hours = Math.floor(value / 3600);
   const minutes = Math.floor((value - hours * 3600) / 60);
   const seconds = Math.floor(value - hours * 3600 - minutes * 60);

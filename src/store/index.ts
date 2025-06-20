@@ -19,6 +19,7 @@ import { connect as connectHistory } from "@/domains/history/connect.web";
 import { onCreateScrollView } from "@/domains/ui/scroll-view";
 import { onRequestCreated, RequestCore } from "@/domains/request/index";
 import { Result } from "@/domains/result/index";
+import { query_stringify } from "@/utils";
 
 import { PageKeys, routes, routesWithPathname } from "./routes";
 import { client } from "./request";
@@ -76,6 +77,8 @@ export const history = new HistoryCore<PageKeys, RouteConfig<PageKeys>>({
     root: view,
   } as Record<PageKeys, RouteViewCore>,
 });
+// @todo 临时解决方案
+let _pending_redirect: null | { name: PageKeys; pathname: string; query: Record<string, string> } = null;
 export const app = new Application({
   user,
   storage,
@@ -107,12 +110,19 @@ export const app = new Application({
       history.push("root.home_layout.index");
       return Result.Ok(null);
     }
-    console.log("[STORE]beforeReady - before if (!app.$user.isLogin", app.$user.isLogin);
+    console.log("[STORE]beforeReady - before if (!app.$user.isLogin", app.$user.isLogin, route.pathname);
     if (!app.$user.isLogin) {
       app.tip({
         text: ["请先登录"],
       });
-      history.push("root.login", { redirect: route.pathname });
+      if (route.name !== "root.home_layout.index" && route.name !== "root") {
+        _pending_redirect = {
+          name: route.name,
+          pathname,
+          query,
+        };
+      }
+      history.push("root.login");
       return Result.Ok(null);
     }
     console.log("before client.appendHeaders", app.$user.token);
@@ -200,6 +210,12 @@ user.onLogin((profile) => {
   request.appendHeaders({
     Authorization: user.token,
   });
+  // console.log("before history.destroyAllAndPush", history.routes)
+  if (_pending_redirect) {
+    history.replace(_pending_redirect.name, _pending_redirect.query);
+    _pending_redirect = null;
+    return;
+  }
   history.destroyAllAndPush("root.home_layout.index");
 });
 user.onTokenRefresh((profile) => {

@@ -38,7 +38,7 @@ import { map_parts_with_ids } from "@/biz/muscle/data";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { ListCore } from "@/domains/list";
-import { seconds_to_hour, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
+import { seconds_to_hour_text, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 import { debounce } from "@/utils/lodash/debounce";
 
 import { ActionInput, ActionInputViewModel } from "./components/action-input";

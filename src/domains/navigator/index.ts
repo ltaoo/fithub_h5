@@ -86,8 +86,8 @@ type NavigatorState = {
 export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
   static prefix: string | null = null;
   static parse(url: string) {
-    const { pathname, query: queryStr, ...rest } = parse(url);
-    const query = qs.parse(queryStr, { ignoreQueryPrefix: true }) as Record<string, string>;
+    const { pathname, query: query_str, ...rest } = parse(url);
+    const query = qs.parse(query_str, { ignoreQueryPrefix: true }) as Record<string, string>;
     if (NavigatorCore.prefix && pathname.startsWith(NavigatorCore.prefix)) {
       return { ...rest, query, pathname: pathname.replace(NavigatorCore.prefix, "") };
     }
@@ -146,11 +146,11 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
   async prepare(location: RouteLocation) {
     const { host, pathname, href, search, origin } = location;
     // console.log("[DOMAIN]router - prepare", location);
-    let cleanPathname = pathname;
+    let clean_pathname = pathname;
     if (NavigatorCore.prefix && NavigatorCore.prefix.match(/^\/[a-z0-9A-Z]{1,}/)) {
-      cleanPathname = pathname.replace(NavigatorCore.prefix!, "");
+      clean_pathname = pathname.replace(NavigatorCore.prefix!, "");
     }
-    this.setPathname(cleanPathname);
+    this.setPathname(clean_pathname);
     this.origin = origin;
     this.host = host;
     this.location = location;
@@ -158,7 +158,7 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
     const query = buildQuery(href);
     this.query = query;
     this._pending = {
-      pathname: cleanPathname,
+      pathname: clean_pathname,
       search,
       type: "initialize",
     };
