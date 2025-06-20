@@ -75,9 +75,9 @@ export class AffixCore extends BaseDomain<TheTypesOfEvents> {
     const { top, height } = rect;
     this.curTop = top;
     this.height = height;
-    if (top === this.targetTop) {
-      this.fix();
-    }
+    // if (top === this.targetTop) {
+    //   this.fix();
+    // }
     // if (this.targetTop >= this.curTop) {
     //   // 如果目标距离大于实际距离，发生固定时，位置反而会往下移动，所以这里将目标距离等于实际距离
     //   this.targetTop = this.curTop;
@@ -115,6 +115,10 @@ export class AffixCore extends BaseDomain<TheTypesOfEvents> {
     if (this.targetTop >= this.curTop) {
       // 如果目标距离大于实际距离，发生固定时，位置反而会往下移动，所以这里将目标距离等于实际距离
       this.targetTop = this.curTop;
+    }
+    if (this.targetTop < this.curTop && this.fixed) {
+      this.fixed = false;
+      this.emit(Events.StateChange, { ...this.state });
     }
     this.height = height;
     this.emit(Events.SizeChange);

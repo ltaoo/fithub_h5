@@ -4,6 +4,7 @@ import { JSX } from "solid-js/jsx-runtime";
 import { useViewModelStore } from "@/hooks";
 
 import { AffixCore } from "@/domains/ui/affix";
+import { sleep } from "@/utils";
 
 export function Affix(props: { store: AffixCore } & JSX.HTMLAttributes<HTMLDivElement>) {
   const [state, vm] = useViewModelStore(props.store);

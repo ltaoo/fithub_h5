@@ -146,7 +146,7 @@ export function fetchArticleProfileProcess(r: TmpRequestResp<typeof fetchArticle
           if (!v.workout_action) {
             return null;
           }
-          if (v.workout_action.score === 0) {
+          if (!v.workout_action.score) {
             return null;
           }
           return {

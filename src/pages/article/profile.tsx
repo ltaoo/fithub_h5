@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { MoreHorizontal } from "lucide-solid";
+import { CircleX, Loader2, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -97,6 +97,9 @@ function ArticleProfileViewModel(props: ViewComponentProps) {
 
   request.content.profile.onStateChange(() => methods.refresh());
   ui.$video.onStateChange(() => methods.refresh());
+  ui.$video.onCanPlay(() => {
+    ui.$affix.registerAgain();
+  });
 
   return {
     methods,
@@ -112,6 +115,8 @@ function ArticleProfileViewModel(props: ViewComponentProps) {
         return;
       }
       ui.$video.load(r.data.video_url);
+      // ui.$affix.registerAgain();
+      props.app.setTitle(r.data.title);
       if (r.data.is_author) {
         ui.$menu.showMenuItem("编辑");
       }
@@ -134,106 +139,130 @@ export function ArticleProfileView(props: ViewComponentProps) {
 
   return (
     <>
-      <PageView
-        no_padding
-        store={vm}
-        operations={
-          <Flex justify="between">
-            <div></div>
-            <IconButton
-              onClick={(event) => {
-                const { x, y } = event.currentTarget.getBoundingClientRect();
-                vm.ui.$menu.toggle({ x, y });
-              }}
-            >
-              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-            </IconButton>
-          </Flex>
-        }
-      >
-        <Show when={state().profile} keyed>
-          <div class="p-6">
-            <div class="text-xl text-w-fg-0">{state().profile?.title}</div>
-            <div class=" mt-2">
-              <Flex class="" justify="between">
-                <Flex class="gap-2">
-                  <Show
-                    when={state().profile?.creator.avatar_url}
-                    fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
-                  >
-                    <div
-                      class="w-[24px] h-[24px] rounded-full"
-                      style={{
-                        "background-image": `url('${state().profile?.creator.avatar_url}')`,
-                        "background-size": "cover",
-                        "background-position": "center",
-                      }}
-                    ></div>
-                  </Show>
-                  <div class="text-sm text-w-fg-0">{state().profile?.creator.nickname}</div>
-                </Flex>
-                <div class="text-sm text-w-fg-1">{state().profile?.created_at}</div>
-              </Flex>
-            </div>
-            <div class="mt-4 text-w-fg-0 text-sm">
-              <For each={state().profile?.overview}>
-                {(t) => {
-                  return <div>{t}</div>;
-                }}
-              </For>
+      <Show when={state().error}>
+        <PageView store={vm}>
+          <div class="error max-w-[screen] p-4">
+            <div class="flex flex-col items-center text-red-500">
+              <div>
+                <CircleX class="w-12 h-12" />
+              </div>
+              <div class="mt-2 text-w-fg-0 text-center break-all">{state().error?.message}</div>
             </div>
           </div>
-        </Show>
-        <div class="z-[100] relative">
-          <Affix store={vm.ui.$affix} class="">
-            <Video store={vm.ui.$video} />
-          </Affix>
-        </div>
-        <div class="z-[90] relative space-y-4 mt-4 p-2">
-          <For each={state().profile?.time_points}>
-            {(p, idx) => {
-              return (
-                <Flex
-                  class="relative gap-2"
-                  onClick={() => {
-                    vm.methods.handleClickTimePoint(p);
+        </PageView>
+      </Show>
+      <Show when={!state().error}>
+        <PageView
+          no_padding
+          store={vm}
+          operations={
+            <Flex justify="between">
+              <div></div>
+              <IconButton
+                onClick={(event) => {
+                  const { x, y } = event.currentTarget.getBoundingClientRect();
+                  vm.ui.$menu.toggle({ x, y });
+                }}
+              >
+                <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+              </IconButton>
+            </Flex>
+          }
+        >
+          <Show when={state().loading}>
+            <div class="loading flex justify-center items-center p-4">
+              <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+            </div>
+          </Show>
+          <Show when={state().profile} keyed>
+            <div class="p-6">
+              <div class="text-xl text-w-fg-0">{state().profile?.title}</div>
+              <div class=" mt-2">
+                <Flex class="" justify="between">
+                  <Flex class="gap-2">
+                    <Show
+                      when={state().profile?.creator.avatar_url}
+                      fallback={<div class="w-[24px] h-[24px] rounded-full bg-w-bg-5"></div>}
+                    >
+                      <div
+                        class="w-[24px] h-[24px] rounded-full"
+                        style={{
+                          "background-image": `url('${state().profile?.creator.avatar_url}')`,
+                          "background-size": "cover",
+                          "background-position": "center",
+                        }}
+                      ></div>
+                    </Show>
+                    <div class="text-sm text-w-fg-0">{state().profile?.creator.nickname}</div>
+                  </Flex>
+                  <div class="text-sm text-w-fg-1">{state().profile?.created_at}</div>
+                </Flex>
+              </div>
+              <div class="mt-4 text-w-fg-0 text-sm">
+                <For each={state().profile?.overview}>
+                  {(t) => {
+                    return <div>{t}</div>;
                   }}
-                >
-                  <div class="w-[16px]"></div>
-                  <div class="absolute left-1 top-2 w-2 h-2 rounded-full bg-w-fg-0"></div>
-                  {idx() < state().profile!.time_points.length - 1 && (
-                    <div class="absolute left-[7px] top-4 w-0.5 h-full bg-w-fg-3"></div>
-                  )}
-                  <div class="flex-1">
-                    <Flex justify="between">
-                      <Flex class="gap-2">
-                        <div class="text-blue-500">{p.time_text}</div>
-                        <Show when={p.workout_action}>
-                          <div class="text-w-fg-0">{p.workout_action?.zh_name}</div>
+                </For>
+              </div>
+            </div>
+          </Show>
+          <div
+            class="z-[3] relative"
+            classList={{
+              "opacity-0": !state().profile,
+            }}
+          >
+            <Affix store={vm.ui.$affix} class="min-h-[210px]">
+              <Video store={vm.ui.$video} />
+            </Affix>
+          </div>
+          <div class="z-[2] relative space-y-4 mt-4 p-2">
+            <For each={state().profile?.time_points}>
+              {(p, idx) => {
+                return (
+                  <Flex
+                    class="relative gap-2"
+                    onClick={() => {
+                      vm.methods.handleClickTimePoint(p);
+                    }}
+                  >
+                    <div class="w-[16px]"></div>
+                    <div class="absolute left-1 top-2 w-2 h-2 rounded-full bg-w-fg-0"></div>
+                    {idx() < state().profile!.time_points.length - 1 && (
+                      <div class="absolute left-[7px] top-4 w-0.5 h-full bg-w-fg-3"></div>
+                    )}
+                    <div class="flex-1">
+                      <Flex justify="between">
+                        <Flex class="gap-2">
+                          <div class="text-blue-500">{p.time_text}</div>
+                          <Show when={p.workout_action}>
+                            <div class="text-w-fg-0">{p.workout_action?.zh_name}</div>
+                          </Show>
+                        </Flex>
+                        <Show when={p.score}>
+                          <div class="w-[88px]">
+                            <WorkoutActionScoreColorBar v={p.score?.text!} position={p.score?.position!} />
+                          </div>
                         </Show>
                       </Flex>
-                      <Show when={p.score}>
-                        <div class="w-[88px]">
-                          <WorkoutActionScoreColorBar v={p.score?.text!} position={p.score?.position!} />
+                      <Show when={p.text.length}>
+                        <div class="mt-2 space-y-1">
+                          <For each={p.text}>
+                            {(t) => {
+                              return <div class="text-sm text-w-fg-0">{t}</div>;
+                            }}
+                          </For>
                         </div>
                       </Show>
-                    </Flex>
-                    <Show when={p.text.length}>
-                      <div class="mt-2 space-y-1">
-                        <For each={p.text}>
-                          {(t) => {
-                            return <div class="text-sm text-w-fg-0">{t}</div>;
-                          }}
-                        </For>
-                      </div>
-                    </Show>
-                  </div>
-                </Flex>
-              );
-            }}
-          </For>
-        </div>
-      </PageView>
+                    </div>
+                  </Flex>
+                );
+              }}
+            </For>
+          </div>
+        </PageView>
+      </Show>
       <DropdownMenu store={vm.ui.$menu}></DropdownMenu>
     </>
   );
