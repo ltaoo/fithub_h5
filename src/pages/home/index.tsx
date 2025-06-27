@@ -21,8 +21,8 @@ import { TabHeaderCore } from "@/domains/ui/tab-header";
 import { Result } from "@/domains/result";
 import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import {
-  fetchMyWorkoutScheduleList,
-  fetchMyWorkoutScheduleListProcess,
+  fetchAppliedWorkoutScheduleList,
+  fetchAppliedWorkoutScheduleListProcess,
   fetchWorkoutPlanList,
   fetchWorkoutPlanListProcess,
   fetchWorkoutPlanSetList,
@@ -41,11 +41,15 @@ import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
 import { sleep } from "@/utils";
 
 import { HomeViewTabHeader } from "./components/tabs";
+import { refreshWorkoutStats } from "@/biz/coach/service";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
 function HomeIndexPageViewModel(props: ViewComponentProps) {
   const request = {
+    workout: {
+      stats: new RequestCore(refreshWorkoutStats, { client: props.client }),
+    },
     workout_plan_set: {
       list: new RequestCore(fetchWorkoutPlanSetList, { process: fetchWorkoutPlanSetListProcess, client: props.client }),
     },
@@ -56,6 +60,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
           client: props.client,
         }),
         {
+          pageSize: 100,
           search: {
             status: WorkoutDayStatus.Finished,
           },
@@ -75,8 +80,8 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       ),
     },
     workout_schedule: {
-      enabled: new RequestCore(fetchMyWorkoutScheduleList, {
-        process: fetchMyWorkoutScheduleListProcess,
+      enabled: new RequestCore(fetchAppliedWorkoutScheduleList, {
+        process: fetchAppliedWorkoutScheduleListProcess,
         client: props.client,
       }),
     },
@@ -129,11 +134,11 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       /** 指定天内完成的 不属于计划中的训练 */
       const extra_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[] = [];
       const plan_ids_today_need_to_do = schedule_of_the_day ? schedule_of_the_day.workout_plans.map((v) => v.id) : [];
-      console.log(
-        "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
-        plan_ids_today_need_to_do,
-        completed_plan_ids_in_the_day
-      );
+      // console.log(
+      //   "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
+      //   plan_ids_today_need_to_do,
+      //   completed_plan_ids_in_the_day
+      // );
       for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
         const vv = completed_plans_in_the_day[i];
         if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
@@ -242,8 +247,15 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       return false;
     },
     async ready() {
+      // request.workout.stats.run();
       request.workout_day.has_started.run();
-      await request.workout_day.list.init();
+      const today = dayjs();
+      const monday = today.startOf("week");
+      const sunday = today.endOf("week");
+      await request.workout_day.list.search({
+        finished_at_start: monday.toDate(),
+        finished_at_end: sunday.toDate(),
+      });
       (async () => {
         const r = await request.workout_schedule.enabled.run();
         if (r.error) {
@@ -295,7 +307,8 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         });
         const schedules = buildWorkoutScheduleWithSpecialDay(workout_schedule_with_workout_plans, new Date());
         _schedules = schedules;
-        const shouldTip = methods.checkShouldShowWorkoutTipDialog();
+        console.log("[PAGE]home/index - after buildWorkoutScheduleWithSpecialDay", _schedules);
+        // const shouldTip = methods.checkShouldShowWorkoutTipDialog();
         // if (shouldTip) {
         //   alert(1);
         // }

@@ -567,7 +567,7 @@ export function fetchWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetchWo
   });
 }
 
-export function fetchMyWorkoutScheduleList() {
+export function fetchAppliedWorkoutScheduleList() {
   return request.post<{
     list: {
       id: number;
@@ -587,11 +587,12 @@ export function fetchMyWorkoutScheduleList() {
       title: string;
       type: number;
       workout_schedule_id: number;
+      applied_at: string;
     }[];
   }>("/api/workout_schedule/enabled", {});
 }
 
-export function fetchMyWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetchMyWorkoutScheduleList>) {
+export function fetchAppliedWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetchAppliedWorkoutScheduleList>) {
   if (r.error) {
     return Result.Err(r.error);
   }
@@ -601,7 +602,7 @@ export function fetchMyWorkoutScheduleListProcess(r: TmpRequestResp<typeof fetch
       return {
         id: v.id,
         type: v.type,
-        start_date: dayjs(v.start_date),
+        start_date: v.start_date ? dayjs(v.start_date) : dayjs(v.applied_at),
         schedules: (() => {
           if (v.schedules.length) {
             return v.schedules.map((s) => {

@@ -21,6 +21,9 @@ import {
   fetchWorkoutScheduleListProcess,
   fetchWorkoutPlanList,
   fetchWorkoutPlanListProcess,
+  fetchAppliedWorkoutScheduleList,
+  fetchMyWorkoutPlanListProcess,
+  fetchAppliedWorkoutScheduleListProcess,
 } from "@/biz/workout_plan/services";
 import { TagInputCore } from "@/domains/ui/form/tag-input";
 import { WorkoutPlanTags } from "@/biz/workout_plan/constants";
@@ -31,8 +34,6 @@ enum WorkoutPlanOrScheduleType {
 }
 
 function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
-  // const DefaultWorkoutPlanOrScheduleType = WorkoutPlanOrScheduleType.WorkoutPlan
-
   const request = {
     workout_plan: {
       list: new ListCore(
@@ -40,6 +41,10 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       ),
     },
     workout_schedule: {
+      enabled: new RequestCore(fetchAppliedWorkoutScheduleList, {
+        process: fetchAppliedWorkoutScheduleListProcess,
+        client: props.client,
+      }),
       list: new ListCore(
         new RequestCore(fetchWorkoutScheduleList, {
           process: fetchWorkoutScheduleListProcess,
@@ -74,6 +79,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       }
       if (_state.tab_id === WorkoutPlanOrScheduleType.WorkoutSchedule) {
         await request.workout_schedule.list.refresh();
+        request.workout_schedule.enabled.run();
       }
       ui.$view.finishPullToRefresh();
     },
@@ -139,11 +145,12 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       ],
       onChange(v) {
         ui.$input_keyword.clear();
-        if (v === WorkoutPlanOrScheduleType.WorkoutSchedule) {
-          request.workout_schedule.list.refresh();
-        }
         if (v === WorkoutPlanOrScheduleType.WorkoutPlan) {
           request.workout_plan.list.refresh();
+        }
+        if (v === WorkoutPlanOrScheduleType.WorkoutSchedule) {
+          request.workout_schedule.list.refresh();
+          request.workout_schedule.enabled.run();
         }
       },
     }),
@@ -179,7 +186,17 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       return request.workout_plan.list.response;
     },
     get response_schedule() {
-      return request.workout_schedule.list.response;
+      return {
+        ...request.workout_schedule.list.response,
+        dataSource: request.workout_schedule.list.response.dataSource.map((v) => {
+          return {
+            ...v,
+            applied: request.workout_schedule.enabled.response?.list.find((vv) => {
+              return v.id === vv.id;
+            }),
+          };
+        }),
+      };
     },
     get tab_id() {
       return ui.$input_view_select.value;
@@ -196,6 +213,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
   ui.$input_view_select.onChange(() => methods.refresh());
   request.workout_plan.list.onStateChange(() => methods.refresh());
   request.workout_schedule.list.onStateChange(() => methods.refresh());
+  request.workout_schedule.enabled.onStateChange(() => methods.refresh());
 
   return {
     request,
@@ -208,6 +226,7 @@ function WorkoutPlanListPageViewModel(props: ViewComponentProps) {
       }
       if (ui.$input_view_select.value === WorkoutPlanOrScheduleType.WorkoutSchedule) {
         request.workout_schedule.list.init();
+        request.workout_schedule.enabled.run();
       }
     },
     destroy() {
@@ -346,7 +365,12 @@ export function WorkoutPlanListPage(props: ViewComponentProps) {
                       }}
                     >
                       <div class="absolute right-4 top-4">
-                        <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
+                        <div class="flex items-center gap-2">
+                          <div class="px-2 rounded-full bg-blue-500 text-[12px] text-w-fg-0">{v.type_text}</div>
+                          <Show when={v.applied}>
+                            <div class="px-2 rounded-full bg-green-500 text-[12px] text-w-fg-0">应用中</div>
+                          </Show>
+                        </div>
                       </div>
                       <div class="text-lg text-w-fg-0">{v.title}</div>
                       <div class="text-sm text-w-fg-1">{v.overview}</div>

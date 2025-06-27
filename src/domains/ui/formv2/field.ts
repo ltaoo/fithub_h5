@@ -176,12 +176,12 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
       }
       if (rule.maxLength && value) {
         if (String(value).length > rule.maxLength) {
-          errors.push(`${this._label}长度不能超过${rule.maxLength}`);
+          errors.push(`${this._label}长度不能超过${rule.maxLength}个字符`);
         }
       }
       if (rule.minLength && value) {
         if (String(value).length < rule.minLength) {
-          errors.push(`${this._label}长度不能小于${rule.minLength}`);
+          errors.push(`${this._label}长度不能小于${rule.minLength}个字符`);
         }
       }
       if (rule.max) {

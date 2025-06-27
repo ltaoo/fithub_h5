@@ -159,3 +159,7 @@ export function fetchArticleProfileProcess(r: TmpRequestResp<typeof fetchArticle
     created_at: dayjs(v.created_at).format("YYYY-MM-DD HH:mm"),
   });
 }
+
+export function refreshWorkoutStats() {
+  return request.post("/api/refresh_workout_stats");
+}

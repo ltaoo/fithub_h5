@@ -275,15 +275,17 @@ export function buildWorkoutScheduleWithSpecialDay(
   for (let i = 0; i < schedules.length; i += 1) {
     const { type, days, start_date } = schedules[i];
     // console.log("[BIZ]workout_plan/workout_schedule - schedule", type, days, start_date);
-    // console.log("[]buildWorkoutScheduleWithSpecialDay", days, type === WorkoutScheduleType.Days);
+    const monday = dayjs(day).startOf("week");
+    // console.log("[]buildWorkoutScheduleWithSpecialDay", monday.format("YYYY-MM-DD"));
     if (type === WorkoutScheduleType.Days && days.length) {
       for (let j = 1; j < 8; j += 1) {
-        const weekday = dayjs(day).set("day", j);
+        // const weekday = dayjs(day).set("day", j);
+        const weekday = monday.clone().set("day", j);
         const weekday_text = weekday.format("YYYY-MM-DD");
         workout_plans_in_day[weekday_text] = workout_plans_in_day[weekday_text] || [];
         (() => {
-          // console.log("weekday.isBefore(start_date)", weekday_text, weekday.isBefore(start_date))
-          if (weekday.isBefore(start_date)) {
+          // console.log("weekday.isBefore(start_date)", weekday_text, start_date.format("YYYY-MM-DD"));
+          if (weekday.isBefore(start_date.startOf("date"))) {
             workout_plans_in_day[weekday_text].push({
               type: WorkoutScheduleDayType.Empty,
               // day_text: dayjs(day).set("day", j).format("YYYY-MM-DD"),
@@ -322,30 +324,42 @@ export function buildWorkoutScheduleWithSpecialDay(
     }
     if (type === WorkoutScheduleType.Weekly) {
       for (let j = 1; j < 8; j += 1) {
-        const weekday_text = dayjs(day).set("day", j).format("YYYY-MM-DD");
+        const weekday = monday.set("day", j);
+        const weekday_text = weekday.format("YYYY-MM-DD");
         workout_plans_in_day[weekday_text] = workout_plans_in_day[weekday_text] || [];
-        const dd = days.find((v) => v.weekday === j);
-        if (dd) {
-          for (let a = 0; a < dd.workout_plans.length; a += 1) {
-            const pp = dd.workout_plans[a];
+        (() => {
+          // console.log("weekday.isBefore(start_date)", weekday_text, start_date.format("YYYY-MM-DD"));
+          if (weekday.isBefore(start_date.startOf("date"))) {
             workout_plans_in_day[weekday_text].push({
-              type: WorkoutScheduleDayType.Workout,
-              // day_text,
-              workout_plan: {
-                id: pp.id,
-                title: pp.title,
-                overview: "",
-                tags: "",
-              },
+              type: WorkoutScheduleDayType.Empty,
+              // day_text: dayjs(day).set("day", j).format("YYYY-MM-DD"),
+              workout_plan: { id: 0, title: "", overview: "", tags: "" },
+            });
+            return;
+          }
+          const dd = days.find((v) => v.weekday === j);
+          if (dd) {
+            for (let a = 0; a < dd.workout_plans.length; a += 1) {
+              const pp = dd.workout_plans[a];
+              workout_plans_in_day[weekday_text].push({
+                type: WorkoutScheduleDayType.Workout,
+                // day_text,
+                workout_plan: {
+                  id: pp.id,
+                  title: pp.title,
+                  overview: "",
+                  tags: "",
+                },
+              });
+            }
+          } else {
+            workout_plans_in_day[weekday_text].push({
+              type: WorkoutScheduleDayType.Resting,
+              // day_text: dayjs(day).set("day", j).format("YYYY-MM-DD"),
+              workout_plan: { id: 0, title: "", overview: "", tags: "" },
             });
           }
-        } else {
-          workout_plans_in_day[weekday_text].push({
-            type: WorkoutScheduleDayType.Resting,
-            // day_text: dayjs(day).set("day", j).format("YYYY-MM-DD"),
-            workout_plan: { id: 0, title: "", overview: "", tags: "" },
-          });
-        }
+        })();
       }
     }
     if (type === WorkoutScheduleType.Monthly) {

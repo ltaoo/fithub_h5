@@ -2,12 +2,14 @@
  * @file 用户注册
  */
 import { ViewComponent, ViewComponentProps } from "@/store/types";
+import { useViewModel } from "@/hooks";
 import { Button, Input } from "@/components/ui";
 
 import { BizError } from "@/domains/error";
 import { base, Handler } from "@/domains/base";
 import { InputCore, ButtonCore } from "@/domains/ui";
-import { useViewModel } from "@/hooks";
+import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { UserAccountForm } from "@/biz/user/account_form";
 
 function RegisterViewModel(props: ViewComponentProps) {
   const methods = {
@@ -17,30 +19,24 @@ function RegisterViewModel(props: ViewComponentProps) {
   };
 
   const ui = {
-    $input_email: new InputCore({
-      defaultValue: "",
-      placeholder: "请输入邮箱",
-      onChange(v) {
-        props.app.$user.inputEmail(v);
-      },
-    }),
-    $input_pwd: new InputCore({
-      defaultValue: "",
-      type: "password",
-      placeholder: "请输入密码",
-      onChange(v) {
-        props.app.$user.inputPassword(v);
-      },
-    }),
+    $form: UserAccountForm().ui.$form,
     $input_code: new InputCore({ defaultValue: "" }),
     $btn_submit: new ButtonCore({
       async onClick() {
-        ui.$btn_submit.setLoading(true);
-        const r = await props.app.$user.register();
-        ui.$btn_submit.setLoading(false);
+        const r = await ui.$form.validate();
         if (r.error) {
+          props.app.tip({ text: r.error.messages });
+          return;
+        }
+        const values = r.data;
+        props.app.$user.inputEmail(values.email);
+        props.app.$user.inputPassword(values.password);
+        ui.$btn_submit.setLoading(true);
+        const r2 = await props.app.$user.register();
+        ui.$btn_submit.setLoading(false);
+        if (r2.error) {
           props.app.tip({
-            text: [r.error.message],
+            text: [r2.error.message],
           });
           return;
         }
@@ -51,7 +47,7 @@ function RegisterViewModel(props: ViewComponentProps) {
     }),
     $btn_home: new ButtonCore({
       onClick() {
-        props.history.push("root.home_layout.index");
+        props.history.destroyAllAndPush("root.home_layout.index");
       },
     }),
   };
@@ -93,11 +89,11 @@ export const RegisterPage = (props: ViewComponentProps) => {
       <div class="space-y-4 rounded-md text-w-fg-0">
         <div>
           <div>邮箱</div>
-          <Input class="mt-1" store={vm.ui.$input_email} />
+          <Input class="mt-1" store={vm.ui.$form.fields.email.input} />
         </div>
         <div>
-          <div class="">密码</div>
-          <Input class="mt-1" store={vm.ui.$input_pwd} />
+          <div>密码</div>
+          <Input class="mt-1" store={vm.ui.$form.fields.password.input} />
         </div>
         {/* <div>
           <div>邀请码</div>

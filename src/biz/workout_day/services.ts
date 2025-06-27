@@ -650,7 +650,9 @@ export function fetchWorkoutDayCurStep(body: { id: number }) {
  * @param body
  * @returns
  */
-export function fetchWorkoutDayList(body: Partial<FetchParams> & { status: WorkoutDayStatus }) {
+export function fetchWorkoutDayList(
+  body: Partial<FetchParams> & Partial<{ status: WorkoutDayStatus; finished_at_start: Date; finished_at_end: Date }>
+) {
   return request.post<
     ListResponseWithCursor<{
       id: number;
@@ -666,6 +668,8 @@ export function fetchWorkoutDayList(body: Partial<FetchParams> & { status: Worko
     page_size: body.pageSize,
     page: body.page,
     status: body.status,
+    finished_at_start: body.finished_at_start,
+    finished_at_end: body.finished_at_end,
   });
 }
 

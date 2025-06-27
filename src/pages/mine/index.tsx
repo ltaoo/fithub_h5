@@ -34,6 +34,7 @@ import { Avatars } from "@/biz/student/constants";
 import { SelectViewModel } from "@/biz/select_base";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
+import { UserAccountForm } from "@/biz/user/account_form";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
@@ -219,33 +220,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
       ],
     }),
     $dialog_account_create: new DialogCore(),
-    $form_account: new ObjectFieldCore({
-      fields: {
-        email: new SingleFieldCore({
-          label: "邮箱",
-          rules: [
-            {
-              required: true,
-              maxLength: 18,
-              minLength: 5,
-              mode: "email",
-            },
-          ],
-          input: new InputCore({ defaultValue: "", placeholder: "请输入邮箱" }),
-        }),
-        password: new SingleFieldCore({
-          label: "密码",
-          rules: [
-            {
-              required: true,
-              maxLength: 18,
-              minLength: 3,
-            },
-          ],
-          input: new InputCore({ defaultValue: "", placeholder: "请输入密码", type: "password" }),
-        }),
-      },
-    }),
+    $form_account: UserAccountForm().ui.$form,
     $btn_account_create: new ButtonCore({
       async onClick() {
         ui.$btn_account_create.setLoading(true);

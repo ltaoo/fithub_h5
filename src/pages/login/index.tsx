@@ -9,52 +9,11 @@ import { base, Handler } from "@/domains/base";
 import { ButtonCore, InputCore } from "@/domains/ui";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { Result } from "@/domains/result";
+import { UserAccountForm } from "@/biz/user/account_form";
 
 function LoginViewModel(props: ViewComponentProps) {
   const ui = {
-    $form: new ObjectFieldCore({
-      rules: [],
-      fields: {
-        email: new SingleFieldCore({
-          label: "邮箱",
-          rules: [
-            {
-              required: true,
-              maxLength: 18,
-              minLength: 5,
-              mode: "email",
-            },
-          ],
-          input: new InputCore({ defaultValue: "", placeholder: "请输入邮箱" }),
-        }),
-        password: new SingleFieldCore({
-          label: "密码",
-          rules: [
-            {
-              required: true,
-              maxLength: 18,
-              minLength: 3,
-            },
-          ],
-          input: new InputCore({ defaultValue: "", placeholder: "请输入密码", type: "password" }),
-        }),
-      },
-    }),
-    // $input_email: new InputCore({
-    //   defaultValue: "",
-    //   placeholder: "请输入邮箱",
-    //   onChange(v) {
-    //     props.app.$user.inputEmail(v);
-    //   },
-    // }),
-    // $input_pwd: new InputCore({
-    //   defaultValue: "",
-    //   type: "password",
-    //   placeholder: "请输入密码",
-    //   onChange(v) {
-    //     props.app.$user.inputPassword(v);
-    //   },
-    // }),
+    $form: UserAccountForm().ui.$form,
     $btn_submit: new ButtonCore({
       async onClick() {
         const r = await ui.$form.validate();
