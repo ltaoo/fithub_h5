@@ -9,14 +9,14 @@ import { ScrollViewCore } from "@/domains/ui/scroll-view";
 import { cn } from "@/utils/index";
 
 export const ScrollView = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store, children, ...rest } = props;
+  // const { store, children, ...rest } = props;
 
   const [rotate, setRotate] = createSignal(false);
 
-  store.inDownOffset(() => {
+  props.store.inDownOffset(() => {
     setRotate(false);
   });
-  store.outDownOffset(() => {
+  props.store.outDownOffset(() => {
     setRotate(true);
   });
 
@@ -24,12 +24,12 @@ export const ScrollView = (props: { store: ScrollViewCore } & JSX.HTMLAttributes
     <ScrollViewPrimitive.Root
       class={cn("scroll-view w-full h-full overflow-y-auto", props.class)}
       style={props.style}
-      store={store}
+      store={props.store}
       // onClick={rest.onClick}
     >
-      <ScrollViewPrimitive.Indicator class="relative w-full overflow-hidden text-center" store={store}>
+      <ScrollViewPrimitive.Indicator class="relative w-full overflow-hidden text-center" store={props.store}>
         <div class="absolute left-0 bottom-0 w-full min-h-[30px] py-[10px]">
-          <ScrollViewPrimitive.Progress class="w-[50px] h-[50px] mx-auto rounded-full bg-w-bg-0" store={store}>
+          <ScrollViewPrimitive.Progress class="w-[50px] h-[50px] mx-auto rounded-full bg-w-bg-0" store={props.store}>
             <div
               class={cn(
                 "inline-flex justify-center items-center w-full h-full",
@@ -42,7 +42,7 @@ export const ScrollView = (props: { store: ScrollViewCore } & JSX.HTMLAttributes
               <ArrowDown width={18} height={18} />
             </div>
           </ScrollViewPrimitive.Progress>
-          <ScrollViewPrimitive.Loading class="w-[50px] h-[50px] mx-auto rounded-full bg-w-bg-0" store={store}>
+          <ScrollViewPrimitive.Loading class="w-[50px] h-[50px] mx-auto rounded-full bg-w-bg-0" store={props.store}>
             <div class="inline-flex justify-center items-center w-full h-full">
               <Loader2 class="animate animate-spin" width={18} height={18} />
             </div>

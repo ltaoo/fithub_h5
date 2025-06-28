@@ -31,7 +31,7 @@ import { RequestCore } from "@/domains/request";
 import { BizError } from "@/domains/error";
 import { toNumber } from "@/utils/primitive";
 
-import { ActionInput, ActionInputViewModel } from "./components/action-input";
+import { ActionInput, StepInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
 
 function WorkoutPlanUpdatePageViewModel(props: ViewComponentProps) {

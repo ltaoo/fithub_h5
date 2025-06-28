@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { request } from "@/biz/requests";
 import { idsMapValue } from "@/biz/services/utils";
 import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
-import { SetValueUnit } from "@/biz/input_set_value";
+import { getSetValueUnit, SetValueUnit } from "@/biz/input_set_value";
 import { TheResponseOfFetchFunction } from "@/domains/request";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
@@ -21,58 +21,13 @@ import {
   WorkoutPlanActionPayload,
   WorkoutPlanPreviewPayload,
   WorkoutPlanStepJSON250607,
+  WorkoutPlanBodyDetailsJSON250424,
+  WorkoutPlanStepContent,
+  WorkoutPlanStepJSON250424,
+  WorkoutPlanBodyStepJSON250627,
+  WorkoutPlanBodyDetailsJSON250627,
 } from "./types";
 import { map_weekday_text } from "./workout_schedule";
-
-export type WorkoutPlanDetailsJSON250424 = {
-  v: "250424";
-  steps: WorkoutPlanStepJSON250424[];
-};
-/** 可以理解成训练计划中的「动作组」 */
-export type WorkoutPlanStepJSON250424 = {
-  /** 组类型 */
-  set_type: WorkoutPlanSetType;
-  /** 组动作 */
-  actions: {
-    action_id: number;
-    /** 动作 */
-    action: {
-      id: number;
-      zh_name: string;
-    };
-    /** 计数 */
-    reps: number;
-    /** 技术单位 */
-    reps_unit: SetValueUnit;
-    /** 负重 */
-    weight: string;
-    /** 动作间歇 */
-    rest_duration: number;
-  }[];
-  /** 组数 */
-  set_count: number;
-  /** 组间歇 */
-  set_rest_duration: number;
-  /** 组负重，一般都用不上 */
-  set_weight: string;
-  /** 组说明 */
-  set_note: string;
-};
-type WorkoutPlanStepContent = {
-  idx: number;
-  set_type: WorkoutPlanSetType;
-  set_count: number;
-  set_rest_duration: number;
-  set_weight: string;
-  set_note: string;
-  actions: {
-    action: { id: number; zh_name: string };
-    reps: number;
-    reps_unit: SetValueUnit;
-    weight: string;
-    rest_duration: number;
-  }[];
-};
 
 enum WorkoutPlanPublishStatus {
   Unknown = 0,
@@ -86,7 +41,7 @@ export function createWorkoutPlan(body: {
   tags: string;
   level: number;
   status: WorkoutPlanPublishStatus;
-  details: WorkoutPlanDetailsJSON250424;
+  details: WorkoutPlanBodyDetailsJSON250627;
   estimated_duration: number;
   points: string;
   suggestions: string;
@@ -105,7 +60,7 @@ export function updateWorkoutPlan(body: {
   overview: string;
   tags: string;
   level: number;
-  details: WorkoutPlanDetailsJSON250424;
+  details: WorkoutPlanBodyDetailsJSON250627;
   estimated_duration: number;
   points: string;
   suggestions: string;
@@ -118,6 +73,94 @@ export function updateWorkoutPlan(body: {
   });
 }
 
+export function parseWorkoutPlanStepsString(details: string) {
+  const r = parseJSONStr<WorkoutPlanBodyDetailsJSON250424 | WorkoutPlanBodyDetailsJSON250627>(details);
+  if (r.error) {
+    return [];
+  }
+  const { v, steps } = r.data;
+  const result: WorkoutPlanStepContent[] = [];
+  if (["250424", "250607"].includes(v)) {
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i] as WorkoutPlanStepJSON250607;
+      result.push({
+        idx: i,
+        set_type: step.set_type as WorkoutPlanSetType,
+        set_count: String(step.set_count),
+        set_rest_duration: {
+          num: String(step.set_rest_duration),
+          unit: getSetValueUnit("秒"),
+        },
+        set_weight: (() => {
+          const m1 = step.set_weight.match(/([0-9]{1,})RM/);
+          if (m1) {
+            return {
+              num: m1[1],
+              unit: getSetValueUnit("RM"),
+            };
+          }
+          const m2 = step.set_weight.match(/([0-9]{1,})RPE/);
+          if (m2) {
+            return {
+              num: m2[1],
+              unit: getSetValueUnit("RPE"),
+            };
+          }
+          return {
+            num: "8",
+            unit: getSetValueUnit("RPE"),
+          };
+        })(),
+        set_note: step.set_note,
+        set_tags: [],
+        actions: step.actions.map((act) => {
+          return {
+            action: {
+              id: act.action.id,
+              zh_name: act.action.zh_name,
+            },
+            reps: {
+              num: String(act.reps),
+              unit: act.reps_unit,
+            },
+            weight: {
+              num: act.weight,
+              unit: getSetValueUnit("RM"),
+            },
+            rest_duration: {
+              num: String(act.rest_duration),
+              unit: getSetValueUnit("秒"),
+            },
+          };
+        }),
+      });
+    }
+  }
+  if (v === "250627") {
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i] as WorkoutPlanBodyStepJSON250627;
+      result.push({
+        idx: i,
+        set_type: step.set_type as WorkoutPlanSetType,
+        set_count: String(step.set_count),
+        set_rest_duration: step.set_rest_duration,
+        set_weight: step.set_weight,
+        set_note: step.set_note,
+        set_tags: step.set_tags.split(",").filter(Boolean),
+        actions: step.actions.map((act) => {
+          return {
+            action: act.action,
+            reps: act.reps,
+            weight: act.weight,
+            rest_duration: act.rest_duration,
+          };
+        }),
+      });
+    }
+  }
+  return result;
+}
+
 export function fetchWorkoutPlanProfile(body: { id: number }) {
   return request.post<{
     id: number;
@@ -127,7 +170,9 @@ export function fetchWorkoutPlanProfile(body: { id: number }) {
     level: number;
     estimated_duration: number;
     suggestions: string;
-    steps: WorkoutPlanStepJSON250607[];
+    details: string;
+    // details: WorkoutPlanBodyDetailsJSON250424 | WorkoutPlanBodyDetailsJSON250627;
+    // steps: (WorkoutPlanStepJSON250607 | WorkoutPlanStepJSON250627)[];
     muscle_ids: string;
     equipment_ids: string;
     creator: {
@@ -139,36 +184,6 @@ export function fetchWorkoutPlanProfile(body: { id: number }) {
   }>("/api/workout_plan/profile", { id: body.id });
 }
 
-export function parseWorkoutPlanStepsString(details: string) {
-  const r = parseJSONStr<WorkoutPlanDetailsJSON250424>(details);
-  if (r.error) {
-    return [];
-  }
-  const data = r.data.steps;
-  const result: WorkoutPlanStepContent[] = [];
-  const steps = data;
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    result.push({
-      idx: i,
-      set_type: step.set_type as WorkoutPlanSetType,
-      set_count: Number(step.set_count),
-      set_rest_duration: Number(step.set_rest_duration),
-      set_weight: step.set_weight,
-      set_note: step.set_note,
-      actions: step.actions.map((act) => {
-        return {
-          action: act.action,
-          reps: act.reps,
-          reps_unit: act.reps_unit,
-          weight: act.weight,
-          rest_duration: act.rest_duration,
-        };
-      }),
-    });
-  }
-  return result;
-}
 export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWorkoutPlanProfile>) {
   if (r.error) {
     return Result.Err(r.error);
@@ -180,7 +195,7 @@ export function fetchWorkoutPlanProfileProcess(r: TmpRequestResp<typeof fetchWor
     overview: v.overview,
     tags: v.tags.split(",").filter(Boolean),
     level: v.level,
-    steps: v.steps,
+    steps: parseWorkoutPlanStepsString(v.details),
     estimated_duration: v.estimated_duration,
     estimated_duration_text: seconds_to_hour_with_template(v.estimated_duration, seconds_to_hour_template1),
     suggestions: (() => {

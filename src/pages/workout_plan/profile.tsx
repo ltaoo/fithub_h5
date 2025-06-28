@@ -133,8 +133,8 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
       _students = _students.filter((v) => v.id !== student.id);
       methods.refresh();
     },
-    handleClickWorkoutAction(act: { action_id: number }) {
-      ui.$workout_action.methods.fetch({ id: act.action_id });
+    handleClickWorkoutAction(act: { id: number }) {
+      ui.$workout_action.methods.fetch({ id: act.id });
       ui.$workout_action.ui.$dialog.show();
     },
     async handleClickContentOfWorkoutPlan(v: { id: number }) {
@@ -423,13 +423,13 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                       <div
                                         class="flex items-center gap-2 text-sm"
                                         onClick={() => {
-                                          vm.methods.handleClickWorkoutAction(action);
+                                          vm.methods.handleClickWorkoutAction(action.action);
                                         }}
                                       >
                                         <span class="text-w-fg-0">{action.action.zh_name}</span>
                                         <span class="flex items-end text-blue-400 font-medium">
-                                          <div>{action.reps}</div>
-                                          <div class="text-sm">{action.reps_unit}</div>
+                                          <div>{action.reps.num}</div>
+                                          <div class="text-sm">{action.reps.unit}</div>
                                         </span>
                                       </div>
                                     )}
@@ -452,13 +452,13 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                       <div
                                         class="flex items-center gap-2 text-sm"
                                         onClick={() => {
-                                          vm.methods.handleClickWorkoutAction(action);
+                                          vm.methods.handleClickWorkoutAction(action.action);
                                         }}
                                       >
                                         <span class="text-w-fg-0">{action.action.zh_name}</span>
                                         <span class="text-blue-400 font-medium">
-                                          {action.reps}
-                                          {action.reps_unit}
+                                          {action.reps.num}
+                                          {action.reps.unit}
                                         </span>
                                       </div>
                                     )}
@@ -481,13 +481,13 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                       <div
                                         class="flex items-center gap-2 text-sm"
                                         onClick={() => {
-                                          vm.methods.handleClickWorkoutAction(action);
+                                          vm.methods.handleClickWorkoutAction(action.action);
                                         }}
                                       >
                                         <span class="text-w-fg-0">{action.action.zh_name}</span>
                                         <span class="flex items-center text-blue-400 font-medium">
-                                          <div>{action.reps}</div>
-                                          <div class="text-sm">{action.reps_unit}</div>
+                                          <div>{action.reps.num}</div>
+                                          <div class="text-sm">{action.reps.unit}</div>
                                         </span>
                                       </div>
                                     )}
@@ -512,7 +512,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                   <div
                                     class="text-sm"
                                     onClick={() => {
-                                      vm.methods.handleClickWorkoutAction(step.actions[0]);
+                                      vm.methods.handleClickWorkoutAction(step.actions[0].action);
                                     }}
                                   >
                                     <div class="text-w-fg-0">{step.actions[0].action.zh_name}</div>
@@ -522,8 +522,8 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                       {(action) => (
                                         <div class="flex items-center gap-2 text-sm">
                                           <span class="flex items-center text-blue-400 font-medium">
-                                            <div>{action.reps}</div>
-                                            <div class="text-sm">{action.reps_unit}</div>
+                                            <div>{action.reps.num}</div>
+                                            <div class="text-sm">{action.reps.unit}</div>
                                           </span>
                                         </div>
                                       )}

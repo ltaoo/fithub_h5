@@ -22,7 +22,7 @@ import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { ScrollViewCore } from "@/domains/ui";
 
-import { ActionInput, ActionInputViewModel } from "./components/action-input";
+import { ActionInput, StepInputViewModel } from "./components/action-input";
 import { WorkoutPlanEditorViewModel } from "./model";
 
 function WorkoutPlanCreateViewModel(props: ViewComponentProps) {
@@ -180,7 +180,9 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                       if (!$field) {
                                         return;
                                       }
-                                      vm.ui.$input_act_remark.setValue($field.field.input.ui.$input_set_remark.value);
+                                      vm.ui.$input_act_remark.setValue(
+                                        $field.field.input.ui.$form.fields.set_note.value
+                                      );
                                       vm.ui.$dialog_act_remark.show();
                                     }}
                                   >

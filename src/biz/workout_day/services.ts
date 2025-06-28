@@ -1,14 +1,9 @@
 import dayjs, { Dayjs } from "dayjs";
 
 import { request } from "@/biz/requests";
-import { WorkoutPlanActionPayload, WorkoutPlanStepJSON250607 } from "@/biz/workout_plan/types";
 import { WorkoutPlanStepType, WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import { ListResponseWithCursor } from "@/biz/requests/types";
-import {
-  parseWorkoutPlanStepsString,
-  WorkoutPlanDetailsJSON250424,
-  WorkoutPlanStepJSON250424,
-} from "@/biz/workout_plan/services";
+import { parseWorkoutPlanStepsString } from "@/biz/workout_plan/services";
 import { getSetValueUnit, SetValueUnit } from "@/biz/input_set_value";
 import { TmpRequestResp } from "@/domains/request/utils";
 import { Result } from "@/domains/result";

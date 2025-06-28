@@ -4,7 +4,7 @@ import { ScrollViewCore } from "@/domains/ui/scroll-view";
 import { connectScroll, connectIndicator } from "@/domains/ui/scroll-view/connect.web";
 
 export const Root = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store, children, ...rest } = props;
+  // const { store, children, ...rest } = props;
 
   let $elm = undefined as HTMLDivElement | undefined;
 
@@ -15,12 +15,12 @@ export const Root = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLD
     if (props.store.disabled) {
       return;
     }
-    store.setRect({
+    props.store.setRect({
       width: $elm.clientWidth,
       height: $elm.clientHeight,
     });
-    store.setMounted();
-    connectScroll(store, $elm);
+    props.store.setMounted();
+    connectScroll(props.store, $elm);
   });
 
   return (
@@ -33,7 +33,7 @@ export const Root = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLD
  * 下拉刷新指示器
  */
 export const Indicator = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store } = props;
+  // const { store } = props;
 
   let $elm = undefined as HTMLDivElement | undefined;
   // const [visible, setVisible] = useState(true);
@@ -46,9 +46,9 @@ export const Indicator = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<
       return;
     }
     // 在这里里面会监听滚动逻辑，并改变 height
-    connectIndicator(store, $elm);
-    if (store.needHideIndicator) {
-      store.hideIndicator();
+    connectIndicator(props.store, $elm);
+    if (props.store.needHideIndicator) {
+      props.store.hideIndicator();
     }
   });
 
@@ -59,18 +59,18 @@ export const Indicator = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<
   );
 };
 export const Progress = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store } = props;
+  // const { store } = props;
 
   let $node = undefined as HTMLDivElement | undefined;
 
-  store.inDownOffset(() => {
+  props.store.inDownOffset(() => {
     // console.log("[]Progress - store.onInOffset", ref);
     if (!$node) {
       return;
     }
     $node.style.display = "block";
   });
-  store.onPullToRefresh(() => {
+  props.store.onPullToRefresh(() => {
     // console.log("[]Progress - store.onPullToRefresh");
     if (!$node) {
       return;
@@ -86,18 +86,18 @@ export const Progress = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<H
 };
 
 export const Loading = (props: { store: ScrollViewCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store } = props;
+  // const { store } = props;
 
   let $node = undefined as HTMLDivElement | undefined;
 
-  store.inDownOffset(() => {
+  props.store.inDownOffset(() => {
     // console.log("[]Loading - store.onInOffset", ref);
     if (!$node) {
       return;
     }
     $node.style.display = "none";
   });
-  store.onPullToRefresh(() => {
+  props.store.onPullToRefresh(() => {
     // console.log("[]Loading - store.onPullToRefresh", ref);
     if (!$node) {
       return;

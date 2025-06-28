@@ -59,8 +59,8 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
           <ChevronDown class="h-4 w-4 opacity-50" />
         </SelectPrimitive.Icon>
       </div>
-      <Portal>
-        <Presence store={props.store.presence}>
+      <Presence store={props.store.presence}>
+        <Portal>
           <div
             classList={{
               "z-[998] fixed inset-0 bg-black opacity-20 duration-200": true,
@@ -122,8 +122,8 @@ export const Select = (props: { store: SelectCore<any>; position?: "popper" } & 
               </div>
             </div>
           </div>
-        </Presence>
-      </Portal>
+        </Portal>
+      </Presence>
     </div>
   );
 };

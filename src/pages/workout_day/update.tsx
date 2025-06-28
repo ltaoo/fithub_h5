@@ -77,15 +77,8 @@ import {
   fetchContentProfileOfWorkoutPlan,
   fetchContentProfileOfWorkoutPlanProcess,
 } from "@/biz/workout_plan/services";
-import {
-  calc_bottom_padding_need_add,
-  has_num_value,
-  has_value,
-  remove_arr_item,
-  sleep,
-  toFixed,
-  update_arr_item,
-} from "@/utils";
+import { calc_bottom_padding_need_add } from "@/biz/input_with_keyboard/utils";
+import { has_num_value, has_value, remove_arr_item, sleep, toFixed, update_arr_item } from "@/utils";
 import { toNumber } from "@/utils/primitive";
 
 import { SetCountdownView } from "./components/set-countdown";
@@ -2041,13 +2034,13 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                                                         store={vm.ui.$fields_reps.get(act_uid)!}
                                                         class=""
                                                         onClick={(event) => {
-                                                          const client = event.currentTarget.getBoundingClientRect();
                                                           console.log(
                                                             "[]beforeShowNumInput2",
                                                             step_idx(),
                                                             set_idx(),
                                                             act_idx()
                                                           );
+                                                          const client = event.currentTarget.getBoundingClientRect();
                                                           vm.methods.handleShowNumKeyboard({
                                                             for: "reps",
                                                             step_idx: step_idx(),

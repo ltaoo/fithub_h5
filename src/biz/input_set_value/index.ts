@@ -1,10 +1,73 @@
 import { base, Handler } from "@/domains/base";
 import { InputCore, PopoverCore } from "@/domains/ui";
 
-export type SetValueUnit = "公斤" | "磅" | "秒" | "分" | "次" | "千米" | "米" | "千卡";
+export type SetValueUnit =
+  | "公斤"
+  | "磅"
+  | "RM"
+  | "%1RM"
+  | "RPE"
+  | "RIR"
+  | "To Fail" // To Fail 是计数单位啊，表示做到 力竭
+  | "次"
+  | "秒"
+  | "分"
+  | "千米"
+  | "米"
+  | "千卡";
 export function getSetValueUnit(v: SetValueUnit): SetValueUnit {
   return v;
 }
+export const RepsSetValueOptions = [
+  {
+    label: "次",
+    value: getSetValueUnit("次"),
+  },
+  {
+    label: "秒",
+    value: getSetValueUnit("秒"),
+  },
+  {
+    label: "分",
+    value: getSetValueUnit("分"),
+  },
+  {
+    label: "千米",
+    value: getSetValueUnit("千米"),
+  },
+  {
+    label: "米",
+    value: getSetValueUnit("米"),
+  },
+];
+export const WeightSetValueOptions = [
+  {
+    label: "RM",
+    value: getSetValueUnit("RM"),
+  },
+  {
+    label: "%1RM",
+    value: getSetValueUnit("%1RM"),
+  },
+  {
+    label: "RPE",
+    value: getSetValueUnit("RPE"),
+  },
+  {
+    label: "RIR",
+    value: getSetValueUnit("RIR"),
+  },
+];
+export const RestSetValueOptions = [
+  {
+    label: "秒",
+    value: getSetValueUnit("秒"),
+  },
+  {
+    label: "分",
+    value: getSetValueUnit("分"),
+  },
+];
 
 export function SetValueInputViewModel(props: { defaultValue?: string; placeholder?: string; unit?: SetValueUnit }) {
   const methods = {

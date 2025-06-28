@@ -3,6 +3,7 @@
  */
 import { For, Match, Show, Switch } from "solid-js";
 
+import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
 import { Input } from "@/components/ui";
 import { Select } from "@/components/ui/select";
@@ -12,9 +13,52 @@ import { InputCore, SelectCore } from "@/domains/ui";
 import { ArrayFieldCore, ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { FormInputInterface } from "@/domains/ui/formv2/types";
 import { WorkoutActionType } from "@/biz/workout_action/constants";
-import { getSetValueUnit, SetValueUnit } from "@/biz/input_set_value";
+import { getSetValueUnit, RepsSetValueOptions, SetValueUnit, WeightSetValueOptions } from "@/biz/input_set_value";
 import { WorkoutPlanSetType, WorkoutPlanStepTypeTextMap, WorkoutSetTypeTextMap } from "@/biz/workout_plan/constants";
+import { WeightInputModel } from "@/biz/input_with_keyboard/input_weight";
+import { RepsInputModel } from "@/biz/input_with_keyboard/input_reps";
+import { RestInputModel } from "@/biz/input_with_keyboard/input_rest";
 import { diff, diff2 } from "@/utils/diff";
+
+import { SetValueArrayField, SetValueField } from "./field";
+import { WeightInputView } from "./input-weight";
+import { RepsInputView } from "./input-reps";
+import { NumInputView } from "./input-num";
+import { InputWithKeyboardModel } from "@/biz/input_with_keyboard";
+
+export function DefaultSetValue(action: { id: number; zh_name: string }) {
+  return {
+    set_type: WorkoutPlanSetType.Normal,
+    set_count: "3",
+    set_rest_duration: {
+      num: "90",
+      unit: getSetValueUnit("秒"),
+    },
+    set_weight: {
+      num: "6",
+      unit: getSetValueUnit("RPE"),
+    },
+    set_note: "",
+    // set_tags: [],
+    actions: [
+      {
+        action,
+        reps: {
+          num: "12",
+          unit: getSetValueUnit("次"),
+        },
+        weight: {
+          num: "12",
+          unit: getSetValueUnit("RM"),
+        },
+        rest_duration: {
+          num: "30",
+          unit: getSetValueUnit("秒"),
+        },
+      },
+    ],
+  };
+}
 
 function WorkoutActionInput() {
   let _value: { id: number; zh_name: string } | null = null;
@@ -40,7 +84,7 @@ function WorkoutActionInput() {
       return null;
     },
     get value() {
-      return _value;
+      return _state.value;
     },
     setValue(v: { id: number; zh_name: string }) {
       _value = v;
@@ -58,84 +102,59 @@ function WorkoutActionInput() {
 }
 type WorkoutActionInput = ReturnType<typeof WorkoutActionInput>;
 
-export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () => void }) {
+export function StepInputViewModel(props: {
+  defaultValue?: {};
+  app: ViewComponentProps["app"];
+  onChange?: () => void;
+}) {
   const ui = {
-    $input_set_count: new InputCore({ defaultValue: 3, type: "number" }),
-    $input_set_rest: new InputCore({ defaultValue: 90, type: "number" }),
-    $input_set_weight: new InputCore({ defaultValue: "RPE 6" }),
-    /** 备注 */
-    $input_set_remark: new InputCore({ defaultValue: "" }),
-    //  new InputCore({
-    //       defaultValue: "3",
-    //     })
-    //     $inputs_reps: new Map<string, InputCore<string>>(),
-    //     new InputCore({
-    //       defaultValue: "12",
-    //     }),
-    //     $inputs_weight: new Map<string, InputCore<string>>(),
-    //     new InputCore({
-    //       defaultValue: "12RM",
-    //     }),
-    $sets: new ArrayFieldCore({
-      label: "",
-      name: "",
-      field(count) {
-        return new ObjectFieldCore({
-          label: "",
-          name: "",
-          fields: {
-            action: new SingleFieldCore({
-              label: "动作",
-              name: "action",
-              input: WorkoutActionInput(),
-            }),
-            reps: new SingleFieldCore({
-              label: "计数",
-              name: "reps",
-              input: new InputCore({ unique_id: "reps_input", defaultValue: 12, type: "number" }),
-            }),
-            reps_unit: new SingleFieldCore({
-              label: "计数单位",
-              name: "reps_unit",
-              input: new SelectCore({
-                defaultValue: getSetValueUnit("次"),
-                options: [
-                  {
-                    label: "次",
-                    value: getSetValueUnit("次"),
-                  },
-                  {
-                    label: "秒",
-                    value: getSetValueUnit("秒"),
-                  },
-                  {
-                    label: "分",
-                    value: getSetValueUnit("分"),
-                  },
-                  {
-                    label: "千米",
-                    value: getSetValueUnit("千米"),
-                  },
-                  {
-                    label: "米",
-                    value: getSetValueUnit("米"),
-                  },
-                ],
-              }),
-            }),
-            weight: new SingleFieldCore({
-              label: "阻力",
-              name: "weight",
-              input: new InputCore({ defaultValue: "12RM" }),
-            }),
-            rest_duration: new SingleFieldCore({
-              label: "间歇",
-              name: "rest_duration",
-              hidden: true,
-              input: new InputCore({ defaultValue: "0" }),
-            }),
+    $form: new ObjectFieldCore({
+      fields: {
+        set_count: new SingleFieldCore({
+          label: "组数",
+          input: InputWithKeyboardModel({ defaultValue: "3", app: props.app }),
+        }),
+        set_rest_duration: new SingleFieldCore({
+          label: "组间歇",
+          input: RestInputModel({ defaultValue: "90", suffix: getSetValueUnit("秒"), app: props.app }),
+        }),
+        set_weight: new SingleFieldCore({
+          label: "强度",
+          input: WeightInputModel({ defaultValue: "6", suffix: getSetValueUnit("RPE"), app: props.app }),
+        }),
+        set_note: new SingleFieldCore({
+          label: "备注",
+          input: new InputCore({ defaultValue: "", placeholder: "该动作的额外说明或注意事项" }),
+        }),
+        actions: new ArrayFieldCore({
+          field() {
+            return new ObjectFieldCore({
+              fields: {
+                action: new SingleFieldCore({
+                  label: "动作",
+                  name: "action",
+                  input: WorkoutActionInput(),
+                }),
+                reps: new SingleFieldCore({
+                  label: "计数",
+                  name: "reps",
+                  input: RepsInputModel({ defaultValue: "12", suffix: getSetValueUnit("次"), app: props.app }),
+                }),
+                weight: new SingleFieldCore({
+                  label: "阻力",
+                  name: "weight",
+                  input: WeightInputModel({ defaultValue: "12", suffix: getSetValueUnit("RM"), app: props.app }),
+                }),
+                rest_duration: new SingleFieldCore({
+                  label: "间歇",
+                  name: "rest_duration",
+                  hidden: true,
+                  input: RestInputModel({ defaultValue: "30", suffix: getSetValueUnit("秒"), app: props.app }),
+                }),
+              },
+            });
           },
-        });
+        }),
       },
     }),
   };
@@ -148,13 +167,23 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       zh_name: string;
     };
     /** 计数 */
-    reps: number;
+    reps: {
+      num: string;
+      unit: SetValueUnit;
+    };
     /** 计数单位 */
-    reps_unit: SetValueUnit;
+    // reps_unit: SetValueUnit;
     /** 阻力，有多种情况，可以是 50%1RM/12RM/RPE 6/RIR 2/自重/无 等等 */
-    weight: string;
+    weight: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    // weight_unit: SetValueUnit;
     /** 动作间隔休息时间 */
-    rest_duration: number;
+    rest_duration: {
+      num: string;
+      unit: SetValueUnit;
+    };
   }[] = [];
 
   let _state = {
@@ -162,19 +191,24 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       return _type;
     },
     get value() {
+      // return {
+      //   /** 组内动作 */
+      //   actions: _set_actions,
+      //   /** 组类型 */
+      //   set_type: _type,
+      //   /** 组数 */
+      //   set_count: ui.$input_set_count.value,
+      //   /** 组间歇 */
+      //   set_rest_duration: ui.$input_set_rest.value,
+      //   /** 组负荷，一般用于 HIIT */
+      //   set_weight: ui.$input_set_weight.value,
+      //   set_weight_unit: ui.$input_set_weight_unit.value,
+      //   /** 动作说明 */
+      //   set_note: ui.$input_set_remark.value,
+      // };
       return {
-        /** 组内动作 */
-        actions: _set_actions,
-        /** 组类型 */
         set_type: _type,
-        /** 组数 */
-        set_count: ui.$input_set_count.value,
-        /** 组间歇 */
-        set_rest_duration: ui.$input_set_rest.value,
-        /** 组负荷，一般用于 HIIT */
-        set_weight: ui.$input_set_weight.value,
-        /** 动作说明 */
-        set_note: ui.$input_set_remark.value,
+        ...ui.$form.value,
       };
     },
     get action() {
@@ -183,9 +217,9 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
     get actions() {
       return _set_actions;
     },
-    get fields() {
-      return ui.$sets.state.fields;
-    },
+    // get fields() {
+    //   return ui.$sets.state.fields;
+    // },
   };
   enum Events {
     Change,
@@ -197,16 +231,17 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$sets.onChange(async (changed) => {
+  ui.$form.fields.actions.onChange(async (changed) => {
     // console.log("[COMPONENT]workout_plan/component/action-input", changed);
-    const field = ui.$sets.mapFieldWithIndex(changed.idx);
+    const field = ui.$form.fields.actions.mapFieldWithIndex(changed.idx);
     if (field) {
       const r = await field.field.validate();
       if (r.data) {
         const value = r.data;
-        _set_actions[changed.idx].reps = Number(value.reps);
-        _set_actions[changed.idx].reps_unit = value.reps_unit!;
+        _set_actions[changed.idx].reps = value.reps;
+        // _set_actions[changed.idx].reps_unit = value.reps.unit;
         _set_actions[changed.idx].weight = value.weight;
+        // _set_actions[changed.idx].weight_unit = value.weight.unit;
       }
     }
     bus.emit(Events.Change, _state.value);
@@ -235,28 +270,36 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
         return;
       }
       if ([WorkoutPlanSetType.HIIT].includes(type)) {
-        ui.$sets.showField("rest_duration");
-        ui.$sets.setFieldValue("reps_unit", getSetValueUnit("秒"));
-        ui.$sets.setFieldValue("reps", "30");
+        ui.$form.fields.actions.showField("rest_duration");
+        ui.$form.fields.actions.setFieldValue("reps_unit", getSetValueUnit("秒"));
+        ui.$form.fields.actions.setFieldValue("reps", "30");
         _set_actions = _set_actions.map((act) => {
           return {
             action: act.action,
-            reps: 30,
-            reps_unit: getSetValueUnit("秒"),
+            reps: {
+              num: "30",
+              unit: getSetValueUnit("秒"),
+            },
+            // reps_unit: ,
             weight: act.weight,
+            // weight_unit: ,
             rest_duration: act.rest_duration,
           };
         });
       } else {
-        ui.$sets.hideField("rest_duration");
-        ui.$sets.setFieldValue("reps_unit", getSetValueUnit("次"));
-        ui.$sets.setFieldValue("reps", 12);
+        ui.$form.fields.actions.hideField("rest_duration");
+        ui.$form.fields.actions.setFieldValue("reps_unit", getSetValueUnit("次"));
+        ui.$form.fields.actions.setFieldValue("reps", 12);
         _set_actions = _set_actions.map((act) => {
           return {
             action: act.action,
-            reps: 12,
-            reps_unit: getSetValueUnit("次"),
+            reps: {
+              num: "12",
+              unit: getSetValueUnit("次"),
+            },
+            // reps_unit: ,
             weight: act.weight,
+            // weight_unit: getSetValueUnit("RM"),
             rest_duration: act.rest_duration,
           };
         });
@@ -265,29 +308,29 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
     },
     setValue(value: {
       type?: WorkoutPlanSetType;
-      set_count?: number;
-      set_rest_duration?: number;
-      set_weight?: string;
+      set_count?: string;
+      set_rest_duration?: { num: string; unit: SetValueUnit };
+      set_weight?: { num: string; unit: SetValueUnit };
       set_note?: string;
       actions: typeof _set_actions;
     }) {
       if (value.set_count) {
-        ui.$input_set_count.setValue(value.set_count);
+        ui.$form.fields.set_count.setValue(value.set_count);
       }
       if (value.set_rest_duration) {
-        ui.$input_set_rest.setValue(value.set_rest_duration);
+        ui.$form.fields.set_rest_duration.setValue(value.set_rest_duration);
       }
       if (value.set_weight) {
-        ui.$input_set_weight.setValue(value.set_weight);
+        ui.$form.fields.set_weight.setValue(value.set_weight);
       }
       if (value.set_note) {
-        ui.$input_set_remark.setValue(value.set_note);
+        ui.$form.fields.set_note.setValue(value.set_note);
       }
       // console.log("[COMPONENT]action-input - setValue", value);
       if (value.type !== undefined) {
         _type = value.type;
         if ([WorkoutPlanSetType.HIIT].includes(_type)) {
-          ui.$sets.showField("rest_duration");
+          ui.$form.fields.actions.showField("rest_duration");
         }
       }
       (() => {
@@ -299,7 +342,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
           // console.log("[COMPONENT]action-input - setValue diff", nodes_updated);
           for (let i = 0; i < nodes_updated.length; i += 1) {
             const node = nodes_updated[i];
-            const field = ui.$sets.fields.find((f) => {
+            const field = ui.$form.fields.actions.fields.find((f) => {
               // console.log("[COMPONENT]action-input - setValue walk $sets.fields", f.id, f.field.value);
               return f.field.value.action?.id === node.action.id;
             });
@@ -315,17 +358,20 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
           }
           for (let i = 0; i < nodes_removed.length; i += 1) {
             const node = nodes_removed[i];
-            const field = ui.$sets.fields.find((f) => f.field.value.action?.id === node.action.id);
+            const field = ui.$form.fields.actions.fields.find((f) => f.field.value.action?.id === node.action.id);
             if (field) {
-              ui.$sets.remove(field.id);
+              ui.$form.fields.actions.remove(field.id);
             }
           }
           for (let i = 0; i < nodes_added.length; i += 1) {
             const node = nodes_added[i];
-            const $input = ui.$sets.append();
+            const $input = ui.$form.fields.actions.append();
             if ([WorkoutPlanSetType.HIIT].includes(_type)) {
-              $input.fields.reps_unit.setValue("秒");
-              $input.fields.reps.setValue(30);
+              // $input.fields.reps_unit.setValue("秒");
+              $input.fields.reps.setValue({
+                num: "30",
+                unit: getSetValueUnit("秒"),
+              });
               $input.fields.rest_duration.show();
               // $input.fields.rest_duration.setValue("30");
             }
@@ -338,50 +384,40 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
       bus.emit(Events.StateChange, { ..._state });
     },
     setRemark(v: string) {
-      ui.$input_set_remark.setValue(v);
+      ui.$form.fields.set_note.setValue(v);
     },
     /** 递增递减组增加组 */
     appendSet() {
-      const $first = ui.$sets.fields[0];
-      const $created = ui.$sets.append();
+      const $first = ui.$form.fields.actions.fields[0];
+      const $created = ui.$form.fields.actions.append();
       const idx = _set_actions.length;
       const prev_weight = $first.field.value.weight;
-      const value_weight = ((): { type: "RM" | "%1RM" | "RIR" | "RPE" | "unknown"; v: string } => {
-        const r1 = prev_weight.match(/([0-9]{1,})([rR][mM])/);
-        if (r1) {
-          return { type: "RM", v: r1[1] };
-        }
-        const r2 = prev_weight.match(/([0-9]{1,})(%1[rR][mM])/);
-        if (r2) {
-          return { type: "%1RM", v: r2[1] };
-        }
-        const r3 = prev_weight.match(/([0-9]{1,})([rR][iI][rR])/);
-        if (r3) {
-          return { type: "RIR", v: r3[1] };
-        }
-        const r4 = prev_weight.match(/([0-9]{1,})([rR][pP][eE])/);
-        if (r4) {
-          return { type: "RPE", v: r4[1] };
-        }
-        return { type: "unknown", v: prev_weight };
-      })();
-      const next_reps = Number($first.field.value.reps);
+      const value_weight = {
+        num: prev_weight.num,
+        unit: prev_weight.unit,
+      };
+      const next_reps = $first.field.value.reps;
       const next_weight = (() => {
-        if (value_weight.type === "RM") {
-          return Number(value_weight.v) * (idx + 1) + "RM";
+        if (value_weight.unit === getSetValueUnit("RM")) {
+          return {
+            num: String(Number(value_weight.num) * (idx + 1)),
+            unit: value_weight.unit,
+          };
         }
-        if (value_weight.type === "%1RM") {
-          return Number(value_weight.v) - (idx + 1) * 5 + "%1RM";
+        if (value_weight.unit === getSetValueUnit("%1RM")) {
+          return {
+            num: String(Number(value_weight.num) - (idx + 1) * 5),
+            unit: value_weight.unit,
+          };
         }
-        return value_weight.v;
+        return value_weight;
       })();
       const created = {
         action: _set_actions[0].action,
         reps: next_reps,
-        reps_unit: $first.field.value.reps_unit as SetValueUnit,
         weight: next_weight,
-        rest_duration: Number($first.field.value.rest_duration),
-        note: ui.$input_set_remark.value,
+        rest_duration: $first.field.value.rest_duration,
+        note: ui.$form.fields.set_note.value,
       };
       _set_actions = [..._set_actions, created];
       $created.fields.reps.setValue(next_reps);
@@ -404,7 +440,7 @@ export function ActionInputViewModel(props: { defaultValue?: {}; onChange?: () =
     },
   };
 }
-export type ActionInputViewModel = ReturnType<typeof ActionInputViewModel>;
+export type StepInputViewModel = ReturnType<typeof StepInputViewModel>;
 
 function WorkoutActionNameView(props: { name?: string }) {
   return (
@@ -424,14 +460,13 @@ function WorkoutActionInputView(props: { store: WorkoutActionInput }) {
   );
 }
 
-function SetActionView(props: {
+function SetActionInputView(props: {
   type: WorkoutPlanSetType;
   store: ObjectFieldCore<{
     action: SingleFieldCore<WorkoutActionInput>;
-    reps: SingleFieldCore<InputCore<number>>;
-    reps_unit: SingleFieldCore<SelectCore<SetValueUnit>>;
-    weight: SingleFieldCore<InputCore<string>>;
-    rest_duration: SingleFieldCore<InputCore<string>>;
+    reps: SingleFieldCore<RepsInputModel>;
+    weight: SingleFieldCore<WeightInputModel>;
+    rest_duration: SingleFieldCore<RestInputModel>;
   }>;
 }) {
   const [state, vm] = useViewModelStore(props.store);
@@ -442,7 +477,19 @@ function SetActionView(props: {
         <WorkoutActionInputView store={props.store.fields.action.input} />
       </Show>
       <div class="flex items-center gap-2">
-        <For each={state().fields}>
+        <SetValueField store={vm.fields.reps}>
+          <RepsInputView store={vm.fields.reps} />
+        </SetValueField>
+        {/* <SetValueField store={vm.fields.reps_unit}>
+          <Select store={vm.fields.reps_unit.input} />
+        </SetValueField> */}
+        <SetValueField store={vm.fields.weight}>
+          <WeightInputView store={vm.fields.weight} />
+        </SetValueField>
+        {/* <SetValueField store={vm.fields.weight_unit}>
+          <Select store={vm.fields.weight_unit.input} />
+        </SetValueField> */}
+        {/* <For each={state().fields}>
           {(field) => {
             if (field.name === "action") {
               return null;
@@ -475,14 +522,14 @@ function SetActionView(props: {
               </div>
             );
           }}
-        </For>
+        </For> */}
       </div>
     </div>
   );
 }
 
 export function ActionInput(props: {
-  store: ActionInputViewModel;
+  store: StepInputViewModel;
   onShowActionSelect?: (arg: { type: "add_action" | "change_action" }) => void;
 }) {
   const [state, vm] = useViewModelStore(props.store);
@@ -505,21 +552,30 @@ export function ActionInput(props: {
           "space-y-4": ![WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(state().type),
         }}
       >
-        <For each={state().fields}>
-          {(field, index) => {
-            const $inner = vm.ui.$sets.mapFieldWithIndex(index());
-            if (!$inner) {
-              return null;
-            }
+        <SetValueArrayField
+          store={vm.ui.$form.fields.actions}
+          render={(field) => {
             return (
-              <Switch>
-                <Match when={$inner.field.symbol === "ObjectFieldCore"}>
-                  <SetActionView store={$inner.field} type={state().type} />
-                </Match>
-              </Switch>
+              <div>
+                <Show
+                  when={[WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(
+                    state().type
+                  )}
+                >
+                  <WorkoutActionInputView store={field.fields.action.input} />
+                </Show>
+                <div class="flex items-center gap-2">
+                  <SetValueField store={field.fields.reps}>
+                    <RepsInputView store={field.fields.reps} />
+                  </SetValueField>
+                  <SetValueField store={field.fields.weight}>
+                    <WeightInputView store={field.fields.weight} />
+                  </SetValueField>
+                </div>
+              </div>
             );
           }}
-        </For>
+        ></SetValueArrayField>
       </div>
       <Show when={[WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(state().type)}>
         <div class="flex justify-center my-4">
@@ -548,19 +604,16 @@ export function ActionInput(props: {
         </div>
       </Show>
       <div class="flex items-center gap-2">
-        <div class="">
-          <div class="text-sm text-w-fg-2">组数</div>
-          <Input store={vm.ui.$input_set_count} />
-        </div>
-        <div class="">
-          <div class="text-sm text-w-fg-2">组间歇</div>
-          <Input store={vm.ui.$input_set_rest} />
-        </div>
+        <SetValueField store={vm.ui.$form.fields.set_count}>
+          <NumInputView store={vm.ui.$form.fields.set_count}></NumInputView>
+        </SetValueField>
+        <SetValueField store={vm.ui.$form.fields.set_rest_duration}>
+          <RepsInputView store={vm.ui.$form.fields.set_rest_duration}></RepsInputView>
+        </SetValueField>
         <Show when={[WorkoutPlanSetType.HIIT].includes(state().type)}>
-          <div class="">
-            <div class="text-sm text-w-fg-2">强度</div>
-            <Input store={vm.ui.$input_set_weight} />
-          </div>
+          <SetValueField store={vm.ui.$form.fields.set_weight}>
+            <WeightInputView store={vm.ui.$form.fields.set_weight}></WeightInputView>
+          </SetValueField>
         </Show>
       </div>
     </div>

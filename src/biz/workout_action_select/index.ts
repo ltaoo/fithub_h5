@@ -22,13 +22,13 @@ import { BizError } from "@/domains/error";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 
 export function WorkoutActionSelectViewModel(props: {
-  defaultValue?: { id: number | string; zh_name: string }[];
+  defaultValue?: { id: number; zh_name: string }[];
   list: typeof $workout_action_list;
   multiple?: boolean;
   app: ViewComponentProps["app"];
   client: HttpClientCore;
   onChange?: (action: WorkoutActionProfile[]) => void;
-  onOk?: (actions: { id: number | string; zh_name: string }[]) => void;
+  onOk?: (actions: { id: number; zh_name: string }[]) => void;
   onError?: (error: BizError) => void;
 }) {
   const request = {
@@ -43,7 +43,7 @@ export function WorkoutActionSelectViewModel(props: {
     cancel() {
       ui.$dialog.hide();
     },
-    select(vv: { id: number | string; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
+    select(vv: { id: number; zh_name: string }, extra: Partial<{ silence: boolean }> = {}) {
       // console.log("[BIZ]workout_action_select2 - select", vv);
       const disabled = _disabled.includes(vv.id);
       if (disabled) {
@@ -79,7 +79,7 @@ export function WorkoutActionSelectViewModel(props: {
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
-    unselect(action: { id: number | string }) {
+    unselect(action: { id: number }) {
       _selected = _selected.filter((item) => item.id !== action.id);
       bus.emit(Events.Change, _selected);
       bus.emit(Events.StateChange, { ..._state });
@@ -91,14 +91,14 @@ export function WorkoutActionSelectViewModel(props: {
       console.log("[BIZ]workout_action_select - setActions", actions, _selected);
       bus.emit(Events.StateChange, { ..._state });
     },
-    setDisabled(v: (number | string)[]) {
+    setDisabled(v: number[]) {
       _disabled = v;
       bus.emit(Events.StateChange, { ..._state });
     },
     setMode(mode: typeof _mode) {
       _mode = mode;
     },
-    find(value: { id: number | string }) {
+    find(value: { id: number }) {
       return _actions.find((a) => a.id === value.id) ?? null;
     },
     clear() {
@@ -216,10 +216,10 @@ export function WorkoutActionSelectViewModel(props: {
 
   let _loading = true;
   let _multiple = props.multiple ?? true;
-  let _selected: { id: number | string; zh_name: string }[] = (() => {
+  let _selected: { id: number; zh_name: string }[] = (() => {
     return props.defaultValue ?? [];
   })();
-  let _disabled: (number | string)[] = [];
+  let _disabled: number[] = [];
   let _mode = "multiple" as "multiple" | "single";
   let _actions: WorkoutActionProfile[] = props.list?.response.dataSource ?? [];
   let _tags = WorkoutActionTypeSubTagMap[WorkoutActionType.Resistance];
@@ -286,7 +286,7 @@ export function WorkoutActionSelectViewModel(props: {
     get defaultValue() {
       return props.defaultValue;
     },
-    setValue(value: { id: number | string; zh_name: string }[], extra: Partial<{ silence: boolean }> = {}) {
+    setValue(value: { id: number; zh_name: string }[], extra: Partial<{ silence: boolean }> = {}) {
       console.log("[BIZ]workout_action_select - setValue", value, _actions);
       if (value.length === 0) {
         bus.emit(Events.Change, []);

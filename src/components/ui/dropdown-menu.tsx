@@ -22,7 +22,7 @@ export const DropdownMenu = (props: { store: DropdownMenuCore } & JSX.HTMLAttrib
   // store.onStateChange((v) => setState(v));
 
   return (
-    <div>
+    <div class="dropdown-menu">
       <Show when={props.children}>
         <DropdownMenuPrimitive.Trigger class="inline-block" store={vm}>
           {props.children}

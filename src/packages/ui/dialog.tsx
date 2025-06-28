@@ -17,14 +17,10 @@ const Root = (props: { store: DialogCore } & JSX.HTMLAttributes<HTMLElement>) =>
 const Portal = (
   props: { store: DialogCore; enterClassName?: string; exitClassName?: string } & JSX.HTMLAttributes<HTMLElement>
 ) => {
-  const { store, enterClassName, exitClassName } = props;
-
   return (
-    <PortalPrimitive>
-      <Presence store={store.present} classList={props.classList}>
-        <div class={props.class}>{props.children}</div>
-      </Presence>
-    </PortalPrimitive>
+    <Presence store={props.store.present} classList={props.classList}>
+      <PortalPrimitive>{props.children}</PortalPrimitive>
+    </Presence>
   );
 };
 

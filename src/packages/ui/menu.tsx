@@ -2,7 +2,7 @@
  * @file 菜单 组件
  */
 import { createSignal, onCleanup, onMount, JSX } from "solid-js";
-import { Portal as PortalPrimitive } from "solid-js/web";
+// import { Portal as PortalPrimitive } from "solid-js/web";
 
 import { MenuCore } from "@/domains/ui/menu";
 import { MenuItemCore } from "@/domains/ui/menu/item";
@@ -10,7 +10,7 @@ import { cn } from "@/utils/index";
 
 import * as PopperPrimitive from "./popper";
 import { Presence } from "./presence";
-import { DismissableLayer } from "./dismissable-layer";
+import { Portal as PortalPrimitive } from "./portal";
 
 const Root = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store } = props;

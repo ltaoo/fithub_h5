@@ -24,8 +24,8 @@ import {
   fetchWorkoutPlanProfile,
   fetchWorkoutPlanProfileProcess,
   updateWorkoutPlan,
-  WorkoutPlanDetailsJSON250424,
 } from "@/biz/workout_plan/services";
+import { WorkoutPlanBodyDetailsJSON250424, WorkoutPlanBodyDetailsJSON250627 } from "@/biz/workout_plan/types";
 import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
 import {
   fetchWorkoutActionListByIds,
@@ -41,20 +41,31 @@ import { ListCore } from "@/domains/list";
 import { seconds_to_hour_text, seconds_to_hour_template1, seconds_to_hour_with_template } from "@/utils";
 import { debounce } from "@/utils/lodash/debounce";
 
-import { ActionInput, ActionInputViewModel } from "./components/action-input";
+import { ActionInput, DefaultSetValue, StepInputViewModel } from "./components/action-input";
 
 function calc_estimated_duration(
-  v: { set_count: number; set_rest_duration: number; actions: { reps: number; reps_unit: SetValueUnit }[] }[]
+  actions: {
+    set_count: string;
+    set_rest_duration: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    actions: {
+      reps: {
+        num: string;
+        unit: SetValueUnit;
+      };
+    }[];
+  }[]
 ) {
-  const actions = v;
   let duration = 0;
   for (let i = 0; i < actions.length; i += 1) {
     const set = actions[i];
     let set_duration = Number(set.set_rest_duration);
     for (let j = 0; j < set.actions.length; j += 1) {
       const act = set.actions[j];
-      const reps = Number(act.reps);
-      const reps_unit = act.reps_unit;
+      const reps = Number(act.reps.num);
+      const reps_unit = act.reps.unit;
       if (reps_unit === getSetValueUnit("秒")) {
         set_duration += reps;
       }
@@ -189,12 +200,15 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
         }
         for (let j = 0; j < value_actions[i].actions.length; j += 1) {
           const act = value_actions[i].actions[j];
+          if (!act.action) {
+            return Result.Err("存在未选择动作");
+          }
           if (!act.reps) {
             return Result.Err("存在未填写的表单");
           }
-          if (!act.reps_unit) {
-            return Result.Err("存在未填写的表单");
-          }
+          // if (!act.reps_unit) {
+          //   return Result.Err("存在未填写的表单");
+          // }
           if (!act.weight) {
             return Result.Err("存在未填写的表单");
           }
@@ -214,36 +228,52 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
         tags: value_tags.join(","),
         status: status ? 1 : 2,
         level: 5,
-        details: ((): WorkoutPlanDetailsJSON250424 => {
-          const steps: WorkoutPlanDetailsJSON250424["steps"] = [];
+        details: ((): WorkoutPlanBodyDetailsJSON250627 => {
+          const steps: WorkoutPlanBodyDetailsJSON250627["steps"] = [];
           for (let i = 0; i < value_actions.length; i += 1) {
             const set_value = value_actions[i];
-            const actions: WorkoutPlanDetailsJSON250424["steps"][number]["actions"] = [];
+            const actions: WorkoutPlanBodyDetailsJSON250627["steps"][number]["actions"] = [];
             for (let j = 0; j < set_value.actions.length; j += 1) {
               const act = value_actions[i].actions[j];
-              actions.push({
-                action_id: act.action.id,
-                action: {
-                  id: act.action.id,
-                  zh_name: act.action.zh_name,
-                },
-                reps: act.reps,
-                reps_unit: act.reps_unit,
-                weight: act.weight,
-                rest_duration: act.rest_duration,
-              });
+              if (act.action) {
+                actions.push({
+                  action: {
+                    id: act.action.id,
+                    zh_name: act.action.zh_name,
+                  },
+                  reps: {
+                    num: act.reps.num,
+                    unit: act.reps.unit,
+                  },
+                  weight: {
+                    num: act.weight.num,
+                    unit: act.weight.unit,
+                  },
+                  rest_duration: {
+                    num: act.rest_duration.num,
+                    unit: act.rest_duration.unit,
+                  },
+                });
+              }
             }
             steps.push({
               set_type: set_value.set_type,
               set_count: Number(set_value.set_count),
-              set_rest_duration: Number(set_value.set_rest_duration),
-              set_weight: set_value.set_weight,
-              actions,
+              set_rest_duration: {
+                num: set_value.set_rest_duration.num,
+                unit: set_value.set_rest_duration.unit,
+              },
+              set_weight: {
+                num: set_value.set_weight.num,
+                unit: set_value.set_weight.unit,
+              },
               set_note: set_value.set_note,
+              set_tags: "",
+              actions,
             });
           }
           return {
-            v: "250424",
+            v: "250627",
             steps,
           };
         })(),
@@ -332,11 +362,11 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
           set_rest_duration: vv.set_rest_duration,
           set_weight: vv.set_weight,
           set_note: vv.set_note,
+          // set_tags: vv.set_tags,
           actions: vv.actions.map((vvv) => {
             return {
               action: vvv.action,
               reps: vvv.reps,
-              reps_unit: vvv.reps_unit,
               weight: vvv.weight,
               rest_duration: vvv.rest_duration,
             };
@@ -353,8 +383,8 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
           const vv = data.steps[i];
           for (let j = 0; j < vv.actions.length; j += 1) {
             const act = vv.actions[j];
-            if (!act_ids.includes(act.action_id)) {
-              act_ids.push(act.action_id);
+            if (!act_ids.includes(act.action.id)) {
+              act_ids.push(act.action.id);
             }
           }
         }
@@ -384,12 +414,9 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     $input_status: new CheckboxCore({ checked: false }),
     $input_actions: new ArrayFieldCore({
       label: "actions",
-      name: "",
       field(count) {
         return new SingleFieldCore({
-          label: "",
-          name: "",
-          input: ActionInputViewModel({}),
+          input: StepInputViewModel({ app: props.app }),
         });
       },
     }),
@@ -434,18 +461,24 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
                   },
                   reps: (() => {
                     if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
-                      return 30;
+                      return {
+                        num: "30",
+                        unit: getSetValueUnit("秒"),
+                      };
                     }
-                    return 12;
+                    return {
+                      num: "12",
+                      unit: getSetValueUnit("次"),
+                    };
                   })(),
-                  reps_unit: (() => {
-                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
-                      return getSetValueUnit("秒");
-                    }
-                    return getSetValueUnit("次");
-                  })(),
-                  weight: "12RM",
-                  rest_duration: 30,
+                  weight: {
+                    num: "12",
+                    unit: getSetValueUnit("RM"),
+                  },
+                  rest_duration: {
+                    num: "30",
+                    unit: getSetValueUnit("秒"),
+                  },
                 };
               }),
             });
@@ -453,7 +486,17 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
           if (menu_type === "add_action") {
             $field.field.input.setValue({
               actions: [
-                ...$field.field.input.value.actions,
+                ...$field.field.input.value.actions.map((v) => {
+                  return {
+                    action: v.action!,
+                    reps: v.reps,
+                    weight: {
+                      num: v.weight.num,
+                      unit: v.weight.unit as SetValueUnit,
+                    },
+                    rest_duration: v.rest_duration,
+                  };
+                }),
                 ...actions.map((act) => {
                   return {
                     action: {
@@ -462,18 +505,24 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
                     },
                     reps: (() => {
                       if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
-                        return 30;
+                        return {
+                          num: "30",
+                          unit: getSetValueUnit("秒"),
+                        };
                       }
-                      return 12;
+                      return {
+                        num: "12",
+                        unit: getSetValueUnit("次"),
+                      };
                     })(),
-                    reps_unit: (() => {
-                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
-                        return "秒" as const;
-                      }
-                      return "次" as const;
-                    })(),
-                    weight: "12RM",
-                    rest_duration: 30,
+                    weight: {
+                      num: "12",
+                      unit: getSetValueUnit("RM"),
+                    },
+                    rest_duration: {
+                      num: "30",
+                      unit: getSetValueUnit("秒"),
+                    },
                   };
                 }),
               ],
@@ -486,26 +535,14 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
 
         // 新增动作
         for (let i = 0; i < actions.length; i += 1) {
+          const act = actions[i];
           const $input = ui.$input_actions.append();
-          $input.setValue({
-            set_type: WorkoutPlanSetType.Normal,
-            set_count: 3,
-            set_rest_duration: 90,
-            set_weight: "RPE 6",
-            set_note: "",
-            actions: [
-              {
-                action: {
-                  id: Number(actions[i].id),
-                  zh_name: actions[i].zh_name,
-                },
-                reps: 12,
-                reps_unit: getSetValueUnit("次"),
-                weight: "12RM",
-                rest_duration: 30,
-              },
-            ],
-          });
+          $input.setValue(
+            DefaultSetValue({
+              id: act.id,
+              zh_name: act.zh_name,
+            })
+          );
         }
         ui.$input_actions.validate().then((r) => {
           console.log("before methods.calc_estimated_duration", r.data);

@@ -25,6 +25,41 @@ export type WorkoutPlanStepBody = {
   }[];
 };
 
+export type WorkoutPlanBodyDetailsJSON250424 = {
+  v: "250424";
+  steps: WorkoutPlanStepJSON250424[];
+};
+/** 可以理解成训练计划中的「动作组」 */
+export type WorkoutPlanStepJSON250424 = {
+  /** 组类型 */
+  set_type: WorkoutPlanSetType;
+  /** 组动作 */
+  actions: {
+    action_id: number;
+    /** 动作 */
+    action: {
+      id: number;
+      zh_name: string;
+    };
+    /** 计数 */
+    reps: number;
+    /** 技术单位 */
+    reps_unit: SetValueUnit;
+    /** 负重 */
+    weight: string;
+    /** 动作间歇 */
+    rest_duration: number;
+  }[];
+  /** 组数 */
+  set_count: number;
+  /** 组间歇 */
+  set_rest_duration: number;
+  /** 组负重，一般都用不上 */
+  set_weight: string;
+  /** 组说明 */
+  set_note: string;
+};
+
 export type WorkoutPlanStepJSON250607 = {
   title: string;
   type: WorkoutPlanStepType;
@@ -42,13 +77,82 @@ export type WorkoutPlanStepJSON250607 = {
     };
     idx: number;
     set_idx: number;
-    weight: string;
     reps: number;
     reps_unit: SetValueUnit;
+    weight: string;
     rest_duration: number;
     note: string;
   }[];
   set_note: string;
+};
+
+export type WorkoutPlanBodyDetailsJSON250627 = {
+  v: "250627";
+  steps: WorkoutPlanBodyStepJSON250627[];
+};
+export type WorkoutPlanBodyStepJSON250627 = {
+  set_type: WorkoutPlanSetType;
+  set_count: number;
+  set_rest_duration: {
+    num: string;
+    unit: SetValueUnit;
+  };
+  set_weight: {
+    num: string;
+    unit: SetValueUnit;
+  };
+  set_note: string;
+  set_tags: string;
+  actions: {
+    action: {
+      id: number;
+      zh_name: string;
+    };
+    reps: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    weight: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    rest_duration: {
+      num: string;
+      unit: SetValueUnit;
+    };
+  }[];
+};
+
+/** 在页面中实际用到的，所有 JSON25xxx 版本最终都要转换成这个接口 */
+export type WorkoutPlanStepContent = {
+  idx: number;
+  set_type: WorkoutPlanSetType;
+  set_count: string;
+  set_rest_duration: {
+    num: string;
+    unit: SetValueUnit;
+  };
+  set_weight: {
+    num: string;
+    unit: SetValueUnit;
+  };
+  set_note: string;
+  set_tags: string[];
+  actions: {
+    action: { id: number; zh_name: string };
+    reps: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    weight: {
+      num: string;
+      unit: SetValueUnit;
+    };
+    rest_duration: {
+      num: string;
+      unit: SetValueUnit;
+    };
+  }[];
 };
 
 export type WorkoutPlanActionPayload = {

@@ -14,7 +14,8 @@ import { FieldObjV2 } from "@/components/fieldv2/obj";
 import { FieldV2 } from "@/components/fieldv2/field";
 import { FieldArrV2 } from "@/components/fieldv2/arr";
 import { Select } from "@/components/ui/select";
-import { InputWithKeyboardView, InputWithKeyboardViewModel } from "@/components/input-with-keyboard";
+import { InputWithKeyboardView } from "@/components/input-weight";
+import { Portal } from "solid-js/web";
 
 function FeaturePlaygroundViewModel(props: ViewComponentProps) {
   const request = {
@@ -35,12 +36,13 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
     $history: props.history,
     $btn: new ButtonCore({
       async onClick() {
-        ui.$values.fields.persons.fields[0].field.setValue({
-          name: "update_value",
-        });
+        ui.$dialog.show();
+        // ui.$values.fields.persons.fields[0].field.setValue({
+        //   name: "update_value",
+        // });
       },
     }),
-    $input: InputWithKeyboardViewModel({ app: props.app }),
+    // $input: InputWithKeyboardViewModel({ app: props.app }),
     $values: new ObjectFieldCore({
       name: "",
       label: "表单",
@@ -86,6 +88,7 @@ function FeaturePlaygroundViewModel(props: ViewComponentProps) {
         }),
       },
     }),
+    $dialog: new DialogCore({}),
   };
 
   let _state = {};
@@ -152,7 +155,10 @@ export function FeaturePlaygroundView(props: ViewComponentProps) {
             }}
           ></FieldArrV2>
         </FieldObjV2> */}
-        <InputWithKeyboardView store={vm.ui.$input} />
+        {/* <InputWithKeyboardView store={vm.ui.$input} /> */}
+        <Sheet store={vm.ui.$dialog} app={props.app}>
+          <div>Hello</div>
+        </Sheet>
       </PageView>
     </>
   );

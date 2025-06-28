@@ -134,9 +134,10 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 显示弹窗 */
   show() {
-    // if (this.open) {
-    //   return;
-    // }
+    console.log("[]ui/dialog - show");
+    if (this.open) {
+      return;
+    }
     // this.emit(Events.BeforeShow);
     this.present.show();
   }

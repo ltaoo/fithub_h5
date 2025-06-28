@@ -1,7 +1,7 @@
 /**
  * @file 右键菜单
  */
-import { For, createContext, createSignal, onMount, JSX } from "solid-js";
+import { For, createSignal, onMount, JSX } from "solid-js";
 import { ChevronRight } from "lucide-solid";
 
 import { ContextMenuCore } from "@/domains/ui/context-menu";
@@ -194,8 +194,7 @@ const Trigger = (props: { store: ContextMenuCore } & JSX.HTMLAttributes<HTMLElem
   );
 };
 const Portal = (props: { store: MenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
-  const { store } = props;
-  return <Menu.Portal store={store}>{props.children}</Menu.Portal>;
+  return <Menu.Portal store={props.store}>{props.children}</Menu.Portal>;
 };
 const Content = (props: { store: ContextMenuCore } & JSX.HTMLAttributes<HTMLElement>) => {
   const { store } = props;

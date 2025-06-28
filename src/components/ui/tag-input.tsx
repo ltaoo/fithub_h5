@@ -4,6 +4,7 @@ import { Funnel, Tags, X } from "lucide-solid";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
 import { TopSheet } from "@/components/top-sheet";
+import * as PortalPrimitive from "@/packages/ui/portal";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -123,28 +124,30 @@ export function TagInput(props: { store: TagSelectInput } & JSX.HTMLAttributes<H
           }}
         />
       </div>
-      <TopSheet top={56} store={vm.ui.$dialog} app={vm.app}>
-        <div class="flex flex-wrap gap-2 bg-w-bg-0 p-4">
-          <For each={state().options}>
-            {(opt) => {
-              return (
-                <div
-                  classList={{
-                    "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
-                    "border-w-fg-3": !opt.selected,
-                    "border-w-fg-2 bg-w-bg-5 text-w-fg-0": opt.selected,
-                  }}
-                  onClick={() => {
-                    vm.methods.select(opt.value);
-                  }}
-                >
-                  <div>{opt.text}</div>
-                </div>
-              );
-            }}
-          </For>
-        </div>
-      </TopSheet>
+      <PortalPrimitive.Portal>
+        <TopSheet top={56} store={vm.ui.$dialog} app={vm.app}>
+          <div class="flex flex-wrap gap-2 bg-w-bg-0 p-4">
+            <For each={state().options}>
+              {(opt) => {
+                return (
+                  <div
+                    classList={{
+                      "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
+                      "border-w-fg-3": !opt.selected,
+                      "border-w-fg-2 bg-w-bg-5 text-w-fg-0": opt.selected,
+                    }}
+                    onClick={() => {
+                      vm.methods.select(opt.value);
+                    }}
+                  >
+                    <div>{opt.text}</div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+        </TopSheet>
+      </PortalPrimitive.Portal>
     </>
   );
 }
