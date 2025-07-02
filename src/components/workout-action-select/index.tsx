@@ -8,13 +8,12 @@ import { ChevronDown, ChevronLeft, MoreHorizontal, X } from "lucide-solid";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModelStore } from "@/hooks";
 import * as PopoverPrimitive from "@/packages/ui/popover";
-import { Button, Dialog, Input, ListView, ScrollView } from "@/components/ui";
+import { Button, Dialog, Input, ListView, Popover, ScrollView } from "@/components/ui";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 
 import { WorkoutActionSelectViewModel } from "@/biz/workout_action_select";
-import { cn } from "@/utils/index";
 
 export function WorkoutActionSelectView(props: {
   store: WorkoutActionSelectViewModel;
@@ -64,8 +63,8 @@ export function WorkoutActionSelectView(props: {
                       <div
                         classList={{
                           "relative p-2 flex justify-between border-2 border-w-fg-3 rounded-md text-w-fg-0": true,
-                          "border-w-fg-2 bg-w-bg-5 text-w-fg-0": !!state().value.find((act) => act.id === action.id),
-                          "text-gray-100": !!state().disabled.includes(action.id),
+                          "border-w-fg-2 bg-w-bg-5": !!state().value.find((act) => act.id === action.id),
+                          "border-w-fg-3 bg-w-bg-3 text-w-fg-3": !!state().disabled.includes(action.id),
                         }}
                         onClick={() => {
                           vm.methods.select(action);
@@ -102,7 +101,18 @@ export function WorkoutActionSelectView(props: {
               <ChevronDown class="w-6 h-6 text-w-fg-0" />
             </div>
             <div class="flex-1 flex items-center gap-2">
-              <div class="text-sm text-w-fg-1 whitespace-nowrap">已选择{state().selected.length}个动作</div>
+              <div
+                class="text-sm text-w-fg-1 whitespace-nowrap"
+                onClick={(event) => {
+                  if (state().selected.length === 0) {
+                    return;
+                  }
+                  const { x, y, width, height } = event.currentTarget.getBoundingClientRect();
+                  vm.ui.$popup_selected_actions.toggle({ x, y, width, height });
+                }}
+              >
+                已选择{state().selected.length}个动作
+              </div>
               <Button store={vm.ui.$btn_submit} class="w-full">
                 确定
               </Button>
@@ -114,6 +124,15 @@ export function WorkoutActionSelectView(props: {
       <Sheet ignore_safe_height store={vm.ui.$workout_action.ui.$dialog} app={props.app}>
         <WorkoutActionProfileView store={vm.ui.$workout_action} />
       </Sheet>
+      <Popover store={vm.ui.$popup_selected_actions}>
+        <div class="space-y-2 w-[232px]">
+          <For each={state().selected}>
+            {(v) => {
+              return <div class="text-w-fg-0">{v.zh_name}</div>;
+            }}
+          </For>
+        </div>
+      </Popover>
     </>
   );
 }

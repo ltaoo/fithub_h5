@@ -129,7 +129,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[12px]": state().running,
           }}
         >
           :
@@ -155,7 +155,7 @@ export function SetCountdownView(props: {
         <div
           classList={{
             "text-center": true,
-            "w-[20px]": state().running,
+            "w-[12px]": state().running,
           }}
         >
           .

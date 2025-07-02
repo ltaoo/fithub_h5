@@ -2,7 +2,7 @@
  * @file 试卷答题页面
  */
 import { For, Show } from "solid-js";
-import { Check, ChevronDown, Clock, Loader2, MoreHorizontal } from "lucide-solid";
+import { Check, ChevronDown, Clock, LoaderCircle, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -359,7 +359,7 @@ export function ExamAnswerView(props: ViewComponentProps) {
           when={state().quiz}
           fallback={
             <div class="flex justify-center">
-              <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+              <LoaderCircle class="w-8 h-8 text-w-fg-1 animate-spin" />
             </div>
           }
         >

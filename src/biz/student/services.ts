@@ -6,6 +6,7 @@ import { Result } from "@/domains/result";
 import { request } from "@/biz/requests";
 import { ListResponse, ListResponseWithCursor } from "@/biz/requests/types";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
+import { WorkoutPlanType } from "@/biz/workout_plan/constants";
 
 import { HumanGenderType, CoachStudentRole, CoachStudentRoleTextMap } from "./constants";
 
@@ -166,16 +167,21 @@ export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
 export function fetchStudentWorkoutDayProfile(body: { id: number; student_id?: number }) {
   return request.post<{
     id: number;
+    title: string;
+    type: WorkoutPlanType;
     status: WorkoutDayStatus;
     started_at: number;
     finished_at: number;
     pending_steps: string;
     updated_details: string;
+    duration: number;
+    total_volume: number;
+    remark: string;
     day_number: number;
     is_self: boolean;
     student_id: number;
     // steps: WorkoutPlanStepResp[];
-    workout_plan: {
+    workout_plan: null | {
       id: number;
       title: string;
       overview: string;

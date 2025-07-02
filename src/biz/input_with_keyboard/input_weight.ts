@@ -14,6 +14,8 @@ export function WeightInputModel(props: {
   defaultValue: string;
   suffix: SetValueUnit;
   app: ViewComponentProps["app"];
+  onChange?: (v: { num: string; unit: SetValueUnit }) => void;
+  onPaddingHeightChange?: (v: number) => void;
 }) {
   const methods = {
     refresh() {
@@ -23,13 +25,24 @@ export function WeightInputModel(props: {
       ui.$dialog.hide();
     },
   };
-  const $input = InputWithKeyboardModel({ defaultValue: props.defaultValue, app: props.app });
+  const $input = InputWithKeyboardModel({
+    defaultValue: props.defaultValue,
+    app: props.app,
+    onPaddingHeightChange: props.onPaddingHeightChange,
+  });
   const ui = {
     $input,
     $keyboard: $input.ui.$keyboard,
     $select: new SelectCore({
       defaultValue: props.suffix ?? getSetValueUnit("RM"),
       options: WeightSetValueOptions,
+      onChange(v) {
+        if (v === getSetValueUnit("自重")) {
+          ui.$keyboard.disable();
+        } else {
+          ui.$keyboard.enable();
+        }
+      },
     }),
     $dialog: $input.ui.$dialog,
   };
@@ -46,15 +59,20 @@ export function WeightInputModel(props: {
     get suffix() {
       return ui.$select.value;
     },
+    get status() {
+      return ui.$input.state.status;
+    },
     get showSubKey() {
       return ui.$keyboard.state.showSubKey;
     },
   };
   enum Events {
+    Change,
     StateChange,
     Error,
   }
   type TheTypesOfEvents = {
+    [Events.Change]: typeof _state.value;
     [Events.StateChange]: typeof _state;
     [Events.Error]: BizError;
   };
@@ -62,7 +80,13 @@ export function WeightInputModel(props: {
 
   ui.$keyboard.onStateChange(() => methods.refresh());
   ui.$input.onStateChange(() => methods.refresh());
+  ui.$input.onChange(() => {
+    bus.emit(Events.Change, _state.value);
+  });
   ui.$select.onStateChange(() => methods.refresh());
+  if (props.onChange) {
+    bus.on(Events.Change, props.onChange);
+  }
 
   return {
     shape: "input" as const,
@@ -79,12 +103,20 @@ export function WeightInputModel(props: {
     setValue(v: { num: string; unit: SetValueUnit }) {
       ui.$input.setValue(v.num);
       ui.$select.select(v.unit);
+      if (v.unit === getSetValueUnit("自重")) {
+        ui.$keyboard.disable();
+      } else {
+        ui.$keyboard.enable();
+      }
+      methods.refresh();
     },
     ready() {},
     destroy() {
       bus.destroy();
     },
-    onChange: ui.$input.onChange.bind(ui.$input),
+    onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
+      return bus.on(Events.Change, handler);
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

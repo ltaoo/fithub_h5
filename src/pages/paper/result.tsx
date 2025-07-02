@@ -2,7 +2,7 @@
  * @file 答题结果
  */
 import { For, Show } from "solid-js";
-import { Check, CheckCircle, CircleCheck, CircleX, Loader2, X } from "lucide-solid";
+import { Check, CheckCircle, CircleCheck, CircleX, LoaderCircle, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -108,7 +108,7 @@ export function PaperResultView(props: ViewComponentProps) {
       <PageView store={vm} home={!state().can_back}>
         <Show when={state().loading}>
           <div class="flex justify-center">
-            <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+            <LoaderCircle class="w-8 h-8 text-w-fg-1 animate-spin" />
           </div>
         </Show>
         <Show when={state().result}>

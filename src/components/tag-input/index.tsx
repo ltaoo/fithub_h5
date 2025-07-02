@@ -1,5 +1,5 @@
 import { JSX, createSignal, onMount } from "solid-js";
-import { Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 import { InputCore } from "@/domains/ui/form/input";
 import { cn } from "@/utils";
@@ -26,7 +26,7 @@ export function TagInput(props: { store: InputCore<any>; prefix?: JSX.Element; c
             return null;
           }
           if (state().loading) {
-            return <Loader2 class="w-4 h-4 animate-spin" />;
+            return <LoaderCircle class="w-4 h-4 animate-spin" />;
           }
           return prefix;
         })()}

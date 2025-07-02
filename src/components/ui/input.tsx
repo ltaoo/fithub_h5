@@ -1,5 +1,5 @@
 import { JSX, createSignal, onMount } from "solid-js";
-import { Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
 import { Input as InputPrimitive } from "@/packages/ui/input";
@@ -47,7 +47,7 @@ const Input = (props: { store: InputCore<any>; prefix?: JSX.Element; class?: str
             return null;
           }
           if (state().loading) {
-            return <Loader2 class="w-4 h-4 animate-spin" />;
+            return <LoaderCircle class="w-4 h-4 animate-spin" />;
           }
           return props.prefix;
         })()}

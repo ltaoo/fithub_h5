@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "solid-js";
-import { Loader, Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 import { BodyPartWithMuscles } from "@/biz/muscle/types";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
@@ -11,7 +11,7 @@ export function BodyMusclePreview(props: { store: HumanBodyViewModel; onClick?: 
     <Suspense
       fallback={
         <div class="flex items-center justify-center">
-          <Loader2 class="w-8 h-8 text-w-fg-1 animate animate-spin" />
+          <LoaderCircle class="w-8 h-8 text-w-fg-1 animate animate-spin" />
         </div>
       }
     >

@@ -1,3 +1,22 @@
+export enum WorkoutPlanType {
+  /** 力量 */
+  Strength = "strength",
+  /** 有氧 */
+  Cardio = "cardio",
+  /** 拉伸/柔韧性 */
+  Stretching = "Stretching",
+  /** 代谢调节 */
+  Metcon = "Metcon",
+  /** HIIT */
+  HIIT = "hiit",
+  /** 瑜伽 */
+  Yoga = "yoga",
+  /** 格斗 */
+  Combat = "combat",
+  /** 整体健康 */
+  Wellness = "wellness",
+}
+
 export enum WorkoutPlanStepType {
   Warmup = "warmup",
   Strength = "strength",
@@ -52,11 +71,11 @@ export const WorkoutSetTypeTextMap: Record<WorkoutPlanSetType, string> = {
   [WorkoutPlanSetType.Decreasing]: "递减组",
   [WorkoutPlanSetType.HIIT]: "HIIT",
 };
-export const WorkoutSetTypeOptions = Object.keys(WorkoutSetTypeTextMap).map((k) => {
+export const WorkoutPlanSetTypeOptions = Object.keys(WorkoutSetTypeTextMap).map((k) => {
   const label = WorkoutSetTypeTextMap[k as any as WorkoutPlanSetType];
   return {
     label,
-    value: k,
+    value: k as WorkoutPlanSetType,
   };
 });
 

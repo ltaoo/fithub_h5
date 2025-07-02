@@ -153,9 +153,17 @@ export function buildSetAct(act: { id: number | string; zh_name: string }, extra
     uid: extra.uid,
     id: Number(act.id),
     zh_name: act.zh_name,
-    reps: extra?.hiit ? 30 : 12,
-    reps_unit: extra?.hiit ? getSetValueUnit("秒") : getSetValueUnit("次"),
-    weight: "12RM",
-    rest_duration: 30,
+    reps: {
+      num: extra?.hiit ? 30 : 12,
+      unit: extra?.hiit ? getSetValueUnit("秒") : getSetValueUnit("次"),
+    },
+    weight: {
+      num: "12",
+      unit: getSetValueUnit("RM"),
+    },
+    rest_duration: {
+      num: 30,
+      unit: getSetValueUnit("秒"),
+    },
   };
 }

@@ -162,6 +162,7 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
   }
   setFieldValue(key: string, v: any) {
     // ...
+    this.input.setValue(v);
   }
   clear() {
     this.setValue(this._input.defaultValue);
@@ -408,7 +409,8 @@ export class ArrayFieldCore<
   }
   setValue(values: any[], extra: Partial<{ key: string; idx: number; silence: boolean }> = {}) {
     console.log("[DOMAIN]ArrayFieldCore - setValue", extra.key, values, this.fields);
-    for (let i = 0; i < values.length; i += 1) {
+    let i = 0;
+    for (; i < values.length; i += 1) {
       (() => {
         const v = values[i];
         let field = this.fields[i];
@@ -432,6 +434,9 @@ export class ArrayFieldCore<
         field.field.setValue(v, { idx: i, silence: extra.silence, key: extra.key });
       })();
     }
+    this.fields = this.fields.slice(0, i);
+    // this.value = this.value.slice(i);
+    // for (; i < this.value.length; i += 1) {}
     console.log("[DOMAIN]ArrayFieldCore - after setValue", this.fields);
     this._bus.emit(ArrayFieldEvents.StateChange, { ...this.state });
   }
@@ -511,7 +516,7 @@ export class ArrayFieldCore<
     const v_idx = this.fields.length;
     setTimeout(() => {
       field.onChange(() => {
-        // console.log('field onChange')
+        // console.log("[BIZ]ui/formv2 - ArrayField append field onChange");
         this._bus.emit(ArrayFieldEvents.Change, {
           id: v_id,
           idx: v_idx,

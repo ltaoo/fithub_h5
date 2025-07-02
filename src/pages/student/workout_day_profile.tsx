@@ -2,7 +2,7 @@
  * @file 学员某次训练的详情
  */
 import { For, Show } from "solid-js";
-import { ChevronLeft, Loader2, X } from "lucide-solid";
+import { ChevronLeft, LoaderCircle, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -130,7 +130,7 @@ export function StudentWorkoutDayProfileView(props: ViewComponentProps) {
       <PageView store={vm} hide_bottom_bar={props.view.query.hide_bottom_bar === "1"}>
         <Show when={state().loading}>
           <div class="p-4 flex items-center justify-center">
-            <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />
+            <LoaderCircle class="w-8 h-8 text-w-fg-0 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>

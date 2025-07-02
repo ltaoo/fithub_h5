@@ -1,8 +1,10 @@
 import path from "path";
-import fs from 'fs';
+import fs from "fs";
 
 import { UserConfigExport, defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
+// import { barrel } from "vite-plugin-barrel";
+import { createLucideSolidImportOptimizer } from "./plugins/lucide-solid";
 
 const pkg = (() => {
   try {
@@ -14,13 +16,11 @@ const pkg = (() => {
 
 const config = defineConfig(({ mode }) => {
   return {
-    plugins: [
-      solidPlugin(),
-    ],
+    plugins: [solidPlugin(), createLucideSolidImportOptimizer()],
     resolve: {
       alias: {
         "hls.js": "hls.js/dist/hls.min.js",
-        "lucide-solid": require.resolve("lucide-solid").replace("cjs", "esm"),
+        // "lucide-solid": require.resolve("lucide-solid").replace("cjs", "esm"),
         "@": path.resolve(__dirname, "./src"),
       },
     },

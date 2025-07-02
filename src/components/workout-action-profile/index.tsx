@@ -1,5 +1,5 @@
-import { Bird, ChevronDown, Loader2, Play, PlayCircle } from "lucide-solid";
 import { For, Show } from "solid-js";
+import { Bird, ChevronDown, LoaderCircle, Play, PlayCircle } from "lucide-solid";
 
 import { useViewModelStore } from "@/hooks";
 import { WorkoutActionCard } from "@/components/workout-action-card";
@@ -25,7 +25,7 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
           <div class="absolute inset-0">
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="flex items-center justify-center p-4 rounded-lg text-w-fg-0 bg-w-bg-5">
-                <Loader2 class="w-8 h-8 animate-spin" />
+                <LoaderCircle class="w-8 h-8 animate-spin" />
               </div>
             </div>
           </div>

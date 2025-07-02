@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select";
 
 import { InputCore } from "@/domains/ui";
 import { SingleFieldCore } from "@/domains/ui/formv2";
-import { SetValueInputViewModel } from "@/biz/input_set_value";
+import { getSetValueUnit, SetValueInputModel } from "@/biz/input_set_value";
 import { WeightInputModel } from "@/biz/input_with_keyboard/input_weight";
 import { RepsInputModel } from "@/biz/input_with_keyboard/input_reps";
 
@@ -25,9 +25,9 @@ export function RepsInputView(
         class={props.class}
         classList={{
           "set-value-input relative flex items-center gap-2 w-full h-10 px-3 border-2 rounded-xl bg-w-bg-2": true,
-          "border-w-fg-3": field().status === "normal",
-          "border-yellow-500": field().status === "focus",
-          "border-red-500 dark:border-red-800": field().status === "error",
+          "border-w-fg-3": input().status === "normal",
+          "border-yellow-500": input().status === "focus",
+          "border-red-500 dark:border-red-800": input().status === "error",
         }}
         // style={{
         //   width: `${props.width ?? 88}px`,
@@ -42,8 +42,10 @@ export function RepsInputView(
           });
         }}
       >
-        <Show when={input().value.num !== ""} fallback={<div class="text-w-fg-2">{input().placeholder}</div>}>
-          <div class="text-w-fg-0">{input().value.num}</div>
+        <Show when={input().value.unit != getSetValueUnit("ToFail")}>
+          <Show when={input().value.num !== ""} fallback={<div class="text-w-fg-2">{input().placeholder}</div>}>
+            <div class="text-w-fg-0">{input().value.num}</div>
+          </Show>
         </Show>
         {/* <div class="absolute right-2 top-1/2 -translate-y-1/2 text-w-fg-0">{input().value.unit}</div> */}
         <div class="text-w-fg-0">{input().value.unit}</div>
@@ -51,7 +53,9 @@ export function RepsInputView(
       <Sheet store={$input.ui.$dialog} app={$input.app}>
         <div class="flex flex-col gap-4 w-full p-4">
           <div class="headers flex items-center justify-between px-2">
-            <div class="text-3xl font-bold text-w-fg-0">{input().value.num}</div>
+            <Show when={input().value.unit != getSetValueUnit("ToFail")} fallback={<div></div>}>
+              <div class="text-3xl font-bold text-w-fg-0">{input().value.num}</div>
+            </Show>
             <Select store={$input.ui.$select}></Select>
           </div>
           <div class="grid grid-cols-4 gap-2">

@@ -152,7 +152,7 @@ export function Sheet(props: SheetProps) {
       <div
         class="fixed bottom-0"
         classList={{
-          "left-1/2 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
+          "left-1/2 -translate-x-1/2 w-[375px]": props.app.env.pc,
           "w-full": !props.app.env.pc,
         }}
         style={{ "z-index": 99 + (props.plus_idx ?? 0) }}

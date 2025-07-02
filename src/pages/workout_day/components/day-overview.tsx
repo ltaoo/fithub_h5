@@ -17,7 +17,7 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel
   return (
     <>
       <div class="relative flex flex-col h-[100vh] bg-w-bg-0" style={{ "z-index": 10 }}>
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto scroll--hidden">
           <div class="p-2">
             <div class="text-3xl text-w-fg-0">{state().stats.finished_at}</div>
             <div class="text-w-fg-1">
@@ -72,19 +72,21 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel
                     {(set, b) => {
                       return (
                         <div class="flex">
-                          <div class="w-[14px]">{b() + 1}.</div>
+                          <div class="w-[16px]">{b() + 1}.</div>
                           <div class="space-y-2">
                             <For each={set.actions}>
                               {(act, c) => {
                                 return (
                                   <div class="text-w-fg-0">
                                     <div class="">{act.zh_name}</div>
-                                    <SetValueView
-                                      weight={act.weight}
-                                      weight_unit={act.weight_unit}
-                                      reps={act.reps}
-                                      reps_unit={act.reps_unit}
-                                    />
+                                    <div class="mt-1">
+                                      <SetValueView
+                                        weight={act.weight}
+                                        weight_unit={act.weight_unit}
+                                        reps={act.reps}
+                                        reps_unit={act.reps_unit}
+                                      />
+                                    </div>
                                   </div>
                                 );
                               }}

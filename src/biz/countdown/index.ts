@@ -8,6 +8,8 @@
  *
  * 还有一种不叫倒计时，应该称为「秒表」，应该另外写一个组件，不要和倒计时混在一起？
  */
+import dayjs from "dayjs";
+
 import { base, Handler } from "@/domains/base";
 
 export function CountdownViewModel(props: {
@@ -19,12 +21,13 @@ export function CountdownViewModel(props: {
   finished?: boolean;
   onRefresh?: (text: string) => void;
 }) {
+  // console.log("[BIZ]countdown/index", props.finished);
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
     play() {
-      // console.log("[BIZ]countdown - play", _started_at);
+      console.log("[BIZ]countdown - play", _started_at);
       methods.start(_started_at !== 0 ? _started_at : new Date().valueOf(), {
         is_resume: _started_at !== 0,
       });
@@ -42,7 +45,7 @@ export function CountdownViewModel(props: {
       // _animation_frame_id = requestAnimationFrame(tick);
     },
     start(started_at: number, extra: Partial<{ is_resume: boolean }> = {}) {
-      console.log("[BIZ]countdown - start", _time, _is_running);
+      console.log("[BIZ]countdown - start", _time, _is_running, _started_at, started_at);
       /** 如果倒计时正常结束，就无法再次开始，需要使用 reset 来重置倒计时 */
       if (_time === 0) {
         return;
@@ -73,7 +76,10 @@ export function CountdownViewModel(props: {
       //   return;
       // }
       cancelAnimationFrame(_animation_frame_id);
+      _is_pending = false;
       _is_running = false;
+      _is_completed = true;
+      _time = 0;
       _time_text = "00:00.00";
       _minutes1 = "0";
       _minutes2 = "0";
@@ -83,8 +89,7 @@ export function CountdownViewModel(props: {
       _ms2 = "0";
       _ms3 = "0";
       _previous_time = undefined;
-      _is_completed = true;
-      _started_at = 0;
+      // _started_at = 0;
       bus.emit(Events.Finished);
       bus.emit(Events.Completed, { time: new Date().valueOf() / 1000 });
       methods.refresh();
@@ -127,6 +132,19 @@ export function CountdownViewModel(props: {
       console.log("[BIZ]countdown - setStartedAt", v);
       _started_at = v;
     },
+    recoverWithStartedAt(v: number) {
+      _started_at = v;
+      const pass_milliseconds = dayjs().diff(_started_at);
+      const diff = _time - pass_milliseconds;
+      if (diff < 0) {
+        methods.finish();
+        return;
+      }
+      // _is_pending = false;
+      // _is_running = true;
+      _time = diff;
+      methods.play();
+    },
     addSeconds(seconds: number) {
       _time += seconds * 1000;
       methods.refresh();
@@ -136,6 +154,32 @@ export function CountdownViewModel(props: {
       methods.refresh();
     },
     format_time(time: number) {
+      if (time < 0) {
+        return {
+          hours: {
+            v: 0,
+            a: "0",
+            b: "0",
+          },
+          minutes: {
+            v: 0,
+            a: "0",
+            b: "0",
+          },
+          seconds: {
+            v: 0,
+            a: "0",
+            b: "0",
+          },
+          milliseconds: {
+            v: 0,
+            a: "0",
+            b: "0",
+            c: "0",
+          },
+          text: "00:00.00",
+        };
+      }
       const hours = Math.floor(time / 3600000);
       const minutes = Math.floor((time % 3600000) / 60000);
       const seconds = Math.floor((time % 60000) / 1000);
@@ -168,6 +212,7 @@ export function CountdownViewModel(props: {
         },
         text: `${h}:${m}:${s}.${ms}`,
       };
+      // console.log("after format_time", r.text, time);
       return r;
     },
     handleFinished() {
@@ -262,6 +307,9 @@ export function CountdownViewModel(props: {
     get ms3() {
       return _ms3;
     },
+    get started_at() {
+      return _started_at;
+    },
   };
 
   enum Events {
@@ -339,6 +387,7 @@ export function CountdownViewModel(props: {
     finish: methods.finish,
     reset: methods.reset,
     setStartedAt: methods.setStartedAt,
+    recover: methods.recoverWithStartedAt,
     addSeconds: methods.addSeconds,
     subSeconds: methods.subSeconds,
     setComplete() {

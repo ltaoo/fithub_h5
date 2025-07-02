@@ -2,7 +2,7 @@
 
 import { createSignal, For, onMount, Show } from "solid-js";
 import { render } from "solid-js/web";
-import { Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 import { app, history } from "./store/index";
 import { storage } from "./store/storage";
@@ -11,6 +11,7 @@ import { PageKeys } from "./store/routes";
 import { pages } from "./store/views";
 import { KeepAliveRouteView } from "./components/ui";
 import { Toast } from "./components/ui/toast";
+
 import { ToastCore } from "./domains/ui/toast";
 
 import "./style.css";
@@ -55,11 +56,11 @@ function Application() {
   });
 
   return (
-    <div class={"screen w-screen h-screen"}>
+    <div class="screen w-screen h-screen transition-all duration-120" style={{ transform: `translateY(${-state().height}px)` }}>
       <Show when={!state().ready}>
         <div class="flex items-center justify-center w-full h-full">
           <div class="flex flex-col items-center text-w-fg-1">
-            <Loader2 class="w-8 h-8 animate-spin" />
+            <LoaderCircle class="w-8 h-8 animate-spin" />
             <div class="mt-4 text-center">正在加载</div>
           </div>
         </div>

@@ -2,7 +2,7 @@
  * @file 可滚动容器，支持下拉刷新、滚动监听等
  */
 import { JSX, createSignal } from "solid-js";
-import { ArrowDown, Loader2 } from "lucide-solid";
+import { ArrowDown, LoaderCircle } from "lucide-solid";
 
 import * as ScrollViewPrimitive from "@/packages/ui/scroll-view";
 import { ScrollViewCore } from "@/domains/ui/scroll-view";
@@ -44,7 +44,7 @@ export const ScrollView = (props: { store: ScrollViewCore } & JSX.HTMLAttributes
           </ScrollViewPrimitive.Progress>
           <ScrollViewPrimitive.Loading class="w-[50px] h-[50px] mx-auto rounded-full bg-w-bg-0" store={props.store}>
             <div class="inline-flex justify-center items-center w-full h-full">
-              <Loader2 class="animate animate-spin" width={18} height={18} />
+              <LoaderCircle class="animate animate-spin" width={18} height={18} />
             </div>
           </ScrollViewPrimitive.Loading>
         </div>

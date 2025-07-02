@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
+import { useViewModel } from "@/hooks";
 import { DropdownMenu, ListView, ScrollView } from "@/components/ui";
 import { NavigationBar1 } from "@/components/navigation-bar1";
 import { PageView } from "@/components/page-view";
@@ -11,7 +12,6 @@ import { IconButton } from "@/components/icon-btn/icon-btn";
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
-import { useViewModel } from "@/hooks";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import { continueWorkoutDay, fetchWorkoutDayList, fetchWorkoutDayListProcess } from "@/biz/workout_day/services";
@@ -165,7 +165,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
             {(value) => {
               return (
                 <div class="border-2 border-w-fg-3 p-4 rounded-lg">
-                  <div class="text-lg text-w-fg-0">{value.workout_plan.title}</div>
+                  <div class="text-lg text-w-fg-0">{value.title}</div>
                   <div class="text-w-fg-1">{value.started_at_text}</div>
                   <div class="flex items-center justify-between">
                     <div>

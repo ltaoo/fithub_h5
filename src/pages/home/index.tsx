@@ -38,22 +38,19 @@ import {
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
 import { buildWorkoutScheduleWithSpecialDay } from "@/biz/workout_plan/workout_schedule";
 import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
-import { sleep } from "@/utils";
+import { refreshWorkoutDays } from "@/biz/coach/service";
 
 import { HomeViewTabHeader } from "./components/tabs";
-import { refreshWorkoutStats } from "@/biz/coach/service";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
 function HomeIndexPageViewModel(props: ViewComponentProps) {
   const request = {
-    workout: {
-      stats: new RequestCore(refreshWorkoutStats, { client: props.client }),
-    },
     workout_plan_set: {
       list: new RequestCore(fetchWorkoutPlanSetList, { process: fetchWorkoutPlanSetListProcess, client: props.client }),
     },
     workout_day: {
+      refresh: new RequestCore(refreshWorkoutDays, { client: props.client }),
       list: new ListCore(
         new RequestCore(fetchWorkoutDayList, {
           process: fetchWorkoutDayListProcess,
@@ -128,7 +125,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       const completed_plans_in_the_day = request.workout_day.list.response.dataSource.filter((v) => {
         return v.status === WorkoutDayStatus.Finished && v.day === the_date_text;
       });
-      const completed_plan_ids_in_the_day = completed_plans_in_the_day.map((v) => v.workout_plan.id);
+      // const completed_plan_ids_in_the_day = completed_plans_in_the_day.map((v) => v.workout_plan.id);
       // console.log("[PAGE]home/index - handleClickDay - before completed_plan_ids = ", completed_plan_ids);
       const schedule_of_the_day = _schedules[the_date_text];
       /** 指定天内完成的 不属于计划中的训练 */
@@ -141,13 +138,15 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       // );
       for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
         const vv = completed_plans_in_the_day[i];
-        if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
-          extra_workout_days.push({
-            id: vv.id,
-            workout_plan_id: vv.workout_plan.id,
-            title: vv.workout_plan.title,
-            finished_at_text: vv.finished_at_text,
-          });
+        if (vv.workout_plan) {
+          if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
+            extra_workout_days.push({
+              id: vv.id,
+              workout_plan_id: vv.workout_plan.id,
+              title: vv.title,
+              finished_at_text: vv.finished_at_text,
+            });
+          }
         }
       }
       // console.log("[]before _cur_day_profile = ", dayjs(v).isBefore(dayjs(), "d"), dayjs(v).format("YYYY-MM-DD"));
@@ -181,7 +180,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
               return {
                 ...v,
                 ...(() => {
-                  const idx = completed_plans_in_the_day.findIndex((vv) => vv.workout_plan.id === v.id);
+                  const idx = completed_plans_in_the_day.findIndex((vv) => vv.workout_plan?.id === v.id);
                   console.log("find idx", idx, v.id);
                   if (idx === -1) {
                     return {
@@ -235,9 +234,13 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         return true;
       }
       // console.log('today_workout_days', today_workout_days);
-      const completed_plan_ids_in_today = today_workout_days.map((d) => {
-        return d.workout_plan.id;
-      });
+      const completed_plan_ids_in_today = today_workout_days
+        .filter((v) => {
+          return v.workout_plan;
+        })
+        .map((d) => {
+          return d.workout_plan!.id;
+        });
       for (let i = 0; i < today_workout_plans.length; i += 1) {
         const target_plan = today_workout_plans[i];
         if (!completed_plan_ids_in_today.includes(target_plan.id)) {
@@ -247,7 +250,6 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       return false;
     },
     async ready() {
-      // request.workout.stats.run();
       request.workout_day.has_started.run();
       const today = dayjs();
       const monday = today.startOf("week");
@@ -421,12 +423,11 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   > = {};
   const _state = {
     get weekdays() {
-      const today_text = new Date().getDate();
       return ui.$calendar.state.weekdays.map((day, idx) => {
         return {
           ...day,
           week_text: WeekdayChineseTextArr[idx],
-          is_pass: day.value.getDate() < today_text,
+          is_pass: dayjs(day.value).isBefore(dayjs().startOf("date")),
           selected: (() => {
             if (!_cur_day) {
               return day.is_today;
@@ -728,7 +729,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
               vm.methods.gotoWorkoutDayView();
             }}
           >
-            <div class="text-sm text-w-fg-1">进行中的训练</div>
+            <div class="text-sm text-w-fg-0">进行中的训练</div>
           </div>
         </div>
       </Show>

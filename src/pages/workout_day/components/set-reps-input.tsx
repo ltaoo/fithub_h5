@@ -4,10 +4,15 @@ import { JSX } from "solid-js/jsx-runtime";
 import { useViewModelStore } from "@/hooks";
 import { InputCore } from "@/domains/ui";
 import { SingleFieldCore } from "@/domains/ui/formv2";
-import { SetValueInputViewModel } from "@/biz/input_set_value";
+import { getSetValueUnit, SetValueInputModel } from "@/biz/input_set_value";
 
-export function SetValueInput(
-  props: { width?: number; store: SingleFieldCore<SetValueInputViewModel> } & JSX.HTMLAttributes<HTMLDivElement>
+export function SetRepsInput(
+  props: {
+    width?: number;
+    /** 没有值的时候也显示 unit */
+    unit?: boolean;
+    store: SingleFieldCore<SetValueInputModel>;
+  } & JSX.HTMLAttributes<HTMLDivElement>
 ) {
   const [field, $field] = useViewModelStore(props.store);
   const [input, $input] = useViewModelStore(props.store.input);
@@ -33,10 +38,20 @@ export function SetValueInput(
         $field.setStatus("focus");
       }}
     >
-      <Show when={input().value !== ""} fallback={<div class="text-w-fg-2">{input().placeholder}</div>}>
-        <div class="text-w-fg-0">{input().value}</div>
+      <Show when={input().unit !== getSetValueUnit("ToFail")} fallback={<div class="text-w-fg-2">力竭</div>}>
+        <Show
+          when={input().value !== ""}
+          fallback={
+            <>
+              <div class="text-w-fg-2">{input().placeholder}</div>
+              <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-w-fg-2">{input().unit}</div>
+            </>
+          }
+        >
+          <div class="text-w-fg-0">{input().value}</div>
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-w-fg-2">{input().unit}</div>
+        </Show>
       </Show>
-      <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-w-fg-2">{input().unit}</div>
     </div>
   );
 }

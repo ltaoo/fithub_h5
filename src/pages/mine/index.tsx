@@ -1,13 +1,24 @@
 import { For, Show } from "solid-js";
-import { ChevronDown, ChevronLeft, ChevronRight, Gem, Moon, MoreHorizontal, Pen, Sun } from "lucide-solid";
+import { Bird, ChevronDown, ChevronLeft, ChevronRight, Gem, Moon, MoreHorizontal, Pen, Sun } from "lucide-solid";
+import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, Input, ScrollView } from "@/components/ui";
 import { Sheet } from "@/components/ui/sheet";
+import { Flex } from "@/components/flex/flex";
+import { Empty } from "@/components/empty";
 
 import { base, Handler } from "@/domains/base";
-import { ButtonCore, DialogCore, DropdownMenuCore, InputCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
+import {
+  ButtonCore,
+  DialogCore,
+  DropdownMenuCore,
+  InputCore,
+  MenuItemCore,
+  ScrollViewCore,
+  SelectCore,
+} from "@/domains/ui";
 import { ListCore } from "@/domains/list";
 import { RequestCore } from "@/domains/request";
 import {
@@ -35,6 +46,8 @@ import { SelectViewModel } from "@/biz/select_base";
 import { CalendarCore } from "@/domains/ui/calendar";
 import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { UserAccountForm } from "@/biz/user/account_form";
+import { WorkoutDayStatus } from "@/biz/workout_day/constants";
+import { Select } from "@/components/ui/select";
 
 function HomeMineViewModel(props: ViewComponentProps) {
   const request = {
@@ -57,6 +70,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
           process: fetchFinishedWorkoutDayListProcess,
           client: props.client,
         })
+      ),
+      list: new ListCore(
+        new RequestCore(fetchWorkoutDayList, { process: fetchWorkoutDayListProcess, client: props.client })
       ),
     },
     gift_card: {
@@ -158,7 +174,23 @@ function HomeMineViewModel(props: ViewComponentProps) {
       props.app.$user.updateToken(r2.data);
       return Result.Ok(r2.data);
     },
+    async handleClickDate(date: { yyyy: string }) {
+      const [finished_at_start, finished_at_end] = [
+        dayjs(date.yyyy).startOf("date").toDate(),
+        dayjs(date.yyyy).endOf("date").toDate(),
+      ];
+      const r = await request.workout_day.list.search({
+        finished_at_start,
+        finished_at_end,
+        status: WorkoutDayStatus.Finished,
+      });
+      if (r.error) {
+        return;
+      }
+      ui.$dialog_calendar_workout_days.show();
+    },
   };
+  const today = dayjs();
   const ui = {
     $view: new ScrollViewCore({
       async onPullToRefresh() {
@@ -166,8 +198,24 @@ function HomeMineViewModel(props: ViewComponentProps) {
         ui.$view.finishPullToRefresh();
       },
     }),
+    $select_month: new SelectCore({
+      defaultValue: today.month(),
+      options: Array.from({ length: today.month() + 1 }, (_, i) => ({
+        label: `${i + 1}月`,
+        value: i,
+      })),
+      onChange(v) {
+        if (v === null) {
+          return;
+        }
+        const vv = dayjs().set("month", v);
+        // const [start, end] = [vv.startOf("month").startOf("date"), vv.endOf("month").endOf("date")];
+        ui.$calendar.selectDay(vv.toDate());
+        methods.refreshWorkoutCalendar();
+      },
+    }),
     $calendar: CalendarCore({
-      today: new Date(),
+      today: today.toDate(),
     }),
     $menu: new DropdownMenuCore({
       items: [
@@ -364,6 +412,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
         methods.refreshMyProfile();
       },
     }),
+    $dialog_calendar_workout_days: new DialogCore({}),
   };
   let _theme = props.app.theme;
   let _nickname = "...";
@@ -404,6 +453,9 @@ function HomeMineViewModel(props: ViewComponentProps) {
     get theme() {
       return _theme;
     },
+    get workout_days() {
+      return request.workout_day.list.response.dataSource;
+    },
   };
   enum Events {
     StateChange,
@@ -413,11 +465,13 @@ function HomeMineViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
   request.workout_day.finished_list.onStateChange(() => methods.refresh());
+  request.workout_day.list.onStateChange(() => methods.refresh());
   request.gift_card.profile.onStateChange(() => methods.refresh());
   // ui.$calendar.onStateChange(() => methods.refresh());
   ui.$dialog_nickname_update.onShow(() => {
     ui.$input_nickname.focus();
   });
+  ui.$calendar.onChange(() => methods.refresh());
   ui.$select_avatar.onStateChange(() => methods.refresh());
 
   return {
@@ -510,9 +564,33 @@ export function HomeMineView(props: ViewComponentProps) {
               "border-radius": "12px 12px 0 0",
             }}
           >
-            <div class="rounded-lg border-2 border-w-fg-3">
+            <div class="grid grid-cols-3 gap-2">
+              <div
+                class="border-2 border-w-fg-3 rounded-lg p-4"
+                onClick={() => {
+                  props.history.push("root.workout_day_cardio");
+                }}
+              >
+                <div class="text-w-fg-0 text-center">
+                  <div>添加</div>
+                  <div>有氧记录</div>
+                </div>
+              </div>
+              <div class="border-2 border-w-fg-3 rounded-lg p-4">
+                <div class="text-w-fg-0 text-center">
+                  <div>补录</div>
+                  <div>训练记录</div>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border-2 border-w-fg-3 mt-2">
               <div class="flex items-center justify-between p-4 border-b-2 border-w-fg-3">
-                <div class="font-semibold text-w-fg-0">训练日历</div>
+                <Flex class="gap-2">
+                  <div class="font-semibold text-w-fg-0">训练日历</div>
+                  <div>
+                    <Select store={vm.ui.$select_month}></Select>
+                  </div>
+                </Flex>
                 <div
                   class="p-1 rounded-full bg-w-bg-5"
                   onClick={() => {
@@ -544,7 +622,7 @@ export function HomeMineView(props: ViewComponentProps) {
                                   "bg-w-bg-5": date.is_today,
                                 }}
                                 onClick={() => {
-                                  // vm.methods.handleClickDate(date);
+                                  vm.methods.handleClickDate(date);
                                 }}
                               >
                                 <div class="text-center text-sm text-w-fg-0">{date.text}</div>
@@ -562,6 +640,21 @@ export function HomeMineView(props: ViewComponentProps) {
                   }}
                 </For>
               </div>
+            </div>
+          </div>
+          <div class="px-2">
+            <div
+              class="p-4 border-2 border-w-fg-3 rounded-lg"
+              onClick={() => {
+                const today = dayjs("2025/06/01");
+                props.history.push("root.workout_report_month", {
+                  title: "六月训练总结",
+                  start: String(today.startOf("month").startOf("date").valueOf()),
+                  end: String(today.endOf("month").endOf("date").valueOf()),
+                });
+              }}
+            >
+              <div class="text-w-fg-0">六月训练统计</div>
             </div>
           </div>
         </div>
@@ -685,6 +778,55 @@ export function HomeMineView(props: ViewComponentProps) {
             </Button>
           </div>
         </Show>
+      </Sheet>
+      <Sheet store={vm.ui.$dialog_calendar_workout_days} app={props.app}>
+        <div class="p-2 space-y-2 h-[480px] overflow-y-auto">
+          <For
+            each={state().workout_days}
+            fallback={
+              <div>
+                <Empty text="无训练记录" />
+              </div>
+            }
+          >
+            {(d) => {
+              return (
+                <div class="p-4 border-2 border-w-fg-3 rounded-lg">
+                  <div class="text-w-fg-0">{d.title}</div>
+                  <div>
+                    <div class="mt-1 text-sm text-w-fg-1">完成于 {d.finished_at_text}</div>
+                    <Flex class="mt-2 gap-2">
+                      <div
+                        class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
+                        onClick={() => {
+                          vm.ui.$dialog_calendar_workout_days.hide();
+                          if (d.workout_plan) {
+                            props.history.push("root.workout_plan_profile", {
+                              id: String(d.workout_plan.id),
+                            });
+                          }
+                        }}
+                      >
+                        <div class="text-sm">计划详情</div>
+                      </div>
+                      <div
+                        class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
+                        onClick={() => {
+                          vm.ui.$dialog_calendar_workout_days.hide();
+                          props.history.push("root.workout_day_profile", {
+                            id: String(d.id),
+                          });
+                        }}
+                      >
+                        <div class="text-sm">训练详情</div>
+                      </div>
+                    </Flex>
+                  </div>
+                </div>
+              );
+            }}
+          </For>
+        </div>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu} />
     </>

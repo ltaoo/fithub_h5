@@ -104,11 +104,13 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
     this.present.onShow(async () => {
       this.open = true;
       this.emit(Events.VisibleChange, true);
+      this.emit(Events.Show);
       this.emit(Events.StateChange, { ...this.state });
     });
     this.present.onHidden(async () => {
       this.open = false;
       this.emit(Events.Cancel);
+      this.emit(Events.Hidden);
       this.emit(Events.VisibleChange, false);
       this.emit(Events.StateChange, { ...this.state });
     });
@@ -134,7 +136,7 @@ export class DialogCore extends BaseDomain<TheTypesOfEvents> {
   }
   /** 显示弹窗 */
   show() {
-    console.log("[]ui/dialog - show");
+    // console.log("[]ui/dialog - show");
     if (this.open) {
       return;
     }

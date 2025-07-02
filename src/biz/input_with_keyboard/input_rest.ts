@@ -16,7 +16,13 @@ import {
 
 import { InputWithKeyboardModel } from "./index";
 
-export function RestInputModel(props: { defaultValue: string; suffix: SetValueUnit; app: ViewComponentProps["app"] }) {
+export function RestInputModel(props: {
+  defaultValue: string;
+  suffix: SetValueUnit;
+  app: ViewComponentProps["app"];
+  onChange?: (v: { num: string; unit: SetValueUnit }) => void;
+  onPaddingHeightChange?: (v: number) => void;
+}) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -25,7 +31,11 @@ export function RestInputModel(props: { defaultValue: string; suffix: SetValueUn
       ui.$dialog.hide();
     },
   };
-  const $input = InputWithKeyboardModel({ defaultValue: props.defaultValue, app: props.app });
+  const $input = InputWithKeyboardModel({
+    defaultValue: props.defaultValue,
+    app: props.app,
+    onPaddingHeightChange: props.onPaddingHeightChange,
+  });
   const ui = {
     $input,
     $keyboard: $input.ui.$keyboard,
@@ -48,15 +58,20 @@ export function RestInputModel(props: { defaultValue: string; suffix: SetValueUn
     get suffix() {
       return ui.$select.value;
     },
+    get status() {
+      return ui.$input.state.status;
+    },
     get showSubKey() {
       return ui.$keyboard.state.showSubKey;
     },
   };
   enum Events {
+    Change,
     StateChange,
     Error,
   }
   type TheTypesOfEvents = {
+    [Events.Change]: typeof _state.value;
     [Events.StateChange]: typeof _state;
     [Events.Error]: BizError;
   };
@@ -64,7 +79,13 @@ export function RestInputModel(props: { defaultValue: string; suffix: SetValueUn
 
   ui.$keyboard.onStateChange(() => methods.refresh());
   ui.$input.onStateChange(() => methods.refresh());
+  ui.$input.onChange(() => {
+    bus.emit(Events.Change, _state.value);
+  });
   ui.$select.onStateChange(() => methods.refresh());
+  if (props.onChange) {
+    bus.on(Events.Change, props.onChange);
+  }
 
   return {
     shape: "input" as const,
@@ -86,7 +107,9 @@ export function RestInputModel(props: { defaultValue: string; suffix: SetValueUn
     destroy() {
       bus.destroy();
     },
-    onChange: ui.$input.onChange.bind(ui.$input),
+    onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
+      return bus.on(Events.Change, handler);
+    },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },

@@ -61,7 +61,7 @@ function calc_estimated_duration(
   let duration = 0;
   for (let i = 0; i < actions.length; i += 1) {
     const set = actions[i];
-    let set_duration = Number(set.set_rest_duration);
+    let set_duration = Number(set.set_rest_duration.num);
     for (let j = 0; j < set.actions.length; j += 1) {
       const act = set.actions[j];
       const reps = Number(act.reps.num);
@@ -257,7 +257,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
               }
             }
             steps.push({
-              set_type: set_value.set_type,
+              set_type: set_value.set_type ?? WorkoutPlanSetType.Normal,
               set_count: Number(set_value.set_count),
               set_rest_duration: {
                 num: set_value.set_rest_duration.num,
@@ -442,7 +442,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
         methods.refreshEquipments();
         const field_value = ui.$ref_action_in_menu.value;
         const menu_type = ui.$ref_menu_type.value;
-        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value, menu_type);
+        console.log("[PAGE]home_workout_plan/create - $workout_action_select onOk", field_value, menu_type, actions);
         if (field_value) {
           const $field = ui.$input_actions.getFieldWithId(field_value.id);
           if (!$field) {
@@ -460,7 +460,10 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
                     zh_name: act.zh_name,
                   },
                   reps: (() => {
-                    if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
+                    if (
+                      $field.field.input.value.set_type &&
+                      [WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)
+                    ) {
                       return {
                         num: "30",
                         unit: getSetValueUnit("秒"),
@@ -484,49 +487,45 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
             });
           }
           if (menu_type === "add_action") {
-            $field.field.input.setValue({
-              actions: [
-                ...$field.field.input.value.actions.map((v) => {
-                  return {
-                    action: v.action!,
-                    reps: v.reps,
-                    weight: {
-                      num: v.weight.num,
-                      unit: v.weight.unit as SetValueUnit,
-                    },
-                    rest_duration: v.rest_duration,
-                  };
-                }),
-                ...actions.map((act) => {
-                  return {
-                    action: {
-                      id: Number(act.id),
-                      zh_name: act.zh_name,
-                    },
-                    reps: (() => {
-                      if ([WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)) {
-                        return {
-                          num: "30",
-                          unit: getSetValueUnit("秒"),
-                        };
-                      }
-                      return {
-                        num: "12",
-                        unit: getSetValueUnit("次"),
-                      };
-                    })(),
-                    weight: {
-                      num: "12",
-                      unit: getSetValueUnit("RM"),
-                    },
-                    rest_duration: {
+            for (let i = 0; i < actions.length; i += 1) {
+              const act = actions[i];
+              const _$f = $field.field.input.ui.$form.fields.actions.append();
+              if (
+                $field.field.input.value.set_type &&
+                [WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)
+              ) {
+                _$f.showField("rest_duration");
+              }
+              _$f.setValue({
+                action: {
+                  id: Number(act.id),
+                  zh_name: act.zh_name,
+                },
+                reps: (() => {
+                  if (
+                    $field.field.input.value.set_type &&
+                    [WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)
+                  ) {
+                    return {
                       num: "30",
                       unit: getSetValueUnit("秒"),
-                    },
+                    };
+                  }
+                  return {
+                    num: "12",
+                    unit: getSetValueUnit("次"),
                   };
-                }),
-              ],
-            });
+                })(),
+                weight: {
+                  num: "12",
+                  unit: getSetValueUnit("RM"),
+                },
+                rest_duration: {
+                  num: "30",
+                  unit: getSetValueUnit("秒"),
+                },
+              });
+            }
           }
           ui.$workout_action_select.clear();
           ui.$workout_action_select.ui.$dialog.hide();
@@ -582,21 +581,25 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
               return;
             }
             ui.$workout_action_select.setValue(
-              $field.field.input.actions.map((act) => {
+              $field.field.input.value.actions.map((act) => {
                 return {
-                  id: act.action.id,
-                  zh_name: act.action.zh_name,
+                  id: act.action!.id,
+                  zh_name: act.action!.zh_name,
                 };
               })
             );
             if (
+              $field.field.input.value.set_type &&
               [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
-                $field.field.input.type
+                $field.field.input.value.set_type
               )
             ) {
               ui.$workout_action_select.methods.setMode("single");
             }
-            if ([WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes($field.field.input.type)) {
+            if (
+              $field.field.input.value.set_type &&
+              [WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes($field.field.input.value.set_type)
+            ) {
               ui.$workout_action_select.methods.setMode("multiple");
             }
             ui.$ref_menu_type.select("change_action");
@@ -844,6 +847,7 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
   };
   const bus = base<TheTypesOfEvents>();
   ui.$input_actions.onChange(() => {
+    console.log("[PAGE]workout_plan/model - input_actions.onChange");
     methods.debounce_calc_estimated_duration();
   });
   ui.$workout_action_select.ui.$dialog.onStateChange(() => methods.refresh());

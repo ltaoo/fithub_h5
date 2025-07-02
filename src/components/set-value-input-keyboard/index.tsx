@@ -6,11 +6,11 @@ import { createSignal, For } from "solid-js";
 import { useViewModel, useViewModelStore } from "@/hooks";
 import { Input } from "@/components/ui/input";
 import * as PopoverPrimitive from "@/packages/ui/popover";
-import { SetValueInputViewModel } from "@/biz/input_set_value";
+import { SetValueInputModel } from "@/biz/input_set_value";
 import { base, Handler } from "@/domains/base";
 import { InputCore, PopoverCore } from "@/domains/ui";
 
-export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) {
+export function SetValueInputKeyboard(props: { store: SetValueInputModel }) {
   const [state, vm] = useViewModelStore(props.store);
 
   return (
@@ -19,7 +19,7 @@ export function SetValueInputKeyboard(props: { store: SetValueInputViewModel }) 
         <div class="headers flex items-center justify-between px-2">
           <div class="text-3xl font-bold text-w-fg-0">{state().text}</div>
           <div class="overflow-hidden flex items-center border-2 border-w-fg-3 rounded-xl">
-            <For each={state().unitOptions}>
+            <For each={state().options}>
               {(unit) => {
                 return (
                   <div

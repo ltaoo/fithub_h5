@@ -19,8 +19,8 @@ type PartialWorkoutAction = {
   type: string;
   overview: string;
   level: number;
-  tags1: string;
-  tags2: string;
+  tags: string;
+  // tags2: string;
   details: string;
   points: string;
   problems: string;
@@ -80,6 +80,32 @@ export function fetchWorkoutActionListProcess(r: TmpRequestResp<typeof fetchWork
     }),
   });
 }
+
+export function fetchCardioWorkoutActionList(body: Partial<FetchParams>) {
+  return request.post<ListResponseWithCursor<PartialWorkoutAction>>("/api/workout_action/list/cardio", {
+    page_size: body.pageSize,
+    page: body.page,
+  });
+}
+export function fetchCardioWorkoutActionListProcess(r: TmpRequestResp<typeof fetchCardioWorkoutActionList>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  return Result.Ok({
+    no_more: !r.data.has_more,
+    list: r.data.list.map((v) => {
+      return {
+        id: v.id,
+        name: v.name,
+        zh_name: v.zh_name,
+        type: v.type,
+        overview: v.overview,
+        tags: v.tags.split(",").filter(Boolean),
+      };
+    }),
+  });
+}
+
 export type WorkoutActionProfile = {
   id: number;
   name: string;
@@ -371,7 +397,7 @@ export function fetchWorkoutActionHistoryListOfWorkoutDayProcess(
         reps_unit: v.reps_unit,
         weight: v.weight,
         weight_unit: v.weight_unit,
-        created_at: dayjs(new Date(v.created_at)).format("YYYY-MM-DD HH:mm"),
+        created_at: dayjs(v.created_at).format("YYYY-MM-DD HH:mm"),
         action: {
           id: v.action.id,
           zh_name: v.action.zh_name,

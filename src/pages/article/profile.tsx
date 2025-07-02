@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { CircleX, Loader2, MoreHorizontal } from "lucide-solid";
+import { CircleX, LoaderCircle, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -171,7 +171,7 @@ export function ArticleProfileView(props: ViewComponentProps) {
         >
           <Show when={state().loading}>
             <div class="loading flex justify-center items-center p-4">
-              <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+              <LoaderCircle class="w-8 h-8 text-w-fg-1 animate-spin" />
             </div>
           </Show>
           <Show when={state().profile} keyed>

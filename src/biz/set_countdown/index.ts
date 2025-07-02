@@ -1,13 +1,19 @@
+import dayjs from "dayjs";
+
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
 import { CountdownViewModel } from "@/biz/countdown";
 import { StopwatchViewModel } from "@/biz/stopwatch";
 
 export function SetCountdownViewModel(props: {
+  /** 倒计时，单位秒 */
   countdown: number;
+  /** 倒计时还剩多少毫秒 */
   remaining: number;
+  /** 超出了多少毫秒 */
   exceed: number;
-  finished: boolean;
+  /** 暂停时间 */
+  finished_at: number;
   onStop?: () => void;
 }) {
   const methods = {
@@ -16,12 +22,17 @@ export function SetCountdownViewModel(props: {
     },
   };
   const ui = {
-    $countdown: CountdownViewModel({ countdown: props.countdown, time: props.remaining, finished: props.finished }),
+    $countdown: CountdownViewModel({
+      countdown: props.countdown,
+      time: props.remaining,
+      finished: !!props.finished_at,
+    }),
     $stopwatch: StopwatchViewModel({ time: props.exceed }),
   };
 
   let _running = false;
-  let _paused = false;
+  let _paused = !!props.finished_at;
+  let _paused_at = props.finished_at ?? 0;
   let _state = {
     get running() {
       return _running;
@@ -34,6 +45,9 @@ export function SetCountdownViewModel(props: {
     },
     get exceed() {
       return ui.$stopwatch.time;
+    },
+    get paused_at() {
+      return _paused_at;
     },
   };
   enum Events {
@@ -88,6 +102,7 @@ export function SetCountdownViewModel(props: {
     },
     pause() {
       console.log("[BIZ]workout_day/SetCountdown - pause", _paused);
+      _paused_at = dayjs().valueOf();
       if (ui.$countdown.state.running) {
         ui.$countdown.pause();
         return;
@@ -99,6 +114,31 @@ export function SetCountdownViewModel(props: {
       _paused = true;
       ui.$countdown.setComplete();
       methods.refresh();
+    },
+    setStartAt(v: number) {
+      console.log("[BIZ]set_countdown - setStartAt", v, props.remaining, props.exceed, props.finished_at);
+      ui.$countdown.setStartedAt(v);
+      if (props.finished_at) {
+        return;
+      }
+      const pass_milliseconds = dayjs().diff(v);
+      const remaining = props.countdown * 1000 - pass_milliseconds;
+      console.log("[BIZ]countdown - start2 ", pass_milliseconds);
+      if (remaining >= 0) {
+        // 还在倒计时
+        ui.$countdown.recover(v);
+        _running = true;
+        methods.refresh();
+      }
+      if (remaining < 0) {
+        // 超过倒计时了
+        ui.$countdown.finish();
+        ui.$stopwatch.setStartedAt(dayjs(v).add(props.countdown, "second").valueOf());
+        ui.$stopwatch.play();
+        _running = true;
+        methods.refresh();
+      }
+      console.log("[]距离倒计时开始已过去", dayjs().diff(v, "minute"));
     },
     ready() {},
     onStart(handler: Handler<TheTypesOfEvents[Events.Start]>) {

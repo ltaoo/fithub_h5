@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -145,7 +145,7 @@ export function ReportProfileView(props: ViewComponentProps) {
     >
       <Show when={state().loading}>
         <div class="flex justify-center">
-          <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+          <LoaderCircle class="w-8 h-8 text-w-fg-1 animate-spin" />
         </div>
       </Show>
       <Show when={state().profile}>

@@ -116,6 +116,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_day_cardio: {
+        title: "有氧记录",
+        pathname: "/workout_day/cardio",
+        options: {
+          require: ["login"],
+        },
+      },
       workout_day_list: {
         title: "历史训练记录",
         pathname: "/workout_day/list",
@@ -273,6 +280,13 @@ const configure = {
       workout_action_list: {
         title: "动作库",
         pathname: "/workout_action/list",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_report_month: {
+        title: "月度统计",
+        pathname: "/workout_report/month",
         options: {
           require: ["login"],
         },

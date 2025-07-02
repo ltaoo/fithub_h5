@@ -212,6 +212,7 @@ export function WorkoutActionSelectViewModel(props: {
         ui.$view.finishLoadingMore();
       },
     }),
+    $popup_selected_actions: new PopoverCore(),
   };
 
   let _loading = true;

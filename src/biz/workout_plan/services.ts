@@ -73,6 +73,26 @@ export function updateWorkoutPlan(body: {
   });
 }
 
+export function parseWeightToNumAndUnit(set_weight: string) {
+  const m1 = set_weight.match(/([0-9]{1,})RM/);
+  if (m1) {
+    return {
+      num: m1[1],
+      unit: getSetValueUnit("RM"),
+    };
+  }
+  const m2 = set_weight.match(/([0-9]{1,})RPE/);
+  if (m2) {
+    return {
+      num: m2[1],
+      unit: getSetValueUnit("RPE"),
+    };
+  }
+  return {
+    num: "6",
+    unit: getSetValueUnit("RPE"),
+  };
+}
 export function parseWorkoutPlanStepsString(details: string) {
   const r = parseJSONStr<WorkoutPlanBodyDetailsJSON250424 | WorkoutPlanBodyDetailsJSON250627>(details);
   if (r.error) {
@@ -91,26 +111,7 @@ export function parseWorkoutPlanStepsString(details: string) {
           num: String(step.set_rest_duration),
           unit: getSetValueUnit("秒"),
         },
-        set_weight: (() => {
-          const m1 = step.set_weight.match(/([0-9]{1,})RM/);
-          if (m1) {
-            return {
-              num: m1[1],
-              unit: getSetValueUnit("RM"),
-            };
-          }
-          const m2 = step.set_weight.match(/([0-9]{1,})RPE/);
-          if (m2) {
-            return {
-              num: m2[1],
-              unit: getSetValueUnit("RPE"),
-            };
-          }
-          return {
-            num: "8",
-            unit: getSetValueUnit("RPE"),
-          };
-        })(),
+        set_weight: parseWeightToNumAndUnit(step.set_weight),
         set_note: step.set_note,
         set_tags: [],
         actions: step.actions.map((act) => {
@@ -123,10 +124,7 @@ export function parseWorkoutPlanStepsString(details: string) {
               num: String(act.reps),
               unit: act.reps_unit,
             },
-            weight: {
-              num: act.weight,
-              unit: getSetValueUnit("RM"),
-            },
+            weight: parseWeightToNumAndUnit(act.weight),
             rest_duration: {
               num: String(act.rest_duration),
               unit: getSetValueUnit("秒"),

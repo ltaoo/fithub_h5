@@ -2,7 +2,7 @@
  * @file 训练计划详情
  */
 import { Show, For, Switch, Match } from "solid-js";
-import { BicepsFlexed, ChevronLeft, CircleX, Clock, Hourglass, Loader, Loader2, MoreHorizontal, X } from "lucide-solid";
+import { CircleX, Clock, LoaderCircle, MoreHorizontal, X } from "lucide-solid";
 
 import { ViewComponentProps, PageKeys } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -43,6 +43,7 @@ import { PlayerCore } from "@/domains/player";
 import { toNumber } from "@/utils/primitive";
 
 import { WorkoutPlanVideoPlayView } from "./components/video-play";
+import { getSetValueUnit } from "@/biz/input_set_value";
 
 function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
   const request = {
@@ -352,7 +353,7 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
         >
           <Show when={state().loading}>
             <div class="loading flex justify-center items-center p-4">
-              <Loader2 class="w-8 h-8 text-w-fg-1 animate-spin" />
+              <LoaderCircle class="w-8 h-8 text-w-fg-1 animate-spin" />
             </div>
           </Show>
           <Show when={state().profile}>
@@ -428,8 +429,13 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                       >
                                         <span class="text-w-fg-0">{action.action.zh_name}</span>
                                         <span class="flex items-end text-blue-400 font-medium">
-                                          <div>{action.reps.num}</div>
-                                          <div class="text-sm">{action.reps.unit}</div>
+                                          <Show
+                                            when={action.reps.unit !== getSetValueUnit("ToFail")}
+                                            fallback="做到力竭"
+                                          >
+                                            <div>{action.reps.num}</div>
+                                            <div class="text-sm">{action.reps.unit}</div>
+                                          </Show>
                                         </span>
                                       </div>
                                     )}
@@ -455,11 +461,16 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                           vm.methods.handleClickWorkoutAction(action.action);
                                         }}
                                       >
-                                        <span class="text-w-fg-0">{action.action.zh_name}</span>
-                                        <span class="text-blue-400 font-medium">
-                                          {action.reps.num}
-                                          {action.reps.unit}
-                                        </span>
+                                        <div class="text-w-fg-0">{action.action.zh_name}</div>
+                                        <div class="flex items-end text-blue-400 font-medium">
+                                          <Show
+                                            when={action.reps.unit !== getSetValueUnit("ToFail")}
+                                            fallback="做到力竭"
+                                          >
+                                            <div>{action.reps.num}</div>
+                                            <div class="text-sm">{action.reps.unit}</div>
+                                          </Show>
+                                        </div>
                                       </div>
                                     )}
                                   </For>
@@ -484,11 +495,16 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                           vm.methods.handleClickWorkoutAction(action.action);
                                         }}
                                       >
-                                        <span class="text-w-fg-0">{action.action.zh_name}</span>
-                                        <span class="flex items-center text-blue-400 font-medium">
-                                          <div>{action.reps.num}</div>
-                                          <div class="text-sm">{action.reps.unit}</div>
-                                        </span>
+                                        <div class="text-w-fg-0">{action.action.zh_name}</div>
+                                        <div class="flex items-center text-blue-400 font-medium">
+                                          <Show
+                                            when={action.reps.unit !== getSetValueUnit("ToFail")}
+                                            fallback="做到力竭"
+                                          >
+                                            <div>{action.reps.num}</div>
+                                            <div class="text-sm">{action.reps.unit}</div>
+                                          </Show>
+                                        </div>
                                       </div>
                                     )}
                                   </For>
@@ -521,10 +537,15 @@ export function HomeWorkoutPlanProfilePage(props: ViewComponentProps) {
                                     <For each={step.actions}>
                                       {(action) => (
                                         <div class="flex items-center gap-2 text-sm">
-                                          <span class="flex items-center text-blue-400 font-medium">
-                                            <div>{action.reps.num}</div>
-                                            <div class="text-sm">{action.reps.unit}</div>
-                                          </span>
+                                          <div class="flex items-center text-blue-400 font-medium">
+                                            <Show
+                                              when={action.reps.unit !== getSetValueUnit("ToFail")}
+                                              fallback="做到力竭"
+                                            >
+                                              <div>{action.reps.num}</div>
+                                              <div class="text-sm">{action.reps.unit}</div>
+                                            </Show>
+                                          </div>
                                         </div>
                                       )}
                                     </For>

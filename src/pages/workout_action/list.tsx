@@ -2,7 +2,7 @@
  * @file 健身动作列表
  */
 import { For, Show } from "solid-js";
-import { ChevronRight, Loader2, MoreHorizontal, X } from "lucide-solid";
+import { ChevronRight, MoreHorizontal, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";

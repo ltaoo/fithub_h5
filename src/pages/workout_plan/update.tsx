@@ -175,7 +175,7 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
                                         return;
                                       }
                                       vm.ui.$workout_action_select.methods.setDisabled(
-                                        $field.field.input.actions.map((act) => act.action.id)
+                                        $field.field.input.value.actions.map((act) => act.action!.id)
                                       );
                                       vm.ui.$workout_action_select.ui.$dialog.show();
                                     }}
@@ -195,7 +195,9 @@ export function HomeWorkoutPlanUpdatePage(props: ViewComponentProps) {
                                       if (!$field) {
                                         return;
                                       }
-                                      vm.ui.$input_act_remark.setValue($field.field.input.ui.$input_set_remark.value);
+                                      vm.ui.$input_act_remark.setValue(
+                                        $field.field.input.ui.$form.fields.set_note.value
+                                      );
                                       vm.ui.$dialog_act_remark.show();
                                     }}
                                   >

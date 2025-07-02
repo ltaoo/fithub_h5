@@ -36,7 +36,7 @@ export function SetValueArrayField<T extends (v: number) => any>(
 
   return (
     <Show when={!state().hidden}>
-      <div class={props.class}>
+      <div class={props.class} classList={props.classList}>
         <For each={state().fields}>
           {(field, idx) => {
             const store = props.store.mapFieldWithIndex(idx());

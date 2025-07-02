@@ -2,7 +2,7 @@
  * @file 周期安排 详情
  */
 import { For, sharedConfig, Show } from "solid-js";
-import { CheckCircle2, ChevronDown, ChevronLeft, Coffee, Divide, Loader2 } from "lucide-solid";
+import { CheckCircle2, ChevronDown, Coffee, LoaderCircle } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -201,7 +201,7 @@ export function WorkoutScheduleProfileView(props: ViewComponentProps) {
       >
         <Show when={state().loading}>
           <div class="flex justify-center p-4">
-            <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />
+            <LoaderCircle class="w-8 h-8 text-w-fg-0 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>

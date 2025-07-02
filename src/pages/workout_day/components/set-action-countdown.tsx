@@ -3,6 +3,7 @@
  */
 import { createSignal, Show } from "solid-js";
 import { Pause, Play, PlayCircle, StopCircle } from "lucide-solid";
+import dayjs from "dayjs";
 
 import { useViewModelStore } from "@/hooks";
 import { CountdownViewModel } from "@/biz/countdown";
@@ -15,7 +16,8 @@ export function SetActionCountdownViewModel(props: {
   time1?: number;
   time2?: number;
   time3?: number;
-  finished: boolean;
+  /** 含义是 暂停时间。判断是否倒计时结束，看 time2 是否小于 0 */
+  finished_at1: number;
   no_rest_countdown?: boolean;
 }) {
   const methods = {
@@ -29,27 +31,35 @@ export function SetActionCountdownViewModel(props: {
       countdown: props.countdown,
       time: props.time1,
       // finished: props.time1 !== undefined && props.time1 < props.workout_duration,
-      finished: props.time1 === 0,
+      finished: !!(props.time1 !== undefined && props.time1 <= 0),
     }),
     /** 动作休息倒计时 */
     $countdown2: CountdownViewModel({
       countdown: props.rest_duration,
       time: props.time2,
       // finished: props.time2 !== undefined && props.time2 < props.rest_duration,
-      finished: props.time2 === 0,
+      finished: !!(props.time2 !== undefined && props.time2 <= 0),
     }),
-    /** 计算休息的超出时间，废弃了 */
+    /** @todo 计算休息的超出时间，废弃了（根据配置判断是否使用吧 */
     $stopwatch: StopwatchViewModel({ time: props.time3 }),
   };
 
   let _running = false;
-  let _finished = false;
+  console.log("[BIZ]workout_day/set-action-countdown", props.time1, props.time2);
+  let _finished =
+    !!(props.time2 !== undefined && props.time2 <= 0) ||
+    !!(props.no_rest_countdown && props.time1 !== undefined && props.time1 <= 0);
+  let _paused = !!props.finished_at1;
+  let _paused_at = props.finished_at1 ?? 0;
   let _state = {
     get running() {
       return _running;
     },
     get finished() {
       return _finished;
+    },
+    get paused_at() {
+      return _paused_at;
     },
     get remaining() {
       return ui.$countdown1.time;
@@ -65,32 +75,44 @@ export function SetActionCountdownViewModel(props: {
     Start,
     Stop,
     Finished,
+    /** 通知外部调用接口保存数据 */
+    Refresh,
     StateChange,
   }
   type TheTypesOfEvents = {
     [Events.Start]: void;
     [Events.Stop]: true;
     [Events.Finished]: void;
+    [Events.Refresh]: void;
     [Events.StateChange]: typeof _state;
   };
   const bus = base<TheTypesOfEvents>();
 
   ui.$countdown1.onStart(() => {
-    console.log("[BIZ]workout_day/set-action-countdown - countdown1.onStart");
+    console.log("[BIZ]workout_day/set-action-countdown - countdown1.onStart", ui.$countdown1.state.started_at);
     _running = true;
     bus.emit(Events.Start);
     methods.refresh();
   });
   ui.$countdown2.onStart(() => {
     _running = true;
+    _paused = false;
+    _paused_at = 0;
+    bus.emit(Events.Refresh);
     methods.refresh();
   });
   ui.$countdown1.onResume(() => {
     _running = true;
+    _paused = false;
+    _paused_at = 0;
+    bus.emit(Events.Refresh);
     methods.refresh();
   });
   ui.$countdown2.onResume(() => {
     _running = true;
+    _paused = false;
+    _paused_at = 0;
+    bus.emit(Events.Refresh);
     methods.refresh();
   });
   ui.$countdown1.onFinished(() => {
@@ -132,6 +154,27 @@ export function SetActionCountdownViewModel(props: {
   return {
     ui,
     state: _state,
+    get time1() {
+      if (_finished) {
+        return 0;
+      }
+      return ui.$countdown1.time;
+    },
+    get time2() {
+      if (_finished) {
+        return 0;
+      }
+      return ui.$countdown2.time;
+    },
+    get time3() {
+      if (_finished) {
+        return 0;
+      }
+      return ui.$stopwatch.time;
+    },
+    get finished() {
+      return _state.finished;
+    },
     start() {
       console.log(
         "[BIZ]workout_day/set-action-countdown - start",
@@ -139,13 +182,23 @@ export function SetActionCountdownViewModel(props: {
         ui.$countdown2.state.completed
       );
       if (ui.$countdown2.state.paused) {
+        _paused_at = 0;
+        ui.$countdown2.setStartedAt(0);
         ui.$countdown2.play();
         return;
       }
+      _paused_at = 0;
+      ui.$countdown1.setStartedAt(0);
       ui.$countdown1.play();
     },
     pause() {
-      console.log("[BIZ]workout_day/set-action-countdown - pause");
+      console.log(
+        "[BIZ]workout_day/set-action-countdown - pause",
+        ui.$countdown2.state.running,
+        ui.$countdown1.state.running
+      );
+      _paused_at = dayjs().valueOf();
+      _paused = true;
       if (ui.$countdown2.state.running) {
         ui.$countdown2.pause();
         return;
@@ -155,14 +208,81 @@ export function SetActionCountdownViewModel(props: {
         return;
       }
     },
-    get time1() {
-      return ui.$countdown1.time;
-    },
-    get time2() {
-      return ui.$countdown2.time;
-    },
-    get time3() {
-      return ui.$stopwatch.time;
+    setStartAt(v1: number, v2?: number) {
+      console.log("[BIZ]set_action_countdown - setStartAt", v1, props.finished_at1, props.time1, props.time2);
+      if (_finished) {
+        ui.$countdown1.finish();
+        ui.$countdown2.finish();
+        return;
+      }
+      ui.$countdown1.setStartedAt(v1);
+      if (props.finished_at1) {
+        // 训练倒计时手动暂停的情况
+        if (props.time1 && props.time1 > 0) {
+          // 休息倒计时暂停了，刷新页面后，仍然保持暂停的状态，可以继续 倒计时
+          _finished = false;
+          ui.$countdown1.pause();
+          methods.refresh();
+        } else {
+          ui.$countdown1.finish();
+          if (props.time2 && props.time2 > 0) {
+            // 休息倒计时暂停了，刷新页面后，仍然保持暂停的状态，可以继续 倒计时
+            _finished = false;
+            ui.$countdown2.pause();
+            methods.refresh();
+          }
+        }
+        return;
+      }
+      const remaining1 = props.countdown * 1000 - dayjs().diff(v1);
+      console.log("[BIZ]set_action_countdown - setStartAt before remaining1", remaining1, v1, v2);
+      if (remaining1 >= 0) {
+        // 还在倒计时
+        ui.$countdown1.recover(v1);
+        _running = true;
+        methods.refresh();
+      } else {
+        // 训练倒计时结束
+        if (v2) {
+          // 在休息倒计时开始后刷新了页面
+          const remaining2 = props.rest_duration * 1000 - dayjs().diff(v2);
+          console.log("[BIZ]set_countdown - setStartAt before remaining2", remaining2, v2);
+          if (remaining2 >= 0) {
+            ui.$countdown1.finish();
+            ui.$countdown2.setStartedAt(v2 ?? 0);
+            // 还在倒计时
+            ui.$countdown2.recover(v2);
+            _running = true;
+            methods.refresh();
+          }
+          if (remaining2 < 0) {
+            // 超过倒计时了
+            ui.$countdown1.finish();
+            // ui.$stopwatch.setStartedAt(dayjs(v).add(props.countdown, "second").valueOf());
+            // ui.$stopwatch.play();
+            // _running = true;
+            // methods.refresh();
+          }
+        } else {
+          // 在休息倒计时开始前就刷新了页面，然后训练倒计时已经终止
+          // remaining3 表示从开始训练倒计时到现在，是否超过了训练时间+休息时间
+          const remaining3 = props.countdown * 1000 + props.rest_duration * 1000 - dayjs().diff(v1);
+          if (remaining3 >= 0) {
+            // 还要休息倒计时
+            ui.$countdown1.finish();
+            const v2 = dayjs(v1)
+              .add(props.countdown * 1000, "millisecond")
+              .valueOf();
+            ui.$countdown2.setStartedAt(v2);
+            ui.$countdown2.recover(v2);
+          } else {
+            ui.$countdown1.finish();
+            ui.$countdown2.finish();
+          }
+        }
+      }
+      console.log("[]距离倒计时开始已过去", dayjs().diff(v1, "minute"));
+      console.log("[]距离倒计时开始已过去", dayjs().diff(v2, "minute"));
     },
     ready() {},
     destroy() {
@@ -179,6 +299,9 @@ export function SetActionCountdownViewModel(props: {
     },
     onFinished(handler: Handler<TheTypesOfEvents[Events.Finished]>) {
       return bus.on(Events.Finished, handler);
+    },
+    onRefresh(handler: Handler<TheTypesOfEvents[Events.Refresh]>) {
+      return bus.on(Events.Refresh, handler);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -273,55 +396,52 @@ export function SetActionCountdownView(props: {
 
   return (
     <div class="set-act-countdown flex items-center gap-4">
-      <div
-        class="set-countdown-btn overflow-hidden rounded-full relative flex items-center gap-2"
-        classList={{
-          "bg-w-fg-5": props.highlight,
-        }}
+      <Show
+        when={state().running}
+        fallback={
+          <Show when={!state().finished}>
+            <div
+              class=""
+              classList={{
+                "flex items-center justify-center p-2 rounded-full": true,
+                "bg-w-fg-5": props.highlight,
+              }}
+              onClick={() => {
+                vm.start();
+              }}
+            >
+              <div
+                classList={{
+                  "text-w-fg-0": !!props.highlight,
+                  "text-w-fg-1": !props.highlight,
+                }}
+              >
+                <Play class="w-4 h-4" />
+              </div>
+            </div>
+          </Show>
+        }
       >
         <div
           class=""
           classList={{
             "flex items-center justify-center p-2 rounded-full": true,
+            "bg-w-fg-5": props.highlight,
           }}
-          onClick={(event) => {
-            const { x, y } = event;
-            // if (props.onClick) {
-            //   props.onClick({ x, y, finished: vm.state.running });
-            // }
-            if (vm.state.running) {
-              vm.pause();
-              return;
-            }
-            vm.start();
+          onClick={() => {
+            vm.pause();
           }}
         >
-          <Show
-            when={state().running}
-            fallback={
-              <Show when={!state().finished}>
-                <div
-                  classList={{
-                    "text-w-fg-0": !!props.highlight,
-                    "text-w-fg-1": !props.highlight,
-                  }}
-                >
-                  <Play class="w-4 h-4" />
-                </div>
-              </Show>
-            }
+          <div
+            classList={{
+              "text-w-fg-0": !!props.highlight,
+              "text-w-fg-1": !props.highlight,
+            }}
           >
-            <div
-              classList={{
-                "text-w-fg-0": !!props.highlight,
-                "text-w-fg-1": !props.highlight,
-              }}
-            >
-              <Pause class="w-4 h-4" />
-            </div>
-          </Show>
+            <Pause class="w-4 h-4" />
+          </div>
         </div>
-      </div>
+      </Show>
       <div>
         <div
           classList={{
@@ -333,8 +453,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[18px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_minutes1}
           >
@@ -343,8 +463,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[20px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_minutes2}
           >
@@ -353,8 +473,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[12px]": state().running,
-              "width-[6px]": !state().running,
+              "w-[12px]": state().running,
+              "w-[6px]": !state().running,
             }}
           >
             :
@@ -362,8 +482,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[20px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_seconds1}
           >
@@ -372,8 +492,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[20px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_seconds2}
           >
@@ -382,8 +502,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[12px]": state().running,
-              "width-[6px]": !state().running,
+              "w-[12px]": state().running,
+              "w-[6px]": !state().running,
             }}
           >
             .
@@ -391,8 +511,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[20px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_ms1}
           >
@@ -401,8 +521,8 @@ export function SetActionCountdownView(props: {
           <div
             classList={{
               "text-center": true,
-              "width-[18px]": state().running,
-              "width-[10px]": !state().running,
+              "w-[20px]": state().running,
+              "w-[10px]": !state().running,
             }}
             ref={$a_ms2}
           >
@@ -420,8 +540,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_minutes1}
               >
@@ -430,8 +550,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_minutes2}
               >
@@ -440,8 +560,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[12px]": state().running,
-                  "width-[4px]": !state().running,
+                  "w-[12px]": state().running,
+                  "w-[6px]": !state().running,
                 }}
               >
                 :
@@ -449,8 +569,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_seconds1}
               >
@@ -459,8 +579,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_seconds2}
               >
@@ -469,8 +589,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[12px]": state().running,
-                  "width-[4px]": !state().running,
+                  "w-[12px]": state().running,
+                  "w-[6px]": !state().running,
                 }}
               >
                 .
@@ -478,8 +598,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_ms1}
               >
@@ -488,8 +608,8 @@ export function SetActionCountdownView(props: {
               <div
                 classList={{
                   "text-center": true,
-                  "width-[18px]": state().running,
-                  "width-[10px]": !state().running,
+                  "w-[20px]": state().running,
+                  "w-[10px]": !state().running,
                 }}
                 ref={$b_ms2}
               >

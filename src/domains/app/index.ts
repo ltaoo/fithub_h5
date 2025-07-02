@@ -92,6 +92,7 @@ type ApplicationState = {
   env: JSONObject;
   theme: ThemeTypes;
   deviceSize: DeviceSizeTypes;
+  height: number;
 };
 type ApplicationProps<T extends { storage: StorageCore<any> }> = {
   user: UserCore;
@@ -142,6 +143,7 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
   };
   orientation = OrientationTypes.Vertical;
   curDeviceSize: DeviceSizeTypes = "md";
+  height = 0;
   theme: ThemeTypes = "system";
 
   safeArea = false;
@@ -155,6 +157,7 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
       theme: this.theme,
       env: this.env,
       deviceSize: this.curDeviceSize,
+      height: this.height,
     };
   }
 
@@ -252,6 +255,10 @@ export class Application<T extends { storage: StorageCore<any> }> extends BaseDo
       ...this.env,
       ...env,
     };
+  }
+  setHeight(v: number) {
+    this.height = v;
+    this.emit(Events.StateChange, { ...this.state });
   }
   /** 复制文本到粘贴板 */
   copy(text: string) {

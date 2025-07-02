@@ -14,7 +14,7 @@ import { FieldObjV2 } from "@/components/fieldv2/obj";
 import { FieldV2 } from "@/components/fieldv2/field";
 import { FieldArrV2 } from "@/components/fieldv2/arr";
 import { Select } from "@/components/ui/select";
-import { InputWithKeyboardView } from "@/components/input-weight";
+import { InputWithKeyboardView } from "@/components/input-with-keyboard";
 import { Portal } from "solid-js/web";
 
 function FeaturePlaygroundViewModel(props: ViewComponentProps) {

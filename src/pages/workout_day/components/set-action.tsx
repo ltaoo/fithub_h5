@@ -64,7 +64,14 @@ export function SetActionView(
           <div class="text-sm text-white">{props.idx}</div>
         </div>
       </Show>
-      <div class="relative left-[4px] text-w-fg-0" onClick={props.onClick}>
+      <div
+        class="relative left-[4px] underline underline-offset-2 decoration-2 text-w-fg-0"
+        // classList={{
+        //   "decoration-blue-500": !props.highlight,
+        //   "decoration-w-green": props.highlight,
+        // }}
+        onClick={props.onClick}
+      >
         {state().zh_name}
       </div>
     </div>

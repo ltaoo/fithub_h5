@@ -254,18 +254,35 @@ export function seconds_to_minutes(value: number) {
 export function relative_time_from_now(time: string) {
   const date = dayjs(time);
   const now = dayjs();
-  const minute_diff = now.diff(date, "minute");
+  const diffMonths = now.diff(date, "month");
+  const diffWeeks = now.diff(date, "week");
+  const diffDays = now.diff(date, "day");
+  const diffHours = now.diff(date, "hour");
+  const diffMinutes = now.diff(date, "minute");
+  const diffSeconds = now.diff(date, "second");
+
   let str;
-  if (minute_diff >= 7 * 24 * 60) {
+  if (diffMonths >= 6) {
+    // 半年以上，显示完整时间
     str = date.format("YYYY-MM-DD HH:mm");
-  } else if (minute_diff >= 24 * 60) {
-    str = now.diff(date, "day") + "天前"; // 显示天数级别的时间差
-  } else if (minute_diff >= 60) {
-    str = now.diff(date, "hour") + "小时前"; // 显示小时级别的时间差
-  } else if (minute_diff > 0) {
-    str = minute_diff + "分钟前"; // 显示分钟级别的时间差
+  } else if (diffMonths >= 1) {
+    // 1个月以上，显示几个月前
+    str = `${diffMonths}个月前`;
+  } else if (diffWeeks >= 1) {
+    // 1周以上，显示几周前
+    str = `${diffWeeks}周前`;
+  } else if (diffDays >= 1) {
+    // 1天以上，显示几天前
+    str = `${diffDays}天前`;
+  } else if (diffHours >= 1) {
+    // 1小时以上，显示几小时前
+    str = `${diffHours}小时前`;
+  } else if (diffMinutes >= 1) {
+    // 1分钟以上，显示几分钟前
+    str = `${diffMinutes}分钟前`;
   } else {
-    str = "刚刚"; // 不到1分钟，显示“刚刚”
+    // 1分钟内，显示"刚刚"
+    str = "刚刚";
   }
   return str;
 }

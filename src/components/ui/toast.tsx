@@ -2,7 +2,7 @@
  * @file 小黑块 提示
  */
 import { For, createSignal, JSX, Show } from "solid-js";
-import { Loader2, Loader } from "lucide-solid";
+import { Loader } from "lucide-solid";
 
 import * as ToastPrimitive from "@/packages/ui/toast";
 import { ToastCore } from "@/domains/ui/toast";

@@ -22,6 +22,7 @@ type TabHeaderState<T extends { key: any; options: { id: any; text: string }[] }
 };
 type TabHeaderProps<T extends { key: any; options: { id: any; text: string; hidden?: boolean }[] }> = {
   key?: T["key"];
+  selected?: any;
   options: T["options"];
   targetLeftWhenSelected?: number;
   onChange?: (value: T["options"][number] & { index: number }) => void;
@@ -83,11 +84,17 @@ export class TabHeaderCore<
   constructor(props: Partial<{ _name: string }> & TabHeaderProps<T>) {
     super(props);
 
-    const { key = "id", options, targetLeftWhenSelected = 0, onChange, onMounted } = props;
+    const { key = "id", options, selected, targetLeftWhenSelected = 0, onChange, onMounted } = props;
     this.key = key;
     this.targetLeftWhenSelected = targetLeftWhenSelected;
     this.tabs = options;
     this.current = 0;
+    if (selected !== undefined) {
+      const i = options.findIndex((v) => v.id === selected);
+      if (i !== -1) {
+        this.current = i;
+      }
+    }
     if (onChange) {
       this.onChange(onChange);
     }

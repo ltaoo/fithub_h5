@@ -11,6 +11,7 @@ export function InputWithKeyboardModel(props: {
   defaultValue?: string;
   placeholder?: string;
   app: ViewComponentProps["app"];
+  onPaddingHeightChange?: (v: number) => void;
 }) {
   const methods = {
     refresh() {
@@ -26,7 +27,7 @@ export function InputWithKeyboardModel(props: {
         object: opt.rect,
         screen: props.app.screen,
       });
-      // console.log("[PAGE]workout_day/update - beforeShowNumInput", v);
+      console.log("[PAGE]workout_day/update - beforeShowNumInput", v);
       if (v > 0) {
         _height = v;
         bus.emit(Events.PaddingHeightChange, v);
@@ -89,9 +90,16 @@ export function InputWithKeyboardModel(props: {
     ui.$input.setValue(String(v));
   });
   ui.$dialog.onCancel(() => {
+    // console.log("[]before _status = normal");
+    _status = "normal";
     _height = 0;
+    methods.refresh();
     bus.emit(Events.PaddingHeightChange, 0);
   });
+  ui.$keyboard.onStateChange(() => methods.refresh());
+  if (props.onPaddingHeightChange) {
+    bus.on(Events.PaddingHeightChange, props.onPaddingHeightChange);
+  }
 
   return {
     shape: "input" as const,

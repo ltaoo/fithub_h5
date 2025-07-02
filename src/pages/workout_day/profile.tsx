@@ -2,18 +2,20 @@
  * @file 某次训练的详情
  */
 import { For, Show } from "solid-js";
-import { ChevronLeft, Loader2, X } from "lucide-solid";
+import { ChevronLeft, LoaderCircle, MoreHorizontal, X } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
-import { ScrollView } from "@/components/ui";
+import { Dialog, DropdownMenu, ScrollView } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Divider } from "@/components/divider";
 import { SetValueView } from "@/components/set-value-view";
+import { Flex } from "@/components/flex/flex";
+import { IconButton } from "@/components/icon-btn/icon-btn";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { ScrollViewCore } from "@/domains/ui";
+import { DialogCore, DropdownMenuCore, MenuItemCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
 import { fetchWorkoutDayProfile, fetchWorkoutDayProfileProcess } from "@/biz/workout_day/services";
@@ -57,6 +59,18 @@ function WorkoutDayProfileViewModel(props: ViewComponentProps) {
   const ui = {
     $view: new ScrollViewCore(),
     $history: props.history,
+    $menu: new DropdownMenuCore({
+      items: [
+        new MenuItemCore({
+          label: "分享",
+          onClick() {
+            ui.$menu.hide();
+            ui.$dialog_share.show();
+          },
+        }),
+      ],
+    }),
+    $dialog_share: new DialogCore({}),
   };
   let _state = {
     get loading() {
@@ -124,10 +138,23 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
         store={vm}
         home={props.view.query.home === "1"}
         hide_bottom_bar={props.view.query.hide_bottom_bar === "1"}
+        // operations={
+        //   <Flex justify="between">
+        //     <div></div>
+        //     <IconButton
+        //       onClick={(event) => {
+        //         const { x, y, width, height } = event.currentTarget.getBoundingClientRect();
+        //         vm.ui.$menu.toggle({ x, y, width, height });
+        //       }}
+        //     >
+        //       <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+        //     </IconButton>
+        //   </Flex>
+        // }
       >
         <Show when={state().loading}>
           <div class="p-4 flex items-center justify-center">
-            <Loader2 class="w-8 h-8 text-w-fg-0 animate-spin" />
+            <LoaderCircle class="w-8 h-8 text-w-fg-0 animate-spin" />
           </div>
         </Show>
         <Show when={state().profile}>
@@ -145,6 +172,28 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
                 </div>
               </Show>
               <div class="text-w-fg-1">{WorkoutDayStatusTextMap[state().profile!.status]}</div>
+              <Show when={state().profile?.remark}>
+                <div class="flex gap-2 pb-2">
+                  <Show
+                    when={state().profile?.workout_plan?.creator}
+                    fallback={<div class="w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
+                  >
+                    <div
+                      class="w-[32px] h-[32px] rounded-full bg-w-bg-5"
+                      style={{
+                        "background-image": `url('${state().profile?.workout_plan?.creator.avatar_url}')`,
+                        "background-size": "cover",
+                        "background-position": "center",
+                      }}
+                    ></div>
+                  </Show>
+                  <div class="relative flex-1">
+                    <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] text-w-fg-1 text-sm bg-w-bg-5">
+                      {state().profile!.remark}
+                    </div>
+                  </div>
+                </div>
+              </Show>
             </div>
             <div>
               <Show when={state().profile!.status === WorkoutDayStatus.Finished}>
@@ -166,7 +215,7 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
                     <div class="text-w-fg-0 truncate">总组数</div>
                     <div class="flex items-end truncate">
-                      <div class="text-xl">{state().profile!.total_set_count}</div>
+                      <div class="text-3xl">{state().profile!.total_set_count}</div>
                     </div>
                   </div>
                 </div>
@@ -196,6 +245,12 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
           </div>
         </Show>
       </PageView>
+      <Dialog store={vm.ui.$dialog_share} app={props.app}>
+        <div class="w-full flex items-center justify-center bg-w-bg-1 rounded-lg p-12">
+          <LoaderCircle class="w-12 h-12 text-w-fg-1 animate-spin" />
+        </div>
+      </Dialog>
+      <DropdownMenu store={vm.ui.$menu}></DropdownMenu>
     </>
   );
 }

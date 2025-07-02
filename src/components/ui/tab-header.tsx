@@ -7,17 +7,12 @@ export const TabHeader = (props: { store: TabHeaderCore<any> }) => {
   const { store } = props;
 
   const [state, setState] = createSignal(store.state);
-  const [left, setLeft] = createSignal<null | number>(null);
+  // const [left, setLeft] = createSignal<null | number>(store.state.left);
 
-  // console.log("[COMPONENT]ui/tab-header - listen onChange");
-  store.onStateChange((v) => {
-    // console.log("[COMPONENT]ui/tab-header - onChange", v);
-    setState(v);
-  });
-  store.onLinePositionChange((v) => {
-    // console.log("[COMPONENT]ui/tab-header - onLinePositionChange", v.left);
-    setLeft(v.left);
-  });
+  store.onStateChange((v) => setState(v));
+  // store.onLinePositionChange((v) => {
+  //   setLeft(v.left);
+  // });
 
   return (
     <div
@@ -34,42 +29,51 @@ export const TabHeader = (props: { store: TabHeaderCore<any> }) => {
         // scroll-left="{{scrollLeftInset}}"
         // scroll-x
       >
-        <div id="tabs-wrapper" class="flex border-b border-w-fg-1">
+        <div id="tabs-wrapper" class="flex border-b border-w-fg-3">
           <For each={state().tabs}>
             {(tab, index) => {
               return (
                 <Show when={!tab.hidden}>
                   <div
                     classList={{
-                      "__a p-4 break-keep cursor-pointer": true,
+                      "__a relative px-4 py-2 text-sm break-keep cursor-pointer": true,
                     }}
                     // style="{{current === index ? activeItemStyle : itemStyle}}"
                     onClick={() => {
                       store.select(index());
                     }}
-                    onAnimationEnd={(event) => {
-                      event.stopPropagation();
-                      const target = event.currentTarget;
-                      // const { width, height, left } = event.currentTarget.getBoundingClientRect();
-                      store.updateTabClient(index(), {
-                        rect() {
-                          const { offsetLeft, clientWidth, clientHeight } = target;
-                          return {
-                            width: clientWidth,
-                            height: clientHeight,
-                            left: offsetLeft,
-                          };
-                        },
-                      });
-                    }}
+                    // onAnimationEnd={(event) => {
+                    //   event.stopPropagation();
+                    //   const target = event.currentTarget;
+                    //   // const { width, height, left } = event.currentTarget.getBoundingClientRect();
+                    //   store.updateTabClient(index(), {
+                    //     rect() {
+                    //       const { offsetLeft, clientWidth, clientHeight } = target;
+                    //       return {
+                    //         width: clientWidth,
+                    //         height: clientHeight,
+                    //         left: offsetLeft,
+                    //       };
+                    //     },
+                    //   });
+                    // }}
                   >
                     {tab.text}
+                    <Show when={tab.id === state().curId}>
+                      <div
+                        class="absolute left-1/2 -translate-1/2 bottom-0 w-4 bg-w-fg-0 transition-all"
+                        style={{
+                          height: "4px",
+                          transform: "translateX(-50%)",
+                        }}
+                      />
+                    </Show>
                   </div>
                 </Show>
               );
             }}
           </For>
-          {left() !== null ? (
+          {/* {left() !== null ? (
             <div
               class="absolute bottom-0 w-4 bg-w-fg-0 transition-all"
               style={{
@@ -78,7 +82,7 @@ export const TabHeader = (props: { store: TabHeaderCore<any> }) => {
                 transform: "translateX(-50%)",
               }}
             />
-          ) : null}
+          ) : null} */}
         </div>
       </div>
     </div>

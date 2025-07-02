@@ -160,7 +160,7 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                         return;
                                       }
                                       vm.ui.$workout_action_select.methods.setDisabled(
-                                        $field.field.input.actions.map((act) => act.action.id)
+                                        $field.field.input.value.actions.map((act) => act.action!.id)
                                       );
                                       vm.ui.$workout_action_select.ui.$dialog.show();
                                     }}

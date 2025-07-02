@@ -23,15 +23,16 @@ export function NumInputView(
         class={props.class}
         classList={{
           "set-value-input relative flex items-center gap-2 w-full h-10 px-3 border-2 rounded-xl bg-w-bg-2": true,
-          "border-w-fg-3": field().status === "normal",
-          "border-yellow-500": field().status === "focus",
-          "border-red-500 dark:border-red-800": field().status === "error",
+          "border-w-fg-3": input().status === "normal",
+          "border-yellow-500": input().status === "focus",
+          "border-red-500 dark:border-red-800": input().status === "error",
         }}
         // style={{
         //   width: `${props.width ?? 88}px`,
         // }}
         onClick={(event) => {
           const { x, y, width, height } = event.currentTarget.getBoundingClientRect();
+          // console.log("[COMPONENT]input-num - before methods.handleClickField");
           $input.methods.handleClickField({
             x,
             y,
