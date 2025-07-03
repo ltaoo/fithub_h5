@@ -3,7 +3,6 @@
  */
 import { Show, createSignal, JSX, onCleanup } from "solid-js";
 
-import { PageLoading } from "@/components/page-loading";
 import { RouteViewCore } from "@/domains/route_view";
 
 export function RouteView(props: { store: RouteViewCore; index: number } & JSX.HTMLAttributes<HTMLDivElement>) {

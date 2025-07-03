@@ -307,8 +307,8 @@ function CardioViewModel(props: ViewComponentProps) {
         const body = {
           title: v.title,
           type: WorkoutPlanType.Cardio,
-          pending_steps: JSON.stringify(pending_steps),
-          updated_details: JSON.stringify(updated_details),
+          pending_steps,
+          updated_details,
           finish_when_created: true,
           finished_at: v.finished_at.toDate(),
           start_at: v.start_at.toDate(),

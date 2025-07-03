@@ -576,7 +576,12 @@ export function HomeMineView(props: ViewComponentProps) {
                   <div>有氧记录</div>
                 </div>
               </div>
-              <div class="border-2 border-w-fg-3 rounded-lg p-4">
+              <div
+                class="border-2 border-w-fg-3 rounded-lg p-4"
+                onClick={() => {
+                  props.history.push("root.workout_day_catch_up_on");
+                }}
+              >
                 <div class="text-w-fg-0 text-center">
                   <div>补录</div>
                   <div>训练记录</div>

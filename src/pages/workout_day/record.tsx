@@ -79,6 +79,7 @@ import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
 import { WorkoutDayProfileView } from "./profile";
+import { calcTheHighlightIdxAfterRemoveSet } from "./utils";
 
 export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
 export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
@@ -116,6 +117,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
       }),
     },
   };
+  // @ts-ignore
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -200,54 +202,20 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     removeSet(opt: { step_idx: number; set_idx: number }) {
       const step = _steps[opt.step_idx];
       const set = step.sets[opt.set_idx];
-      const r = (() => {
-        console.log("[PAGE]workout_day/update - removeSet", opt.step_idx, opt.set_idx);
-        console.log("[]", _cur_step_idx, _cur_set_idx);
-        const is_remove_cur_set = opt.step_idx === _cur_step_idx && opt.set_idx === _cur_set_idx;
-        const is_remove_last_set = step.sets.length === 1;
-        const step_is_last_step = _steps.length === 1;
-        console.log("[]step_is_last_step", step_is_last_step);
-        console.log("[]is_remove_last_set", is_remove_last_set);
-        console.log("[]is_remove_cur_set", is_remove_cur_set);
-        if (step_is_last_step && is_remove_last_set) {
-          return Result.Err("无法删除最后一组动作");
-        }
-        _steps = update_arr_item(_steps, opt.step_idx, {
-          uid: step.uid,
-          sets: remove_arr_item(step.sets, opt.set_idx),
-          note: step.note,
-        });
-        if (is_remove_last_set) {
-          _steps = remove_arr_item(_steps, opt.step_idx);
-        }
-        if (!is_remove_cur_set) {
-          // 不是移除当前高亮的，但是高亮通过 idx 标记，idx = 2，删除了 0，视觉上高亮变成了下一个
-          if (opt.set_idx < _cur_set_idx) {
-            _cur_set_idx -= 1;
-          }
-          return Result.Ok(null);
-        }
-        let next_set_idx = _cur_set_idx - 1;
-        if (next_set_idx < 0) {
-          next_set_idx = 0;
-        }
-        _cur_set_idx = next_set_idx;
-        if (is_remove_last_set) {
-          _cur_set_idx = 0;
-          let next_step_idx = _cur_step_idx - 1;
-          if (next_step_idx < 0) {
-            next_step_idx = 0;
-          }
-          _cur_step_idx = next_step_idx;
-        }
-        return Result.Ok(null);
-      })();
+      const r = calcTheHighlightIdxAfterRemoveSet(opt, {
+        steps: _steps,
+        cur_step_idx: _cur_step_idx,
+        cur_set_idx: _cur_set_idx,
+      });
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
         });
         return;
       }
+      _steps = r.data.steps;
+      _cur_step_idx = r.data.cur_step_idx;
+      _cur_set_idx = r.data.cur_set_idx;
       // console.log("[]complete remove", _cur_step_idx, _cur_set_idx);
       const step_set_uid = `${step.uid}-${set.uid}`;
       if (_touched_set_uid.includes(step_set_uid)) {
@@ -1104,6 +1072,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     },
     /** 更新动作执行进度 */
     updateSteps: debounce(800, (opt: { step_idx: number; set_idx: number }) => {
+      // @ts-ignore
       const { data } = methods.buildPendingSteps();
       console.log("[PAGE]workout_day/update - updateSteps before update_steps.run", opt, data, _touched_set_uid);
       return request.workout_day.update_steps.run({
@@ -1493,7 +1462,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           methods.refresh();
           return;
         }
-        // @todo 这是什么场景
+        // 在已有的训练计划基础上，增加一个新的动作，而不是修改原有训练计划中的
         _steps = [
           ..._steps,
           {
@@ -1598,6 +1567,11 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
     $btn_give_up_confirm_ok: new ButtonCore({
       async onClick() {
         methods.giveUp();
+      },
+    }),
+    $btn_show_overview_dialog: new ButtonCore({
+      onClick() {
+        methods.showWorkoutDayCompleteConfirmDialog();
       },
     }),
     $dialog_finish_confirm: new DialogCore({}),
@@ -2317,15 +2291,8 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
               <div class="flex items-center justify-between p-2">
                 <DayDurationTextView store={vm.ui.$day_duration} />
                 <div class="flex items-center gap-2">
-                  <div
-                    class="py-2 px-4 rounded-md bg-w-bg-5 text-center text-w-fg-0 text-sm"
-                    onClick={() => {
-                      vm.methods.showWorkoutDayCompleteConfirmDialog();
-                    }}
-                  >
-                    完成
-                  </div>
-                  <div
+                  <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
+                  <IconButton
                     class="p-2 rounded-full bg-w-bg-5"
                     onClick={(event) => {
                       const client = event.currentTarget.getBoundingClientRect();
@@ -2333,7 +2300,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
                     }}
                   >
                     <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-                  </div>
+                  </IconButton>
                 </div>
               </div>
             </Show>

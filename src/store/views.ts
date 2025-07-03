@@ -107,7 +107,7 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
     default: (await import("@/pages/workout_day/prepare")).WorkoutDayPreparingPage,
   })),
   "root.workout_day_catch_up_on": lazy(async () => ({
-    default: (await import("@/pages/workout_day/catch_up_on")).WorkoutDayCatchUpOnView,
+    default: (await import("@/pages/workout_day/catch_up_on")).WorkoutDayCatchUpView,
   })),
   "root.workout_day_cardio": lazy(async () => ({
     default: (await import("@/pages/workout_day/cardio")).CardioCreateView,

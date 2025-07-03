@@ -18,12 +18,14 @@ import { fetchStartedWorkoutDayList, fetchStartedWorkoutDayListProcess } from "@
 import { RouteViewCore } from "@/domains/route_view";
 import { ScrollViewCore } from "@/domains/ui";
 
-import { WorkoutDayUpdateView } from "./update";
+import { WorkoutDayUpdateView } from "./record";
+import { PageLoading } from "@/components/page-loading";
 
 export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
       started_list: new RequestCore(fetchStartedWorkoutDayList, {
+        delay: 500,
         process: fetchStartedWorkoutDayListProcess,
         client: props.client,
       }),
@@ -91,6 +93,9 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
   let _views_for_student: RouteViewCore[] = [];
   let _cur_student_idx = 0;
   let _state = {
+    get loading() {
+      return request.workout_day.started_list.loading;
+    },
     get list() {
       return request.workout_day.started_list.response?.list ?? [];
     },
@@ -146,129 +151,132 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
 
   return (
     <>
-      <Show when={!state().working}>
-        <PageView store={vm}>
-          <div class="space-y-2">
-            <For
-              each={state().list}
-              fallback={
-                <div class="w-full h-[360px] center flex items-center justify-center">
-                  <div class="flex flex-col items-center justify-center text-w-fg-1">
-                    <Bird class="w-24 h-24" />
-                    <div class="mt-4 flex items-center space-x-2">
-                      <div class="text-center text-xl">列表为空</div>
+      <Show when={!state().loading} fallback={<PageLoading text="加载中"></PageLoading>}>
+        <Show
+          when={!state().working}
+          fallback={
+            <div>
+              <For each={state().views}>
+                {(view, idx) => {
+                  return (
+                    <div
+                      classList={{
+                        "absolute inset-0 h-screen": true,
+                        "hidden ": idx() !== state().cur_view_idx,
+                      }}
+                    >
+                      <WorkoutDayUpdateView
+                        app={props.app}
+                        storage={props.storage}
+                        pages={props.pages}
+                        history={props.history}
+                        client={props.client}
+                        view={view}
+                      />
                     </div>
-                  </div>
-                </div>
-              }
-            >
-              {(v) => {
-                return (
-                  <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <div class="flex">
-                      <div class="px-2 rounded-full bg-green-500 text-white text-sm">已开始</div>
-                    </div>
-                    <div class="mt-2 text-w-fg-0">{v.workout_plan.title}</div>
-                    <div class="flex text-w-fg-1 text-sm">
-                      <div>开始时间</div>
-                      <div>{v.started_at_text}</div>
-                    </div>
-                    <div class="flex items-center justify-between mt-4">
-                      <MultipleAvatar value={v.students} />
-                      <div
-                        class="px-4 py-2 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm"
-                        onClick={() => {
-                          vm.methods.handleClickStart(v);
-                        }}
-                      >
-                        继续
+                  );
+                }}
+              </For>
+            </div>
+          }
+        >
+          <PageView store={vm}>
+            <div class="space-y-2">
+              <For
+                each={state().list}
+                fallback={
+                  <div class="w-full h-[360px] center flex items-center justify-center">
+                    <div class="flex flex-col items-center justify-center text-w-fg-1">
+                      <Bird class="w-24 h-24" />
+                      <div class="mt-4 flex items-center space-x-2">
+                        <div class="text-center text-xl">列表为空</div>
                       </div>
                     </div>
                   </div>
-                );
-              }}
-            </For>
-          </div>
-        </PageView>
-      </Show>
-      <Show when={state().working}>
-        <div>
-          <For each={state().views}>
-            {(view, idx) => {
-              return (
-                <div
-                  classList={{
-                    "absolute inset-0 h-screen": true,
-                    "hidden ": idx() !== state().cur_view_idx,
-                  }}
-                >
-                  <WorkoutDayUpdateView
-                    app={props.app}
-                    storage={props.storage}
-                    pages={props.pages}
-                    history={props.history}
-                    client={props.client}
-                    view={view}
-                  />
-                </div>
-              );
-            }}
-          </For>
-        </div>
-      </Show>
-      <Show when={state().students.length}>
-        <div class="fixed bottom-[56px] w-full p-2">
-          <div class="inline-flex items-center gap-2 rounded-full p-2 bg-w-bg-5">
-            <div
-              classList={{
-                "rounded-full ": true,
-              }}
-            >
+                }
+              >
+                {(v) => {
+                  return (
+                    <div class="p-4 rounded-lg border-2 border-w-fg-3">
+                      <div class="flex">
+                        <div class="px-2 rounded-full bg-green-500 text-white text-sm">已开始</div>
+                      </div>
+                      <div class="mt-2 text-w-fg-0">{v.workout_plan.title}</div>
+                      <div class="flex text-w-fg-1 text-sm">
+                        <div>开始时间</div>
+                        <div>{v.started_at_text}</div>
+                      </div>
+                      <div class="flex items-center justify-between mt-4">
+                        <MultipleAvatar value={v.students} />
+                        <div
+                          class="px-4 py-2 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm"
+                          onClick={() => {
+                            vm.methods.handleClickStart(v);
+                          }}
+                        >
+                          继续
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </PageView>
+        </Show>
+        <Show when={state().students.length}>
+          <div class="fixed bottom-[56px] w-full p-2">
+            <div class="inline-flex items-center gap-2 rounded-full p-2 bg-w-bg-5">
               <div
-                class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-3"
-                onClick={() => {
-                  vm.methods.back();
+                classList={{
+                  "rounded-full ": true,
                 }}
               >
-                <ChevronLeft class="w-6 h-6 text-w-fg-0" />
+                <div
+                  class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-3"
+                  onClick={() => {
+                    vm.methods.back();
+                  }}
+                >
+                  <ChevronLeft class="w-6 h-6 text-w-fg-0" />
+                </div>
               </div>
-            </div>
-            <For each={state().students}>
-              {(s, idx) => {
-                return (
-                  <div
-                    classList={{
-                      "rounded-full ": true,
-                      "ring-2 ring-green-500": state().cur_view_idx === idx(),
-                    }}
-                    onClick={() => {
-                      vm.methods.handleClickStudent(s, idx());
-                    }}
-                  >
-                    <Show
-                      when={!s.is_self}
-                      fallback={
-                        <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-2">
-                          <div class="text-w-fg-0 text-sm">我</div>
-                        </div>
-                      }
+              <For each={state().students}>
+                {(s, idx) => {
+                  return (
+                    <div
+                      classList={{
+                        "rounded-full ": true,
+                        "ring-2 ring-green-500": state().cur_view_idx === idx(),
+                      }}
+                      onClick={() => {
+                        vm.methods.handleClickStudent(s, idx());
+                      }}
                     >
                       <Show
-                        when={s.avatar_url}
+                        when={!s.is_self}
                         fallback={
-                          <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-3">
-                            <div class="text-w-fg-0 text-sm">{s.nickname[0]}</div>
+                          <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-2">
+                            <div class="text-w-fg-0 text-sm">我</div>
                           </div>
                         }
                       >
-                        <img class="w-[32px] h-[32px] rounded-full object-contain" src={s.avatar_url} />
+                        <Show
+                          when={s.avatar_url}
+                          fallback={
+                            <div class="flex items-center justify-center w-[32px] h-[32px] rounded-full bg-w-bg-3">
+                              <div class="text-w-fg-0 text-sm">{s.nickname[0]}</div>
+                            </div>
+                          }
+                        >
+                          <img class="w-[32px] h-[32px] rounded-full object-contain" src={s.avatar_url} />
+                        </Show>
                       </Show>
-                    </Show>
-                  </div>
-                );
-              }}
-            </For>
-            {/* <div
+                    </div>
+                  );
+                }}
+              </For>
+              {/* <div
               classList={{
                 "rounded-full ": true,
               }}
@@ -279,9 +287,10 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                 </div>
               </div>
             </div> */}
+            </div>
+            <div class="safe-height safe-height--no-color"></div>
           </div>
-          <div class="safe-height safe-height--no-color"></div>
-        </div>
+        </Show>
       </Show>
     </>
   );

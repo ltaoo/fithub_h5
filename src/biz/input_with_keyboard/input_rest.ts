@@ -103,6 +103,9 @@ export function RestInputModel(props: {
       ui.$input.setValue(v.num);
       ui.$select.select(v.unit);
     },
+    setNum(v: string) {
+      ui.$input.setValue(v);
+    },
     ready() {},
     destroy() {
       bus.destroy();

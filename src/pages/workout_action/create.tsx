@@ -216,11 +216,11 @@ export function HomeActionCreatePage(props: ViewComponentProps) {
           </div>
         </div>
       </ScrollView>
-      <Dialog store={vm.ui.$json_dialog}>
+      {/* <Dialog store={vm.ui.$json_dialog}>
         <div class="w-[520px] p-4">
           <Textarea store={vm.ui.$json_input} />
         </div>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 }

@@ -9,9 +9,9 @@ import { PageView } from "@/components/page-view";
 import { Button } from "@/components/ui";
 import { SetValueView } from "@/components/set-value-view";
 
-import { WorkoutDayUpdateViewModel } from "../record";
+import { WorkoutDayCatchUpViewModel } from "../catch_up_on";
 
-export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel }) {
+export function WorkoutDayCatchUpOverviewView(props: { store: WorkoutDayCatchUpViewModel }) {
   const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (
@@ -116,9 +116,6 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel
               <ChevronDown class="w-6 h-6 text-w-fg-1" />
             </div>
             <div class="flex-1 flex items-center gap-2">
-              <Button class="w-full" store={vm.ui.$btn_workout_day_give_up}>
-                放弃
-              </Button>
               <Button class="w-full" store={vm.ui.$btn_workout_day_submit}>
                 提交
               </Button>

@@ -44,6 +44,21 @@ export function ClockModel(props: {
     isAfter(...args: Parameters<typeof _$date.isAfter>) {
       return _$date.isAfter(...args);
     },
+    setYear(y: number) {
+      // @ts-ignore
+      _$date.$set("year", y);
+      refresh_time_text();
+    },
+    setMonth(m: number) {
+      // @ts-ignore
+      _$date.$set("month", m - 1);
+      refresh_time_text();
+    },
+    setDate(d: number) {
+      // @ts-ignore
+      _$date.$set("date", d);
+      refresh_time_text();
+    },
     setYearMonthDate(y: number, m: number, d: number) {
       // @ts-ignore
       _$date.$set("year", y);
@@ -56,9 +71,19 @@ export function ClockModel(props: {
     },
     setHourAndMinute(h: number, m: number) {
       // @ts-ignore
-      _$date.$set("hour", h - 1);
+      _$date.$set("hour", h);
       // @ts-ignore
       _$date.$set("minute", m);
+      refresh_time_text();
+    },
+    setHour(v: number) {
+      // @ts-ignore
+      _$date.$set("hour", v);
+      refresh_time_text();
+    },
+    setMinute(v: number) {
+      // @ts-ignore
+      _$date.$set("minute", v);
       refresh_time_text();
     },
     setTimestamp(v: number) {
@@ -66,7 +91,7 @@ export function ClockModel(props: {
       const full_year = t.year();
       const month = t.month() + 1;
       const date = t.date();
-      const hours = t.hour() + 1;
+      const hours = t.hour();
       const minutes = t.minute();
       methods.setYearMonthDate(full_year, month, date);
       methods.setHourAndMinute(hours, minutes);
@@ -75,7 +100,7 @@ export function ClockModel(props: {
       const $today = dayjs();
       return {
         year: $today.year(),
-        month: $today.month(),
+        month: $today.month() + 1,
         date: $today.date(),
       };
     },
@@ -83,10 +108,10 @@ export function ClockModel(props: {
       const $today = dayjs();
       _full_year = $today.year();
       _month = $today.month() + 1;
-      _date = $today.date() + 1;
+      _date = $today.date();
       methods.setYearMonthDate(_full_year, _month, _date);
     },
-    getTime() {
+    getNowTime() {
       const $today = dayjs();
       return {
         hour: $today.hour(),
@@ -107,7 +132,7 @@ export function ClockModel(props: {
   let _month = _$date.month() + 1;
   let _date = _$date.date();
   /** 小时 */
-  let _hours = _$date.hour() + 1;
+  let _hours = _$date.hour();
   /** 分 */
   let _minutes = _$date.minute();
   /** 秒 */
@@ -121,6 +146,12 @@ export function ClockModel(props: {
   let _animation_frame_id: number | NodeJS.Timer;
 
   let _state = {
+    get full_date_text() {
+      return [_state.year, _state.month_text, _state.date_text].join("-");
+    },
+    get full_time_text() {
+      return [_state.hours_text, _state.minutes_text].join(":");
+    },
     get time() {
       return _time;
     },
@@ -181,7 +212,7 @@ export function ClockModel(props: {
     _full_year = _$date.year();
     _month = _$date.month() + 1;
     _date = _$date.date();
-    _hours = _$date.hour() + 1;
+    _hours = _$date.hour();
     _minutes = _$date.minute();
     _seconds = _$date.second();
     _ms = _$date.millisecond();

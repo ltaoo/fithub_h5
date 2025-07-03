@@ -1,15 +1,19 @@
 import { JSX } from "solid-js/jsx-runtime";
 import { LoaderCircle } from "lucide-solid";
 
-import { cn } from "@/utils";
-
-export function PageLoading(props: JSX.HTMLAttributes<HTMLDivElement>) {
+export function PageLoading(props: { text: string } & JSX.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div class={cn("flex items-center", props.class)}>
-      <div class="flex items-center justify-center w-full h-full">
-        <div class="flex flex-col items-center text-slate-500">
-          <LoaderCircle class="w-8 h-8 animate-spin" />
-          <div class="mt-4 text-center">正在加载</div>
+    <div
+      classList={{
+        ...props.classList,
+        "w-full h-[360px] flex items-center justify-center": true,
+      }}
+      class={props.class}
+    >
+      <div class="flex flex-col items-center justify-center text-w-fg-1">
+        <LoaderCircle class="w-12 h-12 text-w-fg-1 animate-spin" />
+        <div class="mt-4 flex items-center space-x-2">
+          <div class="text-center">{props.text}</div>
         </div>
       </div>
     </div>

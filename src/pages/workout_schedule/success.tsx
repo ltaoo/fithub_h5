@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { CheckCircle2, Coffee, Divide } from "lucide-solid";
+import { CheckCircle, Coffee, Divide } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -90,7 +90,7 @@ export function WorkoutScheduleCreateSuccessView(props: ViewComponentProps) {
     <PageView store={vm}>
       <div class="space-y-2">
         <div class="flex flex-col items-center py-4">
-          <CheckCircle2 class="w-12 h-12 text-green-500" />
+          <CheckCircle class="w-12 h-12 text-green-500" />
           <div class="mt-2 text-w-fg-0 text-center">创建成功</div>
         </div>
         <Divider />

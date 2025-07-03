@@ -15,22 +15,22 @@ export function TimePickerModel(props: { $clock: ClockModel; app: ViewComponentP
       bus.emit(Events.StateChange, { ..._state });
     },
     selectHour(v: number) {
-      _hour = v;
-      ui.$clock.methods.setHourAndMinute(_hour, _minute);
+      ui.$tmp_clock.methods.setHour(v);
       methods.refresh();
     },
     selectMinute(v: number) {
-      _minute = v;
-      ui.$clock.methods.setHourAndMinute(_hour, _minute);
+      ui.$tmp_clock.methods.setMinute(v);
       methods.refresh();
     },
     handleClickInput() {
-//       _manually = true;
       ui.$dialog.show();
     },
   };
   const ui = {
     $clock: props.$clock,
+    $tmp_clock: ClockModel({
+      time: props.$clock.$dayjs.valueOf(),
+    }),
     $dialog: new DialogCore({
       onOk: props.onOk,
     }),
@@ -38,7 +38,8 @@ export function TimePickerModel(props: { $clock: ClockModel; app: ViewComponentP
     $view_minute: new ScrollViewCore({}),
     $btn_confirm: new ButtonCore({
       onClick() {
-        ui.$clock.methods.setHourAndMinute(_hour, _minute);
+        const { hours, minutes } = ui.$tmp_clock.state;
+        ui.$clock.methods.setHourAndMinute(hours, minutes);
         if (props.onOk) {
           props.onOk();
           return;
@@ -48,69 +49,31 @@ export function TimePickerModel(props: { $clock: ClockModel; app: ViewComponentP
     }),
     $btn_set_today: new ButtonCore({
       onClick() {
-        const { hour, minute } = ui.$clock.methods.getTime();
-        _hour = hour;
-        _minute = minute;
-        ui.$view_hour.scrollTo({ top: 40 * (_hour - 1) });
-        ui.$view_minute.scrollTo({ top: 40 * (_minute - 2) });
-        ui.$clock.methods.setHourAndMinute(_hour, _minute);
+        const { hour, minute } = ui.$clock.methods.getNowTime();
+        ui.$tmp_clock.methods.setHourAndMinute(hour, minute);
+        ui.$view_hour.scrollTo({ top: 40 * (hour - 1) });
+        ui.$view_minute.scrollTo({ top: 40 * (minute - 2) });
         methods.refresh();
       },
     }),
   };
 
-//   let _manually = false;
-  let _hour = ui.$clock.state.hours;
-  let _minute = ui.$clock.state.minutes;
   let _state = {
     get value() {
       return ui.$clock.$dayjs;
     },
-    get year() {
-      return ui.$clock.state.year;
+    get full_time_text() {
+      return ui.$clock.state.full_time_text;
     },
-    get month() {
-      return ui.$clock.state.month;
-    },
-    get month_text() {
-      return ui.$clock.state.month_text;
-    },
-    get date() {
-      return ui.$clock.state.date;
-    },
-    get date_text() {
-      return ui.$clock.state.date_text;
-    },
-    get time_text() {
-      return ui.$clock.state.time_text;
-    },
-    get hour() {
-      return ui.$clock.state.hours;
-    },
-    get hour_text() {
-      return ui.$clock.state.hours_text;
-    },
-    get minute() {
-      return ui.$clock.state.minutes;
-    },
-    get minute_text() {
-      return ui.$clock.state.minutes_text;
-    },
-    get second() {
-      return ui.$clock.state.seconds;
-    },
-    get second_text() {
-      return ui.$clock.state.seconds_text;
-    },
-    get ms() {
-      return ui.$clock.state.ms;
+    get tmp_full_time_text() {
+      return ui.$tmp_clock.state.full_time_text;
     },
     get options_hour() {
       return Array.from({ length: 24 }, (_, i) => {
         return {
-          label: `${i + 1}`,
-          value: i + 1,
-          selected: i + 1 === _hour,
+          label: `${i}`,
+          value: i,
+          selected: i === ui.$tmp_clock.state.hours,
         };
       });
     },
@@ -119,7 +82,7 @@ export function TimePickerModel(props: { $clock: ClockModel; app: ViewComponentP
         return {
           label: `${i}`,
           value: i,
-          selected: i === _minute,
+          selected: i === ui.$tmp_clock.state.minutes,
         };
       });
     },
@@ -136,19 +99,16 @@ export function TimePickerModel(props: { $clock: ClockModel; app: ViewComponentP
   };
   const bus = base<TheTypesOfEvents>();
 
-  ui.$clock.onStateChange(() => {
-    _hour = ui.$clock.state.hours;
-    _minute = ui.$clock.state.minutes;
-    methods.refresh();
-  });
+  ui.$clock.onStateChange(() => methods.refresh());
+  ui.$tmp_clock.onStateChange(() => methods.refresh());
   ui.$dialog.onShow(() => {
-    console.log("[]", _hour, _minute);
-    ui.$view_hour.scrollTo({ top: 40 * (_hour - 1) });
-    ui.$view_minute.scrollTo({ top: 40 * (_minute - 2) });
+    const { hours, minutes } = ui.$clock.state;
+    ui.$view_hour.scrollTo({ top: 40 * (hours - 1) });
+    ui.$view_minute.scrollTo({ top: 40 * (minutes - 2) });
   });
   ui.$dialog.onHidden(() => {
-    _hour = ui.$clock.state.hours;
-    _minute = ui.$clock.state.minutes;
+    const { hours, minutes } = ui.$clock.state;
+    ui.$tmp_clock.methods.setHourAndMinute(hours, minutes);
     methods.refresh();
   });
 

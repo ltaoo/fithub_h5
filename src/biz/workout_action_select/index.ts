@@ -299,6 +299,9 @@ export function WorkoutActionSelectViewModel(props: {
       bus.emit(Events.StateChange, { ..._state });
     },
     init() {
+      if (!request.action.list.response.initial) {
+        return;
+      }
       request.action.list.init();
     },
     clear() {

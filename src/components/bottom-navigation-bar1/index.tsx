@@ -3,6 +3,7 @@ import { JSX } from "solid-js/jsx-runtime";
 import { ChevronLeft, Home } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
+import { IconButton } from "@/components/icon-btn/icon-btn";
 
 export function BottomNavigationBar1(props: {
   history: ViewComponentProps["history"];
@@ -21,8 +22,7 @@ export function BottomNavigationBar1(props: {
           "border-t border-w-fg-3": !props.hide_border,
         }}
       >
-        <div
-          class="p-2 w-[40px] rounded-full bg-w-bg-5"
+        <IconButton
           onClick={() => {
             if (props.home) {
               props.history.destroyAllAndPush("root.home_layout.index");
@@ -34,7 +34,7 @@ export function BottomNavigationBar1(props: {
           <Show when={!props.home} fallback={<Home class="w-6 h-6 text-w-fg-1" />}>
             <ChevronLeft class="w-6 h-6 text-w-fg-1" />
           </Show>
-        </div>
+        </IconButton>
         <Show when={props.extra}>
           <div class="extra flex-1">{props.extra}</div>
         </Show>

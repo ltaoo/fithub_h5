@@ -200,50 +200,9 @@ export function StepInputViewModel(props: {
       unit: SetValueUnit;
     };
   };
-  // let _type: WorkoutPlanSetType = WorkoutPlanSetType.Normal;
-  // let _set_actions: {
-  //   /** 动作 */
-  //   action: {
-  //     id: number;
-  //     zh_name: string;
-  //   };
-  //   /** 计数 */
-  //   reps: {
-  //     num: string;
-  //     unit: SetValueUnit;
-  //   };
-  //   /** 计数单位 */
-  //   // reps_unit: SetValueUnit;
-  //   /** 阻力，有多种情况，可以是 50%1RM/12RM/RPE 6/RIR 2/自重/无 等等 */
-  //   weight: {
-  //     num: string;
-  //     unit: SetValueUnit;
-  //   };
-  //   // weight_unit: SetValueUnit;
-  //   /** 动作间隔休息时间 */
-  //   rest_duration: {
-  //     num: string;
-  //     unit: SetValueUnit;
-  //   };
-  // }[] = [];
 
   let _state = {
     get value() {
-      // return {
-      //   /** 组内动作 */
-      //   actions: _set_actions,
-      //   /** 组类型 */
-      //   set_type: _type,
-      //   /** 组数 */
-      //   set_count: ui.$input_set_count.value,
-      //   /** 组间歇 */
-      //   set_rest_duration: ui.$input_set_rest.value,
-      //   /** 组负荷，一般用于 HIIT */
-      //   set_weight: ui.$input_set_weight.value,
-      //   set_weight_unit: ui.$input_set_weight_unit.value,
-      //   /** 动作说明 */
-      //   set_note: ui.$input_set_remark.value,
-      // };
       return ui.$form.value;
     },
     get type() {
@@ -255,9 +214,6 @@ export function StepInputViewModel(props: {
     get actions() {
       return ui.$form.fields.actions.value;
     },
-    // get fields() {
-    //   return ui.$sets.state.fields;
-    // },
   };
   enum Events {
     Change,
@@ -269,21 +225,6 @@ export function StepInputViewModel(props: {
   };
   const bus = base<TheTypesOfEvents>();
 
-  // ui.$form.fields.actions.onChange(async (changed) => {
-  //   // console.log("[COMPONENT]workout_plan/component/action-input", changed);
-  //   const field = ui.$form.fields.actions.mapFieldWithIndex(changed.idx);
-  //   if (field) {
-  //     const r = await field.field.validate();
-  //     if (r.data) {
-  //       const value = r.data;
-  //       _set_actions[changed.idx].reps = value.reps;
-  //       // _set_actions[changed.idx].reps_unit = value.reps.unit;
-  //       _set_actions[changed.idx].weight = value.weight;
-  //       // _set_actions[changed.idx].weight_unit = value.weight.unit;
-  //     }
-  //   }
-  //   bus.emit(Events.Change, _state.value);
-  // });
   ui.$form.onChange(() => {
     // console.log("[COMPONENT]workout_plan/component/action-input");
     bus.emit(Events.Change, _state.value);
@@ -508,74 +449,6 @@ function WorkoutActionInputView(props: { store: WorkoutActionInput }) {
     <Show when={state().value} fallback={<div>选择动作</div>}>
       <WorkoutActionNameView name={state().value?.zh_name} />
     </Show>
-  );
-}
-
-function SetActionInputView(props: {
-  type: WorkoutPlanSetType;
-  store: ObjectFieldCore<{
-    action: SingleFieldCore<WorkoutActionInput>;
-    reps: SingleFieldCore<RepsInputModel>;
-    weight: SingleFieldCore<WeightInputModel>;
-    rest_duration: SingleFieldCore<RestInputModel>;
-  }>;
-}) {
-  const [state, vm] = useViewModelStore(props.store);
-
-  return (
-    <div>
-      <Show when={[WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(props.type)}>
-        <WorkoutActionInputView store={props.store.fields.action.input} />
-      </Show>
-      <div class="flex items-center gap-2">
-        <SetValueField store={vm.fields.reps}>
-          <RepsInputView store={vm.fields.reps} />
-        </SetValueField>
-        {/* <SetValueField store={vm.fields.reps_unit}>
-          <Select store={vm.fields.reps_unit.input} />
-        </SetValueField> */}
-        <SetValueField store={vm.fields.weight}>
-          <WeightInputView store={vm.fields.weight} />
-        </SetValueField>
-        {/* <SetValueField store={vm.fields.weight_unit}>
-          <Select store={vm.fields.weight_unit.input} />
-        </SetValueField> */}
-        {/* <For each={state().fields}>
-          {(field) => {
-            if (field.name === "action") {
-              return null;
-            }
-            if (field.hidden) {
-              return null;
-            }
-            const $inner = props.store.mapFieldWithName(field.name);
-            if (!$inner) {
-              return null;
-            }
-            return (
-              <div class="mt-2">
-                <div class="text-sm text-w-fg-2">{field.label}</div>
-                <Switch>
-                  <Match when={$inner.symbol === "SingleFieldCore"}>
-                    {(() => {
-                      // @ts-ignore
-                      const $input = $inner.input as FormInputInterface;
-                      if ($input.shape === "input") {
-                        return <Input store={$input} />;
-                      }
-                      if ($input.shape === "select") {
-                        return <Select store={$input} />;
-                      }
-                      return null;
-                    })()}
-                  </Match>
-                </Switch>
-              </div>
-            );
-          }}
-        </For> */}
-      </div>
-    </div>
   );
 }
 

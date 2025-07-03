@@ -49,15 +49,19 @@ export function createWorkoutDay(body: {
 export function createWorkoutDayFree(body: {
   type: WorkoutPlanType;
   title: string;
-  pending_steps: string;
-  updated_details: string;
+  pending_steps: WorkoutDayStepProgressJSON250629;
+  updated_details: WorkoutDayStepDetailsJSON250629;
   start_at?: Date;
   finished_at?: Date;
   duration: number;
   start_when_create?: boolean;
   finish_when_created?: boolean;
 }) {
-  return request.post<{ id: number }>("/api/workout_day/create_free", body);
+  return request.post<{ id: number }>("/api/workout_day/create_free", {
+    ...body,
+    pending_steps: JSON.stringify(body.pending_steps),
+    updated_details: JSON.stringify(body.updated_details),
+  });
 }
 
 export function checkHasStartedWorkoutDay() {

@@ -1,128 +1,103 @@
 /**
  * @file 日期选择
  */
+import { ViewComponentProps } from "@/store/types";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
-import { ButtonCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
+import { ButtonCore, DialogCore, PopoverCore, ScrollViewCore, SelectCore } from "@/domains/ui";
 
 import { ClockModel } from "./clock";
 
-export function DatePickerModel(props: { $clock: ClockModel }) {
+export function DatePickerModel(props: { $clock: ClockModel; app: ViewComponentProps["app"]; onOk?: () => void }) {
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
     selectYear(v: number) {
-      _year = v;
+      ui.$tmp_clock.methods.setYear(v);
       methods.refresh();
     },
     selectMonth(v: number) {
-      _month = v;
+      ui.$tmp_clock.methods.setMonth(v);
       methods.refresh();
     },
     selectDate(v: number) {
-      _date = v;
+      ui.$tmp_clock.methods.setDate(v);
       methods.refresh();
+    },
+    handleClickInput() {
+      ui.$dialog.show();
     },
   };
   const ui = {
     $clock: props.$clock,
-    $popover: new PopoverCore({}),
-    $view_hour: new ScrollViewCore({}),
-    $view_minute: new ScrollViewCore({}),
-    $btn_confirm_year: new ButtonCore({
+    $tmp_clock: ClockModel({
+      time: props.$clock.$dayjs.valueOf(),
+    }),
+    $dialog: new DialogCore({}),
+    $view_year: new ScrollViewCore({}),
+    $view_month: new ScrollViewCore({}),
+    $view_date: new ScrollViewCore({}),
+    $btn_confirm: new ButtonCore({
       onClick() {
-        ui.$clock.methods.setYearMonthDate(_year, _month, _date);
-        ui.$popover.hide();
+        const { year, month, date } = ui.$tmp_clock.state;
+        ui.$clock.methods.setYearMonthDate(year, month, date);
+        ui.$dialog.hide();
       },
     }),
     $btn_set_today: new ButtonCore({
       onClick() {
         const { year, month, date } = ui.$clock.methods.getToday();
-        _year = year;
-        _month = month;
-        _date = date;
-        ui.$view_hour.scrollTo({ top: 40 * (_month - 1) });
-        ui.$view_minute.scrollTo({ top: 40 * (_date - 2) });
+        ui.$tmp_clock.methods.setYearMonthDate(year, month, date);
+        ui.$view_year.scrollTo({ top: 40 * (year - 1) });
+        ui.$view_month.scrollTo({ top: 40 * (month - 2) });
+        ui.$view_date.scrollTo({ top: 40 * (date - 2) });
         methods.refresh();
       },
     }),
   };
 
-  let _year = ui.$clock.state.year;
-  let _month = ui.$clock.state.month;
-  let _date = ui.$clock.state.date;
+  // let _year = ui.$clock.state.year;
+  // let _month = ui.$clock.state.month;
+  // let _date = ui.$clock.state.date;
   let _state = {
     get value() {
-      return ui.$clock.$dayjs;
+      return ui.$tmp_clock.$dayjs;
     },
-    get year() {
-      return ui.$clock.state.year;
+    get full_date_text() {
+      return ui.$clock.state.full_date_text;
     },
-    get month() {
-      return ui.$clock.state.month;
-    },
-    get month_text() {
-      return ui.$clock.state.month_text;
-    },
-    get date() {
-      return ui.$clock.state.date;
-    },
-    get date_text() {
-      return ui.$clock.state.date_text;
-    },
-    get time_text() {
-      return ui.$clock.state.time_text;
-    },
-    get hour() {
-      return ui.$clock.state.hours;
-    },
-    get hour_text() {
-      return ui.$clock.state.hours_text;
-    },
-    get minute() {
-      return ui.$clock.state.minutes;
-    },
-    get minute_text() {
-      return ui.$clock.state.minutes_text;
-    },
-    get second() {
-      return ui.$clock.state.seconds;
-    },
-    get second_text() {
-      return ui.$clock.state.seconds_text;
-    },
-    get ms() {
-      return ui.$clock.state.ms;
+    get tmp_full_date_text() {
+      return ui.$tmp_clock.state.full_date_text;
     },
     get options_year() {
       return [2022, 2023, 2024, 2025].map((y) => {
         return {
           label: `${y}`,
           value: y,
-          selected: y === _year,
+          selected: y === ui.$tmp_clock.state.year,
         };
       });
     },
     get options_month() {
-      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((m) => {
+      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => {
         return {
-          label: `${m + 1}月`,
+          label: `${m}月`,
           value: m,
-          selected: m === _month,
+          selected: m === ui.$tmp_clock.state.month,
         };
       });
     },
     get options_date() {
-      const first_date = ui.$clock.methods.startOf("month").date();
-      const last_date = ui.$clock.methods.endOf("month").date();
+      const first_date = ui.$tmp_clock.methods.startOf("month").date();
+      const last_date = ui.$tmp_clock.methods.endOf("month").date();
       const result: { label: string; value: number; selected: boolean }[] = [];
       for (let i = first_date; i < last_date + 1; i += 1) {
         result.push({
           label: `${i}`,
           value: i,
-          selected: i === _date,
+          selected: i === ui.$tmp_clock.state.date,
         });
       }
       return result;
@@ -141,14 +116,18 @@ export function DatePickerModel(props: { $clock: ClockModel }) {
   const bus = base<TheTypesOfEvents>();
 
   ui.$clock.onStateChange(() => methods.refresh());
-  ui.$popover.onShow(() => {
-    ui.$view_hour.scrollTo({ top: 40 * (_month - 1) });
-    ui.$view_minute.scrollTo({ top: 40 * (_date - 2) });
+  ui.$tmp_clock.onStateChange(() => methods.refresh());
+  ui.$dialog.onShow(() => {
+    const { year, month, date } = ui.$clock.state;
+    // console.log("[]before tmp_clock .setYearMonthDate", year, month, date);
+    ui.$view_year.scrollTo({ top: 40 * (year - 1) });
+    ui.$view_month.scrollTo({ top: 40 * (month - 2) });
+    ui.$view_date.scrollTo({ top: 40 * (date - 2) });
   });
-  ui.$popover.onHide(() => {
-    _year = ui.$clock.state.year;
-    _month = ui.$clock.state.month;
-    _date = ui.$clock.state.date;
+  ui.$dialog.onHidden(() => {
+    const { year, month, date } = ui.$clock.state;
+    console.log("[]before .setYearMonthDate", year, month, date);
+    ui.$tmp_clock.methods.setYearMonthDate(year, month, date);
     methods.refresh();
   });
 
@@ -157,11 +136,12 @@ export function DatePickerModel(props: { $clock: ClockModel }) {
     methods,
     ui,
     state: _state,
+    app: props.app,
     get defaultValue() {
-      return _state.date;
+      return _state.value;
     },
     get value() {
-      return _state.date;
+      return _state.value;
     },
     setValue(v: number) {
       //...
