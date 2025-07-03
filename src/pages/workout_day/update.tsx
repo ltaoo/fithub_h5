@@ -1,5 +1,5 @@
 /**
- * @file 训练日记录
+ * @file 编辑已完成的训练日记录
  */
 import { For, Show } from "solid-js";
 import { Bird, CircleCheck, Info, Loader, MoreHorizontal, Play, StopCircle, X } from "lucide-solid";
@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { ViewComponentProps } from "@/store/types";
 import { $workout_action_list } from "@/store";
 import { useViewModel } from "@/hooks";
-import { Button, DropdownMenu, Popover, ScrollView, Skeleton, Textarea } from "@/components/ui";
+import { Button, DropdownMenu, Input, Popover, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { WorkoutActionSelectView } from "@/components/workout-action-select";
 import { SetValueInputKeyboard } from "@/components/set-value-input-keyboard";
 import { Sheet } from "@/components/ui/sheet";
@@ -18,6 +18,12 @@ import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 import { StopwatchView } from "@/components/stopwatch";
 import { IconButton } from "@/components/icon-btn/icon-btn";
 import { WorkoutPlanVideoPlayView } from "@/pages/workout_plan/components/video-play";
+import { PageView } from "@/components/page-view";
+import { Flex } from "@/components/flex/flex";
+import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
+import { FieldV2 } from "@/components/fieldv2/field";
+import { DateTimePickerView } from "@/components/ui/date-time-picker";
+import { Select } from "@/components/ui/select";
 import { StudentWorkoutDayProfileView } from "@/pages/student/workout_day_profile";
 
 import { base, Handler } from "@/domains/base";
@@ -31,10 +37,11 @@ import {
   PopoverCore,
   PresenceCore,
   ScrollViewCore,
+  SelectCore,
 } from "@/domains/ui";
 import { RefCore } from "@/domains/ui/cur";
 import { buildSetAct } from "@/biz/workout_plan/workout_plan";
-import { SingleFieldCore } from "@/domains/ui/formv2";
+import { ObjectFieldCore, SingleFieldCore } from "@/domains/ui/formv2";
 import { Result } from "@/domains/result";
 import { ListCore } from "@/domains/list";
 import { WorkoutDayStatus } from "@/biz/workout_day/constants";
@@ -47,8 +54,11 @@ import {
   updateWorkoutDayPlanDetails,
   WorkoutDayStepProgressJSON250629,
   WorkoutDayStepDetailsJSON250629,
+  createWorkoutDay,
+  createWorkoutDayFree,
+  updateWorkoutDay,
 } from "@/biz/workout_day/services";
-import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
+import { WorkoutPlanSetType, WorkoutPlanType } from "@/biz/workout_plan/constants";
 import { fetchStudentWorkoutDayProfile } from "@/biz/student/services";
 import {
   fetchWorkoutActionHistoryListOfWorkoutAction,
@@ -65,8 +75,13 @@ import {
   fetchContentListOfWorkoutPlanProcess,
   fetchContentProfileOfWorkoutPlan,
   fetchContentProfileOfWorkoutPlanProcess,
+  fetchWorkoutPlanList,
+  fetchWorkoutPlanListProcess,
 } from "@/biz/workout_plan/services";
 import { calc_bottom_padding_need_add } from "@/biz/input_with_keyboard/utils";
+import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
+import { ClockModel } from "@/biz/time_picker/clock";
+import { DateTimePickerModel } from "@/biz/time_picker/date_time";
 import { has_num_value, has_value, remove_arr_item, sleep, toFixed, update_arr_item } from "@/utils";
 import { toNumber } from "@/utils/primitive";
 import { debounce } from "@/utils/lodash/debounce";
@@ -78,49 +93,34 @@ import { SetActionView, SetActionViewModel } from "./components/set-action";
 import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
+import { WorkoutDayCatchUpOverviewView } from "./components/catch-up-on-overview";
 import { WorkoutDayProfileView } from "./profile";
-import { calcTheHighlightIdxAfterRemoveSet } from "./utils";
 
-export type WorkoutDayRecordViewModel = ReturnType<typeof WorkoutDayRecordViewModel>;
-export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
-  /** 页面处于多学员环境中 */
-  const is_multiple_view = props.view.query.multiple === "1";
+export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
+export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
       profile: new RequestCore(fetchStudentWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
         client: props.client,
       }),
-      update_steps: new RequestCore(updateWorkoutDayStepContent, { client: props.client }),
-      update_details: new RequestCore(updateWorkoutDayPlanDetails, { client: props.client }),
-      give_up: new RequestCore(giveUpHWorkoutDay, { client: props.client }),
+      create: new RequestCore(createWorkoutDay, { client: props.client }),
+      create_free: new RequestCore(createWorkoutDayFree, { client: props.client }),
+      update: new RequestCore(updateWorkoutDay, { client: props.client }),
       complete: new RequestCore(completeWorkoutDay, { client: props.client }),
     },
-    workout_action_history: {
+    workout_plan: {
       list: new ListCore(
-        new RequestCore(fetchWorkoutActionHistoryListOfWorkoutAction, {
-          process: fetchWorkoutActionHistoryListOfWorkoutActionProcess,
-          client: props.client,
-        })
+        new RequestCore(fetchWorkoutPlanList, { process: fetchWorkoutPlanListProcess, client: props.client })
       ),
-    },
-    content_of_workout_plan: {
-      list: new ListCore(
-        new RequestCore(fetchContentListOfWorkoutPlan, {
-          process: fetchContentListOfWorkoutPlanProcess,
-          client: props.client,
-        })
-      ),
-      profile: new RequestCore(fetchContentProfileOfWorkoutPlan, {
-        process: fetchContentProfileOfWorkoutPlanProcess,
-        client: props.client,
-      }),
     },
   };
-  // @ts-ignore
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
+    },
+    back() {
+      props.history.back();
     },
     getField(opt: { key: string; for: "reps" | "weight" }) {
       if (opt.for === "reps") {
@@ -202,33 +202,65 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     removeSet(opt: { step_idx: number; set_idx: number }) {
       const step = _steps[opt.step_idx];
       const set = step.sets[opt.set_idx];
-      const r = calcTheHighlightIdxAfterRemoveSet(opt, {
-        steps: _steps,
-        cur_step_idx: _cur_step_idx,
-        cur_set_idx: _cur_set_idx,
-      });
+      const r = (() => {
+        console.log("[PAGE]workout_day/update - removeSet", opt.step_idx, opt.set_idx);
+        console.log("[]", _cur_step_idx, _cur_set_idx);
+        const is_remove_cur_set = opt.step_idx === _cur_step_idx && opt.set_idx === _cur_set_idx;
+        const is_remove_last_set = step.sets.length === 1;
+        const step_is_last_step = _steps.length === 1;
+        console.log("[]step_is_last_step", step_is_last_step);
+        console.log("[]is_remove_last_set", is_remove_last_set);
+        console.log("[]is_remove_cur_set", is_remove_cur_set);
+        if (step_is_last_step && is_remove_last_set) {
+          return Result.Err("无法删除最后一组动作");
+        }
+        _steps = update_arr_item(_steps, opt.step_idx, {
+          uid: step.uid,
+          sets: remove_arr_item(step.sets, opt.set_idx),
+          note: step.note,
+        });
+        if (is_remove_last_set) {
+          _steps = remove_arr_item(_steps, opt.step_idx);
+        }
+        if (!is_remove_cur_set) {
+          // 不是移除当前高亮的，但是高亮通过 idx 标记，idx = 2，删除了 0，视觉上高亮变成了下一个
+          if (opt.set_idx < _cur_set_idx) {
+            _cur_set_idx -= 1;
+          }
+          return Result.Ok(null);
+        }
+        let next_set_idx = _cur_set_idx - 1;
+        if (next_set_idx < 0) {
+          next_set_idx = 0;
+        }
+        _cur_set_idx = next_set_idx;
+        if (is_remove_last_set) {
+          _cur_set_idx = 0;
+          let next_step_idx = _cur_step_idx - 1;
+          if (next_step_idx < 0) {
+            next_step_idx = 0;
+          }
+          _cur_step_idx = next_step_idx;
+        }
+        return Result.Ok(null);
+      })();
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
         });
         return;
       }
-      _steps = r.data.steps;
-      _cur_step_idx = r.data.cur_step_idx;
-      _cur_set_idx = r.data.cur_set_idx;
       // console.log("[]complete remove", _cur_step_idx, _cur_set_idx);
       const step_set_uid = `${step.uid}-${set.uid}`;
       if (_touched_set_uid.includes(step_set_uid)) {
         _touched_set_uid = _touched_set_uid.filter((v) => v !== step_set_uid);
       }
-      ui.$set_countdowns.delete(step_set_uid);
       for (let i = 0; i < set.actions.length; i += 1) {
         const act = set.actions[i];
         const step_set_act_uid = `${step_set_uid}-${act.uid}`;
         ui.$set_actions.delete(step_set_act_uid);
         ui.$fields_reps.delete(step_set_act_uid);
         ui.$fields_weight.delete(step_set_act_uid);
-        ui.$set_act_countdowns.delete(step_set_act_uid);
         ui.$inputs_completed.delete(step_set_act_uid);
       }
       methods.refresh();
@@ -286,57 +318,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       if (set_idx === -1) {
         return;
       }
-      if (set.rest_duration) {
-        // 组间歇倒计时
-        console.log(
-          "[PAGE]workout_day/update - before SetCountdownViewModel",
-          pending_set?.start_at,
-          pending_set?.finished_at
-        );
-        const $countdown = SetCountdownViewModel({
-          // countdown: 10,
-          countdown: (() => {
-            if (set.rest_duration.unit === getSetValueUnit("分")) {
-              return set.rest_duration.num * 60;
-            }
-            return toNumber(set.rest_duration.num, 90);
-          })(),
-          remaining: pending_set?.remaining_time ?? 0,
-          exceed: pending_set?.exceed_time ?? 0,
-          finished_at: pending_set?.finished_at ?? 0,
-        });
-        if (pending_set?.start_at) {
-          $countdown.setStartAt(pending_set?.start_at);
-        }
-        $countdown.onStart(() => {
-          methods.pauseAllRunningSetCountdowns();
-          console.log("[PAGE]workout_day/update - after $countdown.onStart", set);
-          if (!_touched_set_uid.includes(step_set_uid)) {
-            _touched_set_uid.push(step_set_uid);
-          }
-          methods.updateSteps({
-            step_idx: _cur_step_idx,
-            set_idx: _cur_set_idx,
-          });
-          ui.$running_set_countdowns.set(step_set_uid, $countdown);
-          // if ([WorkoutPlanSetType.HIIT].includes(set.type)) {
-          //   const k = `${a}-${b}-${set.actions.length - 1}`;
-          //   const $last_action_countdown = ui.$set_act_countdowns.get(k);
-          //   if ($last_action_countdown && $last_action_countdown.state.running) {
-          //     $last_action_countdown.pause();
-          //   }
-          // }
-          methods.setCurSet({ step_idx, set_idx });
-        });
-        $countdown.onStop(() => {
-          ui.$running_set_countdowns.delete(step_set_uid);
-          methods.nextSet();
-        });
-        ui.$set_countdowns.set(step_set_uid, $countdown);
-        // if (!the_set_completed) {
-        //   estimated_duration += set.rest_duration;
-        // }
-      }
       // let estimated_set_duration = 0;
       for (let c = 0; c < set.actions.length; c += 1) {
         const action = set.actions[c];
@@ -348,6 +329,20 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           pending_set: pending_set,
         });
         // estimated_set_duration += action.reps * 5;
+      }
+      if (set.rest_duration) {
+        const $countdown = SetCountdownViewModel({
+          countdown: (() => {
+            if (set.rest_duration.unit === getSetValueUnit("分")) {
+              return set.rest_duration.num * 60;
+            }
+            return toNumber(set.rest_duration.num, 90);
+          })(),
+          remaining: pending_set?.remaining_time ?? 0,
+          exceed: pending_set?.exceed_time ?? 0,
+          finished_at: pending_set?.finished_at ?? 0,
+        });
+        ui.$set_countdowns.set(step_set_uid, $countdown);
       }
       ui.$inputs_set_remark.set(step_set_uid, new InputCore({ defaultValue: pending_set?.remark ?? "" }));
       ui.$btns_more.set(
@@ -413,7 +408,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
                 return "";
               }
               if (action.weight.unit === getSetValueUnit("自重")) {
-                return "";
+                return "0";
               }
               return has_value(pending_action?.weight) ? String(pending_action?.weight) : "";
             })(),
@@ -454,98 +449,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           }),
         })
       );
-      if ([getSetValueUnit("秒"), getSetValueUnit("分")].includes(action.reps.unit)) {
-        const $action_countdown = SetActionCountdownViewModel({
-          // workout_duration: 10,
-          // rest_duration: 5,
-          countdown: (() => {
-            if (action.reps.unit === getSetValueUnit("分")) {
-              return action.reps.num * 60;
-            }
-            return toNumber(action.reps.num, 90);
-          })(),
-          rest_duration: (() => {
-            if (action.rest_duration.unit === getSetValueUnit("分")) {
-              return action.rest_duration.num * 60;
-            }
-            return action.rest_duration.num;
-          })(),
-          time1: pending_action?.time1,
-          time2: pending_action?.time2,
-          time3: pending_action?.time3,
-          finished_at1: pending_action?.finished_at1 ?? 0,
-          no_rest_countdown: is_last_act,
-        });
-        // console.log("before pending_action.start_at1", pending_action?.start_at1);
-        if (pending_action && pending_action.start_at1) {
-          $action_countdown.setStartAt(pending_action.start_at1, pending_action.start_at2);
-        }
-        $action_countdown.onStart(() => {
-          if (!_touched_set_uid.includes(cur_step_set_uid)) {
-            _touched_set_uid.push(cur_step_set_uid);
-          }
-          // console.log($action_countdown.ui.$countdown1.state.started_at);
-          methods.setCurSet({
-            step_idx: opt.step_idx,
-            set_idx: opt.set_idx,
-          });
-          if (prev_step_set_act_uid) {
-            const $prev_act_countdown = ui.$set_act_countdowns.get(prev_step_set_act_uid);
-            if ($prev_act_countdown) {
-              $prev_act_countdown.pause();
-            }
-          }
-          if (prev_step_set_uid) {
-            const $prev_set_countdown = ui.$set_countdowns.get(prev_step_set_uid);
-            if ($prev_set_countdown && $prev_set_countdown.state.running) {
-              $prev_set_countdown.pause();
-            }
-          }
-          methods.setCurSet({ step_idx: a, set_idx: b });
-        });
-        $action_countdown.onStop(() => {
-          methods.updateSteps({
-            step_idx: _cur_step_idx,
-            set_idx: _cur_set_idx,
-          });
-        });
-        $action_countdown.onRefresh(() => {
-          methods.updateSteps({
-            step_idx: _cur_step_idx,
-            set_idx: _cur_set_idx,
-          });
-        });
-        $action_countdown.onFinished(() => {
-          methods.updateSteps({
-            step_idx: _cur_step_idx,
-            set_idx: _cur_set_idx,
-          });
-          /** 在动作倒计时结束后，尝试去将动作「完成」 */
-          const $cur_act_check = ui.$inputs_completed.get(cur_step_set_act_uid);
-          if ($cur_act_check) {
-            methods.completeSetAct({
-              step_idx: a,
-              set_idx: b,
-              act_idx: c,
-              ignore_when_completed: true,
-            });
-          }
-          if (next_step_set_act_uid) {
-            const $next_act_countdown = ui.$set_act_countdowns.get(next_step_set_act_uid);
-            if ($next_act_countdown) {
-              $next_act_countdown.start();
-            }
-            const is_last_act = !$next_act_countdown;
-            if (is_last_act) {
-              const $countdown = ui.$set_countdowns.get(cur_step_set_uid);
-              if ($countdown) {
-                $countdown.start();
-              }
-            }
-          }
-        });
-        ui.$set_act_countdowns.set(cur_step_set_act_uid, $action_countdown);
-      }
       ui.$inputs_completed.set(
         cur_step_set_act_uid,
         new InputCore({ defaultValue: pending_action?.completed ? pending_action?.completed_at : 0 })
@@ -607,10 +510,10 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         // 取消完成状态
         $input_completed.setValue(0);
         // @todo 这里还没更新 _cur_set_idx 吧？
-        methods.updateSteps({
-          step_idx: _cur_step_idx,
-          set_idx: _cur_set_idx,
-        });
+        // methods.updateSteps({
+        //   step_idx: _cur_step_idx,
+        //   set_idx: _cur_set_idx,
+        // });
         result.completed = 0;
         return Result.Ok(result);
       }
@@ -677,10 +580,10 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         }
       }
       if (!opt.ignore_update_steps) {
-        methods.updateSteps({
-          step_idx: _cur_step_idx,
-          set_idx: _cur_set_idx,
-        });
+        // methods.updateSteps({
+        //   step_idx: _cur_step_idx,
+        //   set_idx: _cur_set_idx,
+        // });
       }
       let the_set_is_completed = true;
       for (let i = 0; i < set.actions.length; i += 1) {
@@ -694,17 +597,9 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       if (!the_set_is_completed) {
         return Result.Ok(result);
       }
-      const $countdown = ui.$set_countdowns.get(step_set_uid);
       if (is_last_step && is_last_set && the_set_is_completed) {
         methods.showWorkoutDayCompleteConfirmDialog();
-        if ($countdown) {
-          $countdown.complete();
-        }
         return Result.Ok(result);
-      }
-      // console.log("[]handleCompleteSet - ", _cur_step_idx, _next_set_idx, $countdown);
-      if ($countdown && !$countdown.state.paused) {
-        $countdown.start();
       }
       /** 使用当前的表单值，作为下一组的备用表单值 */
       let next_set_idx = opt.set_idx + 1;
@@ -738,43 +633,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       }
       return Result.Ok(result);
     },
-    setCurSet(opt: { step_idx: number; set_idx: number }) {
-      _cur_step_idx = opt.step_idx;
-      _cur_set_idx = opt.set_idx;
-      console.log("[PAGE]workout_day/update setCurSet before methods.updateSteps", opt);
-      methods.updateSteps({
-        step_idx: _cur_step_idx,
-        set_idx: _cur_set_idx,
-      });
-      methods.refresh();
-    },
-    nextSet() {
-      const cur_step = _steps[_cur_step_idx];
-      console.log("[PAGE]workout_day/update - nextSet", _cur_step_idx, _cur_set_idx, cur_step.sets.length);
-      _cur_set_idx += 1;
-      if (_cur_set_idx > cur_step.sets.length - 1) {
-        _cur_step_idx += 1;
-        _cur_set_idx = 0;
-        if (_cur_step_idx > _steps.length - 1) {
-          console.log("[PAGE]workout_day/update - nextSet before return");
-          return;
-        }
-      }
-      const { data } = methods.buildPendingSteps();
-      request.workout_day.update_steps.run({
-        id: props.view.query.id,
-        content: {
-          v: "250629",
-          step_idx: _cur_step_idx,
-          set_idx: _cur_set_idx,
-          act_idx: _cur_act_idx,
-          touched_set_uid: _touched_set_uid,
-          sets: data,
-        },
-      });
-      console.log("[PAGE]workout_day/update - nextSet before refresh", _cur_step_idx, _cur_step_idx);
-      methods.refresh();
-    },
     /**
      * 完成一个组动作
      */
@@ -801,38 +659,26 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     handleDeleteAction(opt: { step_idx: number; set_idx: number; act_idx: number }) {
       console.log("[PAGE]workout_day/create - handleDeleteSet", opt);
     },
+    async handleClickWorkoutAction(action: { id: number }) {
+      ui.$ref_workout_action.select(action);
+      // ui.$workout_action_profile.ui.$dialog.show();
+      // ui.$workout_action_profile.methods.fetch(action);
+    },
     resetStats() {
       _stats.uncompleted_actions = [];
       _stats.sets = [];
     },
-    async resetPendingSteps() {
-      await request.workout_day.update_steps.run({
-        id: props.view.query.id,
-        content: {
-          v: "250629",
-          step_idx: 0,
-          set_idx: 0,
-          act_idx: 0,
-          touched_set_uid: [],
-          sets: [],
-        },
-      });
-      request.workout_day.update_details.run({
-        id: props.view.query.id,
-        content: {
-          v: "250629",
-          steps: [],
-        },
-      });
-    },
     showWorkoutDayCompleteConfirmDialog() {
-      const profile = request.workout_day.profile.response;
-      if (!profile) {
-        return;
-      }
-      _stats.sets = [];
+      // const profile = request.workout_day.profile.response;
+      // if (!profile) {
+      //   return;
+      // }
+      const started_at = ui.$form.fields.start_at.input.value;
+      const finished_at = ui.$form.fields.finished_at.input.value;
+      _stats.started_at = dayjs(started_at).format("YYYY-MM-DD HH:mm");
       _stats.finished_at = dayjs().format("YYYY-MM-DD");
-      _stats.duration = dayjs().diff(profile.started_at, "minutes") + "min";
+      _stats.duration = finished_at.startOf("minute").diff(started_at.startOf("minute"), "minutes") + "min";
+      _stats.sets = [];
       let total_volume = 0;
       const uncompleted_actions: { step_idx: number; set_idx: number; act_idx: number }[] = [];
       for (let a = 0; a < _steps.length; a += 1) {
@@ -891,23 +737,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       ui.$dialog_overview.show();
       methods.refresh();
     },
-    handleClickVideoPoint(v: { video_key: string; time: number }) {
-      ui.$popover_action.hide();
-      ui.$dialog_content.ui.$dialog_outer.show();
-      ui.$dialog_content.ui.$video.onCanPlay(() => {
-        ui.$dialog_content.playWithTime(v.time, { delay: props.app.env.android });
-      });
-      ui.$dialog_content.ui.$video.onConnected(() => {
-        ui.$dialog_content.ui.$video.load(v.video_key);
-      });
-      if (ui.$dialog_content.ui.$video._mounted) {
-        if (ui.$dialog_content.ui.$video.url !== v.video_key) {
-          ui.$dialog_content.ui.$video.load(v.video_key);
-          return;
-        }
-        ui.$dialog_content.playWithTime(v.time, { delay: props.app.env.android });
-      }
-    },
     buildPendingSteps() {
       const total = {
         sets: 0,
@@ -932,10 +761,9 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
             const $field_weight = ui.$fields_weight.get(step_set_act_uid);
             const $field_reps = ui.$fields_reps.get(step_set_act_uid);
             const $input_check = ui.$inputs_completed.get(step_set_act_uid);
-            const $act_countdown = ui.$set_act_countdowns.get(step_set_act_uid);
             const completed_at = $input_check?.value;
             console.log("[]after set.actions[c]", act.zh_name, $input_check?.value);
-            console.log("[]after set.actions[c]", $act_countdown?.ui.$countdown1.state.started_at);
+            // console.log("[]after set.actions[c]", $act_countdown?.ui.$countdown1.state.started_at);
             if ($field_weight && $field_reps) {
               // console.log("weight", kkk, $field_weight.input.value, $field_weight.input.placeholder);
               // console.log("reps", kkk, $field_reps.input.value, $field_reps.input.placeholder);
@@ -961,63 +789,22 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
                 weight_unit: $field_weight.input.unit,
                 completed: !!completed_at,
                 completed_at: completed_at ?? 0,
-                start_at1: (() => {
-                  const v = $act_countdown?.ui.$countdown1.state.started_at;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
-                finished_at1: (() => {
-                  const v = $act_countdown?.state.paused_at;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
-                start_at2: (() => {
-                  const v = $act_countdown?.ui.$countdown2.state.started_at;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
-                finished_at2: (() => {
-                  const v = $act_countdown?.state.paused_at;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
+                start_at1: 0,
+                finished_at1: 0,
+                start_at2: 0,
+                finished_at2: 0,
                 start_at3: 0,
                 finished_at3: 0,
-                time1: (() => {
-                  const v = $act_countdown?.time1;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
-                time2: (() => {
-                  const v = $act_countdown?.time2;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
-                time3: (() => {
-                  const v = $act_countdown?.time3;
-                  if (v) {
-                    return toFixed(v, 0);
-                  }
-                  return 0;
-                })(),
+                time1: 0,
+                time2: 0,
+                time3: 0,
               });
               total.weight += vv_weight * vv_reps;
             }
           }
           const $countdown = ui.$set_countdowns.get(step_set_uid);
           const $remark = ui.$inputs_set_remark.get(step_set_uid);
+          // console.log("[PAGE]workout_day/update - $countdown", $countdown?.state.remaining);
           const set_completed = actions.every((a) => a.completed);
           data.push({
             step_uid: step.uid,
@@ -1056,46 +843,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       }
       return true;
     },
-    /** 更新训练计划内容 */
-    updateDetails() {
-      request.workout_day.update_details.run({
-        id: props.view.query.id,
-        content: {
-          v: "250629",
-          steps: _steps,
-        },
-      });
-    },
-    /** 更新动作执行进度 */
-    updateSteps: debounce(800, (opt: { step_idx: number; set_idx: number }) => {
-      // @ts-ignore
-      const { data } = methods.buildPendingSteps();
-      console.log("[PAGE]workout_day/update - updateSteps before update_steps.run", opt, data, _touched_set_uid);
-      return request.workout_day.update_steps.run({
-        id: props.view.query.id,
-        content: {
-          v: "250629",
-          step_idx: opt.step_idx,
-          set_idx: opt.set_idx,
-          act_idx: _cur_act_idx,
-          touched_set_uid: _touched_set_uid,
-          sets: data,
-        },
-      });
-    }),
-    async handleClickWorkoutAction(action: { id: number }) {
-      const student_id = request.workout_day.profile.response?.student_id;
-      if (!student_id) {
-        props.app.tip({
-          text: ["异常操作"],
-        });
-        return;
-      }
-      ui.$ref_workout_action.select(action);
-      request.workout_action_history.list.search({ workout_action_id: action.id, student_id });
-      // ui.$workout_action_profile.ui.$dialog.show();
-      // ui.$workout_action_profile.methods.fetch(action);
-    },
     showWorkoutActionDialog() {
       const cur_set_key = ui.$ref_cur_set_idx.value;
       if (!cur_set_key) {
@@ -1127,22 +874,42 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       }
       ui.$workout_action_select.ui.$dialog.show();
     },
-    /** 完成该次训练 */
-    async completeWorkoutDay() {
-      const { data } = methods.buildPendingSteps();
+    /** 修改训练 */
+    async updateWorkoutDay() {
+      const id = toNumber(props.view.query.id);
+      if (id === null) {
+        props.app.tip({
+          text: ["异常操作"],
+        });
+        return;
+      }
+      const r1 = await ui.$form.validate();
+      if (r1.error) {
+        props.app.tip({
+          text: r1.error.messages,
+        });
+        return;
+      }
+      const v = r1.data;
+      const pendingSteps = methods.buildPendingSteps();
+      console.log("[PAGE]workout_day/update - before workout_day.update.run", pendingSteps);
       props.app.loading({
         text: [],
       });
       ui.$btn_workout_day_submit.setLoading(true);
-      const r = await request.workout_day.complete.run({
-        id: props.view.query.id,
+      const r = await request.workout_day.update.run({
+        id,
+        title: v.title,
+        type: v.type ?? WorkoutPlanType.Strength,
+        start_at: v.start_at.toDate(),
+        finished_at: v.finished_at.toDate(),
         pending_steps: {
           v: "250629",
-          step_idx: _cur_step_idx,
-          set_idx: _cur_set_idx,
-          act_idx: _cur_act_idx,
-          touched_set_uid: _touched_set_uid,
-          sets: data,
+          step_idx: 0,
+          set_idx: 0,
+          act_idx: 0,
+          touched_set_uid: [],
+          sets: pendingSteps.data,
         },
         updated_details: {
           v: "250629",
@@ -1160,74 +927,9 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         text: ["完成"],
       });
       ui.$dialog_overview.hide();
-      if (!is_multiple_view) {
-        props.history.push("root.workout_day_profile", {
-          ...props.view.query,
-          home: "1",
-        });
-        return;
-      }
-      _profile_view = new RouteViewCore({
-        title: "",
-        name: "",
-        pathname: "",
-        query: {
-          ...props.view.query,
-          hide_bottom_bar: "1",
-        },
+      props.history.replace("root.workout_day_profile", {
+        id: String(r.data.id),
       });
-      request.workout_day.profile.modifyResponse((v) => {
-        return {
-          ...v,
-          status: WorkoutDayStatus.Finished,
-        };
-      });
-      methods.refresh();
-    },
-    async giveUp() {
-      props.app.loading({
-        text: [],
-      });
-      ui.$btn_workout_day_give_up.setLoading(true);
-      ui.$btn_give_up_confirm_ok.setLoading(true);
-      const r = await request.workout_day.give_up.run({ id: Number(props.view.query.id) });
-      ui.$btn_workout_day_give_up.setLoading(false);
-      ui.$btn_give_up_confirm_ok.setLoading(false);
-      if (r.error) {
-        props.app.tip({
-          text: [r.error.message],
-        });
-        return;
-      }
-      ui.$dialog_overview.hide();
-      ui.$dialog_give_up_confirm.hide();
-      props.app.tip({
-        text: ["操作成功"],
-      });
-      if (!is_multiple_view) {
-        // props.history.destroyAllAndPush("root.home_layout.index");
-        props.history.push("root.workout_day_profile", {
-          ...props.view.query,
-          home: "1",
-        });
-        return;
-      }
-      _profile_view = new RouteViewCore({
-        title: "",
-        name: "",
-        pathname: "",
-        query: {
-          id: props.view.query.id,
-          hide_bottom_bar: "1",
-        },
-      });
-      request.workout_day.profile.modifyResponse((v) => {
-        return {
-          ...v,
-          status: WorkoutDayStatus.GiveUp,
-        };
-      });
-      methods.refresh();
     },
     setHeight(height: number) {
       _height = height;
@@ -1238,21 +940,73 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
   const $fields_weight = new Map<string, SingleFieldCore<SetValueInputModel>>();
   const $fields_reps = new Map<string, SingleFieldCore<SetValueInputModel>>();
   const $inputs_completed = new Map<string, InputCore<number>>();
-  const $set_act_countdowns = new Map<string, SetActionCountdownViewModel>();
   const $set_countdowns = new Map<string, SetCountdownViewModel>();
   const $running_set_countdowns = new Map<string, SetCountdownViewModel>();
   const $inputs_set_remark = new Map<string, InputCore<string>>();
   const $btns_more = new Map<string, ButtonCore>();
+  const $clock = ClockModel({ time: dayjs().valueOf() });
   const ui = {
+    $view: new ScrollViewCore({}),
+    $history: props.history,
     $set_actions,
     $fields_weight,
     $fields_reps,
     $inputs_completed,
-    $set_act_countdowns,
     $set_countdowns,
     $running_set_countdowns,
     $inputs_set_remark,
     $btns_more,
+    $form: new ObjectFieldCore({
+      rules: [
+        {
+          custom(v) {
+            const started_at = v.start_at;
+            const finished_at = v.finished_at;
+            if (finished_at.isBefore(started_at)) {
+              return Result.Err("结束时间不能早于开始时间");
+            }
+            return Result.Ok(null);
+          },
+        },
+      ],
+      fields: {
+        title: new SingleFieldCore({
+          label: "标题",
+          rules: [{ maxLength: 100 }],
+          input: new InputCore({ defaultValue: `${$clock.state.month_text}月${$clock.state.date_text}日 训练` }),
+        }),
+        type: new SingleFieldCore({
+          label: "类型",
+          input: new SelectCore({
+            defaultValue: WorkoutPlanType.Strength,
+            options: [
+              {
+                label: "力量",
+                value: WorkoutPlanType.Strength,
+              },
+              {
+                label: "有氧",
+                value: WorkoutPlanType.Cardio,
+              },
+            ],
+          }),
+        }),
+        start_at: new SingleFieldCore({
+          label: "开始时间",
+          input: DateTimePickerModel({
+            $clock: ClockModel({ time: $clock.$dayjs.valueOf() }),
+            app: props.app,
+          }),
+        }),
+        finished_at: new SingleFieldCore({
+          label: "结束时间",
+          input: DateTimePickerModel({
+            $clock: ClockModel({ time: $clock.$dayjs.valueOf() }),
+            app: props.app,
+          }),
+        }),
+      },
+    }),
     $menu_set: new DropdownMenuCore({
       // side: "left",
       align: "start",
@@ -1262,6 +1016,9 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           onClick() {
             const cur_set_key = ui.$ref_cur_set_idx.value;
             if (!cur_set_key) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
               return;
             }
             const { step_idx, idx } = cur_set_key;
@@ -1287,6 +1044,82 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
             methods.showWorkoutActionDialog();
           },
         }),
+        // new MenuItemCore({
+        //   label: "设为常规组",
+        //   onClick() {
+        //     const field_value = ui.$ref_action_in_menu.value;
+        //     if (!field_value) {
+        //       props.app.tip({
+        //         text: ["异常操作"],
+        //       });
+        //       return;
+        //     }
+        //     const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        //     if (!$field) {
+        //       return;
+        //     }
+        //     $field.field.input.setType(WorkoutPlanSetType.Normal);
+        //     ui.$menu_set.hide();
+        //   },
+        // }),
+        // new MenuItemCore({
+        //   label: "设为超级组",
+        //   onClick() {
+        //     const field_value = ui.$ref_action_in_menu.value;
+        //     if (!field_value) {
+        //       props.app.tip({
+        //         text: ["异常操作"],
+        //       });
+        //       return;
+        //     }
+        //     const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        //     if (!$field) {
+        //       return;
+        //     }
+        //     $field.field.input.setType(WorkoutPlanSetType.Super);
+        //     ui.$menu_set.hide();
+        //   },
+        // }),
+        // new MenuItemCore({
+        //   label: "设为递减组",
+        //   onClick() {
+        //     const field_value = ui.$ref_action_in_menu.value;
+        //     if (!field_value) {
+        //       props.app.tip({
+        //         text: ["异常操作"],
+        //       });
+        //       return;
+        //     }
+        //     const $field = ui.$input_actions.getFieldWithId(field_value.id);
+        //     if (!$field) {
+        //       return;
+        //     }
+        //     $field.field.input.setType(WorkoutPlanSetType.Decreasing);
+        //     ui.$menu_set.hide();
+        //   },
+        // }),
+        new MenuItemCore({
+          label: "设为HIIT",
+          onClick() {
+            const cur_set_key = ui.$ref_cur_set_idx.value;
+            if (!cur_set_key) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            const { step_idx, idx } = cur_set_key;
+            _steps = update_arr_item(_steps, step_idx, {
+              ..._steps[step_idx],
+              sets: update_arr_item(_steps[step_idx].sets, idx, {
+                ..._steps[step_idx].sets[idx],
+                type: WorkoutPlanSetType.HIIT,
+              }),
+            });
+            methods.refresh();
+            ui.$menu_set.hide();
+          },
+        }),
         new MenuItemCore({
           label: "删除",
           async onClick() {
@@ -1297,12 +1130,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
             const { step_idx, idx } = cur_set_key;
             methods.removeSet({ step_idx, set_idx: idx });
             console.log("[]after methods.removeSet", _cur_step_idx, _cur_set_idx);
-            // 连续调用接口必须等同一个完成再调另一个
-            await methods.updateSteps({
-              step_idx: _cur_step_idx,
-              set_idx: _cur_set_idx,
-            });
-            methods.updateDetails();
             ui.$menu_set.hide();
           },
         }),
@@ -1312,12 +1139,9 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     $ref_cur_step: new RefCore<{ idx: number }>(),
     $ref_input_key: new RefCore<{ key: string; for: "reps" | "weight" }>(),
     /** 打开动作选择弹窗的目的 增加动作 修改动作 */
-    $ref_action_dialog_for: new RefCore<"add_action" | "change_action" | "change_cur_action">(),
-    $view: new ScrollViewCore(),
-    $workout_plan_dialog_btn: new ButtonCore(),
-    $action_select_dialog: new DialogCore({}),
-    $action_select_view: new ScrollViewCore(),
-    $start_btn: new ButtonCore(),
+    $ref_action_dialog_for: new RefCore<
+      "add_step" | "add_action" | "change_action" | "change_cur_action" | "hiit_add_action"
+    >(),
     /** 动作选择弹窗 */
     $workout_action_select: WorkoutActionSelectViewModel({
       defaultValue: [],
@@ -1433,71 +1257,127 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           ui.$workout_action_select.methods.clear();
           ui.$workout_action_select.ui.$dialog.hide();
           methods.refresh();
-          methods.updateDetails();
           return;
         }
-        // 增加动作
-        const v = ui.$ref_cur_step.value;
-        console.log("[PAGE]workout_day/create", selected_acts, v);
-        if (v) {
-          const step = _steps[v.idx];
-          if (selected_acts.length === 1) {
-            _steps = update_arr_item(_steps, v.idx, {
-              uid: step.uid,
-              sets: step.sets.map((set, idx) => {
-                return {
-                  uid: idx,
-                  type: set.type,
-                  actions: selected_acts.map((act, idx) => {
-                    return buildSetAct(act, { uid: idx, hiit: false });
-                  }),
-                  rest_duration: {
-                    num: 90,
-                    unit: getSetValueUnit("秒"),
-                  },
-                  weight: {
-                    num: "6",
-                    unit: getSetValueUnit("RPE"),
-                  },
-                };
-              }),
-              note: "",
+        // 增加动作 有点存疑，忘记了什么场景
+        if (["add_action"].includes(target)) {
+          const v = ui.$ref_cur_step.value;
+          console.log("[PAGE]workout_day/create", selected_acts, v);
+          if (v) {
+            const step = _steps[v.idx];
+            if (selected_acts.length === 1) {
+              _steps = update_arr_item(_steps, v.idx, {
+                uid: step.uid,
+                sets: step.sets.map((set, idx) => {
+                  return {
+                    uid: idx,
+                    type: set.type,
+                    actions: selected_acts.map((act, idx) => {
+                      return buildSetAct(act, { uid: idx, hiit: false });
+                    }),
+                    rest_duration: {
+                      num: 90,
+                      unit: getSetValueUnit("秒"),
+                    },
+                    weight: {
+                      num: "6",
+                      unit: getSetValueUnit("RPE"),
+                    },
+                  };
+                }),
+                note: "",
+              });
+            }
+            ui.$ref_cur_step.clear();
+            ui.$workout_action_select.methods.clear();
+            ui.$workout_action_select.ui.$dialog.hide();
+            methods.refresh();
+            return;
+          }
+          return;
+        }
+        if (["hiit_add_action"].includes(target)) {
+          const set_idx = ui.$ref_cur_set_idx.value;
+          console.log("[]$ref_cur_set_key - target hiit_add_action", set_idx);
+          if (!set_idx) {
+            props.app.tip({
+              text: ["操作异常"],
+            });
+            return;
+          }
+          const step = _steps[set_idx.step_idx];
+          const created_acts = selected_acts.map((act, idx) => {
+            return buildSetAct(act, { uid: idx + step.sets[set_idx.idx].actions.length, hiit: false });
+          });
+          _steps = update_arr_item(_steps, set_idx.step_idx, {
+            uid: step.uid,
+            sets: update_arr_item(step.sets, set_idx.idx, {
+              ...step.sets[set_idx.idx],
+              actions: [...step.sets[set_idx.idx].actions, ...created_acts],
+            }),
+            note: "",
+          });
+          for (let i = 0; i < created_acts.length; i += 1) {
+            methods.appendSetAct({
+              step_idx: set_idx.step_idx,
+              set_idx: set_idx.idx,
+              idx: i + step.sets[set_idx.idx].actions.length,
+              action: created_acts[i],
+              pending_set: null,
             });
           }
+          console.log(_steps);
           ui.$ref_cur_step.clear();
           ui.$workout_action_select.methods.clear();
           ui.$workout_action_select.ui.$dialog.hide();
           methods.refresh();
           return;
         }
-        // 在已有的训练计划基础上，增加一个新的动作，而不是修改原有训练计划中的
-        _steps = [
-          ..._steps,
-          {
-            uid: _steps.length,
-            sets: [
-              {
-                uid: 0,
-                type: WorkoutPlanSetType.Normal,
-                actions: selected_acts.map((act, idx) => {
-                  return buildSetAct(act, { uid: idx, hiit: false });
-                }),
-                rest_duration: {
-                  num: 90,
-                  unit: getSetValueUnit("秒"),
-                },
-                weight: {
-                  num: "6",
-                  unit: getSetValueUnit("RPE"),
-                },
+        if (["add_step"].includes(target)) {
+          // 额外增加动作
+          const steps = selected_acts.map((act, i) => {
+            const set = {
+              uid: 0,
+              type: WorkoutPlanSetType.Normal,
+              actions: [act].map((act, idx) => {
+                return buildSetAct(act, { uid: idx, hiit: false });
+              }),
+              rest_duration: {
+                num: 90,
+                unit: getSetValueUnit("秒"),
               },
-            ],
-            note: "",
-          },
-        ];
-        ui.$workout_action_select.methods.clear();
-        ui.$workout_action_select.ui.$dialog.hide();
-        methods.refresh();
+              weight: {
+                num: "6",
+                unit: getSetValueUnit("RPE"),
+              },
+            };
+            const step = {
+              uid: _steps.length + i,
+              sets: [set],
+              note: "",
+            };
+            return step;
+          });
+          _steps = [..._steps, ...steps];
+          for (let i = 0; i < steps.length; i += 1) {
+            const step = steps[i];
+            for (let j = 0; j < step.sets.length; j += 1) {
+              const set = step.sets[j];
+              methods.appendSet(
+                {
+                  ...set,
+                  step_uid: step.uid,
+                  completed: false,
+                },
+                null
+              );
+            }
+          }
+          console.log("[]before methods.refresh", _steps);
+          ui.$workout_action_select.methods.clear();
+          ui.$workout_action_select.ui.$dialog.hide();
+          methods.refresh();
+        }
       },
       onError(error) {
         props.app.tip({
@@ -1515,16 +1395,16 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       },
     }),
     $set_value_input: SetValueInputModel({}),
-    /** 当次训练已经过了多久 */
-    $day_duration: StopwatchViewModel({}),
-    $countdown_presence: new PresenceCore(),
     // $workout_action_profile_dialog: new DialogCore({ footer: false }),
     $workout_action_profile: WorkoutActionProfileViewModel({
       app: props.app,
       client: props.client,
       // extra_body: { student_id: 0 },
     }),
-    $tools: new PresenceCore({}),
+    $workout_plan_select: WorkoutPlanSelectViewModel({
+      defaultValue: [],
+      list: request.workout_plan.list,
+    }),
     $dialog_overview: new DialogCore({}),
     $dialog_remark: new DialogCore({}),
     /** 备注输入框 */
@@ -1557,12 +1437,20 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           return;
         }
         $input.setValue(v);
-        methods.updateSteps({
-          step_idx: _cur_step_idx,
-          set_idx: _cur_set_idx,
-        });
         ui.$input_remark.clear();
         ui.$dialog_remark.hide();
+      },
+    }),
+    $btn_show_workout_action_dialog: new ButtonCore({
+      onClick() {
+        ui.$workout_action_select.init();
+        ui.$ref_action_dialog_for.select("add_step");
+        ui.$workout_action_select.ui.$dialog.show();
+      },
+    }),
+    $btn_show_overview_dialog: new ButtonCore({
+      onClick() {
+        methods.showWorkoutDayCompleteConfirmDialog();
       },
     }),
     /** 确认放弃弹窗中的 取消 按钮 */
@@ -1574,67 +1462,19 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     /** 确认放弃弹窗中的 确定 按钮 */
     $btn_give_up_confirm_ok: new ButtonCore({
       async onClick() {
-        methods.giveUp();
-      },
-    }),
-    $btn_show_overview_dialog: new ButtonCore({
-      onClick() {
-        methods.showWorkoutDayCompleteConfirmDialog();
+        // methods.giveUp();
       },
     }),
     $dialog_finish_confirm: new DialogCore({}),
     $dialog_using_guide: new DialogCore({}),
     $menu_workout_day: new DropdownMenuCore({
       items: [
-        // new MenuItemCore({
-        //   label: "增加动作",
-        //   onClick() {
-        //     ui.$menu_workout_day.hide();
-        //     ui.$workout_action_select.ui.$dialog.show();
-        //   },
-        // }),
         new MenuItemCore({
-          label: "秒表",
+          label: "选择训练计划",
           onClick() {
             ui.$menu_workout_day.hide();
-            ui.$dialog_stopwatch.show();
-          },
-        }),
-        new MenuItemCore({
-          label: "使用说明",
-          onClick() {
-            ui.$dialog_using_guide.show();
-            ui.$menu_workout_day.hide();
-          },
-        }),
-        new MenuItemCore({
-          label: "放弃",
-          onClick() {
-            ui.$menu_workout_day.hide();
-            ui.$dialog_give_up_confirm.show();
-          },
-        }),
-        // new MenuItemCore({
-        //   label: "重置",
-        //   async onClick() {
-        //     ui.$menu_workout_day.hide();
-        //     props.app.tip({
-        //       icon: "loading",
-        //       text: ["提交中..."],
-        //     });
-        //     await methods.resetPendingSteps();
-        //   },
-        // }),
-        new MenuItemCore({
-          label: "返回首页",
-          onClick() {
-            // const countdowns = Array.from($running_set_countdowns.values());
-            // if (countdowns.length !== 0) {
-            //   const countdown = countdowns[0];
-            //   console.log(countdown.state);
-            // }
-            ui.$menu_workout_day.hide();
-            props.history.destroyAllAndPush("root.home_layout.index");
+            ui.$workout_plan_select.init();
+            ui.$workout_plan_select.ui.$dialog.show();
           },
         }),
       ],
@@ -1648,7 +1488,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     }),
     $btn_workout_day_submit: new ButtonCore({
       onClick() {
-        methods.completeWorkoutDay();
+        methods.updateWorkoutDay();
       },
     }),
     /** 放弃按钮 */
@@ -1669,8 +1509,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           });
           return;
         }
-        const student_id = request.workout_day.profile.response?.student_id ?? 0;
-        ui.$workout_action_profile.setExtraBody({ student_id });
         ui.$popover_action.hide();
         ui.$workout_action_profile.ui.$dialog.show();
         ui.$workout_action_profile.methods.fetch({ id: v.id });
@@ -1727,7 +1565,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         });
         ui.$popover_action.hide();
         // methods.updateSteps({ step_idx: _cur_step_idx, set_idx: _cur_set_idx });
-        methods.updateDetails();
         methods.refresh();
       },
     }),
@@ -1779,9 +1616,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     get height() {
       return _height;
     },
-    get cur_workout_action_history() {
-      return request.workout_action_history.list.response.dataSource;
-    },
     get cur_set_idx() {
       return _cur_set_idx;
     },
@@ -1827,7 +1661,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  request.workout_action_history.list.onStateChange(() => methods.refresh());
   ui.$set_value_input.onSubmit((v) => {
     console.log("[PAGE]workout_day/create", v);
     ui.$dialog_num_keyboard.hide();
@@ -1897,66 +1730,17 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      const { status, steps, pending_steps, started_at, workout_plan } = r.data;
-      (async () => {
-        if (!workout_plan) {
-          return;
-        }
-        // 获取关联到训练计划的 文章、视频
-        const r = await request.content_of_workout_plan.list.search({ workout_plan_id: workout_plan.id });
-        if (r.error) {
-          return;
-        }
-        const contents = r.data.dataSource;
-        const workout_action_points: Record<
-          number,
-          {
-            title: string;
-            time: number;
-            time_text: string;
-            video_key: string;
-            workout_action_id: number;
-          }[]
-        > = {};
-        for (let i = 0; i < contents.length; i += 1) {
-          const content = contents[i];
-          if (content.details.points) {
-            for (let j = 0; j < content.details.points.length; j += 1) {
-              const { workout_action_id, time, time_text } = content.details.points[j];
-              workout_action_points[workout_action_id] = workout_action_points[workout_action_id] || [];
-              if (content.video_key) {
-                workout_action_points[workout_action_id].push({
-                  title: content.title,
-                  time_text,
-                  time,
-                  workout_action_id,
-                  video_key: content.video_key,
-                });
-              }
-            }
-          }
-        }
-        _workout_action_points = workout_action_points;
-        // methods.refresh();
-      })();
-      console.log(
-        "[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started",
-        steps,
-        pending_steps
-      );
-      if (status === WorkoutDayStatus.Started) {
-        // console.log("started_at.valueOf()", started_at.format("YYYY-MM-DD HH:mm"));
-        ui.$day_duration.setStartedAt(started_at.valueOf());
-        ui.$day_duration.play();
+      const { title, type, steps, pending_steps, started_at, finished_at } = r.data;
+      console.log("[PAGE]workout_day/update - ready before if (status === WorkoutDayStatus.Started", type);
+      if (started_at) {
+        ui.$form.setValue({
+          title,
+          type,
+          start_at: started_at,
+          finished_at,
+        });
       }
-      _stats.started_at = started_at.format("YYYY-MM-DD HH:mm");
-      _cur_step_idx = pending_steps.step_idx;
-      _cur_set_idx = pending_steps.set_idx;
-      _cur_act_idx = pending_steps.act_idx;
-      _touched_set_uid = pending_steps.touched_set_uid;
       _steps = steps;
-      /** 预计花费时间 */
-      // let estimated_duration = 0;
       for (let a = 0; a < _steps.length; a += 1) {
         const step = _steps[a];
         for (let b = 0; b < step.sets.length; b += 1) {
@@ -1965,10 +1749,6 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
             pending_steps.sets.find((v) => {
               return v.step_uid === step.uid && v.uid === set.uid;
             }) ?? null;
-          // let is_completed = a < pending_steps.step_idx;
-          // if (a === pending_steps.step_idx) {
-          //   is_completed = b < pending_steps.set_idx;
-          // }
           let the_set_completed = pending_set?.completed ?? false;
           let all_act_completed = false;
           const pending_set_actions = pending_set?.actions ?? [];
@@ -1994,11 +1774,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
             },
             pending_set
           );
-          // if (!the_set_completed) {
-          //   estimated_duration += estimated_set_duration;
-          // }
         }
-        // _estimated_duration = `${Math.floor(estimated_duration / 60)}分钟`;
       }
       methods.refresh();
     },
@@ -2011,331 +1787,248 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
   };
 }
 
-export function WorkoutDayRecordView(props: ViewComponentProps) {
-  const [state, vm] = useViewModel(WorkoutDayRecordViewModel, [props]);
+export function WorkoutDayUpdateView(props: ViewComponentProps) {
+  const [state, vm] = useViewModel(WorkoutDayUpdateViewModel, [props]);
 
   return (
     <>
-      <div
-        class="working"
-        classList={{
-          hidden: state().profile?.status !== WorkoutDayStatus.Started,
-        }}
+      <PageView
+        store={vm}
+        operations={
+          <Flex class="flex items-center justify-between gap-2">
+            <Button class="w-full" store={vm.ui.$btn_show_workout_action_dialog}>
+              添加动作
+            </Button>
+            <Flex class="flex items-center gap-2">
+              <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
+              {/* <IconButton
+                onClick={(event) => {
+                  const client = event.currentTarget.getBoundingClientRect();
+                  vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
+                }}
+              >
+                <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+              </IconButton> */}
+            </Flex>
+          </Flex>
+        }
       >
-        <div class="h-screen bg-w-bg-0">
-          <ScrollView store={vm.ui.$view} class="h-full scroll--hidden">
-            <div
-              class="p-2 rounded-lg transition-all duration-300"
-              style={{ transform: `translateY(${-state().height}px)` }}
-            >
-              <div class="space-y-8">
-                <For each={state().steps}>
-                  {(step, step_idx) => {
-                    return (
-                      <div class="">
-                        <Show when={step.note}>
-                          <div class="flex gap-2 pb-2">
-                            <Show
-                              when={state().profile?.workout_plan?.creator}
-                              fallback={<div class="w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
-                            >
-                              <div
-                                class="w-[32px] h-[32px] rounded-full bg-w-bg-5"
-                                style={{
-                                  "background-image": `url('${state().profile?.workout_plan?.creator.avatar_url}')`,
-                                  "background-size": "cover",
-                                  "background-position": "center",
-                                }}
-                              ></div>
-                            </Show>
-                            <div class="relative flex-1">
-                              <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] text-w-fg-1 text-sm bg-w-bg-5">
-                                {step.note}
-                              </div>
-                            </div>
-                          </div>
-                        </Show>
-                        <div class="space-y-2 w-full">
-                          <For each={step.sets}>
-                            {(set, set_idx) => {
-                              const step_set_uid = () => `${step.uid}-${set.uid}`;
-                              const is_cur_set = () =>
-                                state().cur_step_idx === step_idx() && state().cur_set_idx === set_idx();
-                              const is_last_set = () =>
-                                step_idx() === state().steps.length - 1 && set_idx() === step.sets.length - 1;
-                              const first_act = set.actions[0];
-                              const first_act_uid = () => `${step_set_uid()}-${first_act.uid}`;
-                              return (
-                                <>
-                                  <div class="overflow-hidden relative w-full">
-                                    {/* <Show when={!is_cur_set()}>
-                                    <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                  </Show> */}
-                                    <div
-                                      classList={{
-                                        "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
-                                        // "border-w-fg-2": is_cur_set(),
-                                        "border-w-fg-2 bg-w-bg-5": is_cur_set(),
-                                      }}
-                                    >
-                                      <div
-                                        class="z-10 absolute right-4 top-4"
-                                        onClick={(event) => {
-                                          const client = event.currentTarget.getBoundingClientRect();
-                                          vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
-                                          vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
-                                        }}
-                                      >
-                                        <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
-                                      </div>
-                                      <div class="flex items-start gap-2 w-full">
-                                        {/* <Show
-                                          when={
-                                            [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(
-                                              set.type
-                                            ) && vm.ui.$set_actions.get(first_act_uid())
-                                          }
-                                        >
-                                          <SetActionView
-                                            store={vm.ui.$set_actions.get(first_act_uid())!}
-                                            idx={set_idx() + 1}
-                                            highlight={is_cur_set()}
-                                            onClick={(event) => {
-                                              const { x, y } = event.currentTarget.getBoundingClientRect();
-                                              vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
-                                              vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
-                                              vm.methods.handleClickWorkoutAction(set.actions[0]);
-                                            }}
-                                          />
-                                        </Show> */}
-                                        <div
-                                          class="flex items-center justify-center w-[24px] h-[24px] p-2 mt-1 rounded-full"
-                                          classList={{
-                                            "bg-blue-500": !is_cur_set(),
-                                            "bg-w-green": is_cur_set(),
-                                          }}
-                                        >
-                                          <div class="text-sm text-white">{set_idx() + 1}</div>
-                                        </div>
-                                        <div class="space-y-2 w-full">
-                                          <For each={set.actions}>
-                                            {(action, act_idx) => {
-                                              const act_uid = `${step_set_uid()}-${action.uid}`;
-                                              const is_countdown_reps = () =>
-                                                [getSetValueUnit("秒"), getSetValueUnit("分")].includes(
-                                                  action.reps.unit
-                                                );
-                                              return (
-                                                <div class="gap-2">
-                                                  <Show
-                                                    when={
-                                                      ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
-                                                      vm.ui.$set_actions.get(act_uid)
-                                                    }
-                                                  >
-                                                    <SetActionView
-                                                      store={vm.ui.$set_actions.get(act_uid)!}
-                                                      // idx={
-                                                      //   [WorkoutPlanSetType.Normal].includes(set.type)
-                                                      //     ? set_idx() + 1
-                                                      //     : 0
-                                                      // }
-                                                      highlight={is_cur_set()}
-                                                      onClick={(event) => {
-                                                        const { x, y } = event.currentTarget.getBoundingClientRect();
-                                                        vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
-                                                        vm.ui.$ref_cur_set_idx.select({
-                                                          step_idx: step_idx(),
-                                                          idx: set_idx(),
-                                                        });
-                                                        vm.methods.handleClickWorkoutAction(action);
-                                                      }}
-                                                    />
-                                                  </Show>
-                                                  <div class="flex items-center gap-2 mt-1">
-                                                    <Show when={vm.ui.$fields_weight.get(act_uid)}>
-                                                      <SetWeightInput
-                                                        class="w-[128px]"
-                                                        width={128}
-                                                        store={vm.ui.$fields_weight.get(act_uid)!}
-                                                        onClick={(event) => {
-                                                          const client = event.currentTarget.getBoundingClientRect();
-                                                          console.log(
-                                                            "[]beforeShowNumInput1",
-                                                            step_idx(),
-                                                            set_idx(),
-                                                            act_idx(),
-                                                            client.y
-                                                          );
-                                                          vm.methods.handleShowNumKeyboard({
-                                                            for: "weight",
-                                                            step_idx: step_idx(),
-                                                            set_idx: set_idx(),
-                                                            act_idx: act_idx(),
-                                                            rect: {
-                                                              x: client.x,
-                                                              y: client.y,
-                                                              width: client.width,
-                                                              height: client.height,
-                                                            },
-                                                          });
-                                                        }}
-                                                      />
-                                                    </Show>
-                                                    <Show when={vm.ui.$fields_reps.get(act_uid)}>
-                                                      <SetRepsInput
-                                                        store={vm.ui.$fields_reps.get(act_uid)!}
-                                                        class=""
-                                                        unit
-                                                        onClick={(event) => {
-                                                          console.log(
-                                                            "[]beforeShowNumInput2",
-                                                            step_idx(),
-                                                            set_idx(),
-                                                            act_idx()
-                                                          );
-                                                          const client = event.currentTarget.getBoundingClientRect();
-                                                          vm.methods.handleShowNumKeyboard({
-                                                            for: "reps",
-                                                            step_idx: step_idx(),
-                                                            set_idx: set_idx(),
-                                                            act_idx: act_idx(),
-                                                            rect: {
-                                                              x: client.x,
-                                                              y: client.y,
-                                                              width: client.width,
-                                                              height: client.height,
-                                                            },
-                                                          });
-                                                        }}
-                                                      />
-                                                    </Show>
-                                                    <Show when={vm.ui.$inputs_completed.get(act_uid)}>
-                                                      <SetCompleteBtn
-                                                        store={vm.ui.$inputs_completed.get(act_uid)!}
-                                                        highlight={is_cur_set()}
-                                                        onClick={(event) => {
-                                                          vm.methods.handleCompleteSetAction({
-                                                            step_idx: step_idx(),
-                                                            set_idx: set_idx(),
-                                                            act_idx: act_idx(),
-                                                          });
-                                                        }}
-                                                      />
-                                                    </Show>
-                                                  </div>
-                                                  <Show
-                                                    when={is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_uid)}
-                                                  >
-                                                    <div class="rounded-md p-2 mt-1 border-2 border-w-fg-3">
-                                                      <SetActionCountdownView
-                                                        highlight={is_cur_set()}
-                                                        store={vm.ui.$set_act_countdowns.get(act_uid)!}
-                                                      />
-                                                    </div>
-                                                  </Show>
-                                                </div>
-                                              );
-                                            }}
-                                          </For>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <Show when={!is_last_set()}>
-                                    <div class="relative w-full overflow-hidden">
-                                      {/* <Show when={!is_cur_set()}>
-                                      <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                    </Show> */}
-                                      <div
-                                        classList={{
-                                          "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
-                                          // "border-w-fg-2": is_cur_set(),
-                                          "border-w-fg-2 bg-w-bg-5": is_cur_set(),
-                                        }}
-                                      >
-                                        <Show when={vm.ui.$set_countdowns.get(step_set_uid())}>
-                                          <SetCountdownView
-                                            store={vm.ui.$set_countdowns.get(step_set_uid())!}
-                                            highlight={is_cur_set()}
-                                          />
-                                        </Show>
-                                      </div>
-                                    </div>
-                                  </Show>
-                                </>
-                              );
+        <div
+          class="p-2 rounded-lg transition-all duration-300"
+          style={{ transform: `translateY(${-state().height}px)` }}
+        >
+          <div class="space-y-4">
+            <FieldV2 store={vm.ui.$form.fields.start_at}>
+              <DateTimePickerView store={vm.ui.$form.fields.start_at.input}></DateTimePickerView>
+            </FieldV2>
+            <FieldV2 store={vm.ui.$form.fields.finished_at}>
+              <DateTimePickerView store={vm.ui.$form.fields.finished_at.input}></DateTimePickerView>
+            </FieldV2>
+            <FieldV2 store={vm.ui.$form.fields.title}>
+              <Input store={vm.ui.$form.fields.title.input}></Input>
+            </FieldV2>
+            <FieldV2 store={vm.ui.$form.fields.type}>
+              <Select store={vm.ui.$form.fields.type.input}></Select>
+            </FieldV2>
+          </div>
+          <div class="space-y-8 mt-4">
+            <For each={state().steps}>
+              {(step, step_idx) => {
+                return (
+                  <div class="">
+                    <Show when={step.note}>
+                      <div class="flex gap-2 pb-2">
+                        <Show
+                          when={state().profile?.workout_plan?.creator}
+                          fallback={<div class="w-[32px] h-[32px] rounded-full bg-w-bg-5"></div>}
+                        >
+                          <div
+                            class="w-[32px] h-[32px] rounded-full bg-w-bg-5"
+                            style={{
+                              "background-image": `url('${state().profile?.workout_plan?.creator.avatar_url}')`,
+                              "background-size": "cover",
+                              "background-position": "center",
                             }}
-                          </For>
+                          ></div>
+                        </Show>
+                        <div class="relative flex-1">
+                          <div class="relative inline-block p-2 rounded-tr-[8px] rounded-br-[8px] rounded-bl-[8px] text-w-fg-1 text-sm bg-w-bg-5">
+                            {step.note}
+                          </div>
                         </div>
                       </div>
-                    );
-                  }}
-                </For>
-              </div>
-            </div>
-            <div class="py-4">
-              <div class="text-sm text-w-fg-1 text-center">胜利就在眼前 加油!</div>
-            </div>
-            {/* 32是预留出的一些空间，不至于内容和底部操作栏靠得太近 */}
-            <div class="h-[32px]"></div>
-            {/* 56是底部操作栏 bottom-operation-bar 的高度 */}
-            <div class="h-[56px]"></div>
-            <div class="safe-height safe-height--no-color"></div>
-          </ScrollView>
-          <div class="bottom-operation-bar z-10 fixed bottom-0 left-0 w-full bg-w-bg-1">
-            <Show
-              when={state().profile?.status === WorkoutDayStatus.Started}
-              fallback={
-                <div class="flex items-center justify-between">
-                  <Skeleton class="w-[88px] h-[40px]" />
-                  <div class="flex items-center gap-2">
-                    <Skeleton class="w-[60px] h-[36px]" />
-                    <Skeleton class="w-[40px] h-[40px] rounded-full" />
+                    </Show>
+                    <div class="space-y-2 w-full">
+                      <For each={step.sets}>
+                        {(set, set_idx) => {
+                          const step_set_uid = () => `${step.uid}-${set.uid}`;
+                          return (
+                            <>
+                              <div class="overflow-hidden relative w-full p-4 border-2 border-w-fg-3 rounded-lg">
+                                {/* <Show when={!is_cur_set()}>
+                                    <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
+                                  </Show> */}
+                                <div
+                                  classList={{
+                                    "flex items-center gap-2": true,
+                                  }}
+                                >
+                                  <div
+                                    class="z-10 absolute right-4 top-4"
+                                    onClick={(event) => {
+                                      const client = event.currentTarget.getBoundingClientRect();
+                                      vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
+                                      vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
+                                    }}
+                                  >
+                                    <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
+                                  </div>
+                                  <div class="flex items-start gap-2 w-full">
+                                    <div
+                                      class="flex items-center justify-center w-[24px] h-[24px] p-2 mt-1 rounded-full"
+                                      classList={{
+                                        "bg-blue-500": true,
+                                      }}
+                                    >
+                                      <div class="text-sm text-white">{set_idx() + 1}</div>
+                                    </div>
+                                    <div class="space-y-2 w-full">
+                                      <For each={set.actions}>
+                                        {(action, act_idx) => {
+                                          const act_uid = `${step_set_uid()}-${action.uid}`;
+                                          return (
+                                            <div class="gap-2">
+                                              <Show
+                                                when={
+                                                  ![WorkoutPlanSetType.Decreasing].includes(set.type) &&
+                                                  vm.ui.$set_actions.get(act_uid)
+                                                }
+                                              >
+                                                <SetActionView
+                                                  store={vm.ui.$set_actions.get(act_uid)!}
+                                                  onClick={(event) => {
+                                                    const { x, y } = event.currentTarget.getBoundingClientRect();
+                                                    vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
+                                                    vm.ui.$ref_cur_set_idx.select({
+                                                      step_idx: step_idx(),
+                                                      idx: set_idx(),
+                                                    });
+                                                    vm.methods.handleClickWorkoutAction(action);
+                                                  }}
+                                                />
+                                              </Show>
+                                              <div class="flex items-center gap-2 mt-1">
+                                                <Show when={vm.ui.$fields_weight.get(act_uid)}>
+                                                  <SetWeightInput
+                                                    class="w-[128px]"
+                                                    width={128}
+                                                    store={vm.ui.$fields_weight.get(act_uid)!}
+                                                    onClick={(event) => {
+                                                      const client = event.currentTarget.getBoundingClientRect();
+                                                      vm.methods.handleShowNumKeyboard({
+                                                        for: "weight",
+                                                        step_idx: step_idx(),
+                                                        set_idx: set_idx(),
+                                                        act_idx: act_idx(),
+                                                        rect: {
+                                                          x: client.x,
+                                                          y: client.y,
+                                                          width: client.width,
+                                                          height: client.height,
+                                                        },
+                                                      });
+                                                    }}
+                                                  />
+                                                </Show>
+                                                <Show when={vm.ui.$fields_reps.get(act_uid)}>
+                                                  <SetRepsInput
+                                                    store={vm.ui.$fields_reps.get(act_uid)!}
+                                                    class=""
+                                                    unit
+                                                    onClick={(event) => {
+                                                      const client = event.currentTarget.getBoundingClientRect();
+                                                      vm.methods.handleShowNumKeyboard({
+                                                        for: "reps",
+                                                        step_idx: step_idx(),
+                                                        set_idx: set_idx(),
+                                                        act_idx: act_idx(),
+                                                        rect: {
+                                                          x: client.x,
+                                                          y: client.y,
+                                                          width: client.width,
+                                                          height: client.height,
+                                                        },
+                                                      });
+                                                    }}
+                                                  />
+                                                </Show>
+                                                <Show when={vm.ui.$inputs_completed.get(act_uid)}>
+                                                  <SetCompleteBtn
+                                                    store={vm.ui.$inputs_completed.get(act_uid)!}
+                                                    onClick={(event) => {
+                                                      vm.methods.handleCompleteSetAction({
+                                                        step_idx: step_idx(),
+                                                        set_idx: set_idx(),
+                                                        act_idx: act_idx(),
+                                                      });
+                                                    }}
+                                                  />
+                                                </Show>
+                                              </div>
+                                            </div>
+                                          );
+                                        }}
+                                      </For>
+                                      <Show when={set.type === WorkoutPlanSetType.HIIT}>
+                                        <div class="pt-2">
+                                          <div
+                                            class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
+                                            onClick={() => {
+                                              vm.ui.$ref_cur_set_idx.select({
+                                                step_idx: step_idx(),
+                                                idx: set_idx(),
+                                              });
+                                              vm.ui.$ref_action_dialog_for.select("hiit_add_action");
+                                              vm.ui.$workout_action_select.ui.$dialog.show();
+                                            }}
+                                          >
+                                            新增动作
+                                          </div>
+                                        </div>
+                                      </Show>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        }}
+                      </For>
+                      <div
+                        class="inline-block px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-xl text-sm text-w-fg-1"
+                        onClick={() => {
+                          vm.ui.$ref_cur_set_idx.select({
+                            step_idx: step_idx(),
+                            idx: 0,
+                          });
+                          vm.ui.$btn_workout_action_add_set.click();
+                        }}
+                      >
+                        增加1组
+                      </div>
+                    </div>
                   </div>
-                </div>
-              }
-            >
-              <div class="flex items-center justify-between p-2">
-                <DayDurationTextView store={vm.ui.$day_duration} />
-                <div class="flex items-center gap-2">
-                  <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
-                  <IconButton
-                    class="p-2 rounded-full bg-w-bg-5"
-                    onClick={(event) => {
-                      const client = event.currentTarget.getBoundingClientRect();
-                      vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
-                    }}
-                  >
-                    <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-                  </IconButton>
-                </div>
-              </div>
-            </Show>
-            <div class="safe-height"></div>
+                );
+              }}
+            </For>
           </div>
         </div>
-      </div>
-      <Show when={state().profile_view && !state().profile?.is_self}>
-        <StudentWorkoutDayProfileView
-          app={props.app}
-          storage={props.storage}
-          pages={props.pages}
-          history={props.history}
-          client={props.client}
-          view={state().profile_view!}
-        />
-      </Show>
-      <Show when={state().profile_view && state().profile?.is_self}>
-        <WorkoutDayProfileView
-          app={props.app}
-          storage={props.storage}
-          pages={props.pages}
-          history={props.history}
-          client={props.client}
-          view={state().profile_view!}
-        />
-      </Show>
+        {/* 32是预留出的一些空间，不至于内容和底部操作栏靠得太近 */}
+        <div class="h-[32px]"></div>
+        {/* 56是底部操作栏 bottom-operation-bar 的高度 */}
+        <div class="h-[56px]"></div>
+        <div class="safe-height safe-height--no-color"></div>
+      </PageView>
       <Sheet ignore_safe_height store={vm.ui.$workout_action_select.ui.$dialog} app={props.app}>
         <WorkoutActionSelectView store={vm.ui.$workout_action_select} app={props.app} />
       </Sheet>
@@ -2347,10 +2040,8 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
       <Sheet ignore_safe_height store={vm.ui.$workout_action_profile.ui.$dialog} app={props.app}>
         <WorkoutActionProfileView store={vm.ui.$workout_action_profile} />
       </Sheet>
-      <Sheet store={vm.ui.$dialog_overview} app={props.app}>
-        <div class="">
-          <WorkoutDayOverviewView store={vm} />
-        </div>
+      <Sheet ignore_safe_height store={vm.ui.$dialog_overview} app={props.app}>
+        <WorkoutDayCatchUpOverviewView store={vm} />
       </Sheet>
       <Sheet store={vm.ui.$dialog_remark} app={props.app}>
         <div class="relative p-2">
@@ -2447,45 +2138,11 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
           </div>
         </div>
       </Sheet>
-      <Sheet store={vm.ui.$dialog_stopwatch} app={props.app}>
-        <div class="min-h-[320px] flex justify-center pt-4">
-          <StopwatchView store={vm.ui.$stopwatch} />
-        </div>
-      </Sheet>
-      <Sheet ignore_safe_height store={vm.ui.$dialog_content.ui.$dialog_outer} app={props.app}>
-        <WorkoutPlanVideoPlayView store={vm.ui.$dialog_content} />
+      <Sheet ignore_safe_height store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>
+        <WorkoutPlanSelectView store={vm.ui.$workout_plan_select} />
       </Sheet>
       <Popover store={vm.ui.$popover_action}>
         <div class="space-y-2 w-[232px]">
-          <div class="h-[168px] space-y-2 overflow-y-auto">
-            <For
-              each={state().cur_workout_action_history}
-              fallback={
-                <div>
-                  <div class="p-2">
-                    <div class="w-full h-full flex items-center justify-center">
-                      <div class="flex flex-col items-center justify-center text-w-fg-1">
-                        <Bird class="w-12 h-12 text-w-fg-1" />
-                        <div class="mt-4 flex items-center space-x-2">
-                          <div class="text-center">暂无历史数据</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-            >
-              {(v) => {
-                return (
-                  <div>
-                    {/* <div>{v.action.zh_name}</div> */}
-                    <SetValueView reps={v.reps} reps_unit={v.reps_unit} weight={v.weight} weight_unit={v.weight_unit} />
-                    <div class="text-w-fg-1 text-sm">{v.created_at_relative}</div>
-                  </div>
-                );
-              }}
-            </For>
-          </div>
           <div class="operation flex items-center flex-wrap gap-2 mt-4 py-2">
             <Button store={vm.ui.$btn_workout_action_profile} size="sm">
               详情
@@ -2497,29 +2154,6 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
               增加1组
             </Button>
           </div>
-          <Show when={state().selected_act?.points.length}>
-            <div class="space-y-2">
-              <For each={state().selected_act?.points}>
-                {(p) => {
-                  return (
-                    <div
-                      onClick={() => {
-                        vm.methods.handleClickVideoPoint(p);
-                      }}
-                    >
-                      <div class="text-w-fg-0">{p.title}</div>
-                      <div class="flex items-center gap-2">
-                        <div class="text-w-fg-1">{p.time_text}</div>
-                        <div class="p-2 rounded-full bg-w-bg-5">
-                          <Play class="w-4 h-4 text-w-fg-1" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }}
-              </For>
-            </div>
-          </Show>
         </div>
       </Popover>
       <DropdownMenu store={vm.ui.$menu_set}></DropdownMenu>

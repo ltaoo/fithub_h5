@@ -10,6 +10,7 @@ import { useViewModel } from "@/hooks";
 import { MultipleAvatar } from "@/components/avatar/multiple";
 import { Avatar } from "@/components/avatar";
 import { PageView } from "@/components/page-view";
+import { PageLoading } from "@/components/page-loading";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -18,8 +19,7 @@ import { fetchStartedWorkoutDayList, fetchStartedWorkoutDayListProcess } from "@
 import { RouteViewCore } from "@/domains/route_view";
 import { ScrollViewCore } from "@/domains/ui";
 
-import { WorkoutDayUpdateView } from "./record";
-import { PageLoading } from "@/components/page-loading";
+import { WorkoutDayRecordView } from "./record";
 
 export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
   const request = {
@@ -165,7 +165,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                         "hidden ": idx() !== state().cur_view_idx,
                       }}
                     >
-                      <WorkoutDayUpdateView
+                      <WorkoutDayRecordView
                         app={props.app}
                         storage={props.storage}
                         pages={props.pages}
@@ -201,7 +201,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                       <div class="flex">
                         <div class="px-2 rounded-full bg-green-500 text-white text-sm">已开始</div>
                       </div>
-                      <div class="mt-2 text-w-fg-0">{v.workout_plan.title}</div>
+                      <div class="mt-2 text-w-fg-0">{v.title}</div>
                       <div class="flex text-w-fg-1 text-sm">
                         <div>开始时间</div>
                         <div>{v.started_at_text}</div>

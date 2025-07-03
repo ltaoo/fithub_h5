@@ -659,9 +659,10 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
       // }
       const started_at = ui.$form.fields.start_at.input.value;
       const finished_at = ui.$form.fields.finished_at.input.value;
+      _stats.started_at = dayjs(started_at).format("YYYY-MM-DD HH:mm");
+      _stats.finished_at = finished_at.format("YYYY-MM-DD HH:mm");
+      _stats.duration = finished_at.startOf("minute").diff(started_at.startOf("minute"), "minutes") + "min";
       _stats.sets = [];
-      _stats.finished_at = dayjs().format("YYYY-MM-DD");
-      _stats.duration = finished_at.diff(started_at, "minutes") + "min";
       let total_volume = 0;
       const uncompleted_actions: { step_idx: number; set_idx: number; act_idx: number }[] = [];
       for (let a = 0; a < _steps.length; a += 1) {
@@ -733,10 +734,9 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
         for (let b = 0; b < step.sets.length; b++) {
           const set = step.sets[b];
           const step_set_uid = `${step.uid}-${set.uid}`;
-          if (!_touched_set_uid.includes(step_set_uid)) {
-            continue;
-          }
-          let set_completed = false;
+          // if (!_touched_set_uid.includes(step_set_uid)) {
+          //   continue;
+          // }
           const actions: WorkoutDayStepProgressJSON250629["sets"][number]["actions"] = [];
           console.log("[]before set.actions.length", set.actions);
           for (let c = 0; c < set.actions.length; c++) {
@@ -748,9 +748,6 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
             const completed_at = $input_check?.value;
             console.log("[]after set.actions[c]", act.zh_name, $input_check?.value);
             // console.log("[]after set.actions[c]", $act_countdown?.ui.$countdown1.state.started_at);
-            if (!completed_at) {
-              set_completed = false;
-            }
             if ($field_weight && $field_reps) {
               // console.log("weight", kkk, $field_weight.input.value, $field_weight.input.placeholder);
               // console.log("reps", kkk, $field_reps.input.value, $field_reps.input.placeholder);
@@ -790,7 +787,7 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
             }
           }
           const $remark = ui.$inputs_set_remark.get(step_set_uid);
-          // console.log("[PAGE]workout_day/update - $countdown", $countdown?.state.remaining);
+          const set_completed = actions.every((a) => a.completed);
           data.push({
             step_uid: step.uid,
             uid: set.uid,
@@ -878,7 +875,6 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
       const r = await request.workout_day.create_free.run({
         title: v.title,
         type: v.type ?? WorkoutPlanType.Strength,
-        duration,
         start_at: v.start_at.toDate(),
         finished_at: v.finished_at.toDate(),
         pending_steps: {
@@ -934,9 +930,22 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
     $inputs_set_remark,
     $btns_more,
     $form: new ObjectFieldCore({
+      rules: [
+        {
+          custom(v) {
+            const started_at = v.start_at;
+            const finished_at = v.finished_at;
+            if (finished_at.isBefore(started_at)) {
+              return Result.Err("结束时间不能早于开始时间");
+            }
+            return Result.Ok(null);
+          },
+        },
+      ],
       fields: {
         title: new SingleFieldCore({
           label: "标题",
+          rules: [{ maxLength: 100 }],
           input: new InputCore({ defaultValue: `${$clock.state.month_text}月${$clock.state.date_text}日 训练` }),
         }),
         type: new SingleFieldCore({
@@ -1761,14 +1770,14 @@ export function WorkoutDayCatchUpView(props: ViewComponentProps) {
             </Button>
             <Flex class="flex items-center gap-2">
               <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
-              <IconButton
+              {/* <IconButton
                 onClick={(event) => {
                   const client = event.currentTarget.getBoundingClientRect();
                   vm.ui.$menu_workout_day.toggle({ x: client.x + 18, y: client.y + 18 });
                 }}
               >
                 <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-              </IconButton>
+              </IconButton> */}
             </Flex>
           </Flex>
         }

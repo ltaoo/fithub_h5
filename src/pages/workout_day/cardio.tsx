@@ -118,6 +118,7 @@ function CardioViewModel(props: ViewComponentProps) {
       fields: {
         title: new SingleFieldCore({
           label: "标题",
+          rules: [{ maxLength: 100 }],
           input: new InputCore({ defaultValue: `${$clock.state.month_text}月${$clock.state.date_text}日 有氧` }),
         }),
         type: new SingleFieldCore({
@@ -144,6 +145,12 @@ function CardioViewModel(props: ViewComponentProps) {
               console.log("[]vvv change", v, v.unit === getSetValueUnit("分"));
               if (v.unit === getSetValueUnit("分")) {
                 const num = toNumber(v.num, 0);
+                const finished_at = ui.$form.fields.finished_at.input.value;
+                const started_at = finished_at.subtract(num, "minute");
+                ui.$form.fields.start_at.input.setValue(started_at.valueOf());
+              }
+              if (v.unit === getSetValueUnit("小时")) {
+                const num = toNumber(v.num, 0) * 60;
                 const finished_at = ui.$form.fields.finished_at.input.value;
                 const started_at = finished_at.subtract(num, "minute");
                 ui.$form.fields.start_at.input.setValue(started_at.valueOf());
@@ -313,20 +320,7 @@ function CardioViewModel(props: ViewComponentProps) {
           finished_at: v.finished_at.toDate(),
           start_at: v.start_at.toDate(),
           remark: v.remark,
-          duration: (() => {
-            if (v.duration.unit === getSetValueUnit("秒")) {
-              return toFixed(toNumber(v.duration.num, 0) / 60, 0);
-            }
-            if (v.duration.unit === getSetValueUnit("分")) {
-              return toNumber(v.duration.num, 0);
-            }
-            if (v.duration.unit === getSetValueUnit("小时")) {
-              return toNumber(v.duration.num, 0) * 60;
-            }
-            return v.finished_at.diff(v.start_at, "minute");
-          })(),
         };
-        console.log(body);
         ui.$btn_submit.setLoading(true);
         const r2 = await request.workout_day.create_free.run(body);
         ui.$btn_submit.setLoading(false);

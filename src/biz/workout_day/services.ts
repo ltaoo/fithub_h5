@@ -51,9 +51,8 @@ export function createWorkoutDayFree(body: {
   title: string;
   pending_steps: WorkoutDayStepProgressJSON250629;
   updated_details: WorkoutDayStepDetailsJSON250629;
-  start_at?: Date;
-  finished_at?: Date;
-  duration: number;
+  start_at: Date;
+  finished_at: Date;
   start_when_create?: boolean;
   finish_when_created?: boolean;
 }) {
@@ -61,6 +60,28 @@ export function createWorkoutDayFree(body: {
     ...body,
     pending_steps: JSON.stringify(body.pending_steps),
     updated_details: JSON.stringify(body.updated_details),
+  });
+}
+
+/**
+ * 编辑训练日
+ * @param body
+ * @returns
+ */
+export function updateWorkoutDay(body: {
+  id: number;
+  type: WorkoutPlanType;
+  title: string;
+  pending_steps: WorkoutDayStepProgressJSON250629;
+  updated_details: WorkoutDayStepDetailsJSON250629;
+  start_at: Date;
+  finished_at: Date;
+}) {
+  return request.post<{ id: number }>("/api/workout_day/update", {
+    ...body,
+    // @todo 想做更精细化的更新，没有改变过的字段就不传。后端已经有该逻辑了
+    pending_steps: body.pending_steps ? JSON.stringify(body.pending_steps) : undefined,
+    updated_details: body.updated_details ? JSON.stringify(body.updated_details) : undefined,
   });
 }
 
@@ -80,6 +101,8 @@ export function fetchStartedWorkoutDayList() {
   return request.post<{
     list: {
       id: number;
+      title: string;
+      type: WorkoutPlanType;
       status: WorkoutDayStatus;
       started_at: string;
       coach_id: number;
@@ -88,7 +111,7 @@ export function fetchStartedWorkoutDayList() {
         nickname: string;
         avatar_url: string;
       };
-      workout_plan: {
+      workout_plan: null | {
         id: number;
         title: string;
         overview: string;
@@ -104,6 +127,8 @@ export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
     number,
     {
       id: number;
+      title: string;
+      type: WorkoutPlanType;
       status: WorkoutDayStatus;
       idx: number;
       started_at_text: string;
@@ -115,7 +140,7 @@ export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
         /** 这个字段似乎没啥用 */
         workout_day_id: number;
       }[];
-      workout_plan: { id: number; title: string };
+      workout_plan: null | { id: number; title: string };
     }
   > = {};
   for (let i = 0; i < r.data.list.length; i += 1) {
@@ -124,6 +149,8 @@ export function fetchStartedWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
     const group_no = started_at.unix().valueOf();
     groups[group_no] = groups[group_no] || {
       id: v.id,
+      title: v.title ?? v.workout_plan?.title ?? "",
+      type: v.type,
       idx: started_at.unix(),
       status: v.status,
       started_at_text: started_at.format("HH:mm"),
@@ -464,9 +491,15 @@ export function updateWorkoutDayPlanDetails(body: { id: string; content: Workout
  * @param body
  * @returns
  */
-export function completeWorkoutDay(body: { id: string }) {
+export function completeWorkoutDay(body: {
+  id: string;
+  pending_steps: WorkoutDayStepProgressJSON250629;
+  updated_details: WorkoutDayStepDetailsJSON250629;
+}) {
   return request.post("/api/workout_day/finish", {
     id: Number(body.id),
+    pending_steps: JSON.stringify(body.pending_steps),
+    updated_details: JSON.stringify(body.updated_details),
   });
 }
 
@@ -850,12 +883,14 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
   // console.log(seconds, dayjs(workout_day.finished_at).format("HH:mm"), dayjs(workout_day.started_at).format("HH:mm"));
   return Result.Ok({
     id: workout_day.id,
+    type: workout_day.type || WorkoutPlanType.Strength,
     title: workout_day.workout_plan ? workout_day.workout_plan.title : workout_day.title,
     overview: workout_day.workout_plan?.overview ?? "",
     tags: workout_day.workout_plan?.tags.split(",").filter(Boolean) ?? [],
     status: workout_day.status,
     started_at: dayjs(workout_day.started_at),
     started_at_text: dayjs(workout_day.started_at).format("MM-DD HH:mm"),
+    finished_at: dayjs(workout_day.finished_at),
     finished: workout_day.status === WorkoutDayStatus.Finished ? dayjs(workout_day.finished_at) : dayjs(),
     finished_at_text:
       workout_day.status === WorkoutDayStatus.Finished ? dayjs(workout_day.finished_at).format("MM-DD HH:mm") : "",

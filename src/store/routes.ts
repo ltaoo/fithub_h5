@@ -97,7 +97,7 @@ const configure = {
       },
       workout_day_self: {
         title: "训练日",
-        pathname: "/workout_day/update",
+        pathname: "/workout_day/record",
         options: {
           require: ["login"],
         },
@@ -112,6 +112,13 @@ const configure = {
       workout_day_catch_up_on: {
         title: "训练日",
         pathname: "/workout_day/catch_up_on",
+        options: {
+          require: ["login"],
+        },
+      },
+      workout_day_update: {
+        title: "编辑",
+        pathname: "/workout_day/update",
         options: {
           require: ["login"],
         },

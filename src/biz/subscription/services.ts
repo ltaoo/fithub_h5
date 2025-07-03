@@ -82,7 +82,12 @@ export function fetchSubscriptionListProcess(r: TmpRequestResp<typeof fetchSubsc
     ...data,
     list: data.list.map((s) => {
       return {
-        text: `${s.subscription_plan.name}x${s.count}天`,
+        text: (() => {
+          if (s.count === 9999) {
+            return "终身VIP";
+          }
+          return `${s.subscription_plan.name}x${s.count}天`;
+        })(),
         status: s.step,
         status_text: SubscriptionStatusTextMap[s.step],
         reason: s.reason,

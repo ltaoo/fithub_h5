@@ -9,9 +9,9 @@ import { PageView } from "@/components/page-view";
 import { Button } from "@/components/ui";
 import { SetValueView } from "@/components/set-value-view";
 
-import { WorkoutDayUpdateViewModel } from "../record";
+import { WorkoutDayRecordViewModel } from "../record";
 
-export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel }) {
+export function WorkoutDayOverviewView(props: { store: WorkoutDayRecordViewModel }) {
   const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (
@@ -28,20 +28,20 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayUpdateViewModel
             </div>
             <div class="flex gap-2 mt-4">
               <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                <div class="text-w-fg-0">耗时</div>
+                <div class="text-w-fg-0 whitespace-nowrap">耗时</div>
                 <div class="flex items-end">
                   <div class="text-3xl">{state().stats.duration}</div>
                 </div>
               </div>
               <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                <div class="text-w-fg-0">总容量</div>
+                <div class="text-w-fg-0 whitespace-nowrap">总容量</div>
                 <div class="flex items-end">
                   <div class="text-3xl">{state().stats.total_volume}</div>
                   <div class="">kg</div>
                 </div>
               </div>
               <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                <div class="text-w-fg-0">总组数</div>
+                <div class="text-w-fg-0 whitespace-nowrap">总组数</div>
                 <div class="flex items-end">
                   <div class="text-3xl">{state().stats.total_set_count}</div>
                 </div>

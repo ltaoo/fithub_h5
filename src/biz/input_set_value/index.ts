@@ -278,20 +278,30 @@ export function SetValueInputModel(props: { defaultValue?: string; placeholder?:
       return ui.$input.placeholder;
     },
     setValue(value: string) {
-      _text = value === "" ? "0" : String(value);
+      _text = (() => {
+        if (_unit === getSetValueUnit("自重")) {
+          return "";
+        }
+        return value === "" ? "0" : String(value);
+      })();
       ui.$input.setValue(value);
     },
     setUnit(unit: SetValueUnit, value?: string) {
       _unit = unit;
-      console.log("update the value", unit, value);
+      console.log("[BIZ]input_set_value - setUnit", unit, value);
       if (value) {
-        _text = value === "" ? "0" : String(value);
+        _text = (() => {
+          if (_unit === getSetValueUnit("自重")) {
+            return "";
+          }
+          return value === "" ? "0" : String(value);
+        })();
         ui.$input.setValue(_text);
       }
       _disabled = false;
       if (unit === getSetValueUnit("自重")) {
         _text = "";
-        ui.$input.setValue("0");
+        // ui.$input.setValue("0");
         _disabled = true;
       }
       // bus.emit(Events.Change, );

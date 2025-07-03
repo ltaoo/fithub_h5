@@ -101,10 +101,13 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
     default: (await import("@/pages/workout_day/multiple")).WorkoutDayMultiplePersonView,
   })),
   "root.workout_day_self": lazy(async () => ({
-    default: (await import("@/pages/workout_day/record")).WorkoutDayUpdateView,
+    default: (await import("@/pages/workout_day/record")).WorkoutDayRecordView,
   })),
   "root.workout_day_prepare": lazy(async () => ({
     default: (await import("@/pages/workout_day/prepare")).WorkoutDayPreparingPage,
+  })),
+  "root.workout_day_update": lazy(async () => ({
+    default: (await import("@/pages/workout_day/update")).WorkoutDayUpdateView,
   })),
   "root.workout_day_catch_up_on": lazy(async () => ({
     default: (await import("@/pages/workout_day/catch_up_on")).WorkoutDayCatchUpView,

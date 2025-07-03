@@ -1,3 +1,6 @@
+/**
+ * @file 训练记录列表
+ */
 import { For, Show } from "solid-js";
 import { MoreHorizontal } from "lucide-solid";
 
@@ -53,11 +56,10 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
       });
       const r = await request.workout_day.continue.run({ id: v.id });
       if (r.error) {
-        props.app.tip({
-          text: [r.error.message],
-        });
         return;
       }
+      props.app.hideLoading();
+      ui.$workout_day_menu.hide();
       props.history.push("root.workout_day_self", {
         id: String(v.id),
         multiple: "0",
@@ -79,10 +81,17 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
     $menu: new DropdownMenuCore({
       items: [
         new MenuItemCore({
-          label: "补录",
+          label: "补录训练记录",
           onClick() {
             ui.$menu.hide();
             props.history.push("root.workout_day_catch_up_on");
+          },
+        }),
+        new MenuItemCore({
+          label: "增加有氧记录",
+          onClick() {
+            ui.$menu.hide();
+            props.history.push("root.workout_day_cardio");
           },
         }),
       ],
@@ -101,6 +110,22 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
               return;
             }
             methods.handleContinueWorkout({ id: v.id });
+          },
+        }),
+        new MenuItemCore({
+          label: "编辑",
+          onClick() {
+            const v = ui.$ref.value;
+            if (!v) {
+              props.app.tip({
+                text: ["异常操作"],
+              });
+              return;
+            }
+            ui.$workout_day_menu.hide();
+            props.history.push("root.workout_day_update", {
+              id: String(v.id),
+            });
           },
         }),
       ],
@@ -146,19 +171,19 @@ export function WorkoutDayListView(props: ViewComponentProps) {
     <>
       <PageView
         store={vm}
-        // operations={
-        //   <Flex class="justify-between">
-        //     <div></div>
-        //     <IconButton
-        //       onClick={(event) => {
-        //         const { x, y } = event.currentTarget.getBoundingClientRect();
-        //         vm.ui.$menu.toggle({ x, y });
-        //       }}
-        //     >
-        //       <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-        //     </IconButton>
-        //   </Flex>
-        // }
+        operations={
+          <Flex class="justify-between">
+            <div></div>
+            <IconButton
+              onClick={(event) => {
+                const { x, y } = event.currentTarget.getBoundingClientRect();
+                vm.ui.$menu.toggle({ x, y });
+              }}
+            >
+              <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+            </IconButton>
+          </Flex>
+        }
       >
         <ListView store={vm.request.workout_day.list} class="space-y-2">
           <For each={state().response.dataSource}>
@@ -166,12 +191,21 @@ export function WorkoutDayListView(props: ViewComponentProps) {
               return (
                 <div class="border-2 border-w-fg-3 p-4 rounded-lg">
                   <div class="text-lg text-w-fg-0">{value.title}</div>
-                  <div class="text-w-fg-1">{value.started_at_text}</div>
-                  <div class="flex items-center justify-between">
+                  <Flex class="" justify="between">
                     <div>
-                      <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
+                      <Show when={value.status === WorkoutDayStatus.Finished}>
+                        <Flex class="gap-1 text-sm text-w-fg-1">
+                          <div>完成于</div>
+                          <div>{value.finished_at_text}</div>
+                        </Flex>
+                      </Show>
+                      <Show when={value.status === WorkoutDayStatus.GiveUp}>
+                        <Flex class="gap-1 text-sm text-w-fg-1">
+                          <div>{WorkoutDayStatusTextMap[value.status]}</div>
+                        </Flex>
+                      </Show>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <Flex class="gap-2" items="center">
                       <Show when={[WorkoutDayStatus.Finished, WorkoutDayStatus.GiveUp].includes(value.status)}>
                         <div
                           class="p-2 rounded-full bg-w-bg-5"
@@ -180,7 +214,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                             vm.methods.handleClickWorkoutDayMore(value, { x, y });
                           }}
                         >
-                          <MoreHorizontal class="w-4 h-4 text-w-fg-1" />
+                          <MoreHorizontal class="w-4 h-4 text-w-fg-0" />
                         </div>
                       </Show>
                       <div
@@ -191,8 +225,8 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                       >
                         详情
                       </div>
-                    </div>
-                  </div>
+                    </Flex>
+                  </Flex>
                 </div>
               );
             }}

@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { Bird, ChevronDown, ChevronLeft, ChevronRight, Gem, Moon, MoreHorizontal, Pen, Sun } from "lucide-solid";
+import { Award, Bird, ChevronDown, ChevronLeft, ChevronRight, Gem, Moon, MoreHorizontal, Pen, Sun } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -417,7 +417,7 @@ function HomeMineViewModel(props: ViewComponentProps) {
   let _theme = props.app.theme;
   let _nickname = "...";
   let _avatar_url = "";
-  let _subscription: { name: string; expired_at: string } | null = null;
+  let _subscription: { name: string; expired_at: string | null } | null = null;
   let _state = {
     get nickname() {
       return _nickname;
@@ -534,20 +534,33 @@ export function HomeMineView(props: ViewComponentProps) {
                     }}
                   ></div>
                 </Show>
-                <Show when={state().subscription}>
+                <Show
+                  when={state().subscription?.expired_at}
+                  fallback={
+                    <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
+                      <Flex
+                        class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
+                        onClick={() => {
+                          vm.methods.gotoSubscriptionView();
+                        }}
+                      >
+                        <Award class="w-4 h-4 text-yellow-500" />
+                        <div class="text-yellow-500 text-[12px] whitespace-nowrap">{state().subscription?.name}</div>
+                      </Flex>
+                    </div>
+                  }
+                >
                   <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
-                    <div
-                      class="flex items-center px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
+                    <Flex
+                      class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
+                      items="center"
                       onClick={() => {
                         vm.methods.gotoSubscriptionView();
                       }}
                     >
                       <Gem class="w-2.5 h-2.5 text-yellow-500" />
                       <div class="ml-1 text-yellow-500 text-[12px]">{state().subscription?.name}</div>
-                    </div>
-                    {/* <div class="text-w-fg-0 text-[12px]">
-                      至{state().subscription?.expired_at}
-                    </div> */}
+                    </Flex>
                   </div>
                 </Show>
               </div>
@@ -564,30 +577,6 @@ export function HomeMineView(props: ViewComponentProps) {
               "border-radius": "12px 12px 0 0",
             }}
           >
-            <div class="grid grid-cols-3 gap-2">
-              <div
-                class="border-2 border-w-fg-3 rounded-lg p-4"
-                onClick={() => {
-                  props.history.push("root.workout_day_cardio");
-                }}
-              >
-                <div class="text-w-fg-0 text-center">
-                  <div>添加</div>
-                  <div>有氧记录</div>
-                </div>
-              </div>
-              <div
-                class="border-2 border-w-fg-3 rounded-lg p-4"
-                onClick={() => {
-                  props.history.push("root.workout_day_catch_up_on");
-                }}
-              >
-                <div class="text-w-fg-0 text-center">
-                  <div>补录</div>
-                  <div>训练记录</div>
-                </div>
-              </div>
-            </div>
             <div class="rounded-lg border-2 border-w-fg-3 mt-2">
               <div class="flex items-center justify-between p-4 border-b-2 border-w-fg-3">
                 <Flex class="gap-2">
@@ -798,9 +787,9 @@ export function HomeMineView(props: ViewComponentProps) {
               return (
                 <div class="p-4 border-2 border-w-fg-3 rounded-lg">
                   <div class="text-w-fg-0">{d.title}</div>
-                  <div>
-                    <div class="mt-1 text-sm text-w-fg-1">完成于 {d.finished_at_text}</div>
-                    <Flex class="mt-2 gap-2">
+                  <Flex justify="between">
+                    <div class="text-sm text-w-fg-1">完成于 {d.finished_at_text}</div>
+                    <Flex class="gap-2">
                       <div
                         class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
                         onClick={() => {
@@ -812,7 +801,7 @@ export function HomeMineView(props: ViewComponentProps) {
                           }
                         }}
                       >
-                        <div class="text-sm">计划详情</div>
+                        <div class="text-sm">计划</div>
                       </div>
                       <div
                         class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
@@ -823,10 +812,10 @@ export function HomeMineView(props: ViewComponentProps) {
                           });
                         }}
                       >
-                        <div class="text-sm">训练详情</div>
+                        <div class="text-sm">详情</div>
                       </div>
                     </Flex>
-                  </div>
+                  </Flex>
                 </div>
               );
             }}

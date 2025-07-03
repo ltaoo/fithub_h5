@@ -10,8 +10,11 @@ import { Button } from "@/components/ui";
 import { SetValueView } from "@/components/set-value-view";
 
 import { WorkoutDayCatchUpViewModel } from "../catch_up_on";
+import { WorkoutDayUpdateViewModel } from "../update";
 
-export function WorkoutDayCatchUpOverviewView(props: { store: WorkoutDayCatchUpViewModel }) {
+export function WorkoutDayCatchUpOverviewView(props: {
+  store: WorkoutDayCatchUpViewModel | WorkoutDayUpdateViewModel;
+}) {
   const [state, vm] = useViewModelStore(props.store, { silence: true });
 
   return (

@@ -263,17 +263,19 @@ export function refreshWorkoutStatsProcess(r: TmpRequestResp<typeof refreshWorko
       started_at_text: dayjs(v.earliest_start_day.started_at).format("MM-DD HH:mm"),
     },
     stats: v.stats,
-    action_stats: v.action_stats.map((vv) => {
-      return {
-        ...vv,
-        records: vv.records.map((vvv) => {
+    action_stats: v.action_stats
+      ? v.action_stats.map((vv) => {
           return {
-            ...vvv,
-            created_at: dayjs(vvv.created_at).format("HH:mm"),
+            ...vv,
+            records: vv.records.map((vvv) => {
+              return {
+                ...vvv,
+                created_at: dayjs(vvv.created_at).format("HH:mm"),
+              };
+            }),
           };
-        }),
-      };
-    }),
+        })
+      : [],
     ...(() => {
       const types = Object.keys(v.type_plan_map);
       const WorkoutPlanTypeTextMap: Record<string, string> = {

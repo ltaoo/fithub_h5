@@ -199,21 +199,21 @@ export function WorkoutDayProfileView(props: ViewComponentProps) {
               <Show when={state().profile!.status === WorkoutDayStatus.Finished}>
                 <div class="flex items-center gap-2 mt-4">
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <div class="text-w-fg-0">耗时</div>
+                    <div class="text-w-fg-0 whitespace-nowrap">耗时</div>
                     <div class="flex items-end truncate">
                       <div class="text-3xl">{state().profile!.minutes}</div>
                       <div>分钟</div>
                     </div>
                   </div>
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <div class="text-w-fg-0">总容量</div>
+                    <div class="text-w-fg-0 whitespace-nowrap">总容量</div>
                     <div class="flex items-end truncate">
                       <div class="text-3xl">{state().profile!.total_weight}</div>
                       <div>公斤</div>
                     </div>
                   </div>
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
-                    <div class="text-w-fg-0 truncate">总组数</div>
+                    <div class="text-w-fg-0 whitespace-nowrap">总组数</div>
                     <div class="flex items-end truncate">
                       <div class="text-3xl">{state().profile!.total_set_count}</div>
                     </div>

@@ -38,7 +38,6 @@ export function SetWeightInput(
         $field.setStatus("focus");
       }}
     >
-      {/* {input().value ? 1 : 2} */}
       <Show
         when={input().unit !== getSetValueUnit("自重")}
         fallback={

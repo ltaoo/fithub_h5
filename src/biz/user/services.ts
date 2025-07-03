@@ -69,6 +69,7 @@ export function fetch_user_profile() {
       status: SubscriptionStatus;
       name: string;
       expired_at: string;
+      count: number;
     };
     no_account: boolean;
   }>("/api/auth/profile");
@@ -82,8 +83,14 @@ export function fetch_user_profile_process(r: TmpRequestResp<typeof fetch_user_p
     ...v,
     subscription: {
       ...v.subscription,
+      name: (() => {
+        if (v.subscription.count === 9999) {
+          return "终身VIP";
+        }
+        return v.subscription.name;
+      })(),
       status_text: SubscriptionStatusTextMap[v.subscription.status],
-      expired_at_text: dayjs(v.subscription.expired_at).format("YYYY-MM-DD"),
+      expired_at_text: v.subscription.count === 9999 ? null : dayjs(v.subscription.expired_at).format("YYYY-MM-DD"),
     },
     no_account: v.no_account,
   });
