@@ -23,7 +23,7 @@ export function WorkoutActionSelectView(props: {
 
   return (
     <>
-      <div class="flex flex-col bg-w-bg-0 border-w-fg-3" style={{ height: "100vh" }}>
+      <div class="flex flex-col h-w-screen bg-w-bg-0 border-w-fg-3">
         <div class="flex gap-2 p-2">
           <div class="w-[240px]">
             <Select store={vm.ui.$input_type_select} />

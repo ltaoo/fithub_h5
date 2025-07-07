@@ -169,7 +169,7 @@ export function StudentWorkoutDayProfileView(props: ViewComponentProps) {
                   <div class="p-4 rounded-lg border-2 border-w-fg-3">
                     <div class="text-w-fg-0 truncate">总组数</div>
                     <div class="flex items-end truncate">
-                      <div class="text-xl">{state().profile!.total_set_count}</div>
+                      <div class="text-3xl">{state().profile!.total_set_count}</div>
                     </div>
                   </div>
                 </div>

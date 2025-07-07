@@ -62,7 +62,7 @@ export function LoginPage(props: ViewComponentProps) {
   const [state, vm] = useViewModel(LoginViewModel, [props]);
 
   return (
-    <div class="pt-12 px-4 min-h-screen">
+    <div class="pt-12 px-4 h-w-screen">
       <div class="h-[160px] mx-auto">
         <div class="relative cursor-pointer">
           <div class="z-20 relative text-6xl text-center italic">Fit Hub</div>

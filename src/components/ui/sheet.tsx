@@ -127,7 +127,7 @@ export function Sheet(props: SheetProps) {
       <Show when={state().mask}>
         <div
           classList={{
-            "h-screen": true,
+            "h-w-screen": true,
             "fixed left-1/2 top-0 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
             "fixed inset-0": !props.app.env.pc,
             hidden: !state().visible,

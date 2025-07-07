@@ -113,3 +113,7 @@ export function fetchGiftCardProfile(body: { code: string }) {
 export function usingGiftCard(body: { code: string }) {
   return request.post("/api/gift_card/using", { code: body.code });
 }
+
+export function sendGiftCard(body: { code: string; to_coach_id: number }) {
+  return request.post("/api/gift_card/send", { code: body.code, to_coach_id: body.to_coach_id });
+}

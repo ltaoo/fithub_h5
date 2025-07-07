@@ -1,12 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,css,md,mdx,html,json,scss}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,css,md,mdx,html,json,scss}"],
   darkMode: "class",
   theme: {
     extend: {
+      height: {
+        "w-screen": "var(--hh)",
+      },
       colors: {
         "w-bg-0": "var(--weui-BG-0)",
         "w-bg-1": "var(--weui-BG-1)",

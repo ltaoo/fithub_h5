@@ -1,7 +1,7 @@
 {
   "name": "@fithub/h5",
   "private": true,
-  "version": "2507032000",
+  "version": "2507071316",
   "scripts": {
     "dev": "vite --port 3100 --host",
     "build": "tsc && vite build",

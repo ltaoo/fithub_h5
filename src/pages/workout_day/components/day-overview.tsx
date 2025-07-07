@@ -16,7 +16,7 @@ export function WorkoutDayOverviewView(props: { store: WorkoutDayRecordViewModel
 
   return (
     <>
-      <div class="relative flex flex-col h-[100vh] bg-w-bg-0" style={{ "z-index": 10 }}>
+      <div class="z-[10] relative flex flex-col h-w-screen bg-w-bg-0">
         <div class="flex-1 overflow-y-auto scroll--hidden">
           <div class="p-2">
             <div class="text-3xl text-w-fg-0">{state().stats.finished_at}</div>

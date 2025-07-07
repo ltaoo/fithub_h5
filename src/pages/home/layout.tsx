@@ -53,7 +53,7 @@ function HomeLayoutViewModel(props: ViewComponentProps) {
       url: "root.home_layout.tools",
     },
     {
-      text: "学员",
+      text: "好友",
       icon: <Users class="w-6 h-6" />,
       url: "root.home_layout.student_list",
     },

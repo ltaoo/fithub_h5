@@ -25,13 +25,13 @@ export function TimePickerView(props: { store: TimePickerModel }) {
             "text-w-fg-0": true,
           }}
         >
-          {state().time_text}
+          {state().full_time_text}
           <Timer class="w-4 h-4 text-w-fg-0" />
         </div>
       </div>
       <Sheet store={vm.ui.$dialog} app={vm.app}>
         <div class="px-4 py-2 border-b-2 border-w-fg-3">
-          <div class="text-w-fg-0 text-xl">{state().time_text}</div>
+          <div class="text-w-fg-0 text-xl">{state().tmp_full_time_text}</div>
         </div>
         <div class="grid grid-cols-2 h-[240px]">
           <ScrollView store={vm.ui.$view_hour} class="h-full p-2 overflow-y-auto scroll--hidden">

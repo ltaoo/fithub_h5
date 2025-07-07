@@ -36,7 +36,16 @@ function ArticleListViewModel(props: ViewComponentProps) {
     },
   };
   const ui = {
-    $view: new ScrollViewCore({}),
+    $view: new ScrollViewCore({
+      async onReachBottom() {
+        await request.content.list.loadMore();
+        ui.$view.finishLoadingMore();
+      },
+      async onPullToRefresh() {
+        await request.content.list.refresh();
+        ui.$view.finishPullToRefresh();
+      },
+    }),
     $history: props.history,
     $menu: new DropdownMenuCore({
       items: [

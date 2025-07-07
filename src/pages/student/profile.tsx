@@ -2,7 +2,7 @@
  * @file 学员详情
  */
 import { For, Show } from "solid-js";
-import { Check, ChevronRight, CircleX, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
+import { Check, ChevronLeft, ChevronRight, CircleX, Edit, Mars, MoreHorizontal, Venus } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -35,6 +35,7 @@ import { TheItemTypeFromListCore } from "@/domains/list/typing";
 import { map_weekday_text } from "@/biz/workout_plan/workout_schedule";
 import { WorkoutPlanSelectViewModel } from "@/biz/workout_plan_select/workout_plan_select";
 import { toNumber } from "@/utils/primitive";
+import { GiftCardExchangeModel } from "@/biz/gift_card/gift_card";
 
 function MemberProfileViewModel(props: ViewComponentProps) {
   const request = {
@@ -56,7 +57,6 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       ),
     },
   };
-  type TheWorkoutDay = TheItemTypeFromListCore<typeof request.student.workout_day_list>;
   const methods = {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
@@ -140,6 +140,9 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         return Result.Err(r.error);
       }
       if (r.data.role === CoachStudentRole.CoachAndStudent) {
+        ui.$menu.showMenuItem("修改名称");
+        ui.$menu.showMenuItem("生成访问链接");
+        ui.$menu.showMenuItem("删除");
       }
       return Result.Ok(null);
     },
@@ -161,6 +164,27 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         ui.$workout_plan_select.ui.$dialog.show();
       },
     }),
+    $gift_card: GiftCardExchangeModel({ app: props.app, client: props.client }),
+    $btn_gift_card_confirm: new ButtonCore({
+      async onClick() {
+        const id = toNumber(props.view.query.id);
+        if (id === null) {
+          return;
+        }
+        ui.$btn_gift_card_confirm.setLoading(true);
+        const r = await ui.$gift_card.methods.sendGiftCard({ id });
+        ui.$btn_gift_card_confirm.setLoading(false);
+        if (r.error) {
+          props.app.tip({
+            text: r.error.messages,
+          });
+          return;
+        }
+        props.app.tip({
+          text: ["赠送成功"],
+        });
+      },
+    }),
     $menu: new DropdownMenuCore({
       items: [
         // new MenuItemCore({
@@ -168,6 +192,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         // }),
         new MenuItemCore({
           label: "修改名称",
+          hidden: true,
           onClick() {
             ui.$menu.hide();
             ui.$input_nickname.setValue(request.student.profile.response?.nickname ?? "");
@@ -176,6 +201,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         }),
         new MenuItemCore({
           label: "生成访问链接",
+          hidden: true,
           async onClick() {
             ui.$menu.hide();
             const id = toNumber(props.view.query.id);
@@ -197,11 +223,16 @@ function MemberProfileViewModel(props: ViewComponentProps) {
             ui.$dialog_auth_url.show();
           },
         }),
-        // new MenuItemCore({
-        //   label: "选择周期计划",
-        // }),
+        new MenuItemCore({
+          label: "赠送VIP",
+          onClick() {
+            ui.$menu.hide();
+            ui.$gift_card.ui.$dialog_gift_card.show();
+          },
+        }),
         new MenuItemCore({
           label: "删除",
+          hidden: true,
           onClick() {
             ui.$menu.hide();
             ui.$dialog_delete_confirm.show();
@@ -351,6 +382,9 @@ function MemberProfileViewModel(props: ViewComponentProps) {
       }
       return props.history.$router.origin + request.student.auth_url.response.url;
     },
+    get gift_card() {
+      return ui.$gift_card.state.gift_card;
+    },
   };
   enum Events {
     StateChange,
@@ -363,6 +397,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
   request.student.profile.onStateChange(() => methods.refresh());
   request.student.auth_url.onStateChange(() => methods.refresh());
   request.workout_plan.list.onStateChange(() => methods.refresh());
+  ui.$gift_card.onStateChange(() => methods.refresh());
 
   return {
     request,
@@ -405,17 +440,15 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               <Button class="w-full" store={vm.ui.$btn_start_workout}>
                 {state().profile?.role === CoachStudentRole.FriendAndFriend ? "一起练" : "开始训练"}
               </Button>
-              <Show when={state().profile?.role === CoachStudentRole.CoachAndStudent}>
-                <div
-                  class="w-[40px] rounded-full p-2 bg-w-bg-5"
-                  onClick={(event) => {
-                    const { x, y } = event.currentTarget.getBoundingClientRect();
-                    vm.ui.$menu.toggle({ x, y });
-                  }}
-                >
-                  <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
-                </div>
-              </Show>
+              <div
+                class="w-[40px] rounded-full p-2 bg-w-bg-5"
+                onClick={(event) => {
+                  const { x, y } = event.currentTarget.getBoundingClientRect();
+                  vm.ui.$menu.toggle({ x, y });
+                }}
+              >
+                <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
+              </div>
             </div>
           }
         >
@@ -614,6 +647,45 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
             </div>
           </Show>
         </div>
+      </Sheet>
+      <Sheet store={vm.ui.$gift_card.ui.$dialog_gift_card} app={props.app}>
+        <Show
+          when={state().gift_card}
+          fallback={
+            <div class="p-2">
+              <div class="space-y-4">
+                <div class="text-xl text-center text-w-fg-0">兑换礼品码</div>
+                <div>
+                  <Input store={vm.ui.$gift_card.ui.$input_gift_card_code} />
+                </div>
+                <div class="flex items-center justify-between">
+                  <Button class="w-full" store={vm.ui.$btn_gift_card_confirm}>
+                    赠送
+                  </Button>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <div class="relative p-2">
+            <div class="flex items-center justify-between">
+              <div
+                class="p-2 rounded-full bg-w-bg-5"
+                onClick={() => {
+                  vm.ui.$gift_card.methods.clearGiftCardProfile();
+                }}
+              >
+                <ChevronLeft class="w-6 h-6 text-w-fg-0" />
+              </div>
+              <div class="text-xl text-center text-w-fg-0">详情</div>
+              <div class="w-[40px]"></div>
+            </div>
+            <div class="mt-4 rounded-lg border-2 border-w-fg-3 p-4 text-w-fg-0">{state().gift_card?.name}</div>
+            <Button class="w-full mt-2" store={vm.ui.$btn_gift_card_confirm}>
+              确认兑换
+            </Button>
+          </div>
+        </Show>
       </Sheet>
       <DropdownMenu store={vm.ui.$menu} />
     </>

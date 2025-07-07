@@ -2022,7 +2022,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
           hidden: state().profile?.status !== WorkoutDayStatus.Started,
         }}
       >
-        <div class="h-screen bg-w-bg-0">
+        <div class="h-w-screen bg-w-bg-0">
           <ScrollView store={vm.ui.$view} class="h-full scroll--hidden">
             <div
               class="p-2 rounded-lg transition-all duration-300"

@@ -56,7 +56,10 @@ function Application() {
   });
 
   return (
-    <div class="screen w-screen h-screen transition-all duration-120" style={{ transform: `translateY(${-state().height}px)` }}>
+    <div
+      class="screen w-screen h-w-screen transition-all duration-120"
+      style={{ transform: `translateY(${-state().height}px)` }}
+    >
       <Show when={!state().ready}>
         <div class="flex items-center justify-center w-full h-full">
           <div class="flex flex-col items-center text-w-fg-1">

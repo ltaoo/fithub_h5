@@ -534,34 +534,36 @@ export function HomeMineView(props: ViewComponentProps) {
                     }}
                   ></div>
                 </Show>
-                <Show
-                  when={state().subscription?.expired_at}
-                  fallback={
+                <Show when={state().subscription}>
+                  <Show
+                    when={state().subscription?.expired_at}
+                    fallback={
+                      <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
+                        <Flex
+                          class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
+                          onClick={() => {
+                            vm.methods.gotoSubscriptionView();
+                          }}
+                        >
+                          <Award class="w-4 h-4 text-yellow-500" />
+                          <div class="text-yellow-500 text-[12px] whitespace-nowrap">{state().subscription?.name}</div>
+                        </Flex>
+                      </div>
+                    }
+                  >
                     <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
                       <Flex
                         class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
+                        items="center"
                         onClick={() => {
                           vm.methods.gotoSubscriptionView();
                         }}
                       >
-                        <Award class="w-4 h-4 text-yellow-500" />
-                        <div class="text-yellow-500 text-[12px] whitespace-nowrap">{state().subscription?.name}</div>
+                        <Gem class="w-2.5 h-2.5 text-yellow-500" />
+                        <div class="ml-1 text-yellow-500 text-[12px]">{state().subscription?.name}</div>
                       </Flex>
                     </div>
-                  }
-                >
-                  <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
-                    <Flex
-                      class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
-                      items="center"
-                      onClick={() => {
-                        vm.methods.gotoSubscriptionView();
-                      }}
-                    >
-                      <Gem class="w-2.5 h-2.5 text-yellow-500" />
-                      <div class="ml-1 text-yellow-500 text-[12px]">{state().subscription?.name}</div>
-                    </Flex>
-                  </div>
+                  </Show>
                 </Show>
               </div>
               <div>
@@ -774,15 +776,8 @@ export function HomeMineView(props: ViewComponentProps) {
         </Show>
       </Sheet>
       <Sheet store={vm.ui.$dialog_calendar_workout_days} app={props.app}>
-        <div class="p-2 space-y-2 h-[480px] overflow-y-auto">
-          <For
-            each={state().workout_days}
-            fallback={
-              <div>
-                <Empty text="无训练记录" />
-              </div>
-            }
-          >
+        <div class="p-2 space-y-2 h-[320px] overflow-y-auto">
+          <For each={state().workout_days} fallback={<Empty text="无训练记录" />}>
             {(d) => {
               return (
                 <div class="p-4 border-2 border-w-fg-3 rounded-lg">

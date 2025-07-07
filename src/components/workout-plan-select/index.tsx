@@ -13,7 +13,7 @@ export function WorkoutPlanSelectView(props: { store: WorkoutPlanSelectViewModel
   const [state, vm] = useViewModelStore(props.store);
 
   return (
-    <div class="flex flex-col bg-w-bg-0 border-w-fg-3" style={{ height: "100vh" }}>
+    <div class="flex flex-col h-w-screen bg-w-bg-0 border-w-fg-3">
       <div class="flex gap-2 p-2">
         <Input store={vm.ui.$input_keyword} />
         <Button store={vm.ui.$btn_search_submit} size="sm">

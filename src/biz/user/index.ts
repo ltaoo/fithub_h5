@@ -413,7 +413,7 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     if (!this.expires_at) {
       return;
     }
-    const expires_at = dayjs(this.expires_at).subtract(8, "hour");
+    const expires_at = dayjs(this.expires_at).subtract(24, "hour");
     const need_refresh = dayjs().isAfter(expires_at);
     // console.log(
     //   "[BIZ]user/index - refreshToken - before ",

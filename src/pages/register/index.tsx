@@ -80,7 +80,7 @@ export const RegisterPage = (props: ViewComponentProps) => {
   const [state, vm] = useViewModel(RegisterViewModel, [props]);
 
   return (
-    <div class="pt-12 min-h-screen px-4">
+    <div class="pt-12 h-w-screen px-4">
       <div class="h-[160px] mx-auto">
         <div class="relative cursor-pointer">
           <div class="z-20 relative text-6xl text-center italic">Fit Hub</div>

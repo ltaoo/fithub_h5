@@ -20,7 +20,7 @@ export function Dialog(props: { store: DialogCore; app: ViewComponentProps["app"
       <DialogPrimitive.Portal class="fixed inset-0 z-50 flex items-start justify-center sm:items-center" store={vm}>
         <div
           classList={{
-            "h-screen": true,
+            "h-w-screen": true,
             "fixed left-1/2 top-0 -translate-x-1/2 w-[375px] mx-auto": props.app.env.pc,
             "fixed inset-0": !props.app.env.pc,
             hidden: !state().visible,

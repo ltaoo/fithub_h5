@@ -18,7 +18,7 @@ export function WorkoutPlanVideoPlayView(props: { store: VideoWithPointsModel; o
 
   return (
     <>
-      <div class="relative h-screen bg-w-bg-0">
+      <div class="relative h-w-screen bg-w-bg-0">
         <div class="flex items-center h-full">
           <Video store={vm.ui.$video} />
         </div>

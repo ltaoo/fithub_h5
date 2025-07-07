@@ -161,7 +161,7 @@ export function WorkoutDayMultiplePersonView(props: ViewComponentProps) {
                   return (
                     <div
                       classList={{
-                        "absolute inset-0 h-screen": true,
+                        "absolute inset-0 h-w-screen": true,
                         "hidden ": idx() !== state().cur_view_idx,
                       }}
                     >

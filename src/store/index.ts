@@ -134,6 +134,9 @@ export const app = new Application({
     return Result.Ok(null);
   },
 });
+if (!app.env.pc && !app.env.wechat) {
+  document.documentElement.style.setProperty("--hh", `${window.innerHeight}px`);
+}
 
 // setTimeout(() => {
 //   user.refreshToken();

@@ -168,34 +168,34 @@ export function StudentQuestionnaireView(props: ViewComponentProps) {
 
   return (
     <ScrollView store={vm.ui.$view}>
-      <div class="overflow-hidden">
+      <div class="overflow-hidden h-full">
         <div ref={$content} class="flex h-full transition-transform duration-500 ease-in-out">
-          <div class="flex">
-            <div class="panel h-screen p-4 relative flex-shrink-0">
+          <div class="flex h-full">
+            <div class="panel h-full p-4 relative flex-shrink-0">
               <div class="text-2xl font-bold">训练目标</div>
               <div class="mt-4">
                 <MemberGoalValues store={vm.ui.$values_goal} />
               </div>
             </div>
-            <div class="panel h-screen p-4 relative flex-shrink-0">
+            <div class="panel h-full p-4 relative flex-shrink-0">
               <div class="text-2xl font-bold">训练经验与偏好</div>
               <div class="mt-4">
                 <MemberExerciseValues store={vm.ui.$values_fitness} />
               </div>
             </div>
-            <div class="panel h-screen p-4 relative flex-shrink-0">
+            <div class="panel h-full p-4 relative flex-shrink-0">
               <div class="text-2xl font-bold">风险筛查</div>
               <div class="mt-4">
                 <MemberRiskValues store={vm.ui.$values_risk} />
               </div>
             </div>
-            <div class="panel h-screen p-4 relative flex-shrink-0">
+            <div class="panel h-full p-4 relative flex-shrink-0">
               <div class="text-2xl font-bold">饮食习惯</div>
               <div class="mt-4">
                 <MemberDietValues store={vm.ui.$values_diet} />
               </div>
             </div>
-            <div class="panel h-screen p-4 relative flex-shrink-0">
+            <div class="panel h-full p-4 relative flex-shrink-0">
               <div class="text-2xl font-bold">训练计划</div>
               <div class="mt-4">{/* <MemberTrainingPlan store={vm.ui.$values_training_plan} /> */}</div>
             </div>

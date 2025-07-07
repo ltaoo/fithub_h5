@@ -27,19 +27,15 @@ import {
 } from "@/biz/workout_plan/services";
 import { WorkoutPlanSetType, WorkoutPlanStepTypeTextMap, WorkoutSetTypeTextMap } from "@/biz/workout_plan/constants";
 import { createWorkoutDay } from "@/biz/workout_day/services";
-import { fetchMuscleList, fetchMuscleListProcess } from "@/biz/muscle/services";
-import { fetchEquipmentList, fetchEquipmentListProcess } from "@/biz/equipment/services";
 import { WorkoutPlanViewModel } from "@/biz/workout_plan/workout_plan";
 import { HumanBodyViewModel } from "@/biz/muscle/human_body";
 import { map_parts_with_ids } from "@/biz/muscle/data";
-import { StudentSelectViewModel } from "@/biz/student_select";
 import { ListCore } from "@/domains/list";
 import { fetchStudentList, fetchStudentListProcess } from "@/biz/student/services";
 import { Result } from "@/domains/result";
 import { StudentSelect2ViewModel } from "@/biz/student/student_select";
 import { WorkoutActionProfileViewModel } from "@/biz/workout_action/workout_action";
 import { VideoWithPointsModel } from "@/biz/content/video_play";
-import { PlayerCore } from "@/domains/player";
 import { toNumber } from "@/utils/primitive";
 
 import { WorkoutPlanVideoPlayView } from "./components/video-play";

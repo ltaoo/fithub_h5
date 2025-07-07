@@ -20,7 +20,7 @@ export function WorkoutActionProfileView(props: { store: WorkoutActionProfileVie
 
   return (
     <>
-      <div class="relative flex flex-col h-screen bg-w-bg-0">
+      <div class="relative flex flex-col h-w-screen bg-w-bg-0">
         <Show when={state().loading}>
           <div class="absolute inset-0">
             <div class="absolute inset-0 flex items-center justify-center">

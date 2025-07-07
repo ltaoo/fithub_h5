@@ -22,22 +22,21 @@ export function PageView<
   const [stacks] = createSignal(props.store.ui.$history.stacks);
 
   return (
-    <div class="flex flex-col h-screen bg-w-bg-0">
-      <div class="flex-1 overflow-auto">
-        <ScrollView store={props.store.ui.$view} class="scroll--hidden">
-          <div
-            class="h-full"
-            classList={{
-              "p-2": !props.no_padding,
-            }}
-          >
-            {props.children}
-            <Show when={!props.no_extra_bottom}>
-              <div class="h-[68px]"></div>
-            </Show>
-          </div>
-        </ScrollView>
-      </div>
+    <div class="h-full bg-w-bg-0">
+      <ScrollView store={props.store.ui.$view} class="scroll--hidden">
+        <div
+          class="h-full"
+          classList={{
+            "p-2": !props.no_padding,
+          }}
+        >
+          {props.children}
+          <div class="h-[58px]"></div>
+          <Show when={!props.no_extra_bottom}>
+            <div class="h-[68px]"></div>
+          </Show>
+        </div>
+      </ScrollView>
       <Show when={!props.hide_bottom_bar}>
         <div class="">
           <div class="h-[58px]"></div>

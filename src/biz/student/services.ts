@@ -19,6 +19,7 @@ export function fetchStudentList(params: Partial<FetchParams> & { keyword: strin
       gender: number;
       age: number;
       role: CoachStudentRole;
+      role_text: string;
       status: number;
     }>
   >("/api/student/list", {
@@ -42,7 +43,7 @@ export function fetchStudentListProcess(r: TmpRequestResp<typeof fetchStudentLis
         age: v.age,
         gender: v.gender,
         role: v.role,
-        role_text: CoachStudentRoleTextMap[v.role],
+        role_text: v.role_text,
         status: v.status,
       };
     }),
