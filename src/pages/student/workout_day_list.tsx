@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { MoreHorizontal } from "lucide-solid";
+import { Check, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -172,14 +172,26 @@ export function StudentWorkoutDayListView(props: ViewComponentProps) {
             {(value) => {
               return (
                 <div class="border-2 border-w-fg-3 p-4 rounded-lg">
-                  <div class="text-lg text-w-fg-0">{value.workout_plan.title}</div>
-                  <div class="text-w-fg-1">{value.started_at_text}</div>
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <Show when={[WorkoutDayStatus.Finished, WorkoutDayStatus.GiveUp].includes(value.status)}>
+                  <div class="text-lg text-w-fg-0">{value.title}</div>
+                  <Flex class="flex items-center justify-between">
+                    <Show
+                      when={value.status === WorkoutDayStatus.Finished}
+                      fallback={
+                        <div>
+                          <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
+                        </div>
+                      }
+                    >
+                      <div>
+                        <div class="text-w-fg-1">{value.finished_at_text}</div>
+                        <Flex class="gap-2 text-green-500">
+                          <Check class="w-4 h-4" />
+                          <div class="text-sm">{WorkoutDayStatusTextMap[value.status]}</div>
+                        </Flex>
+                      </div>
+                    </Show>
+                    <Flex class="gap-2" items="center">
+                      {/* <Show when={[WorkoutDayStatus.Finished, WorkoutDayStatus.GiveUp].includes(value.status)}>
                         <div
                           class="p-2 rounded-full bg-w-bg-5"
                           onClick={(event) => {
@@ -189,7 +201,7 @@ export function StudentWorkoutDayListView(props: ViewComponentProps) {
                         >
                           <MoreHorizontal class="w-4 h-4 text-w-fg-1" />
                         </div>
-                      </Show>
+                      </Show> */}
                       <div
                         class="px-4 py-1 border-2 border-w-fg-3 text-w-fg-0 bg-w-bg-5 rounded-full text-sm"
                         onClick={() => {
@@ -198,8 +210,8 @@ export function StudentWorkoutDayListView(props: ViewComponentProps) {
                       >
                         详情
                       </div>
-                    </div>
-                  </div>
+                    </Flex>
+                  </Flex>
                 </div>
               );
             }}

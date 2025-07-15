@@ -128,6 +128,7 @@ export default function _BodyMusclePreview(props: {
       const paths = default_muscle_id_map[name];
       return paths.includes(id);
     });
+    console.log("[COMPONENT]body-muscle-preview - handleClick", props.store.disabled, id, matched_muscle_name);
     if (!matched_muscle_name) {
       return;
     }

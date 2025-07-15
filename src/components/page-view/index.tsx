@@ -39,8 +39,8 @@ export function PageView<
       </ScrollView>
       <Show when={!props.hide_bottom_bar}>
         <div class="">
-          <div class="h-[58px]"></div>
-          <div class="z-[10] fixed bottom-0 left-0 w-full">
+          {/* <div class="h-[58px]"></div> */}
+          <div class="z-[100] fixed bottom-0 left-0 w-full">
             <BottomNavigationBar1
               back={props.store.methods.back}
               home={props.home || stacks().length === 1}

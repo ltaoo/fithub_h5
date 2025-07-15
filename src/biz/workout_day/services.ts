@@ -543,8 +543,12 @@ export function fetchWorkoutDayProfile(body: { id: number }) {
     updated_details: string;
     day_number: number;
     student_id: number;
+    student: {
+      id: number;
+      nickname: string;
+      avatar_url: string;
+    };
     is_self: boolean;
-    // steps: WorkoutPlanStepResp[];
     workout_plan: null | {
       id: number;
       title: string;
@@ -1039,6 +1043,7 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
       return action_group;
     })(),
     student_id: workout_day.student_id,
+    student: workout_day.student,
     is_self: workout_day.is_self,
     workout_plan: workout_day.workout_plan
       ? {

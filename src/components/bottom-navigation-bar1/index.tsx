@@ -31,8 +31,8 @@ export function BottomNavigationBar1(props: {
             props.back();
           }}
         >
-          <Show when={!props.home} fallback={<Home class="w-6 h-6 text-w-fg-1" />}>
-            <ChevronLeft class="w-6 h-6 text-w-fg-1" />
+          <Show when={!props.home} fallback={<Home class="w-6 h-6 text-w-fg-0" />}>
+            <ChevronLeft class="w-6 h-6 text-w-fg-0" />
           </Show>
         </IconButton>
         <Show when={props.extra}>

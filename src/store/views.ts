@@ -142,6 +142,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.workout_report_month": lazy(async () => ({
     default: (await import("@/pages/fit_report/month")).WorkoutReportMonthView,
   })),
+  "root.workout_report_daily": lazy(async () => ({
+    default: (await import("@/pages/fit_report/day")).WorkoutReportDailyView,
+  })),
   // 答题
   "root.paper_list": lazy(async () => ({ default: (await import("@/pages/paper/list")).PaperListView })),
   "root.exam": lazy(async () => ({ default: (await import("@/pages/paper/answer")).ExamAnswerView })),

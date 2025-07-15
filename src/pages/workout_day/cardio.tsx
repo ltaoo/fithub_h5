@@ -194,7 +194,7 @@ function CardioViewModel(props: ViewComponentProps) {
               }
               const diff = finished_at.startOf("minute").diff(started_at.startOf("minute"), "minute");
               ui.$form.fields.duration.input.setNum(String(diff));
-              ui.$form.fields.finished_at.input.ui.$dialog.hide();
+              ui.$form.fields.start_at.input.ui.$dialog.hide();
             },
           }),
         }),
@@ -330,7 +330,7 @@ function CardioViewModel(props: ViewComponentProps) {
         props.app.tip({
           text: ["创建成功"],
         });
-        props.history.push("root.workout_day_profile", {
+        props.history.replace("root.workout_day_profile", {
           id: String(r2.data.id),
         });
       },

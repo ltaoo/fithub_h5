@@ -582,7 +582,7 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
         return Result.Ok(result);
       }
       if (is_last_step && is_last_set && the_set_is_completed) {
-        methods.showWorkoutDayCompleteConfirmDialog();
+        // methods.showWorkoutDayCompleteConfirmDialog();
         return Result.Ok(result);
       }
       /** 使用当前的表单值，作为下一组的备用表单值 */
@@ -866,7 +866,6 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
         return;
       }
       const v = r1.data;
-      const duration = v.finished_at.diff(v.start_at, "minute");
       const pendingSteps = methods.buildPendingSteps();
       props.app.loading({
         text: [],
@@ -902,7 +901,7 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
         text: ["完成"],
       });
       ui.$dialog_overview.hide();
-      props.history.push("root.workout_day_profile", {
+      props.history.replace("root.workout_day_profile", {
         id: String(r.data.id),
       });
     },
@@ -1533,9 +1532,6 @@ export function WorkoutDayCatchUpViewModel(props: ViewComponentProps) {
           },
           null
         );
-        props.app.tip({
-          text: ["增加成功"],
-        });
         ui.$popover_action.hide();
         // methods.updateSteps({ step_idx: _cur_step_idx, set_idx: _cur_set_idx });
         methods.refresh();
@@ -2019,92 +2015,6 @@ export function WorkoutDayCatchUpView(props: ViewComponentProps) {
           <Button class="w-full mt-2" store={vm.ui.$btn_remark_submit}>
             提交
           </Button>
-        </div>
-      </Sheet>
-      <Sheet store={vm.ui.$dialog_give_up_confirm} app={props.app}>
-        <div class="p-2">
-          <div class="text-xl text-center text-w-fg-0">确认放弃本次训练？</div>
-          <div class="mt-4 flex items-center gap-2">
-            <Button class="w-full" store={vm.ui.$btn_give_up_confirm_cancel}>
-              取消
-            </Button>
-            <Button class="w-full" store={vm.ui.$btn_give_up_confirm_ok}>
-              确定
-            </Button>
-          </div>
-        </div>
-      </Sheet>
-      <Sheet store={vm.ui.$dialog_using_guide} app={props.app}>
-        <div class="relative p-2">
-          <div class="absolute top-2 right-2">
-            <IconButton
-              onClick={() => {
-                vm.ui.$dialog_using_guide.hide();
-              }}
-            >
-              <X class="w-4 h-4 text-w-fg-1" />
-            </IconButton>
-          </div>
-          <div class="text-w-fg-0 h-[320px] overflow-y-auto">
-            <div class="text-xl text-center text-w-fg-0">使用说明</div>
-            <div class="mt-4 space-y-2">
-              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
-                <div class="">重量</div>
-                <div class="text-sm mt-2 space-y-1">
-                  <div>
-                    <span class="inline-block w-[18px]">1、</span>
-                    <span>12RM 表示使用「一次最多做 12次」的重量</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">2、</span>
-                    <span>自重动作，如「俯卧撑」重量需要填写0</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">3、</span>
-                    <span>动作有辅助参与，如「引体向上机引体」重量可以填写负数</span>
-                  </div>
-                </div>
-              </div>
-              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
-                <div class="">完成一组动作</div>
-                <div class="text-sm mt-2 space-y-1">
-                  <div>
-                    <span class="inline-block w-[18px]">1、</span>
-                    <span>在使用合适的重量完成一组动作后，可以先开始「休息倒计时」</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">2、</span>
-                    <span>在休息时，将实际使用的重量填入重量输入框中</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">3、</span>
-                    <span>计数输入框如果数值正确，可以直接点击后面的「对勾按钮」</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">4、</span>
-                    <span>并且同时会将该组的重量和计数数值同步到下一组动作</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">5、</span>
-                    <span>如果下一组重量和计数不变，无需再次填写，直接点击「对勾」按钮，将直接开始「休息倒计时」</span>
-                  </div>
-                </div>
-              </div>
-              <div class="p-4 border-2 border-w-fg-3 rounded-lg">
-                <div class="">包含多个动作的组</div>
-                <div class="text-sm mt-2 space-y-1">
-                  <div>
-                    <span class="inline-block w-[18px]">1、</span>
-                    <span>类似超级组、递减组在一组动作中包含多个动作</span>
-                  </div>
-                  <div>
-                    <span class="inline-block w-[18px]">2、</span>
-                    <span>可以在填写好重量与计数后，点击最后一个动作的「对勾按钮」即可，无需重复点击</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </Sheet>
       <Sheet ignore_safe_height store={vm.ui.$workout_plan_select.ui.$dialog} app={props.app}>

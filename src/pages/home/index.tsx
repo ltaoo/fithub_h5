@@ -2,7 +2,7 @@
  * @file 首页
  */
 import { For, Show } from "solid-js";
-import { BicepsFlexed, Check, Coffee } from "lucide-solid";
+import { BicepsFlexed, Check, Coffee, Share, SquareArrowOutUpRight } from "lucide-solid";
 import dayjs from "dayjs";
 
 import { ViewComponentProps } from "@/store/types";
@@ -41,6 +41,8 @@ import { WorkoutScheduleDayType } from "@/biz/workout_plan/constants";
 import { refreshWorkoutDays } from "@/biz/coach/service";
 
 import { HomeViewTabHeader } from "./components/tabs";
+import { Flex } from "@/components/flex/flex";
+import { IconButton } from "@/components/icon-btn/icon-btn";
 
 const WeekdayChineseTextArr = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -104,6 +106,18 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         text: ["异常数据"],
       });
     },
+    handleClickShareDay() {
+      const cur_day = _cur_day_profile;
+      if (!cur_day) {
+        return;
+      }
+      const the_day = dayjs(cur_day.yyyy);
+      ui.$dialog_calendar.hide();
+      props.history.push("root.workout_report_daily", {
+        start: String(the_day.startOf("date").valueOf()),
+        end: String(the_day.endOf("date").valueOf()),
+      });
+    },
     gotoWorkoutPlanListView() {
       props.history.push("root.workout_plan_list");
     },
@@ -126,10 +140,15 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         return v.status === WorkoutDayStatus.Finished && v.day === the_date_text;
       });
       // const completed_plan_ids_in_the_day = completed_plans_in_the_day.map((v) => v.workout_plan.id);
-      // console.log("[PAGE]home/index - handleClickDay - before completed_plan_ids = ", completed_plan_ids);
+      console.log("[PAGE]home/index - handleClickDay - before completed workout days", completed_plans_in_the_day);
       const schedule_of_the_day = _schedules[the_date_text];
       /** 指定天内完成的 不属于计划中的训练 */
-      const extra_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[] = [];
+      const extra_workout_days: {
+        id: number;
+        workout_plan: null | { id: number };
+        title: string;
+        finished_at_text: string;
+      }[] = [];
       const plan_ids_today_need_to_do = schedule_of_the_day ? schedule_of_the_day.workout_plans.map((v) => v.id) : [];
       // console.log(
       //   "[PAGE]home/index - handleClickDay - plan_ids_today_need_to_do",
@@ -138,19 +157,25 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       // );
       for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
         const vv = completed_plans_in_the_day[i];
-        if (vv.workout_plan) {
-          if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
-            extra_workout_days.push({
-              id: vv.id,
-              workout_plan_id: vv.workout_plan.id,
-              title: vv.title,
-              finished_at_text: vv.finished_at_text,
-            });
-          }
+        if (vv.workout_plan && !plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
+          extra_workout_days.push({
+            id: vv.id,
+            workout_plan: vv.workout_plan,
+            title: vv.title,
+            finished_at_text: vv.finished_at_text,
+          });
+        } else {
+          extra_workout_days.push({
+            id: vv.id,
+            workout_plan: null,
+            title: vv.title,
+            finished_at_text: vv.finished_at_text,
+          });
         }
       }
       // console.log("[]before _cur_day_profile = ", dayjs(v).isBefore(dayjs(), "d"), dayjs(v).format("YYYY-MM-DD"));
       _cur_day_profile = {
+        yyyy: v.format("YYYY-MM-DD"),
         month_text: `${v.month() + 1}月`,
         day_text: `${v.date()}日`,
         weekday_text: `星期${
@@ -166,6 +191,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         }`,
         is_today: the_date_text === today_text,
         is_pass_day: dayjs(v).isBefore(dayjs(), "d"),
+        has_workout_day: !!completed_plans_in_the_day.length,
         workout_day: null,
         schedule: (() => {
           if (!schedule_of_the_day) {
@@ -252,21 +278,22 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
     async ready() {
       request.workout_day.has_started.run();
       const today = dayjs();
-      const monday = today.startOf("week");
-      const sunday = today.endOf("week");
+      const first_day = today.startOf("week");
+      const last_day = today.endOf("week");
       await request.workout_day.list.search({
-        finished_at_start: monday.toDate(),
-        finished_at_end: sunday.toDate(),
+        finished_at_start: first_day.toDate(),
+        finished_at_end: last_day.toDate(),
       });
       (async () => {
         const r = await request.workout_schedule.enabled.run();
         if (r.error) {
           return;
         }
+        const workout_schedule_list = r.data.list;
         // console.log("before loop r.data.list", r.data.list);
         const workout_plan_ids: number[] = [];
-        for (let a = 0; a < r.data.list.length; a += 1) {
-          const schedule = r.data.list[a];
+        for (let a = 0; a < workout_schedule_list.length; a += 1) {
+          const schedule = workout_schedule_list[a];
           for (let b = 0; b < schedule.schedules.length; b += 1) {
             const ids = schedule.schedules[b].workout_plan_ids;
             for (let c = 0; c < ids.length; c += 1) {
@@ -283,7 +310,8 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         if (r2.error) {
           return;
         }
-        const workout_schedule_with_workout_plans = r.data.list.map((v) => {
+        const workout_plan_list = r2.data.dataSource;
+        const workout_schedule_with_workout_plans = workout_schedule_list.map((v) => {
           return {
             type: v.type,
             start_date: v.start_date,
@@ -296,7 +324,7 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
                   const result: TheItemTypeFromListCore<typeof request.workout_plan.list>[] = [];
                   for (let i = 0; i < vv.workout_plan_ids.length; i += 1) {
                     const plan_id = vv.workout_plan_ids[i];
-                    const m = r2.data.dataSource.find((plan) => plan.id === plan_id);
+                    const m = workout_plan_list.find((plan) => plan.id === plan_id);
                     if (m) {
                       result.push(m);
                     }
@@ -393,11 +421,13 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
   type TheDay = { id: number; value: Date };
   let _cur_day: TheDay | null = null;
   let _cur_day_profile: {
+    yyyy: string;
     month_text: string;
     day_text: string;
     weekday_text: string;
     is_today: boolean;
     is_pass_day: boolean;
+    has_workout_day: boolean;
     workout_day: {
       status: WorkoutDayStatus;
     } | null;
@@ -412,7 +442,12 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
         finished_at_text: string;
       }[];
     };
-    extra_completed_workout_days: { id: number; workout_plan_id: number; title: string; finished_at_text: string }[];
+    extra_completed_workout_days: {
+      id: number;
+      workout_plan: null | { id: number };
+      title: string;
+      finished_at_text: string;
+    }[];
   } | null = null;
   let _schedules: Record<
     string,
@@ -736,13 +771,26 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
       <TopSheet top={92} store={vm.ui.$dialog_calendar} app={props.app}>
         <div class="bg-w-bg-0 p-4 border-b border-w-fg-3">
           <Show when={state().day}>
-            <div class="flex items-center text-w-fg-0">
-              <div class="text-2xl">
-                {state().day?.month_text}
-                {state().day?.day_text}
+            <Flex items="center" justify="between">
+              <div>
+                <div class="flex items-center text-w-fg-0">
+                  <div class="text-2xl">
+                    {state().day?.month_text}
+                    {state().day?.day_text}
+                  </div>
+                </div>
+                <div class="text-w-fg-0">{state().day?.weekday_text}</div>
               </div>
-            </div>
-            <div class="text-w-fg-0">{state().day?.weekday_text}</div>
+              <Show when={state().day?.has_workout_day}>
+                <IconButton
+                  onClick={() => {
+                    vm.methods.handleClickShareDay();
+                  }}
+                >
+                  <SquareArrowOutUpRight class="w-6 h-6 text-w-fg-0" />
+                </IconButton>
+              </Show>
+            </Flex>
             <Show when={state().day?.schedule.type === WorkoutScheduleDayType.NoSchedule}>
               <div class="pt-4">
                 <div class="text-w-fg-1 text-center">暂无周期计划</div>

@@ -20,10 +20,10 @@ import {
   WorkoutPlanStepBody,
   WorkoutPlanActionPayload,
   WorkoutPlanPreviewPayload,
-  WorkoutPlanStepJSON250607,
+  WorkoutPlanBodyStepJSON250607,
   WorkoutPlanBodyDetailsJSON250424,
   WorkoutPlanStepContent,
-  WorkoutPlanStepJSON250424,
+  WorkoutPlanBodyStepJSON250424,
   WorkoutPlanBodyStepJSON250627,
   WorkoutPlanBodyDetailsJSON250627,
 } from "./types";
@@ -102,7 +102,7 @@ export function parseWorkoutPlanStepsString(details: string) {
   const result: WorkoutPlanStepContent[] = [];
   if (["250424", "250607"].includes(v)) {
     for (let i = 0; i < steps.length; i++) {
-      const step = steps[i] as WorkoutPlanStepJSON250607;
+      const step = steps[i] as WorkoutPlanBodyStepJSON250607;
       result.push({
         idx: i,
         set_type: step.set_type as WorkoutPlanSetType,

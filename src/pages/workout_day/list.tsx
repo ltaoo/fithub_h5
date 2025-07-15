@@ -2,7 +2,7 @@
  * @file 训练记录列表
  */
 import { For, Show } from "solid-js";
-import { MoreHorizontal } from "lucide-solid";
+import { Check, MoreHorizontal } from "lucide-solid";
 
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
@@ -192,7 +192,23 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                 <div class="border-2 border-w-fg-3 p-4 rounded-lg">
                   <div class="text-lg text-w-fg-0">{value.title}</div>
                   <Flex class="" justify="between">
-                    <div>
+                    <Show
+                      when={value.status === WorkoutDayStatus.Finished}
+                      fallback={
+                        <div>
+                          <div class="text-sm text-w-fg-1">{WorkoutDayStatusTextMap[value.status]}</div>
+                        </div>
+                      }
+                    >
+                      <div>
+                        <div class="text-w-fg-1">{value.finished_at_text}</div>
+                        <Flex class="gap-2 text-green-500">
+                          <Check class="w-4 h-4" />
+                          <div class="text-sm">{WorkoutDayStatusTextMap[value.status]}</div>
+                        </Flex>
+                      </div>
+                    </Show>
+                    {/* <div>
                       <Show when={value.status === WorkoutDayStatus.Finished}>
                         <Flex class="gap-1 text-sm text-w-fg-1">
                           <div>完成于</div>
@@ -204,7 +220,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                           <div>{WorkoutDayStatusTextMap[value.status]}</div>
                         </Flex>
                       </Show>
-                    </div>
+                    </div> */}
                     <Flex class="gap-2" items="center">
                       <Show when={[WorkoutDayStatus.Finished, WorkoutDayStatus.GiveUp].includes(value.status)}>
                         <div

@@ -38,9 +38,15 @@ export const Avatars = [
 });
 
 export enum CoachStudentRole {
+  // 我是教练
   CoachAndStudent = 1,
+  // 我是教练
   CoachAndStudentHasAccount = 2,
   FriendAndFriend = 3,
+  // 我是学员
+  StudentAndCoach = 4,
+  // 我是学员
+  StudentHasAccountAndCoach = 5,
 }
 
 export const CoachStudentRoleTextMap = {

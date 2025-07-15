@@ -47,6 +47,7 @@ import {
   updateWorkoutDayPlanDetails,
   WorkoutDayStepProgressJSON250629,
   WorkoutDayStepDetailsJSON250629,
+  fetchWorkoutDayProfile,
 } from "@/biz/workout_day/services";
 import { WorkoutPlanSetType } from "@/biz/workout_plan/constants";
 import { fetchStudentWorkoutDayProfile } from "@/biz/student/services";
@@ -80,6 +81,7 @@ import { SetActionCountdownView, SetActionCountdownViewModel } from "./component
 import { WorkoutDayOverviewView } from "./components/day-overview";
 import { WorkoutDayProfileView } from "./profile";
 import { calcTheHighlightIdxAfterRemoveSet } from "./utils";
+import { Flex } from "@/components/flex/flex";
 
 export type WorkoutDayRecordViewModel = ReturnType<typeof WorkoutDayRecordViewModel>;
 export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
@@ -87,7 +89,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
   const is_multiple_view = props.view.query.multiple === "1";
   const request = {
     workout_day: {
-      profile: new RequestCore(fetchStudentWorkoutDayProfile, {
+      profile: new RequestCore(fetchWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
         client: props.client,
       }),
@@ -2108,16 +2110,38 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                             }}
                                           />
                                         </Show> */}
-                                        <div
-                                          class="flex items-center justify-center w-[24px] h-[24px] p-2 mt-1 rounded-full"
+                                        <Flex
+                                          class="w-[24px] h-[24px] p-2 mt-1 rounded-full"
                                           classList={{
                                             "bg-blue-500": !is_cur_set(),
                                             "bg-w-green": is_cur_set(),
                                           }}
+                                          items="center"
+                                          justify="center"
                                         >
                                           <div class="text-sm text-white">{set_idx() + 1}</div>
-                                        </div>
+                                        </Flex>
                                         <div class="space-y-2 w-full">
+                                          <Show
+                                            when={
+                                              [WorkoutPlanSetType.Decreasing].includes(set.type) &&
+                                              vm.ui.$set_actions.get(first_act_uid())
+                                            }
+                                          >
+                                            <SetActionView
+                                              store={vm.ui.$set_actions.get(first_act_uid())!}
+                                              highlight={is_cur_set()}
+                                              onClick={(event) => {
+                                                const { x, y } = event.currentTarget.getBoundingClientRect();
+                                                vm.ui.$popover_action.toggle({ x: x - 12, y: y + 18 });
+                                                vm.ui.$ref_cur_set_idx.select({
+                                                  step_idx: step_idx(),
+                                                  idx: set_idx(),
+                                                });
+                                                vm.methods.handleClickWorkoutAction(first_act);
+                                              }}
+                                            />
+                                          </Show>
                                           <For each={set.actions}>
                                             {(action, act_idx) => {
                                               const act_uid = `${step_set_uid()}-${action.uid}`;
@@ -2135,11 +2159,6 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                                   >
                                                     <SetActionView
                                                       store={vm.ui.$set_actions.get(act_uid)!}
-                                                      // idx={
-                                                      //   [WorkoutPlanSetType.Normal].includes(set.type)
-                                                      //     ? set_idx() + 1
-                                                      //     : 0
-                                                      // }
                                                       highlight={is_cur_set()}
                                                       onClick={(event) => {
                                                         const { x, y } = event.currentTarget.getBoundingClientRect();
@@ -2296,9 +2315,12 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                 </div>
               }
             >
-              <div class="flex items-center justify-between p-2">
+              <Flex class="p-2" items="center" justify="between">
                 <DayDurationTextView store={vm.ui.$day_duration} />
-                <div class="flex items-center gap-2">
+                <Flex class="gap-2" items="center">
+                  <Show when={!state().profile?.is_self}>
+                    <div>{state().profile?.student.nickname}</div>
+                  </Show>
                   <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
                   <IconButton
                     class="p-2 rounded-full bg-w-bg-5"
@@ -2309,8 +2331,8 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                   >
                     <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
                   </IconButton>
-                </div>
-              </div>
+                </Flex>
+              </Flex>
             </Show>
             <div class="safe-height"></div>
           </div>

@@ -34,6 +34,9 @@ export function Dialog(props: { store: DialogCore; app: ViewComponentProps["app"
               "animate-out fade-out": state().exit,
             }}
             store={vm}
+            onClick={() => {
+              vm.hide();
+            }}
           />
         </div>
         <div

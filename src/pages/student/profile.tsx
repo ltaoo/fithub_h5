@@ -10,6 +10,7 @@ import { useViewModel } from "@/hooks";
 import { Button, DropdownMenu, Input, ListView, ScrollView, Skeleton, Textarea } from "@/components/ui";
 import { PageView } from "@/components/page-view";
 import { Sheet } from "@/components/ui/sheet";
+import { Flex } from "@/components/flex/flex";
 import { WorkoutPlanSelectView } from "@/components/workout-plan-select";
 
 import { base, Handler } from "@/domains/base";
@@ -45,7 +46,10 @@ function MemberProfileViewModel(props: ViewComponentProps) {
         new RequestCore(fetchStudentWorkoutDayList, {
           process: fetchStudentWorkoutDayListProcess,
           client: props.client,
-        })
+        }),
+        {
+          pageSize: 100,
+        }
       ),
       update: new RequestCore(updateStudentProfile, { client: props.client }),
       delete: new RequestCore(deleteStudent, { client: props.client }),
@@ -336,10 +340,11 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     weekday_text: string;
     workout_days: {
       id: number;
+      title: string;
       status: number;
       finished_at: string;
       finished_at_text: string;
-      workout_plan: {
+      workout_plan: null | {
         title: string;
         overview: string;
         tags: string[];
@@ -436,10 +441,22 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
         <PageView
           store={vm}
           operations={
-            <div class="flex items-center gap-2">
-              <Button class="w-full" store={vm.ui.$btn_start_workout}>
-                {state().profile?.role === CoachStudentRole.FriendAndFriend ? "一起练" : "开始训练"}
-              </Button>
+            <Flex class="gap-2" items="center" justify="between">
+              <Show
+                when={
+                  state().profile &&
+                  [
+                    CoachStudentRole.CoachAndStudent,
+                    CoachStudentRole.CoachAndStudentHasAccount,
+                    CoachStudentRole.FriendAndFriend,
+                  ].includes(state().profile!.role)
+                }
+                fallback={<div></div>}
+              >
+                <Button class="w-full" store={vm.ui.$btn_start_workout}>
+                  {state().profile?.role === CoachStudentRole.FriendAndFriend ? "一起练" : "开始训练"}
+                </Button>
+              </Show>
               <div
                 class="w-[40px] rounded-full p-2 bg-w-bg-5"
                 onClick={(event) => {
@@ -449,7 +466,7 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
               >
                 <MoreHorizontal class="w-6 h-6 text-w-fg-0" />
               </div>
-            </div>
+            </Flex>
           }
         >
           <div class="">
@@ -592,13 +609,14 @@ export function HomeStudentProfilePage(props: ViewComponentProps) {
                         vm.methods.handleClickWorkoutDay(day);
                       }}
                     >
-                      <div class="text-w-fg-0">{day.workout_plan.title}</div>
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <div class="text-sm text-w-fg-1">已完成</div>
-                        </div>
+                      <div class="text-w-fg-0">{day.title}</div>
+                      <Flex class="" items="center" justify="between">
+                        <Flex class="text-green-500">
+                          <Check class="w-4 h-4" />
+                          <div class="text-sm">已完成</div>
+                        </Flex>
                         <div class="px-2 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-sm">详情</div>
-                      </div>
+                      </Flex>
                     </div>
                   );
                 }}

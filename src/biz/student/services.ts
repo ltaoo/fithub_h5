@@ -124,10 +124,11 @@ export function fetchStudentWorkoutDayList(
   return request.post<
     ListResponse<{
       id: number;
+      title: string;
       status: WorkoutDayStatus;
       started_at: string;
       finished_at: string;
-      workout_plan: {
+      workout_plan: null | {
         id: number;
         title: string;
         overview: string;
@@ -154,12 +155,15 @@ export function fetchStudentWorkoutDayListProcess(r: TmpRequestResp<typeof fetch
     list: resp.list.map((v) => {
       return {
         ...v,
+        title: v.workout_plan ? v.workout_plan.title : v.title,
         finished_at_text: dayjs(v.finished_at).format("YYYY-MM-DD"),
         started_at_text: dayjs(v.started_at).format("YYYY-MM-DD"),
-        workout_plan: {
-          ...v.workout_plan,
-          tags: v.workout_plan.tags.split(",").filter(Boolean),
-        },
+        workout_plan: v.workout_plan
+          ? {
+              ...v.workout_plan,
+              tags: v.workout_plan.tags.split(",").filter(Boolean),
+            }
+          : null,
       };
     }),
   });
@@ -181,6 +185,11 @@ export function fetchStudentWorkoutDayProfile(body: { id: number; student_id?: n
     day_number: number;
     is_self: boolean;
     student_id: number;
+    student: {
+      id: number;
+      nickname: string;
+      avatar_url: string;
+    };
     // steps: WorkoutPlanStepResp[];
     workout_plan: null | {
       id: number;

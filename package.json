@@ -1,7 +1,7 @@
 {
   "name": "@fithub/h5",
   "private": true,
-  "version": "2507071316",
+  "version": "250707151622",
   "scripts": {
     "dev": "vite --port 3100 --host",
     "build": "tsc && vite build",
@@ -9,6 +9,7 @@
     "preview": "vite preview --port 3100 --host"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
     "@types/lodash": "^4.14.195",
     "@types/node": "^18.15.11",
     "@types/qs": "^6.9.7",
@@ -29,7 +30,9 @@
     "class-variance-authority": "^0.5.2",
     "clsx": "^1.2.1",
     "dayjs": "^1.11.7",
+    "file-saver": "^2.0.5",
     "hls.js": "^1.4.0",
+    "html-to-image": "^1.11.13",
     "lodash": "^4.17.21",
     "lucide-solid": "^0.487.0",
     "mitt": "^3.0.0",

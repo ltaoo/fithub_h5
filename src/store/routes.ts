@@ -291,6 +291,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_report_daily: {
+        title: "分享",
+        pathname: "/workout_report/daily",
+        options: {
+          require: ["login"],
+        },
+      },
       workout_report_month: {
         title: "月度统计",
         pathname: "/workout_report/month",

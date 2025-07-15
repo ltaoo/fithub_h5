@@ -29,7 +29,7 @@ import { fetchStudentWorkoutDayProfile } from "@/biz/student/services";
 function StudentWorkoutDayProfileViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
-      profile: new RequestCore(fetchStudentWorkoutDayProfile, {
+      profile: new RequestCore(fetchWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
         client: props.client,
       }),
@@ -101,7 +101,7 @@ function StudentWorkoutDayProfileViewModel(props: ViewComponentProps) {
       //   });
       //   return;
       // }
-      const r = await request.workout_day.profile.run({ id, student_id });
+      const r = await request.workout_day.profile.run({ id });
       if (r.error) {
         props.app.tip({
           text: [r.error.message],

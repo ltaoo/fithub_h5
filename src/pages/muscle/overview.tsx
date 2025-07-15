@@ -4,6 +4,7 @@ import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
 import { BodyMusclePreview } from "@/components/body-muscle-preview";
+import { Flex } from "@/components/flex/flex";
 
 import { base, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error";
@@ -66,7 +67,7 @@ export function MuscleInPersonView(props: ViewComponentProps) {
 
   return (
     <PageView store={vm} no_extra_bottom>
-      <div class="flex flex-col h-full">
+      <Flex class="flex-col h-full">
         <div class="h-[348px] bg-w-bg-0">
           <BodyMusclePreview
             store={vm.ui.$muscle}
@@ -92,7 +93,7 @@ export function MuscleInPersonView(props: ViewComponentProps) {
             <div class="h-[32px]"></div>
           </Show>
         </div>
-      </div>
+      </Flex>
     </PageView>
   );
 }

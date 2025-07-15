@@ -234,7 +234,7 @@ export function refreshWorkoutStats(body: { range_of_start: Date; range_of_end: 
       };
     };
     type_plan_map: Record<
-      number,
+      string,
       {
         workout_day_id: number;
         workout_plan: {
@@ -279,20 +279,19 @@ export function refreshWorkoutStatsProcess(r: TmpRequestResp<typeof refreshWorko
     ...(() => {
       const types = Object.keys(v.type_plan_map);
       const WorkoutPlanTypeTextMap: Record<string, string> = {
-        "0": "未知",
-        "1": "力量",
-        "2": "有氧",
+        cardio: "有氧",
+        strength: "力量",
       };
       const text = [];
       const d = [];
       for (let i = 0; i < types.length; i += 1) {
         const t = types[i];
-        const records = v.type_plan_map[Number(t)];
+        const records = v.type_plan_map[t];
         // text.push({
 
         // });
         d.push({
-          type_text: WorkoutPlanTypeTextMap[t],
+          type_text: WorkoutPlanTypeTextMap[t] ?? "未知",
           day_count: records.length,
           records,
         });
@@ -310,4 +309,36 @@ export function refreshWorkoutActionStats(body: { range_of_start: Date; range_of
 
 export function refreshWorkoutDays() {
   return request.post("/api/admin/workout_day/refresh_250630", {});
+}
+
+export function refreshWorkoutDayStats(body: { range_of_start: Date; range_of_end: Date }) {
+  return request.post<{
+    tags: string[];
+    times: number;
+    /** 总时长 单位分钟 */
+    duration_count: number;
+    /** 总容量 单位 kg */
+    volume_count: number;
+    /** 总组数 */
+    set_count: number;
+    workout_steps: {
+      title: string;
+      type: string;
+      total_volume: number;
+      sets: {
+        idx: number;
+        texts: string[];
+      }[];
+    }[];
+  }>("/api/today_workout", body);
+}
+
+export function refreshWorkoutDayStatsProcess(r: TmpRequestResp<typeof refreshWorkoutDayStats>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const v = r.data;
+  return Result.Ok({
+    ...v,
+  });
 }

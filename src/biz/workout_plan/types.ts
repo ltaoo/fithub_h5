@@ -27,10 +27,10 @@ export type WorkoutPlanStepBody = {
 
 export type WorkoutPlanBodyDetailsJSON250424 = {
   v: "250424";
-  steps: WorkoutPlanStepJSON250424[];
+  steps: WorkoutPlanBodyStepJSON250424[];
 };
 /** 可以理解成训练计划中的「动作组」 */
-export type WorkoutPlanStepJSON250424 = {
+export type WorkoutPlanBodyStepJSON250424 = {
   /** 组类型 */
   set_type: WorkoutPlanSetType;
   /** 组动作 */
@@ -60,7 +60,7 @@ export type WorkoutPlanStepJSON250424 = {
   set_note: string;
 };
 
-export type WorkoutPlanStepJSON250607 = {
+export type WorkoutPlanBodyStepJSON250607 = {
   title: string;
   type: WorkoutPlanStepType;
   idx: number;

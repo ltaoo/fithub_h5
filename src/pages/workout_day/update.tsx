@@ -57,6 +57,7 @@ import {
   createWorkoutDay,
   createWorkoutDayFree,
   updateWorkoutDay,
+  fetchWorkoutDayProfile,
 } from "@/biz/workout_day/services";
 import { WorkoutPlanSetType, WorkoutPlanType } from "@/biz/workout_plan/constants";
 import { fetchStudentWorkoutDayProfile } from "@/biz/student/services";
@@ -84,23 +85,17 @@ import { ClockModel } from "@/biz/time_picker/clock";
 import { DateTimePickerModel } from "@/biz/time_picker/date_time";
 import { has_num_value, has_value, remove_arr_item, sleep, toFixed, update_arr_item } from "@/utils";
 import { toNumber } from "@/utils/primitive";
-import { debounce } from "@/utils/lodash/debounce";
 
-import { SetCountdownView } from "./components/set-countdown";
 import { SetWeightInput } from "./components/set-weight-input";
 import { SetRepsInput } from "./components/set-reps-input";
 import { SetActionView, SetActionViewModel } from "./components/set-action";
-import { DayDurationTextView } from "./components/day-duration";
-import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
-import { WorkoutDayOverviewView } from "./components/day-overview";
 import { WorkoutDayCatchUpOverviewView } from "./components/catch-up-on-overview";
-import { WorkoutDayProfileView } from "./profile";
 
 export type WorkoutDayUpdateViewModel = ReturnType<typeof WorkoutDayUpdateViewModel>;
 export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
   const request = {
     workout_day: {
-      profile: new RequestCore(fetchStudentWorkoutDayProfile, {
+      profile: new RequestCore(fetchWorkoutDayProfile, {
         process: fetchWorkoutDayProfileProcess,
         client: props.client,
       }),
@@ -1800,7 +1795,7 @@ export function WorkoutDayUpdateView(props: ViewComponentProps) {
               添加动作
             </Button>
             <Flex class="flex items-center gap-2">
-              <Button store={vm.ui.$btn_show_overview_dialog}>完成</Button>
+              <Button store={vm.ui.$btn_show_overview_dialog}>预览</Button>
               {/* <IconButton
                 onClick={(event) => {
                   const client = event.currentTarget.getBoundingClientRect();

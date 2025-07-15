@@ -785,19 +785,19 @@ export function HomeMineView(props: ViewComponentProps) {
                   <Flex justify="between">
                     <div class="text-sm text-w-fg-1">完成于 {d.finished_at_text}</div>
                     <Flex class="gap-2">
-                      <div
-                        class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
-                        onClick={() => {
-                          vm.ui.$dialog_calendar_workout_days.hide();
-                          if (d.workout_plan) {
+                      <Show when={d.workout_plan}>
+                        <div
+                          class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
+                          onClick={() => {
+                            vm.ui.$dialog_calendar_workout_days.hide();
                             props.history.push("root.workout_plan_profile", {
-                              id: String(d.workout_plan.id),
+                              id: String(d.workout_plan!.id),
                             });
-                          }
-                        }}
-                      >
-                        <div class="text-sm">计划</div>
-                      </div>
+                          }}
+                        >
+                          <div class="text-sm">计划</div>
+                        </div>
+                      </Show>
                       <div
                         class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
                         onClick={() => {
