@@ -28,8 +28,9 @@ export function WorkoutPlanSelectView(props: { store: WorkoutPlanSelectViewModel
                 return (
                   <div
                     classList={{
-                      "relative p-2 flex justify-between border-2 border-w-fg-3 rounded-md text-w-fg-0": true,
-                      "border-w-fg-2 bg-w-bg-5 text-w-fg-0": v.selected,
+                      "relative p-2 flex justify-between border-2 rounded-md": true,
+                      "border-w-fg-2 text-w-fg-0 bg-w-bg-5": v.selected,
+                      "border-w-fg-3 text-w-fg-1": !v.selected,
                     }}
                     onClick={() => {
                       vm.select(v);

@@ -557,9 +557,9 @@ export function MaxRMTestToolView(props: ViewComponentProps) {
                 return (
                   <div
                     classList={{
-                      "flex items-center justify-between p-4 border-2 border-w-fg-3 rounded-lg text-w-fg-0": true,
-                      "border-w-fg-2 bg-w-bg-5 text-w-fg-0": v.is_cur,
-                      "text-w-fg-2": idx() < state().cur_step_idx,
+                      "flex items-center justify-between p-4 border-2 rounded-lg text-w-fg-0": true,
+                      "border-w-fg-2 text-w-fg-0 bg-w-bg-5": v.is_cur,
+                      "border-w-fg-3 text-w-fg-2": idx() < state().cur_step_idx,
                     }}
                   >
                     <div class="flex">

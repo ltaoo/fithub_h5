@@ -92,14 +92,18 @@ export function mark_dialog_has_show(name: keyof typeof dialogs) {
     },
   });
 }
-
-const QINIU_DEFAULT_CACHE_VALUES = {
-  token: "",
-};
-const qiniu_value = globalThis.localStorage.getItem("qiniu");
-export const qiniu_storage = new StorageCore<typeof QINIU_DEFAULT_CACHE_VALUES>({
-  key,
-  defaultValues: QINIU_DEFAULT_CACHE_VALUES,
-  values: qiniu_value ? JSON.parse(qiniu_value) : QINIU_DEFAULT_CACHE_VALUES,
-  client: globalThis.localStorage,
-});
+export const qiniu_storage = new StorageCore(
+  (() => {
+    const QINIU_DEFAULT_CACHE_VALUES = {
+      token: "",
+    };
+    const key = "qiniu";
+    const existing = globalThis.localStorage.getItem(key);
+    return {
+      key,
+      defaultValues: QINIU_DEFAULT_CACHE_VALUES,
+      values: existing ? JSON.parse(existing) : QINIU_DEFAULT_CACHE_VALUES,
+      client: globalThis.localStorage,
+    };
+  })()
+);

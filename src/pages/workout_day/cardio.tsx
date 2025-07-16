@@ -1,5 +1,7 @@
 import { For, Show } from "solid-js";
+import dayjs from "dayjs";
 
+import { qiniu_storage } from "@/store/storage";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 import { PageView } from "@/components/page-view";
@@ -8,6 +10,8 @@ import { Select } from "@/components/ui/select";
 import { Button, Input, Textarea } from "@/components/ui";
 import { TabHeader } from "@/components/ui/tab-header";
 import { Flex } from "@/components/flex/flex";
+import { TimePickerView } from "@/components/ui/time-picker";
+import { MultipleImageUploadView } from "@/components/ui/multiple-image-upload";
 import { RepsInputView } from "@/pages/workout_plan/components/input-reps";
 
 import { base, Handler } from "@/domains/base";
@@ -33,13 +37,12 @@ import { RepsInputModel } from "@/biz/input_with_keyboard/input_reps";
 import { getSetValueUnit } from "@/biz/input_set_value";
 import { TimePickerModel } from "@/biz/time_picker/time";
 import { ClockModel } from "@/biz/time_picker/clock";
-import { TimePickerView } from "@/components/ui/time-picker";
-import dayjs from "dayjs";
-import { toNumber } from "@/utils/primitive";
 import { WorkoutPlanSetType, WorkoutPlanType } from "@/biz/workout_plan/constants";
 import { RefCore } from "@/domains/ui/cur";
-import { toFixed } from "@/utils";
 import { Result } from "@/domains/result";
+import { MultipleImageUploadModel } from "@/biz/multiple_image_upload";
+import { toNumber } from "@/utils/primitive";
+import { toFixed } from "@/utils";
 
 function CardioViewModel(props: ViewComponentProps) {
   const request = {
@@ -209,6 +212,10 @@ function CardioViewModel(props: ViewComponentProps) {
           label: "备注",
           input: new InputCore({ defaultValue: "", placeholder: "请输入" }),
         }),
+        medias: new SingleFieldCore({
+          label: "图片",
+          input: MultipleImageUploadModel({ storage: qiniu_storage, client: props.client }),
+        }),
       },
     }),
     $btn_submit: new ButtonCore({
@@ -320,7 +327,9 @@ function CardioViewModel(props: ViewComponentProps) {
           finished_at: v.finished_at.toDate(),
           start_at: v.start_at.toDate(),
           remark: v.remark,
+          medias: JSON.stringify(v.medias.map((v) => v.key).filter(Boolean)),
         };
+        console.log("[PAGE]workout_day/cardio - createWorkoutDay", body);
         ui.$btn_submit.setLoading(true);
         const r2 = await request.workout_day.create_free.run(body);
         ui.$btn_submit.setLoading(false);
@@ -462,8 +471,9 @@ export function CardioCreateView(props: ViewComponentProps) {
                     return (
                       <div
                         classList={{
-                          "p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
-                          "border-w-fg-2 bg-w-bg-5 text-w-fg-0": vv.selected,
+                          "p-2 border-2 rounded-lg text-center": true,
+                          "border-w-fg-2 text-w-fg-0 bg-w-bg-5": vv.selected,
+                          "border-w-fg-3 text-w-fg-1 ": !vv.selected,
                         }}
                         onClick={() => {
                           vm.methods.handleClickCardio(vv);
@@ -490,6 +500,9 @@ export function CardioCreateView(props: ViewComponentProps) {
           </Flex>
           <FieldV2 store={vm.ui.$form.fields.remark}>
             <Textarea store={vm.ui.$form.fields.remark.input}></Textarea>
+          </FieldV2>
+          <FieldV2 store={vm.ui.$form.fields.medias}>
+            <MultipleImageUploadView store={vm.ui.$form.fields.medias.input}></MultipleImageUploadView>
           </FieldV2>
         </div>
       </PageView>

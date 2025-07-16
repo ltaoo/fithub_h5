@@ -6,9 +6,7 @@ export function OSSManager() {
     refresh() {
       bus.emit(Events.StateChange, { ..._state });
     },
-    compress() {
-
-    },
+    compress() {},
   };
   const ui = {};
   let _state = {};
@@ -32,3 +30,12 @@ export function OSSManager() {
     },
   };
 }
+
+export type OSS = {
+  upload: (file: File) => void;
+  onStart(handler: Handler<void>): () => void;
+  onProgress(handler: Handler<{ percent: number }>): (opt: { percent: number }) => void;
+  onError(handler: Handler<BizError>): () => void;
+  onSuccess(handler: Handler<{ hash: string; key: string }>): () => void;
+  onCompleted(handler: Handler<void>): () => void;
+};

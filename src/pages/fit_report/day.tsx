@@ -3,6 +3,7 @@
  */
 import { For, Show } from "solid-js";
 import dayjs from "dayjs";
+import { snapdom } from "@zumer/snapdom";
 import { toPng } from "html-to-image";
 import { saveAs } from "file-saver";
 
@@ -55,7 +56,7 @@ function WorkoutReportMonthModel(props: ViewComponentProps) {
     $history: props.history,
     $dialog_share_card: new DialogCore({}),
     $btn_download: new ButtonCore({
-      onClick() {
+      async onClick() {
         const $node = document.getElementById("share-card");
         if (!$node) {
           props.app.tip({
@@ -66,25 +67,27 @@ function WorkoutReportMonthModel(props: ViewComponentProps) {
         if (props.app.env.wechat) {
           ui.$dialog_share_card.show();
         }
-        toPng($node, {})
-          .then((url) => {
-            if (props.app.env.wechat) {
-              const $container = document.getElementById("dialog-share-card");
-              if (!$container) {
-                return;
-              }
-              const $img = new Image();
-              $img.src = url;
-              $container.appendChild($img);
+        try {
+          const result = await snapdom($node, { scale: 2 });
+          const $img = await result.toPng();
+          if (props.app.env.wechat) {
+            const $container = document.getElementById("dialog-share-card");
+            if (!$container) {
               return;
             }
-            saveAs(url, _time.date + ".png");
-          })
-          .catch((err) => {
-            props.app.tip({
-              text: ["oops, something went wrong!", err.message],
-            });
+            // const $img = new Image();
+            // $img.src = url;
+            $container.appendChild($img);
+            return;
+          }
+          const blob = await snapdom.toBlob($img);
+          saveAs(blob, _time.date + ".png");
+        } catch (err) {
+          const e = err as Error;
+          props.app.tip({
+            text: ["oops, something went wrong!", e.message],
           });
+        }
       },
     }),
   };
@@ -183,7 +186,7 @@ export function WorkoutReportDailyView(props: ViewComponentProps) {
         }
       >
         <Show when={state().profile}>
-          <div id="share-card" class="overflow-hidden rounded-xl bg-[#f2470c]">
+          <div id="share-card" class="overflow-hidden bg-[#f2470c]">
             <Flex class="header relative py-4 flex-col" items="center">
               <img class="z-0 absolute left-0 -bottom-4 w-full" src="/share-card__bg.png"></img>
               <Flex class="z-10 relative w-full px-4" items="center" justify="between">

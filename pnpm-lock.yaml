@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@zumer/snapdom':
+        specifier: ^1.9.5
+        version: 1.9.5
       axios:
         specifier: ^1.3.5
         version: 1.3.5
@@ -613,6 +616,9 @@ packages:
 
   '@vitest/utils@0.30.1':
     resolution: {integrity: sha512-/c8Xv2zUVc+rnNt84QF0Y0zkfxnaGhp87K2dYJMLtLOIckPzuxLVzAtFCicGFdB4NeBHNzTRr1tNn7rCtQcWFA==}
+
+  '@zumer/snapdom@1.9.5':
+    resolution: {integrity: sha512-p+9C86evbQceSlDBhRA2+BJSotBPO7YFh6b7LeUDPowt/iAx5kzZomO3Fme7mYqfpn990TDKFHn0XascDvUODw==}
 
   acorn-walk@8.2.0:
     resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
@@ -2036,6 +2042,8 @@ snapshots:
       concordance: 5.0.4
       loupe: 2.3.6
       pretty-format: 27.5.1
+
+  '@zumer/snapdom@1.9.5': {}
 
   acorn-walk@8.2.0: {}
 

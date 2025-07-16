@@ -41,6 +41,25 @@ export function uidFactory() {
   };
 }
 
+const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+/**
+ * 返回一个指定长度的随机字符串
+ * @param length
+ * @returns
+ */
+export function random_key(length: number) {
+  return random_string_with_alphabet(length, defaultRandomAlphabet);
+}
+function random_string_with_alphabet(length: number, alphabet: string) {
+  let b = new Array(length);
+  let max = alphabet.length;
+  for (let i = 0; i < b.length; i++) {
+    let n = Math.floor(Math.random() * max);
+    b[i] = alphabet[n];
+  }
+  return b.join("");
+}
+
 export function padding_zero(str: number | string) {
   if (String(str).length === 1) {
     return `0${str}`;

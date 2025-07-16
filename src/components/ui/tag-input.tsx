@@ -132,9 +132,9 @@ export function TagInput(props: { store: TagSelectInput } & JSX.HTMLAttributes<H
                 return (
                   <div
                     classList={{
-                      "px-4 py-1 border-2 rounded-full text-sm text-w-fg-1": true,
-                      "border-w-fg-3": !opt.selected,
-                      "border-w-fg-2 bg-w-bg-5 text-w-fg-0": opt.selected,
+                      "px-4 py-1 border-2 rounded-full text-sm": true,
+                      "border-w-fg-2 text-w-fg-0 bg-w-bg-5": opt.selected,
+                      "border-w-fg-3 text-w-fg-1": !opt.selected,
                     }}
                     onClick={() => {
                       vm.methods.select(opt.value);

@@ -25,7 +25,7 @@ type TheTypesOfBaseEvents = {
 };
 type BaseDomainEvents<E> = TheTypesOfBaseEvents & E;
 
-  // const uid = uid_factory();
+// const uid = uid_factory();
 export function base<Events extends Record<EventType, unknown>>() {
   const emitter = mitt<BaseDomainEvents<Events>>();
   let listeners: (() => void)[] = [];
@@ -167,6 +167,26 @@ export function applyMixins(derivedCtor: any, constructors: any[]) {
 }
 
 export type { Handler };
+
+// function AAAView() {
+//   const state = createState({
+//     loading: true,
+//   });
+//   const request = createRequest({});
+//   const ui = createUI({});
+//   const methods = {};
+//   const lifecycle = {
+//     mounted() {
+//       state.loading = false;
+//     },
+//   };
+//   const vm = defineViewModel({
+//     state,
+//     methods,
+//     lifecycle,
+//   });
+//   return vm;
+// }
 
 /**
  * 代码片段

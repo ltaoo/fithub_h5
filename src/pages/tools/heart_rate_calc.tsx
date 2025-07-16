@@ -203,8 +203,9 @@ export function HeartRateCalcToolView(props: ViewComponentProps) {
                   return (
                     <div
                       classList={{
-                        "p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg": true,
-                        "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().intensity_level === level,
+                        "p-2 border-2 rounded-lg": true,
+                        "border-w-fg-2 text-w-fg-0 bg-w-bg-5": state().intensity_level === level,
+                        "border-w-fg-3 text-w-fg-1": state().intensity_level !== level,
                       }}
                       onClick={() => {
                         vm.ui.$input_intensity_level.setValue(level);

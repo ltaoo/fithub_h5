@@ -229,8 +229,9 @@ export function BMRCalcToolView(props: ViewComponentProps) {
             <div class="flex gap-2 mt-1">
               <div
                 classList={{
-                  "w-[60px] p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
-                  "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "man",
+                  "w-[60px] p-2 border-2 rounded-lg text-center": true,
+                  "border-w-fg-2 text-w-fg-0 bg-w-bg-5": state().gender === "man",
+                  "border-w-fg-3 text-w-fg-1": state().gender !== "man",
                 }}
                 onClick={() => {
                   vm.ui.$input_gender.select("man");
@@ -240,8 +241,9 @@ export function BMRCalcToolView(props: ViewComponentProps) {
               </div>
               <div
                 classList={{
-                  "w-[60px] p-2 border-2 border-w-fg-3 text-w-fg-1 rounded-lg text-center": true,
-                  "border-w-fg-2 bg-w-bg-5 text-w-fg-0": state().gender === "woman",
+                  "w-[60px] p-2 border-2 rounded-lg text-center": true,
+                  "border-w-fg-2 text-w-fg-0 bg-w-bg-5": state().gender === "woman",
+                  "border-w-fg-3 text-w-fg-1": state().gender !== "woman",
                 }}
                 onClick={() => {
                   vm.ui.$input_gender.select("woman");

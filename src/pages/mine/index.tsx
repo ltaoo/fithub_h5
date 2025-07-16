@@ -95,9 +95,16 @@ function HomeMineViewModel(props: ViewComponentProps) {
     gotoSubscriptionView() {
       props.history.push("root.subscription");
     },
-    showDialogUpdateNickname() {
+    showDialogNicknameUpdate() {
       ui.$input_nickname.setValue(_nickname);
       ui.$dialog_nickname_update.show();
+    },
+    showDialogAvatarURLUpdate() {
+      const matched = Avatars.find((v) => v.url === _avatar_url);
+      if (matched) {
+        ui.$select_avatar.select(matched);
+      }
+      ui.$dialog_avatar_update.show();
     },
     clearGiftCardProfile() {
       ui.$input_gift_card_code.clear();
@@ -189,6 +196,15 @@ function HomeMineViewModel(props: ViewComponentProps) {
       }
       ui.$dialog_calendar_workout_days.show();
     },
+    async handleClickPrevMonthReport() {
+      const v = ui.$select_month.value;
+      const today = dayjs("2025/06/01");
+      props.history.push("root.workout_report_month", {
+        title: "六月训练总结",
+        start: String(today.startOf("month").startOf("date").valueOf()),
+        end: String(today.endOf("month").endOf("date").valueOf()),
+      });
+    },
   };
   const today = dayjs();
   const ui = {
@@ -219,21 +235,20 @@ function HomeMineViewModel(props: ViewComponentProps) {
     }),
     $menu: new DropdownMenuCore({
       items: [
-        new MenuItemCore({
-          label: "修改昵称",
-          onClick() {
-            ui.$menu.hide();
-            ui.$input_nickname.setValue(_nickname);
-            ui.$dialog_nickname_update.show();
-          },
-        }),
-        new MenuItemCore({
-          label: "修改头像",
-          onClick() {
-            ui.$menu.hide();
-            ui.$dialog_avatar_update.show();
-          },
-        }),
+        // new MenuItemCore({
+        //   label: "修改昵称",
+        //   onClick() {
+        //     ui.$menu.hide();
+        //     methods.showDialogNicknameUpdate();
+        //   },
+        // }),
+        // new MenuItemCore({
+        //   label: "修改头像",
+        //   onClick() {
+        //     ui.$menu.hide();
+        //     methods.showDialogAvatarURLUpdate();
+        //   },
+        // }),
         new MenuItemCore({
           label: "复制 UID",
           onClick() {
@@ -523,7 +538,16 @@ export function HomeMineView(props: ViewComponentProps) {
               <div class="avatar relative">
                 <Show
                   when={state().avatar_url}
-                  fallback={<div class="w-[88px] h-[88px] rounded-full bg-w-bg-5">{/* 头像占位 */}</div>}
+                  fallback={
+                    <div
+                      class="w-[88px] h-[88px] rounded-full bg-w-bg-5"
+                      onClick={() => {
+                        vm.methods.showDialogAvatarURLUpdate();
+                      }}
+                    >
+                      {/* 头像占位 */}
+                    </div>
+                  }
                 >
                   <div
                     class="w-[88px] h-[88px] aspect-square rounded-full"
@@ -531,6 +555,9 @@ export function HomeMineView(props: ViewComponentProps) {
                       "background-image": `url('${state().avatar_url}')`,
                       "background-size": "cover",
                       "background-position": "center",
+                    }}
+                    onClick={() => {
+                      vm.methods.showDialogAvatarURLUpdate();
                     }}
                   ></div>
                 </Show>
@@ -541,7 +568,8 @@ export function HomeMineView(props: ViewComponentProps) {
                       <div class="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0">
                         <Flex
                           class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
-                          onClick={() => {
+                          onClick={(event) => {
+                            event.stopPropagation();
                             vm.methods.gotoSubscriptionView();
                           }}
                         >
@@ -555,7 +583,8 @@ export function HomeMineView(props: ViewComponentProps) {
                       <Flex
                         class="px-2 border border-w-fg-3 rounded-full bg-w-bg-5"
                         items="center"
-                        onClick={() => {
+                        onClick={(event) => {
+                          event.stopPropagation();
                           vm.methods.gotoSubscriptionView();
                         }}
                       >
@@ -566,7 +595,11 @@ export function HomeMineView(props: ViewComponentProps) {
                   </Show>
                 </Show>
               </div>
-              <div>
+              <div
+                onClick={() => {
+                  vm.methods.showDialogNicknameUpdate();
+                }}
+              >
                 <div class="flex items-center gap-2">
                   <div class="text-lg text-w-fg-0 text-center font-semibold">{state().nickname}</div>
                 </div>
@@ -581,7 +614,7 @@ export function HomeMineView(props: ViewComponentProps) {
           >
             <div class="rounded-lg border-2 border-w-fg-3 mt-2">
               <div class="flex items-center justify-between p-4 border-b-2 border-w-fg-3">
-                <Flex class="gap-2">
+                <Flex class="gap-2" items="center">
                   <div class="font-semibold text-w-fg-0">训练日历</div>
                   <div>
                     <Select store={vm.ui.$select_month}></Select>
@@ -638,21 +671,16 @@ export function HomeMineView(props: ViewComponentProps) {
               </div>
             </div>
           </div>
-          <div class="px-2">
+          {/* <div class="px-2">
             <div
               class="p-4 border-2 border-w-fg-3 rounded-lg"
               onClick={() => {
-                const today = dayjs("2025/06/01");
-                props.history.push("root.workout_report_month", {
-                  title: "六月训练总结",
-                  start: String(today.startOf("month").startOf("date").valueOf()),
-                  end: String(today.endOf("month").endOf("date").valueOf()),
-                });
+                vm.methods.handleClickPrevMonthReport();
               }}
             >
               <div class="text-w-fg-0">六月训练统计</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </ScrollView>
       <Sheet store={vm.ui.$dialog_account_create} app={props.app}>
