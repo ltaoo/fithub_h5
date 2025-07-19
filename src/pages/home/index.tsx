@@ -157,13 +157,15 @@ function HomeIndexPageViewModel(props: ViewComponentProps) {
       // );
       for (let i = 0; i < completed_plans_in_the_day.length; i += 1) {
         const vv = completed_plans_in_the_day[i];
-        if (vv.workout_plan && !plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
-          extra_workout_days.push({
-            id: vv.id,
-            workout_plan: vv.workout_plan,
-            title: vv.title,
-            finished_at_text: vv.finished_at_text,
-          });
+        if (vv.workout_plan) {
+          if (!plan_ids_today_need_to_do.includes(vv.workout_plan.id)) {
+            extra_workout_days.push({
+              id: vv.id,
+              workout_plan: vv.workout_plan,
+              title: vv.title,
+              finished_at_text: vv.finished_at_text,
+            });
+          }
         } else {
           extra_workout_days.push({
             id: vv.id,

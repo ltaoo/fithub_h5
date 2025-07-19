@@ -146,17 +146,17 @@ function BodyMeasurementViewModel(props: ViewComponentProps) {
       label: "",
       name: "图片",
       fields: {
-        chest: new ArrayFieldCore({
-          label: "胸围",
-          name: "chest",
-          field: () => {
-            return new SingleFieldCore({
-              label: "图片",
-              name: "picture",
-              input: ImageUploadCore({}),
-            });
-          },
-        }),
+        // chest: new ArrayFieldCore({
+        //   label: "胸围",
+        //   name: "chest",
+        //   field: () => {
+        //     return new SingleFieldCore({
+        //       label: "图片",
+        //       name: "picture",
+        //       input: ImageUploadCore({}),
+        //     });
+        //   },
+        // }),
       },
     }),
   };

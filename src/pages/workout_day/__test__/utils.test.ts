@@ -223,4 +223,282 @@ describe("计算删除组后，高亮该如何更新", () => {
     expect(r.data.cur_step_idx).toBe(0);
     expect(r.data.cur_set_idx).toBe(0);
   });
+  it("前后都有未完成的组，当前高亮 [2,0]，删除[1,2]", async () => {
+    const steps = [
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 2,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ];
+    const r = calcTheHighlightIdxAfterRemoveSet(
+      {
+        step_idx: 1,
+        set_idx: 2,
+      },
+      {
+        steps,
+        cur_step_idx: 2,
+        cur_set_idx: 0,
+      }
+    );
+    expect(r.error).toBeNull();
+    if (r.error) {
+      return;
+    }
+    expect(r.data.steps).toStrictEqual([
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 2,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ]);
+    expect(r.data.cur_step_idx).toBe(2);
+    expect(r.data.cur_set_idx).toBe(0);
+  });
+  it("高亮前面的组只剩一个，删除了就没了。当前高亮 [2,0]，删除[1,0]", async () => {
+    const steps = [
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 2,
+        sets: [
+          {
+            uid: 1,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ];
+    const r = calcTheHighlightIdxAfterRemoveSet(
+      {
+        step_idx: 1,
+        set_idx: 0,
+      },
+      {
+        steps,
+        cur_step_idx: 2,
+        cur_set_idx: 0,
+      }
+    );
+    expect(r.error).toBeNull();
+    if (r.error) {
+      return;
+    }
+    expect(r.data.steps).toStrictEqual([
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ]);
+    expect(r.data.cur_step_idx).toBe(1);
+    expect(r.data.cur_set_idx).toBe(0);
+  });
+  it("高亮前面的组只剩一个，删除了就没了。当前高亮 [2,1]，删除[1,0]", async () => {
+    const steps = [
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 2,
+        sets: [
+          {
+            uid: 1,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ];
+    const r = calcTheHighlightIdxAfterRemoveSet(
+      {
+        step_idx: 1,
+        set_idx: 0,
+      },
+      {
+        steps,
+        cur_step_idx: 2,
+        cur_set_idx: 1,
+      }
+    );
+    expect(r.error).toBeNull();
+    if (r.error) {
+      return;
+    }
+    expect(r.data.steps).toStrictEqual([
+      {
+        uid: 1,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+      {
+        uid: 3,
+        sets: [
+          {
+            uid: 1,
+          },
+          {
+            uid: 2,
+          },
+          {
+            uid: 3,
+          },
+        ],
+      },
+    ]);
+    expect(r.data.cur_step_idx).toBe(1);
+    expect(r.data.cur_set_idx).toBe(1);
+  });
 });

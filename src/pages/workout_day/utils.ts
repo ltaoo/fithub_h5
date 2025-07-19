@@ -13,7 +13,6 @@ export function calcTheHighlightIdxAfterRemoveSet<T extends { uid: number; sets:
   let _cur_step_idx = opt2.cur_step_idx;
   let _cur_set_idx = opt2.cur_set_idx;
   let _steps = opt2.steps;
-  const step = _steps[_cur_step_idx];
   console.log("[]", _cur_step_idx, _cur_set_idx);
   const is_remove_cur_set = opt.step_idx === _cur_step_idx && opt.set_idx === _cur_set_idx;
   const step_is_last_step = _steps.length === 1;
@@ -25,16 +24,20 @@ export function calcTheHighlightIdxAfterRemoveSet<T extends { uid: number; sets:
     return Result.Err("无法删除最后一组动作");
   }
   _steps = update_arr_item(_steps, opt.step_idx, {
-    ...step,
-    sets: remove_arr_item(step.sets, opt.set_idx),
+    ..._steps[opt.step_idx],
+    sets: remove_arr_item(_steps[opt.step_idx].sets, opt.set_idx),
   });
   if (is_remove_last_set) {
     console.log(17);
     _steps = remove_arr_item(_steps, opt.step_idx);
+    if (opt.step_idx + 1 === _cur_step_idx) {
+      _cur_step_idx -= 1;
+    }
   }
+  // console.log(_steps);
   if (!is_remove_cur_set) {
     // 不是移除当前高亮的，但是高亮通过 idx 标记，idx = 2，删除了 0，视觉上高亮变成了下一个
-    if (opt.step_idx === _cur_step_idx && opt.set_idx < _cur_set_idx) {
+    if (opt.step_idx === opt2.cur_step_idx && opt.set_idx < opt2.cur_set_idx) {
       console.log(18);
       _cur_set_idx -= 1;
     }

@@ -749,7 +749,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
           //   continue;
           // }
           const actions: WorkoutDayStepProgressJSON250629["sets"][number]["actions"] = [];
-          console.log("[]before set.actions.length", set.actions);
+          // console.log("[]before set.actions.length", set.actions);
           for (let c = 0; c < set.actions.length; c++) {
             const act = set.actions[c];
             const step_set_act_uid = `${step.uid}-${set.uid}-${act.uid}`;
@@ -757,7 +757,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
             const $field_reps = ui.$fields_reps.get(step_set_act_uid);
             const $input_check = ui.$inputs_completed.get(step_set_act_uid);
             const completed_at = $input_check?.value;
-            console.log("[]after set.actions[c]", act.zh_name, $input_check?.value);
+            // console.log("[]after set.actions[c]", act.zh_name, $input_check?.value);
             // console.log("[]after set.actions[c]", $act_countdown?.ui.$countdown1.state.started_at);
             if ($field_weight && $field_reps) {
               // console.log("weight", kkk, $field_weight.input.value, $field_weight.input.placeholder);

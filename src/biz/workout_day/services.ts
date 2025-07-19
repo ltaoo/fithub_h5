@@ -968,13 +968,15 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
             const sets = step_groups[uid].sets;
             for (let j = 0; j < sets.length; j += 1) {
               const s = sets[j];
-              const weight_text =
-                s.actions[0].weight_unit === getSetValueUnit("自重")
-                  ? "自重"
-                  : s.actions[0].weight + s.actions[0].weight_unit;
-              const reps_text = s.actions[0].reps + s.actions[0].reps_unit;
-              console.log(`${weight_text}x${reps_text}`);
-              console.log();
+              if (s.actions.length) {
+                const weight_text =
+                  s.actions[0].weight_unit === getSetValueUnit("自重")
+                    ? "自重"
+                    : s.actions[0].weight + s.actions[0].weight_unit;
+                const reps_text = s.actions[0].reps + s.actions[0].reps_unit;
+                console.log(`${weight_text}x${reps_text}`);
+                console.log();
+              }
             }
           }
           if (set.type === WorkoutPlanSetType.Super) {

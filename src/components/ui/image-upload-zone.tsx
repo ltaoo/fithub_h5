@@ -19,12 +19,12 @@ export function ImageUpload(props: { store: ImageUploadCore } & JSX.HTMLAttribut
 
   return (
     <div class={cn(props.class, "relative")}>
-      <Show when={state().url}>
+      {/* <Show when={state().url}>
         <div class="absolute inset-0 h-full">
           <LazyImage class="h-full object-cover" store={store.ui.img} />
         </div>
       </Show>
-      <DragZone store={store.ui.zone}></DragZone>
+      <DragZone store={store.ui.zone}></DragZone> */}
     </div>
   );
 }

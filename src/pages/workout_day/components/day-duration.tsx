@@ -34,7 +34,7 @@ export function DayDurationTextView(props: { store: StopWatchViewModel; onStart?
     <div class="day-duration flex items-center justify-between">
       <div
         classList={{
-          "flex items-center text-xl text-w-fg-1 transition-all duration-200": true,
+          "flex items-center text-xl text-w-fg-1 whitespace-nowrap transition-all duration-200": true,
           // "text-gray-100": state().finished,
         }}
       >
@@ -81,10 +81,10 @@ export function DayDurationTextView(props: { store: StopWatchViewModel; onStart?
         </div>
         <div
           classList={{
-            "text-center w-[8px]": true,
+            "ml-1 text-center text-[16px] w-[24px]": true,
           }}
         >
-          min
+          分钟
         </div>
       </div>
     </div>

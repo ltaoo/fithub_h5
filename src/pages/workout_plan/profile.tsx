@@ -122,6 +122,13 @@ function HomeWorkoutPlanProfilePageViewModel(props: ViewComponentProps) {
         });
         return;
       }
+      if (_students.length === 1) {
+        props.history.push("root.workout_day_self", {
+          id: String(r.data.ids[0]),
+          multiple: "0",
+        });
+        return;
+      }
       props.history.push("root.workout_day", {
         directly_working: "1",
       });
