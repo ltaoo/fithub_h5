@@ -95,6 +95,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   "root.student_workout_day_profile": lazy(async () => ({
     default: (await import("@/pages/student/workout_day_profile")).StudentWorkoutDayProfileView,
   })),
+  "root.student_workout_day_result": lazy(async () => ({
+    default: (await import("@/pages/student/workout_day_result")).StudentWorkoutDayResultView,
+  })),
   "root.home_layout.mine": lazy(async () => ({ default: (await import("@/pages/mine")).HomeMineView })),
   // 训练记录
   "root.workout_day": lazy(async () => ({
@@ -120,6 +123,9 @@ export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
   })),
   "root.workout_day_profile": lazy(async () => ({
     default: (await import("@/pages/workout_day/profile")).WorkoutDayProfileView,
+  })),
+  "root.workout_day_result": lazy(async () => ({
+    default: (await import("@/pages/workout_day/result")).WorkoutDayResultView,
   })),
   "root.action_history_list": lazy(async () => ({
     default: (await import("@/pages/workout_action_history/list")).WorkoutActionHistoryListView,

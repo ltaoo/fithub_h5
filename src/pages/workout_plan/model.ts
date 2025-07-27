@@ -42,6 +42,8 @@ import { seconds_to_hour_text, seconds_to_hour_template1, seconds_to_hour_with_t
 import { debounce } from "@/utils/lodash/debounce";
 
 import { ActionInput, DefaultSetValue, StepInputViewModel } from "./components/action-input";
+import { fetchWorkoutDayResult, fetchWorkoutDayResultProcess } from "@/biz/workout_day/services";
+import { toNumber } from "@/utils/primitive";
 
 function calc_estimated_duration(
   actions: {
@@ -96,6 +98,12 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     workout_action: {
       list_by_ids: new RequestCore(fetchWorkoutActionListByIds, {
         process: fetchWorkoutActionListByIdsProcess,
+        client: props.client,
+      }),
+    },
+    workout_day: {
+      profile: new RequestCore(fetchWorkoutDayResult, {
+        process: fetchWorkoutDayResultProcess,
         client: props.client,
       }),
     },
@@ -857,7 +865,87 @@ export function WorkoutPlanEditorViewModel(props: Pick<ViewComponentProps, "hist
     methods,
     ui,
     state: _state,
-    ready() {
+    ready(extra: Partial<{ workout_day_id: string }> = {}) {
+      if (extra.workout_day_id) {
+        const workout_day_id = toNumber(extra.workout_day_id);
+        if (workout_day_id === null) {
+          return;
+        }
+        (async () => {
+          const r = await request.workout_day.profile.run({ id: workout_day_id! });
+          if (r.error) {
+            return;
+          }
+          const v = r.data;
+          const action_ids: number[] = [];
+          ui.$input_title.setValue(v.title + "_复制");
+          for (let i = 0; i < v.steps.length; i += 1) {
+            (() => {
+              const step = v.steps[i];
+              if (step.type === "cardio") {
+                return;
+              }
+              const $field = ui.$input_actions.append();
+              $field.setValue({
+                set_type: step.type as WorkoutPlanSetType,
+                set_count: String(step.sets.length),
+                set_rest_duration: {
+                  num: "90",
+                  unit: getSetValueUnit("秒"),
+                },
+                set_weight: {
+                  num: "6",
+                  unit: getSetValueUnit("RPE"),
+                },
+                set_note: "",
+                actions: step.sets[0].actions.map((vvv) => {
+                  if (!action_ids.includes(vvv.action_id)) {
+                    action_ids.push(vvv.action_id);
+                  }
+                  return {
+                    action: {
+                      id: vvv.action_id,
+                      zh_name: vvv.action_name,
+                    },
+                    reps: {
+                      num: String(vvv.reps),
+                      unit: vvv.reps_unit,
+                    },
+                    weight: (() => {
+                      if (vvv.weight_unit === getSetValueUnit("自重")) {
+                        return {
+                          num: "0",
+                          unit: getSetValueUnit("自重"),
+                        };
+                      }
+                      return {
+                        num: String(vvv.reps),
+                        unit: getSetValueUnit("RM"),
+                      };
+                    })(),
+                    rest_duration: {
+                      num: "90",
+                      unit: getSetValueUnit("秒"),
+                    },
+                  };
+                }),
+              });
+            })();
+          }
+          methods.refresh();
+          methods.debounce_calc_estimated_duration();
+          const r2 = await request.workout_action.list_by_ids.run({ ids: action_ids });
+          if (r2.error) {
+            return;
+          }
+          for (let i = 0; i < r2.data.list.length; i += 1) {
+            const profile = r2.data.list[i];
+            _action_profiles[profile.id] = profile;
+          }
+          methods.refreshMuscles();
+          methods.refreshEquipments();
+        })();
+      }
       ui.$workout_action_select.request.action.list.init();
     },
     destroy() {

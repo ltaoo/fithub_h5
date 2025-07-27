@@ -88,7 +88,7 @@ export function WorkoutDayMultiplePersonViewModel(props: ViewComponentProps) {
     $history: props.history,
   };
 
-  let _working = false;
+  let _working = props.view.query.directly_working === "1";
   let _students: TheStudent[] = [];
   let _views_for_student: RouteViewCore[] = [];
   let _cur_student_idx = 0;

@@ -41,7 +41,7 @@ function WorkoutDayListViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     gotoWorkoutDayProfileView(v: { id: number }) {
-      props.history.push("root.workout_day_profile", {
+      props.history.push("root.workout_day_result", {
         id: String(v.id),
       });
     },
@@ -202,7 +202,7 @@ export function WorkoutDayListView(props: ViewComponentProps) {
                     >
                       <div>
                         <div class="text-w-fg-1">{value.finished_at_text}</div>
-                        <Flex class="gap-2 text-green-500">
+                        <Flex class="gap-2 text-green-500" items="center">
                           <Check class="w-4 h-4" />
                           <div class="text-sm">{WorkoutDayStatusTextMap[value.status]}</div>
                         </Flex>

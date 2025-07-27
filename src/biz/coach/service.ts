@@ -329,6 +329,7 @@ export function refreshWorkoutDayStats(body: { range_of_start: Date; range_of_en
         idx: number;
         texts: string[];
       }[];
+      duration: number;
     }[];
   }>("/api/today_workout", body);
 }

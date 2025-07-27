@@ -290,7 +290,7 @@ export function StepInputViewModel(props: {
       bus.emit(Events.StateChange, { ..._state });
     },
     setValue(value: {
-      type?: WorkoutPlanSetType;
+      set_type?: WorkoutPlanSetType;
       set_count?: string;
       set_rest_duration?: { num: string; unit: SetValueUnit };
       set_weight?: { num: string; unit: SetValueUnit };
@@ -310,18 +310,34 @@ export function StepInputViewModel(props: {
       if (value.set_note) {
         ui.$form.fields.set_note.setValue(value.set_note);
       }
-      let type = ui.$form.fields.set_type.input.value;
-      // console.log("[COMPONENT]action-input - setValue", value);
-      if (type && value.type) {
-        type = value.type;
-        if ([WorkoutPlanSetType.HIIT].includes(type)) {
-          ui.$form.fields.actions.showField("rest_duration");
-        }
+      if (value.set_type) {
+        ui.$form.fields.set_type.input.setValue(value.set_type);
+      }
+
+      const type = ui.$form.fields.set_type.input.value;
+      console.log("[COMPONENT]action-input - setValue", type, value);
+      if (type && [WorkoutPlanSetType.HIIT].includes(type)) {
+        ui.$form.fields.actions.showField("rest_duration");
       }
       (() => {
-        // if ([WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(_type)) {
-        //   return;
-        // }
+        if (type && [WorkoutPlanSetType.Increasing, WorkoutPlanSetType.Decreasing].includes(type)) {
+          const set_actions: { action: { id: number } }[] = [];
+          for (let i = 0; i < ui.$form.fields.actions.value.length; i += 1) {
+            const a = ui.$form.fields.actions.value[i];
+            if (a.action) {
+              set_actions.push({
+                action: a.action,
+              });
+            }
+          }
+          const nodes_added = value.actions;
+          for (let i = 0; i < nodes_added.length; i += 1) {
+            const node = nodes_added[i];
+            const $input = ui.$form.fields.actions.append();
+            $input.setValue(node);
+          }
+          return;
+        }
         if (type && [WorkoutPlanSetType.Normal, WorkoutPlanSetType.Super, WorkoutPlanSetType.HIIT].includes(type)) {
           const set_actions: { action: { id: number } }[] = [];
           for (let i = 0; i < ui.$form.fields.actions.value.length; i += 1) {

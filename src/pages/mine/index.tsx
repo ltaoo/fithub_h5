@@ -830,7 +830,7 @@ export function HomeMineView(props: ViewComponentProps) {
                         class="px-4 py-1 border-2 border-w-fg-3 bg-w-bg-5 rounded-full text-w-fg-0"
                         onClick={() => {
                           vm.ui.$dialog_calendar_workout_days.hide();
-                          props.history.push("root.workout_day_profile", {
+                          props.history.push("root.workout_day_result", {
                             id: String(d.id),
                           });
                         }}

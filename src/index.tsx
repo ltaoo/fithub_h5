@@ -14,6 +14,7 @@ import { Toast } from "./components/ui/toast";
 
 import { ToastCore } from "./domains/ui/toast";
 
+import 'animate.css';
 import "./style.css";
 
 function Application() {

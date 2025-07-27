@@ -65,7 +65,7 @@ function WorkoutPlanCreateViewModel(props: ViewComponentProps) {
     ui,
     state: _state,
     ready() {
-      $model.ready();
+      $model.ready(props.view.query);
     },
     destroy() {
       $model.destroy();
@@ -209,9 +209,9 @@ export function WorkoutPlanCreatePage(props: ViewComponentProps) {
                                 </div>
                               </div>
                             </div>
-                            <Show when={state().fields.length - 1 === index()}>
+                            {/* <Show when={state().fields.length - 1 === index()}>
                               <div class=""></div>
-                            </Show>
+                            </Show> */}
                           </>
                         );
                       }}

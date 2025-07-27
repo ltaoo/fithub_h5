@@ -18,7 +18,9 @@ import { WorkoutActionProfileView } from "@/components/workout-action-profile";
 import { StopwatchView } from "@/components/stopwatch";
 import { IconButton } from "@/components/icon-btn/icon-btn";
 import { WorkoutPlanVideoPlayView } from "@/pages/workout_plan/components/video-play";
-import { StudentWorkoutDayProfileView } from "@/pages/student/workout_day_profile";
+import { Flex } from "@/components/flex/flex";
+import { Presence } from "@/components/ui/presence";
+import { StudentWorkoutDayResultView } from "@/pages/student/workout_day_result";
 
 import { base, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request";
@@ -79,9 +81,8 @@ import { SetActionView, SetActionViewModel } from "./components/set-action";
 import { DayDurationTextView } from "./components/day-duration";
 import { SetActionCountdownView, SetActionCountdownViewModel } from "./components/set-action-countdown";
 import { WorkoutDayOverviewView } from "./components/day-overview";
-import { WorkoutDayProfileView } from "./profile";
+import { WorkoutDayResultView } from "./result";
 import { calcTheHighlightIdxAfterRemoveSet } from "./utils";
-import { Flex } from "@/components/flex/flex";
 
 export type WorkoutDayRecordViewModel = ReturnType<typeof WorkoutDayRecordViewModel>;
 export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
@@ -215,25 +216,25 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      _steps = r.data.steps;
-      _cur_step_idx = r.data.cur_step_idx;
-      _cur_set_idx = r.data.cur_set_idx;
-      // console.log("[]complete remove", _cur_step_idx, _cur_set_idx);
       const step_set_uid = `${step.uid}-${set.uid}`;
-      // if (_touched_set_uid.includes(step_set_uid)) {
-      //   _touched_set_uid = _touched_set_uid.filter((v) => v !== step_set_uid);
-      // }
-      ui.$set_countdowns.delete(step_set_uid);
-      for (let i = 0; i < set.actions.length; i += 1) {
-        const act = set.actions[i];
-        const step_set_act_uid = `${step_set_uid}-${act.uid}`;
-        ui.$set_actions.delete(step_set_act_uid);
-        ui.$fields_reps.delete(step_set_act_uid);
-        ui.$fields_weight.delete(step_set_act_uid);
-        ui.$set_act_countdowns.delete(step_set_act_uid);
-        ui.$inputs_completed.delete(step_set_act_uid);
-      }
-      methods.refresh();
+      const $present = ui.$set_presents.get(step_set_uid);
+      $present?.hide();
+      setTimeout(() => {
+        _steps = r.data.steps;
+        _cur_step_idx = r.data.cur_step_idx;
+        _cur_set_idx = r.data.cur_set_idx;
+        ui.$set_countdowns.delete(step_set_uid);
+        for (let i = 0; i < set.actions.length; i += 1) {
+          const act = set.actions[i];
+          const step_set_act_uid = `${step_set_uid}-${act.uid}`;
+          ui.$set_actions.delete(step_set_act_uid);
+          ui.$fields_reps.delete(step_set_act_uid);
+          ui.$fields_weight.delete(step_set_act_uid);
+          ui.$set_act_countdowns.delete(step_set_act_uid);
+          ui.$inputs_completed.delete(step_set_act_uid);
+        }
+        methods.refresh();
+      }, 300);
     },
     addSet(opt: { step_idx: number }) {
       const step = _steps[opt.step_idx];
@@ -335,6 +336,12 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           methods.nextSet();
         });
         ui.$set_countdowns.set(step_set_uid, $countdown);
+        ui.$set_presents.set(
+          step_set_uid,
+          new PresenceCore({
+            visible: true,
+          })
+        );
         // if (!the_set_completed) {
         //   estimated_duration += set.rest_duration;
         // }
@@ -1146,6 +1153,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
           touched_set_uid: _touched_set_uid,
           sets: data,
         },
+        // @todo 应该只有编辑过，才需要保存
         updated_details: {
           v: "250629",
           steps: _steps,
@@ -1163,7 +1171,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       });
       ui.$dialog_overview.hide();
       if (!is_multiple_view) {
-        props.history.push("root.workout_day_profile", {
+        props.history.push("root.workout_day_result", {
           ...props.view.query,
           home: "1",
         });
@@ -1208,7 +1216,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
       });
       if (!is_multiple_view) {
         // props.history.destroyAllAndPush("root.home_layout.index");
-        props.history.push("root.workout_day_profile", {
+        props.history.push("root.workout_day_result", {
           ...props.view.query,
           home: "1",
         });
@@ -1242,6 +1250,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
   const $inputs_completed = new Map<string, InputCore<number>>();
   const $set_act_countdowns = new Map<string, SetActionCountdownViewModel>();
   const $set_countdowns = new Map<string, SetCountdownViewModel>();
+  const $set_presents = new Map<string, PresenceCore>();
   const $running_set_countdowns = new Map<string, SetCountdownViewModel>();
   const $inputs_set_remark = new Map<string, InputCore<string>>();
   const $btns_more = new Map<string, ButtonCore>();
@@ -1252,6 +1261,7 @@ export function WorkoutDayRecordViewModel(props: ViewComponentProps) {
     $inputs_completed,
     $set_act_countdowns,
     $set_countdowns,
+    $set_presents,
     $running_set_countdowns,
     $inputs_set_remark,
     $btns_more,
@@ -2065,7 +2075,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                               "bg-blue-500": state().cur_step_idx !== step_idx(),
                             }}
                           ></div>
-                          <div class="flex-1 space-y-2 w-full">
+                          <div class="flex-1 space-y-2 w-full transition-all duration-300">
                             <For each={step.sets}>
                               {(set, set_idx) => {
                                 const step_set_uid = () => `${step.uid}-${set.uid}`;
@@ -2076,14 +2086,17 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                 const first_act = set.actions[0];
                                 const first_act_uid = () => `${step_set_uid()}-${first_act.uid}`;
                                 return (
-                                  <>
+                                  <Presence
+                                    store={vm.ui.$set_presents.get(step_set_uid())!}
+                                    animation={{
+                                      in: "animate__animated animate__zoomIn",
+                                      out: "animate__animated animate__zoomOut",
+                                    }}
+                                  >
                                     <div class="overflow-hidden relative w-full">
-                                      {/* <Show when={!is_cur_set()}>
-                                    <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                  </Show> */}
                                       <div
                                         classList={{
-                                          "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
+                                          "flex items-center gap-2 p-4 pr-2 border-2 border-w-fg-3 rounded-lg": true,
                                           // "border-w-fg-2": is_cur_set(),
                                           "border-w-fg-2 bg-w-bg-5": is_cur_set(),
                                         }}
@@ -2093,7 +2106,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                           onClick={(event) => {
                                             const client = event.currentTarget.getBoundingClientRect();
                                             vm.ui.$ref_cur_set_idx.select({ step_idx: step_idx(), idx: set_idx() });
-                                            vm.ui.$menu_set.toggle({ x: client.x + 18, y: client.y + 18 });
+                                            vm.ui.$menu_set.toggle({ x: client.x + 8, y: client.y + 12 });
                                           }}
                                         >
                                           <MoreHorizontal class="w-6 h-6 text-w-fg-1" />
@@ -2127,7 +2140,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                             items="center"
                                             justify="center"
                                           >
-                                            <div class="text-sm text-white">{set_idx() + 1}</div>
+                                            <div class="text-sm text-white">{set.uid}</div>
                                           </Flex>
                                           <div class="space-y-2 w-full">
                                             <Show
@@ -2179,64 +2192,69 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                                         }}
                                                       />
                                                     </Show>
-                                                    <div class="flex items-center gap-2 mt-1">
-                                                      <Show when={vm.ui.$fields_weight.get(act_uid)}>
-                                                        <SetWeightInput
-                                                          class="w-[128px]"
-                                                          width={128}
-                                                          store={vm.ui.$fields_weight.get(act_uid)!}
-                                                          onClick={(event) => {
-                                                            const client = event.currentTarget.getBoundingClientRect();
-                                                            console.log(
-                                                              "[]beforeShowNumInput1",
-                                                              step_idx(),
-                                                              set_idx(),
-                                                              act_idx(),
-                                                              client.y
-                                                            );
-                                                            vm.methods.handleShowNumKeyboard({
-                                                              for: "weight",
-                                                              step_idx: step_idx(),
-                                                              set_idx: set_idx(),
-                                                              act_idx: act_idx(),
-                                                              rect: {
-                                                                x: client.x,
-                                                                y: client.y,
-                                                                width: client.width,
-                                                                height: client.height,
-                                                              },
-                                                            });
-                                                          }}
-                                                        />
-                                                      </Show>
-                                                      <Show when={vm.ui.$fields_reps.get(act_uid)}>
-                                                        <SetRepsInput
-                                                          store={vm.ui.$fields_reps.get(act_uid)!}
-                                                          class=""
-                                                          unit
-                                                          onClick={(event) => {
-                                                            console.log(
-                                                              "[]beforeShowNumInput2",
-                                                              step_idx(),
-                                                              set_idx(),
-                                                              act_idx()
-                                                            );
-                                                            const client = event.currentTarget.getBoundingClientRect();
-                                                            vm.methods.handleShowNumKeyboard({
-                                                              for: "reps",
-                                                              step_idx: step_idx(),
-                                                              set_idx: set_idx(),
-                                                              act_idx: act_idx(),
-                                                              rect: {
-                                                                x: client.x,
-                                                                y: client.y,
-                                                                width: client.width,
-                                                                height: client.height,
-                                                              },
-                                                            });
-                                                          }}
-                                                        />
-                                                      </Show>
+                                                    <Flex class="gap-2 mt-1" items="center" justify="between">
+                                                      <Flex class="set_inputs gap-2" items="center">
+                                                        <Show when={vm.ui.$fields_weight.get(act_uid)}>
+                                                          <SetWeightInput
+                                                            class="w-[128px]"
+                                                            width={128}
+                                                            store={vm.ui.$fields_weight.get(act_uid)!}
+                                                            onClick={(event) => {
+                                                              const client =
+                                                                event.currentTarget.getBoundingClientRect();
+                                                              console.log(
+                                                                "[]beforeShowNumInput1",
+                                                                step_idx(),
+                                                                set_idx(),
+                                                                act_idx(),
+                                                                client.y
+                                                              );
+                                                              vm.methods.handleShowNumKeyboard({
+                                                                for: "weight",
+                                                                step_idx: step_idx(),
+                                                                set_idx: set_idx(),
+                                                                act_idx: act_idx(),
+                                                                rect: {
+                                                                  x: client.x,
+                                                                  y: client.y,
+                                                                  width: client.width,
+                                                                  height: client.height,
+                                                                },
+                                                              });
+                                                            }}
+                                                          />
+                                                        </Show>
+                                                        <Show when={vm.ui.$fields_reps.get(act_uid)}>
+                                                          <SetRepsInput
+                                                            store={vm.ui.$fields_reps.get(act_uid)!}
+                                                            // class="w-[108px]"
+                                                            // width={108}
+                                                            unit
+                                                            onClick={(event) => {
+                                                              console.log(
+                                                                "[]beforeShowNumInput2",
+                                                                step_idx(),
+                                                                set_idx(),
+                                                                act_idx()
+                                                              );
+                                                              const client =
+                                                                event.currentTarget.getBoundingClientRect();
+                                                              vm.methods.handleShowNumKeyboard({
+                                                                for: "reps",
+                                                                step_idx: step_idx(),
+                                                                set_idx: set_idx(),
+                                                                act_idx: act_idx(),
+                                                                rect: {
+                                                                  x: client.x,
+                                                                  y: client.y,
+                                                                  width: client.width,
+                                                                  height: client.height,
+                                                                },
+                                                              });
+                                                            }}
+                                                          />
+                                                        </Show>
+                                                      </Flex>
                                                       <Show when={vm.ui.$inputs_completed.get(act_uid)}>
                                                         <SetCompleteBtn
                                                           store={vm.ui.$inputs_completed.get(act_uid)!}
@@ -2250,7 +2268,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                                           }}
                                                         />
                                                       </Show>
-                                                    </div>
+                                                    </Flex>
                                                     <Show
                                                       when={
                                                         is_countdown_reps() && vm.ui.$set_act_countdowns.get(act_uid)
@@ -2272,13 +2290,10 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                       </div>
                                     </div>
                                     <Show when={!is_last_set()}>
-                                      <div class="relative w-full overflow-hidden">
-                                        {/* <Show when={!is_cur_set()}>
-                                      <div class="pointer-events-none z-10 absolute inset-0 opacity-40 bg-w-bg-3"></div>
-                                    </Show> */}
+                                      <div class="relative w-full mt-1 overflow-hidden">
                                         <div
                                           classList={{
-                                            "flex items-center gap-2 p-4 border-2 border-w-fg-3 rounded-lg": true,
+                                            "flex items-center gap-2 p-2 border-2 border-w-fg-3 rounded-lg": true,
                                             // "border-w-fg-2": is_cur_set(),
                                             "border-w-fg-2 bg-w-bg-5": is_cur_set(),
                                           }}
@@ -2292,7 +2307,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
                                         </div>
                                       </div>
                                     </Show>
-                                  </>
+                                  </Presence>
                                 );
                               }}
                             </For>
@@ -2350,7 +2365,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
         </div>
       </div>
       <Show when={state().profile_view && !state().profile?.is_self}>
-        <StudentWorkoutDayProfileView
+        <StudentWorkoutDayResultView
           app={props.app}
           storage={props.storage}
           pages={props.pages}
@@ -2360,7 +2375,7 @@ export function WorkoutDayRecordView(props: ViewComponentProps) {
         />
       </Show>
       <Show when={state().profile_view && state().profile?.is_self}>
-        <WorkoutDayProfileView
+        <WorkoutDayResultView
           app={props.app}
           storage={props.storage}
           pages={props.pages}

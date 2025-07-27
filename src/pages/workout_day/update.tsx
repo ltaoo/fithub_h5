@@ -922,7 +922,7 @@ export function WorkoutDayUpdateViewModel(props: ViewComponentProps) {
         text: ["完成"],
       });
       ui.$dialog_overview.hide();
-      props.history.replace("root.workout_day_profile", {
+      props.history.replace("root.workout_day_result", {
         id: String(r.data.id),
       });
     },

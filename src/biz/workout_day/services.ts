@@ -32,12 +32,19 @@ import { WorkoutDayStatus } from "./constants";
 export function createWorkoutDay(body: {
   workout_plan_id?: number;
   student_ids: number[];
+  details?: WorkoutDayStepDetailsJSON250629;
+  title?: string;
+  type?: string;
   start_when_create: boolean;
 }) {
   return request.post<{ ids: number[] }>("/api/workout_day/create", {
     workout_plan_id: body.workout_plan_id,
     student_ids: body.student_ids,
     start_when_create: body.start_when_create,
+    /** 拿一个现成的训练计划内容，创建一个临时的训练记录 */
+    title: body.title,
+    type: body.type,
+    details: body.details ? JSON.stringify(body.details) : null,
   });
 }
 
@@ -572,10 +579,10 @@ function parseWorkoutDayDetailsString(details: string) {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       result.push({
-        uid: i,
+        uid: i + 1,
         sets: step.sets.map((set, idx) => {
           return {
-            uid: idx,
+            uid: idx + 1,
             type: set.type as WorkoutPlanSetType,
             rest_duration: {
               num: set.rest_duration,
@@ -584,7 +591,7 @@ function parseWorkoutDayDetailsString(details: string) {
             weight: parseWeightToNumAndUnit(set.weight),
             actions: set.actions.map((act, act_idx) => {
               return {
-                uid: act_idx,
+                uid: act_idx + 1,
                 id: act.id,
                 zh_name: act.zh_name,
                 reps: {
@@ -810,16 +817,16 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
     for (let a = 0; a < d.length; a += 1) {
       const step = d[a];
       const rr = {
-        uid: a,
+        uid: a + 1,
         sets: (() => {
           const sets: WorkoutDayStepDetailsJSON250629["steps"][number]["sets"] = [];
           for (let b = 0; b < Number(step.set_count); b += 1) {
             sets.push({
-              uid: b,
+              uid: b + 1,
               type: step.set_type,
               actions: step.actions.map((act, idx) => {
                 return {
-                  uid: idx,
+                  uid: idx + 1,
                   id: Number(act.action.id),
                   zh_name: act.action.zh_name,
                   reps: {
@@ -1053,6 +1060,97 @@ export function fetchWorkoutDayProfileProcess(r: TmpRequestResp<typeof fetchWork
           title: workout_day.workout_plan.title,
           overview: workout_day.workout_plan.overview,
           creator: workout_day.workout_plan.creator,
+        }
+      : null,
+  });
+}
+
+/**
+ * 获取训练日结果
+ * @param body
+ * @returns
+ */
+export function fetchWorkoutDayResult(body: { id: number }) {
+  return request.post<{
+    id: number;
+    title: string;
+    type: WorkoutPlanType;
+    status: WorkoutDayStatus;
+    remark: string;
+    started_at: number;
+    finished_at: number;
+    steps: {
+      title: string;
+      type: string;
+      total_volume: number;
+      sets: {
+        idx: number;
+        texts: string[];
+        actions: {
+          action_id: number;
+          action_name: string;
+          reps: number;
+          reps_unit: SetValueUnit;
+          weight: string;
+          weight_unit: SetValueUnit;
+        }[];
+      }[];
+      duration: number;
+    }[];
+    set_count: number;
+    /** 持续时间，单位 分 */
+    duration: number;
+    /** 总容量，单位 公斤 */
+    total_volume: number;
+    tags: string[];
+    student_id: number;
+    student: {
+      id: number;
+      nickname: string;
+      avatar_url: string;
+    };
+    is_self: boolean;
+    workout_plan: null | {
+      id: number;
+      title: string;
+      overview: string;
+      tags: string;
+      creator: { nickname: string; avatar_url: string };
+    };
+  }>("/api/workout_day/result", body);
+}
+export function fetchWorkoutDayResultProcess(r: TmpRequestResp<typeof fetchWorkoutDayResult>) {
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const v = r.data;
+  return Result.Ok({
+    id: v.id,
+    type: v.type || WorkoutPlanType.Strength,
+    title: v.workout_plan ? v.workout_plan.title : v.title,
+    overview: v.workout_plan?.overview ?? "",
+    tags: v.tags,
+    status: v.status,
+    started_at: dayjs(v.started_at),
+    started_at_text: dayjs(v.started_at).format("MM-DD HH:mm"),
+    finished_at: dayjs(v.finished_at),
+    finished: v.status === WorkoutDayStatus.Finished ? dayjs(v.finished_at) : dayjs(),
+    finished_at_text: v.status === WorkoutDayStatus.Finished ? dayjs(v.finished_at).format("MM-DD HH:mm") : "",
+    total_weight: toFixed(v.total_volume, 1),
+    set_count: v.set_count,
+    duration_text: `${v.duration}分钟`,
+    duration: v.duration,
+    steps: v.steps,
+    remark: v.remark,
+    student_id: v.student_id,
+    student: v.student,
+    is_self: v.is_self,
+    workout_plan: v.workout_plan
+      ? {
+          id: v.workout_plan.id,
+          title: v.workout_plan.title,
+          overview: v.workout_plan.overview,
+          creator: v.workout_plan.creator,
         }
       : null,
   });

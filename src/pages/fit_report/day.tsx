@@ -3,8 +3,8 @@
  */
 import { For, Show } from "solid-js";
 import dayjs from "dayjs";
-import { snapdom } from "@zumer/snapdom";
-import { toPng } from "html-to-image";
+// import { snapdom } from "@zumer/snapdom";
+import { toPng, toBlob } from "html-to-image";
 import { saveAs } from "file-saver";
 
 import { ViewComponentProps } from "@/store/types";
@@ -68,19 +68,24 @@ function WorkoutReportMonthModel(props: ViewComponentProps) {
           ui.$dialog_share_card.show();
         }
         try {
-          const result = await snapdom($node, { scale: 2 });
-          const $img = await result.toPng();
           if (props.app.env.wechat) {
+            const url = await toPng($node);
+            const $img = new Image();
+            $img.src = url;
             const $container = document.getElementById("dialog-share-card");
             if (!$container) {
               return;
             }
-            // const $img = new Image();
-            // $img.src = url;
             $container.appendChild($img);
             return;
           }
-          const blob = await snapdom.toBlob($img);
+          const blob = await toBlob($node);
+          if (!blob) {
+            props.app.tip({
+              text: ["生成分享图片失败"],
+            });
+            return;
+          }
           saveAs(blob, _time.date + ".png");
         } catch (err) {
           const e = err as Error;
@@ -263,6 +268,8 @@ export function WorkoutReportDailyView(props: ViewComponentProps) {
                           <div class="w-[18px] text-[#0a88df]">{idx() + 1}.</div>
                           <Flex class="flex-1">
                             <div class="font-bold">{step.title}</div>
+                            <div class="mx-1 text-gray-400">&nbsp;</div>
+                            <div class=" text-gray-600">{step.duration}分钟</div>
                           </Flex>
                         </Flex>
                       </div>

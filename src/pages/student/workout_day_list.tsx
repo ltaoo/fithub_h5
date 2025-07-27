@@ -40,7 +40,7 @@ function StudentWorkoutDayListViewModel(props: ViewComponentProps) {
       props.history.back();
     },
     gotoWorkoutDayProfileView(v: { id: number }) {
-      props.history.push("root.student_workout_day_profile", {
+      props.history.push("root.student_workout_day_result", {
         id: String(v.id),
         student_id: props.view.query.student_id,
       });

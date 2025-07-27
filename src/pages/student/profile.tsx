@@ -102,7 +102,7 @@ function MemberProfileViewModel(props: ViewComponentProps) {
     },
     handleClickWorkoutDay(day: { id: number }) {
       ui.$dialog_day_profile.hide();
-      props.history.push("root.workout_day_profile", {
+      props.history.push("root.workout_day_result", {
         id: String(day.id),
       });
     },

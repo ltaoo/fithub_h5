@@ -144,6 +144,13 @@ const configure = {
           require: ["login"],
         },
       },
+      workout_day_result: {
+        title: "训练日详情",
+        pathname: "/workout_day/result",
+        options: {
+          require: ["login"],
+        },
+      },
       student_create: {
         title: "学员创建",
         pathname: "/home/student_create",
@@ -179,6 +186,13 @@ const configure = {
           require: ["login"],
         },
       },
+      student_workout_day_result: {
+        title: "训练结果",
+        pathname: "/student/workout_day/result",
+        options: {
+          require: ["login"],
+        },
+      },
       action_history_list: {
         title: "动作记录",
         pathname: "/action_history",
@@ -192,7 +206,7 @@ const configure = {
         options: {},
       },
       tools_rm_calc: {
-        title: "RM换算",
+        title: "1RM换算",
         pathname: "/tools_rm_calc",
         options: {},
       },

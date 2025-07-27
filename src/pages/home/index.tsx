@@ -871,7 +871,7 @@ export const HomeIndexPage = (props: ViewComponentProps) => {
                       class="p-2 border-2 border-w-fg-3 rounded-lg"
                       onClick={() => {
                         vm.ui.$dialog_calendar.hide();
-                        props.history.push("root.workout_day_profile", {
+                        props.history.push("root.workout_day_result", {
                           id: String(v.id),
                         });
                       }}

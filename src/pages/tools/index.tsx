@@ -86,7 +86,7 @@ function ToolsViewModel(props: ViewComponentProps) {
           },
         },
         {
-          title: "RM换算",
+          title: "1RM换算",
           icon: "//static.fithub.top/icons/icon10.jpeg",
           onClick() {
             props.history.push("root.tools_rm_calc");

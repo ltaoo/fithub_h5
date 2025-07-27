@@ -339,7 +339,7 @@ function CardioViewModel(props: ViewComponentProps) {
         props.app.tip({
           text: ["创建成功"],
         });
-        props.history.replace("root.workout_day_profile", {
+        props.history.replace("root.workout_day_result", {
           id: String(r2.data.id),
         });
       },
